@@ -1,0 +1,56 @@
+name: ketion
+description: "Offline-first, cross-platform note-taking application"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management & DI
+  flutter_riverpod: ^2.5.1
+  
+  # Routing
+  go_router: ^14.1.0
+
+  # Logging
+  logger: ^2.5.0
+
+  # Database
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Data Modeling & Utils
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+  uuid: ^4.3.3
+  
+  # Attachments & Media
+  image_picker: ^1.1.2
+  file_picker: ^8.1.1
+  crypto: ^3.0.3
+  image: ^4.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Linting
+  flutter_lints: ^3.0.0
+  custom_lint: ^0.6.4
+  riverpod_lint: ^2.3.10
+
+  # Code Generation
+  build_runner: ^2.4.11
+  drift_dev: ^2.20.0
+  freezed: ^2.5.2
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true

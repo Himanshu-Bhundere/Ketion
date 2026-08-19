@@ -1,0 +1,141 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../blocks/domain/entities/block.dart';
+import '../../../blocks/presentation/providers/block_providers.dart';
+
+class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
+  late String _pageId;
+
+  @override
+  Future<List<Block>> build(String arg) async {
+    _pageId = arg;
+    return _loadBlocks();
+  }
+
+  Future<List<Block>> _loadBlocks() async {
+    final getPageBlocks = ref.read(getPageBlocksUseCaseProvider);
+    final result = await getPageBlocks(_pageId);
+    
+    return result.fold(
+      (blocks) {
+        if (blocks.isEmpty) {
+          // Initialize with an empty text block if page is empty
+          return [
+            Block(
+              id: const Uuid().v7(),
+              pageId: _pageId,
+              type: 'text',
+              position: 0.0,
+              data: '{"spans": [], "headingLevel": 0}',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ];
+        }
+        
+        // Sort by position
+        final sorted = List<Block>.from(blocks);
+        sorted.sort((a, b) => a.position.compareTo(b.position));
+        return sorted;
+      },
+      (failure) {
+        throw Exception(failure.message);
+      },
+    );
+  }
+
+  Future<void> updateBlock(Block block) async {
+    final currentBlocks = state.valueOrNull ?? [];
+    final index = currentBlocks.indexWhere((b) => b.id == block.id);
+    
+    if (index != -1) {
+      final updatedBlock = block.copyWith(updatedAt: DateTime.now());
+      final newBlocks = List<Block>.from(currentBlocks);
+      newBlocks[index] = updatedBlock;
+      state = AsyncData(newBlocks);
+
+      // Persist via UseCase
+      final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
+      await updateBlockUseCase(updatedBlock);
+    }
+  }
+
+  Future<void> insertBlockAfter(Block existingBlock) async {
+    final createBlockUseCase = ref.read(createBlockUseCaseProvider);
+    
+    // Create via usecase to get DB persisted block with correct ID and timestamps
+    final result = await createBlockUseCase(
+      pageId: _pageId,
+      type: 'text',
+      position: existingBlock.position + 10, // Approximate for now
+      data: '{"spans": [], "headingLevel": 0}',
+    );
+
+    result.fold(
+      (newBlock) {
+        final currentBlocks = state.valueOrNull ?? [];
+        final index = currentBlocks.indexWhere((b) => b.id == existingBlock.id);
+        
+        if (index != -1) {
+          final newBlocks = List<Block>.from(currentBlocks);
+          newBlocks.insert(index + 1, newBlock);
+          state = AsyncData(newBlocks);
+        }
+      },
+      (failure) {
+        // Handle error quietly or log
+      },
+    );
+  }
+
+  Future<void> reorderBlocks(int oldIndex, int newIndex) async {
+    final currentBlocks = state.valueOrNull ?? [];
+    if (oldIndex < 0 || oldIndex >= currentBlocks.length || newIndex < 0 || newIndex > currentBlocks.length) return;
+    
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    
+    final newBlocks = List<Block>.from(currentBlocks);
+    final block = newBlocks.removeAt(oldIndex);
+    newBlocks.insert(newIndex, block);
+    
+    // Calculate new position
+    double newPosition;
+    if (newBlocks.length == 1) {
+      newPosition = 0;
+    } else if (newIndex == 0) {
+      newPosition = newBlocks[1].position - 1000;
+    } else if (newIndex == newBlocks.length - 1) {
+      newPosition = newBlocks[newIndex - 1].position + 1000;
+    } else {
+      newPosition = (newBlocks[newIndex - 1].position + newBlocks[newIndex + 1].position) / 2;
+    }
+    
+    final updatedBlock = block.copyWith(
+      position: newPosition, 
+      updatedAt: DateTime.now(),
+    );
+    newBlocks[newIndex] = updatedBlock;
+    
+    state = AsyncData(newBlocks);
+    
+    final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
+    await updateBlockUseCase(updatedBlock);
+  }
+
+  Future<void> deleteBlock(String blockId) async {
+    final currentBlocks = state.valueOrNull ?? [];
+    final newBlocks = currentBlocks.where((b) => b.id != blockId).toList();
+    
+    state = AsyncData(newBlocks);
+    
+    final deleteBlockUseCase = ref.read(deleteBlockUseCaseProvider);
+    await deleteBlockUseCase(blockId);
+  }
+}
+
+final editorStateProvider = AsyncNotifierProviderFamily<EditorStateNotifier, List<Block>, String>(
+  () => EditorStateNotifier(),
+);

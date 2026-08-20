@@ -1,0 +1,78 @@
+import '../../../../core/database/app_database.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../../core/utils/result.dart';
+import '../../domain/entities/collection.dart' as domain;
+import '../../domain/repositories/collection_repository.dart';
+import '../models/collection_mapper.dart';
+
+class CollectionRepositoryImpl implements CollectionRepository {
+  final AppDatabase _db;
+  final AppLogger _logger;
+
+  CollectionRepositoryImpl(this._db, this._logger);
+
+  @override
+  Future<Result<void>> createCollection(domain.Collection collection) async {
+    try {
+      await _db.into(_db.collections).insert(collection.toCompanion());
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to create collection', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<domain.Collection>> getCollection(String id) async {
+    try {
+      final collectionRecord = await (_db.select(_db.collections)..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (collectionRecord == null) {
+        return const Error(StorageFailure('Collection not found'));
+      }
+      return Success(collectionRecord.toDomain());
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get collection', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> updateCollection(domain.Collection collection) async {
+    try {
+      final updatedRows = await (_db.update(_db.collections)..where((t) => t.id.equals(collection.id))).write(collection.toCompanion());
+      if (updatedRows == 0) {
+        return const Error(StorageFailure('Collection not found for update'));
+      }
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to update collection', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteCollection(String id) async {
+    try {
+      final deletedRows = await (_db.delete(_db.collections)..where((t) => t.id.equals(id))).go();
+      if (deletedRows == 0) {
+        return const Error(StorageFailure('Collection not found for deletion'));
+      }
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to delete collection', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<domain.Collection>>> getAllCollections() async {
+    try {
+      final records = await (_db.select(_db.collections)).get();
+      return Success(records.map((r) => r.toDomain()).toList());
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get all collections', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+}

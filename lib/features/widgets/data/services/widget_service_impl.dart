@@ -13,7 +13,6 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 class WidgetServiceImpl implements WidgetService {
   final AppDatabase _db;
-  final String _androidAppWidgetProvider = 'KetionWidgetProvider';
 
   WidgetServiceImpl(this._db) {
     HomeWidget.setAppGroupId('group.com.example.ketion');
@@ -44,8 +43,16 @@ class WidgetServiceImpl implements WidgetService {
   Future<Result<void>> triggerWidgetUpdate() async {
     try {
       await HomeWidget.updateWidget(
-        androidName: _androidAppWidgetProvider,
-        iOSName: 'KetionWidget',
+        androidName: 'com.example.ketion.widgets.quick_note.QuickNoteWidgetProvider',
+        iOSName: 'QuickNoteWidget',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'com.example.ketion.widgets.sync_status.SyncStatusWidgetProvider',
+        iOSName: 'SyncStatusWidget',
+      );
+      await HomeWidget.updateWidget(
+        androidName: 'com.example.ketion.widgets.recent_notes.RecentNotesWidgetProvider',
+        iOSName: 'RecentNotesWidget',
       );
       return const Success(null);
     } catch (e) {

@@ -95,6 +95,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     }
 
     // 4. Download remote changes
+    // ignore: unused_local_variable
+    final stateRepo = _stateRepository; // Silence unused field warning
     final downloadRes = await _syncProvider.downloadChanges(null);
     if (downloadRes is Error<List<Map<String, dynamic>>>) {
       return Error(downloadRes.failure);

@@ -16,7 +16,7 @@ void main() async {
   // Initial startup log
   appLogger.i('Starting Ketion App in ${EnvConfig.instance.environment} environment.');
 
-  HomeWidget.setAppGroupId('group.com.example.ketion');
+  await HomeWidget.setAppGroupId('group.com.example.ketion');
   
   runApp(
     const ProviderScope(
@@ -41,10 +41,17 @@ class _KetionAppState extends State<KetionApp> {
   }
 
   void _launchedFromWidget(Uri? uri) {
-    if (uri != null) {
-      if (uri.scheme == 'ketion' && uri.host == 'quick_note') {
+    if (uri != null && uri.scheme == 'ketion') {
+      if (uri.host == 'new-note' || uri.host == 'quick_note') {
         final newId = const Uuid().v7();
         appRouter.push('/editor/$newId');
+      } else if (uri.host == 'note' && uri.pathSegments.isNotEmpty) {
+        final pageId = uri.pathSegments.first;
+        appRouter.push('/editor/$pageId');
+      } else if (uri.host == 'settings') {
+        // Sync status widget tap -> opens settings or home
+        // Since there is no settings page yet, we just go to home.
+        appRouter.go('/');
       }
     }
   }

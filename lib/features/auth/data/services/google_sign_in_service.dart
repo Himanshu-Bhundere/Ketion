@@ -34,9 +34,7 @@ class GoogleSignInService implements AuthService {
       final googleSignIn = GoogleSignIn(scopes: scopes);
       var account = googleSignIn.currentUser;
       
-      if (account == null) {
-        account = await googleSignIn.signInSilently();
-      }
+      account ??= await googleSignIn.signInSilently();
 
       if (account == null) {
         return const Error(UnknownFailure('User not signed in'));

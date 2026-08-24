@@ -31,15 +31,39 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <receiver android:name=".KetionWidgetProvider" android:exported="true">
+        <receiver android:name=".widgets.quick_note.QuickNoteWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info" />
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_quick_note" />
             <intent-filter>
                 <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
             </intent-filter>
         </receiver>
+        
+        <receiver android:name=".widgets.sync_status.SyncStatusWidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_sync_status" />
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".widgets.recent_notes.RecentNotesWidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_recent_notes" />
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".widgets.recent_notes.RecentNotesWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="true" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

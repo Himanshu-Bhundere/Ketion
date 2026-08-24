@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Ketion</string>
-    <string name="widget_description">Ketion Widget</string>
+    <string name="widget_quick_note_title">Quick Note</string>
+    <string name="widget_quick_note_desc">Create a new note instantly</string>
+    <string name="widget_sync_status_title">Sync Status</string>
+    <string name="widget_sync_status_desc">View current synchronization status</string>
+    <string name="widget_recent_notes_title">Recent Notes</string>
+    <string name="widget_recent_notes_desc">Quick access to your most recent notes</string>
 </resources>

@@ -10,6 +10,8 @@ import 'tables/tags.dart';
 import 'tables/history_pages.dart';
 import 'tables/page_collections.dart';
 import 'tables/page_tags.dart';
+import 'tables/sync_queue.dart';
+import 'tables/sync_state.dart';
 
 import 'connection/connection.dart' as impl;
 
@@ -25,6 +27,8 @@ part 'app_database.g.dart';
   HistoryPages,
   PageCollections,
   PageTags,
+  SyncQueue,
+  SyncStates,
 ],)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
@@ -32,7 +36,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -83,6 +87,10 @@ class AppDatabase extends _$AppDatabase {
           // (or use m.alterTable if possible). To be safe, we'll recreate attachments since it wasn't populated yet.
           await m.deleteTable(attachments.actualTableName);
           await m.createTable(attachments);
+        }
+        if (from < 3) {
+          await m.createTable(syncQueue);
+          await m.createTable(syncStates);
         }
       },
       beforeOpen: (details) async {

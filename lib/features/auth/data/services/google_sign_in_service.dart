@@ -1,4 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:ketion/core/errors/failures.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/auth/domain/services/auth_service.dart';
 
@@ -12,18 +13,18 @@ class GoogleSignInService implements AuthService {
       final googleSignIn = GoogleSignIn(scopes: scopes);
       final account = await googleSignIn.signIn();
       if (account == null) {
-        return const Error(Failure('User canceled sign in'));
+        return const Error(UnknownFailure('User canceled sign in'));
       }
       
       final auth = await account.authentication;
       final accessToken = auth.accessToken;
       if (accessToken == null) {
-        return const Error(Failure('Failed to get access token'));
+        return const Error(UnknownFailure('Failed to get access token'));
       }
 
       return Success(accessToken);
     } catch (e) {
-      return Error(Failure('Sign in failed: $e'));
+      return Error(UnknownFailure('Sign in failed: $e'));
     }
   }
 
@@ -38,18 +39,18 @@ class GoogleSignInService implements AuthService {
       }
 
       if (account == null) {
-        return const Error(Failure('User not signed in'));
+        return const Error(UnknownFailure('User not signed in'));
       }
 
       final auth = await account.authentication;
       final accessToken = auth.accessToken;
       if (accessToken == null) {
-        return const Error(Failure('Failed to get access token'));
+        return const Error(UnknownFailure('Failed to get access token'));
       }
 
       return Success(accessToken);
     } catch (e) {
-      return Error(Failure('Failed to get access token: $e'));
+      return Error(UnknownFailure('Failed to get access token: $e'));
     }
   }
 
@@ -59,12 +60,12 @@ class GoogleSignInService implements AuthService {
       await _googleSignIn.signOut();
       return const Success(null);
     } catch (e) {
-      return Error(Failure('Sign out failed: $e'));
+      return Error(UnknownFailure('Sign out failed: $e'));
     }
   }
 
   @override
   Future<bool> isSignedIn() async {
-    return await _googleSignIn.isSignedIn();
+    return _googleSignIn.currentUser != null || await _googleSignIn.signInSilently() != null;
   }
 }

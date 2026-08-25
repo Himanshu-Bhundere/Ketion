@@ -3,7 +3,7 @@ import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/sync/domain/entities/sync_state_entity.dart';
 
 class SyncStateMapper {
-  static SyncStateEntity fromData(SyncState data) {
+  static SyncStateEntity fromData(SyncStateData data) {
     return SyncStateEntity(
       deviceId: data.deviceId,
       provider: data.provider,

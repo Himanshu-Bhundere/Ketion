@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/core/database/app_database.dart';
+import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
 import 'package:ketion/features/auth/presentation/providers/auth_providers.dart';
 import 'package:ketion/features/sync/data/providers/google_drive_sync_provider.dart';
 import 'package:ketion/features/sync/data/repositories/sync_engine_repository_impl.dart';
@@ -39,10 +40,10 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
     stateRepository: stateRepo,
   );
 });
-
 final syncNowUseCaseProvider = Provider<SyncNowUseCase>((ref) {
   final engineRepo = ref.watch(syncEngineRepositoryProvider);
-  return SyncNowUseCase(engineRepo);
+  final widgetService = ref.watch(widgetServiceProvider);
+  return SyncNowUseCase(engineRepo, widgetService);
 });
 
 final enqueueSyncUseCaseProvider = Provider<EnqueueSyncUseCase>((ref) {

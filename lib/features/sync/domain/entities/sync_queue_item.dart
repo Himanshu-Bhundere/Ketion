@@ -1,0 +1,21 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'sync_queue_item.freezed.dart';
+part 'sync_queue_item.g.dart';
+
+@freezed
+class SyncQueueItem with _$SyncQueueItem {
+  const factory SyncQueueItem({
+    required String id,
+    required String entityTable,
+    required String entityId,
+    required String operation,
+    String? payload,
+    required DateTime createdAt,
+    @Default('pending') String status,
+    @Default(0) int retryCount,
+    String? errorMessage,
+  }) = _SyncQueueItem;
+
+  factory SyncQueueItem.fromJson(Map<String, dynamic> json) => _$SyncQueueItemFromJson(json);
+}

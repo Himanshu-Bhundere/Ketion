@@ -28,10 +28,10 @@ void main() {
     );
 
     final enqueueRes = await repository.enqueue(item);
-    expect(enqueueRes, isA<Success>());
+    expect(enqueueRes, isA<Success<void>>());
 
     final pendingRes = await repository.getPendingItems();
-    expect(pendingRes, isA<Success>());
+    expect(pendingRes, isA<Success<List<SyncQueueItem>>>());
     final items = (pendingRes as Success<List<SyncQueueItem>>).value;
     expect(items.length, 1);
     expect(items.first.id, 'item-1');
@@ -50,7 +50,7 @@ void main() {
     await repository.updateStatus('item-1', 'completed');
 
     final pendingRes = await repository.getPendingItems();
-    expect(pendingRes, isA<Success>());
+    expect(pendingRes, isA<Success<List<SyncQueueItem>>>());
     final items = (pendingRes as Success<List<SyncQueueItem>>).value;
     expect(items.isEmpty, true);
   });

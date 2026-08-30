@@ -12,78 +12,120 @@ import 'tables/page_collections.dart';
 import 'tables/page_tags.dart';
 import 'tables/sync_queue.dart';
 import 'tables/sync_state.dart';
+import 'tables/app_settings_table.dart';
 
 import 'connection/connection.dart' as impl;
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [
-  Pages,
-  Blocks,
-  Attachments,
-  Reminders,
-  Collections,
-  Tags,
-  HistoryPages,
-  PageCollections,
-  PageTags,
-  SyncQueue,
-  SyncStates,
-],)
+@DriftDatabase(
+  tables: [
+    Pages,
+    Blocks,
+    Attachments,
+    Reminders,
+    Collections,
+    Tags,
+    HistoryPages,
+    PageCollections,
+    PageTags,
+    SyncQueue,
+    SyncStates,
+    AppSettingsTable,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(impl.connect());
 
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         await m.createAll();
-        
-        // Create FTS5 external content table for blocks
+        // Create unified FTS5 table for Pages, Blocks, and Tags
         await customStatement('''
-          CREATE VIRTUAL TABLE blocks_fts USING fts5(
-            id UNINDEXED,
+          CREATE VIRTUAL TABLE search_fts USING fts5(
+            entityId UNINDEXED,
             pageId UNINDEXED,
-            type UNINDEXED,
-            data,
-            content='blocks',
-            content_rowid='rowid'
+            entityType UNINDEXED,
+            content
           );
         ''');
 
-        // Triggers to keep FTS index synced with the blocks table
+        // Pages Triggers
+        await customStatement('''
+          CREATE TRIGGER pages_ai AFTER INSERT ON pages BEGIN
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+            VALUES (new.rowid, new.id, new.id, 'page', new.title);
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
+            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
+            UPDATE search_fts 
+            SET content = new.title 
+            WHERE entityId = old.id AND entityType = 'page';
+          END;
+        ''');
+
+        // Blocks Triggers
         await customStatement('''
           CREATE TRIGGER blocks_ai AFTER INSERT ON blocks BEGIN
-            INSERT INTO blocks_fts(rowid, id, pageId, type, data) 
-            VALUES (new.rowid, new.id, new.page_id, new.type, new.data);
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+            VALUES (new.rowid, new.id, new.page_id, 'block', new.data);
           END;
         ''');
-        
+
         await customStatement('''
           CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
-            INSERT INTO blocks_fts(blocks_fts, rowid, id, pageId, type, data) 
-            VALUES ('delete', old.rowid, old.id, old.page_id, old.type, old.data);
+            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
           END;
         ''');
-        
+
         await customStatement('''
           CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
-            INSERT INTO blocks_fts(blocks_fts, rowid, id, pageId, type, data) 
-            VALUES ('delete', old.rowid, old.id, old.page_id, old.type, old.data);
-            
-            INSERT INTO blocks_fts(rowid, id, pageId, type, data) 
-            VALUES (new.rowid, new.id, new.page_id, new.type, new.data);
+            UPDATE search_fts 
+            SET content = new.data 
+            WHERE entityId = old.id AND entityType = 'block';
+          END;
+        ''');
+
+        // Tags Triggers
+        await customStatement('''
+          CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+            VALUES (new.rowid, new.id, NULL, 'tag', new.name);
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
+            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'tag';
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
+            UPDATE search_fts 
+            SET content = new.name 
+            WHERE entityId = old.id AND entityType = 'tag';
           END;
         ''');
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
-          // In a real app we'd alter table. For early dev we can just drop and recreate it 
+          // In a real app we'd alter table. For early dev we can just drop and recreate it
           // (or use m.alterTable if possible). To be safe, we'll recreate attachments since it wasn't populated yet.
           await m.deleteTable(attachments.actualTableName);
           await m.createTable(attachments);
@@ -91,6 +133,132 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await m.createTable(syncQueue);
           await m.createTable(syncStates);
+        }
+        if (from < 4) {
+          await m.addColumn(tags, tags.createdAt);
+          await m.addColumn(tags, tags.updatedAt);
+          await m.addColumn(tags, tags.deleted);
+
+          await m.addColumn(collections, collections.createdAt);
+          await m.addColumn(collections, collections.updatedAt);
+          await m.addColumn(collections, collections.deleted);
+
+          await m.addColumn(reminders, reminders.title);
+          await m.addColumn(reminders, reminders.timezone);
+          await m.addColumn(reminders, reminders.snoozeUntil);
+          await m.addColumn(reminders, reminders.createdAt);
+          await m.addColumn(reminders, reminders.updatedAt);
+          await m.addColumn(reminders, reminders.deleted);
+        }
+        if (from < 5) {
+          // Schema changed drastically for attachments in Phase 2A.
+          // Drop and recreate since previous attachments weren't populated or used.
+          await m.deleteTable(attachments.actualTableName);
+          await m.createTable(attachments);
+        }
+        if (from < 6) {
+          // Drop old search structure
+          await customStatement('DROP TABLE IF EXISTS blocks_fts');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ai');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ad');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_au');
+
+          // Create new search_fts table and triggers
+          await customStatement('''
+            CREATE VIRTUAL TABLE search_fts USING fts5(
+              entityId UNINDEXED,
+              pageId UNINDEXED,
+              entityType UNINDEXED,
+              content
+            );
+          ''');
+
+          // Pages Triggers
+          await customStatement('''
+            CREATE TRIGGER pages_ai AFTER INSERT ON pages BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid, new.id, new.id, 'page', new.title);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
+              DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
+              UPDATE search_fts 
+              SET content = new.title 
+              WHERE entityId = old.id AND entityType = 'page';
+            END;
+          ''');
+
+          // Blocks Triggers
+          await customStatement('''
+            CREATE TRIGGER blocks_ai AFTER INSERT ON blocks BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid, new.id, new.page_id, 'block', new.data);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
+              DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
+              UPDATE search_fts 
+              SET content = new.data 
+              WHERE entityId = old.id AND entityType = 'block';
+            END;
+          ''');
+
+          // Tags Triggers
+          await customStatement('''
+            CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid, new.id, NULL, 'tag', new.name);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
+              DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'tag';
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
+              UPDATE search_fts 
+              SET content = new.name 
+              WHERE entityId = old.id AND entityType = 'tag';
+            END;
+          ''');
+
+          // Rebuild index for existing data
+          await customStatement('''
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid, id, id, 'page', title FROM pages;
+          ''');
+          await customStatement('''
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid, id, page_id, 'block', data FROM blocks;
+          ''');
+          await customStatement('''
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid, id, NULL, 'tag', name FROM tags;
+          ''');
+        } // Close if (from < 6)
+
+        if (from < 7) {
+          await m.addColumn(pages, pages.isTemplate);
+        }
+        if (from < 8) {
+          await m.createTable(appSettingsTable);
         }
       },
       beforeOpen: (details) async {
@@ -103,7 +271,22 @@ class AppDatabase extends _$AppDatabase {
   /// Rebuilds the FTS5 search index from scratch.
   /// Useful for migrations, database recovery, and imports.
   Future<void> rebuildSearchIndex() async {
-    await customStatement("INSERT INTO blocks_fts(blocks_fts) VALUES('rebuild')");
+    await customStatement('DELETE FROM search_fts');
+
+    await customStatement('''
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+      SELECT rowid, id, id, 'page', title FROM pages WHERE deleted = 0;
+    ''');
+
+    await customStatement('''
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+      SELECT rowid, id, page_id, 'block', data FROM blocks WHERE deleted = 0;
+    ''');
+
+    await customStatement('''
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+      SELECT rowid, id, NULL, 'tag', name FROM tags WHERE deleted = 0;
+    ''');
   }
 }
 

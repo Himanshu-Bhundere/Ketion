@@ -24,7 +24,7 @@ class AppTypography {
     fontSize: 14,
     fontWeight: FontWeight.normal,
   );
-  
+
   static const TextStyle labelLarge = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w600,

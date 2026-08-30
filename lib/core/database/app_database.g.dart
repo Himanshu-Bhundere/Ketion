@@ -70,6 +70,16 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _isTemplateMeta =
+      const VerificationMeta('isTemplate');
+  @override
+  late final GeneratedColumn<bool> isTemplate = GeneratedColumn<bool>(
+      'is_template', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_template" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _versionMeta =
       const VerificationMeta('version');
   @override
@@ -100,6 +110,7 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
         isFavorite,
         isArchived,
         deleted,
+        isTemplate,
         version,
         createdAt,
         updatedAt
@@ -155,6 +166,12 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
       context.handle(_deletedMeta,
           deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
+    if (data.containsKey('is_template')) {
+      context.handle(
+          _isTemplateMeta,
+          isTemplate.isAcceptableOrUnknown(
+              data['is_template']!, _isTemplateMeta));
+    }
     if (data.containsKey('version')) {
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
@@ -196,6 +213,8 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
           .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
       deleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      isTemplate: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_template'])!,
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       createdAt: attachedDatabase.typeMapping
@@ -220,6 +239,7 @@ class Page extends DataClass implements Insertable<Page> {
   final bool isFavorite;
   final bool isArchived;
   final bool deleted;
+  final bool isTemplate;
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -232,6 +252,7 @@ class Page extends DataClass implements Insertable<Page> {
       required this.isFavorite,
       required this.isArchived,
       required this.deleted,
+      required this.isTemplate,
       required this.version,
       required this.createdAt,
       required this.updatedAt});
@@ -252,6 +273,7 @@ class Page extends DataClass implements Insertable<Page> {
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['is_archived'] = Variable<bool>(isArchived);
     map['deleted'] = Variable<bool>(deleted);
+    map['is_template'] = Variable<bool>(isTemplate);
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -272,6 +294,7 @@ class Page extends DataClass implements Insertable<Page> {
       isFavorite: Value(isFavorite),
       isArchived: Value(isArchived),
       deleted: Value(deleted),
+      isTemplate: Value(isTemplate),
       version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -290,6 +313,7 @@ class Page extends DataClass implements Insertable<Page> {
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       deleted: serializer.fromJson<bool>(json['deleted']),
+      isTemplate: serializer.fromJson<bool>(json['isTemplate']),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -307,6 +331,7 @@ class Page extends DataClass implements Insertable<Page> {
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isArchived': serializer.toJson<bool>(isArchived),
       'deleted': serializer.toJson<bool>(deleted),
+      'isTemplate': serializer.toJson<bool>(isTemplate),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -322,6 +347,7 @@ class Page extends DataClass implements Insertable<Page> {
           bool? isFavorite,
           bool? isArchived,
           bool? deleted,
+          bool? isTemplate,
           int? version,
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -335,6 +361,7 @@ class Page extends DataClass implements Insertable<Page> {
         isFavorite: isFavorite ?? this.isFavorite,
         isArchived: isArchived ?? this.isArchived,
         deleted: deleted ?? this.deleted,
+        isTemplate: isTemplate ?? this.isTemplate,
         version: version ?? this.version,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -354,6 +381,8 @@ class Page extends DataClass implements Insertable<Page> {
       isArchived:
           data.isArchived.present ? data.isArchived.value : this.isArchived,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isTemplate:
+          data.isTemplate.present ? data.isTemplate.value : this.isTemplate,
       version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -371,6 +400,7 @@ class Page extends DataClass implements Insertable<Page> {
           ..write('isFavorite: $isFavorite, ')
           ..write('isArchived: $isArchived, ')
           ..write('deleted: $deleted, ')
+          ..write('isTemplate: $isTemplate, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -379,8 +409,19 @@ class Page extends DataClass implements Insertable<Page> {
   }
 
   @override
-  int get hashCode => Object.hash(id, parentPageId, title, icon, coverImage,
-      isFavorite, isArchived, deleted, version, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id,
+      parentPageId,
+      title,
+      icon,
+      coverImage,
+      isFavorite,
+      isArchived,
+      deleted,
+      isTemplate,
+      version,
+      createdAt,
+      updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -393,6 +434,7 @@ class Page extends DataClass implements Insertable<Page> {
           other.isFavorite == this.isFavorite &&
           other.isArchived == this.isArchived &&
           other.deleted == this.deleted &&
+          other.isTemplate == this.isTemplate &&
           other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -407,6 +449,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
   final Value<bool> isFavorite;
   final Value<bool> isArchived;
   final Value<bool> deleted;
+  final Value<bool> isTemplate;
   final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -420,6 +463,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     this.isFavorite = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.isTemplate = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -434,6 +478,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     this.isFavorite = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.isTemplate = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -450,6 +495,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     Expression<bool>? isFavorite,
     Expression<bool>? isArchived,
     Expression<bool>? deleted,
+    Expression<bool>? isTemplate,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -464,6 +510,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isArchived != null) 'is_archived': isArchived,
       if (deleted != null) 'deleted': deleted,
+      if (isTemplate != null) 'is_template': isTemplate,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -480,6 +527,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       Value<bool>? isFavorite,
       Value<bool>? isArchived,
       Value<bool>? deleted,
+      Value<bool>? isTemplate,
       Value<int>? version,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -493,6 +541,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       deleted: deleted ?? this.deleted,
+      isTemplate: isTemplate ?? this.isTemplate,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -527,6 +576,9 @@ class PagesCompanion extends UpdateCompanion<Page> {
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
     }
+    if (isTemplate.present) {
+      map['is_template'] = Variable<bool>(isTemplate.value);
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -553,6 +605,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
           ..write('isFavorite: $isFavorite, ')
           ..write('isArchived: $isArchived, ')
           ..write('deleted: $deleted, ')
+          ..write('isTemplate: $isTemplate, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -1076,7 +1129,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
 }
 
 class $AttachmentsTable extends Attachments
-    with TableInfo<$AttachmentsTable, Attachment> {
+    with TableInfo<$AttachmentsTable, AttachmentData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1086,63 +1139,50 @@ class $AttachmentsTable extends Attachments
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _driveFileIdMeta =
-      const VerificationMeta('driveFileId');
+  static const VerificationMeta _pageIdMeta = const VerificationMeta('pageId');
   @override
-  late final GeneratedColumn<String> driveFileId = GeneratedColumn<String>(
-      'drive_file_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _localPathMeta =
-      const VerificationMeta('localPath');
+  late final GeneratedColumn<String> pageId = GeneratedColumn<String>(
+      'page_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _blockIdMeta =
+      const VerificationMeta('blockId');
   @override
-  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
-      'local_path', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+  late final GeneratedColumn<String> blockId = GeneratedColumn<String>(
+      'block_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fileNameMeta =
+      const VerificationMeta('fileName');
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+      'file_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _mimeTypeMeta =
       const VerificationMeta('mimeType');
   @override
   late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
-      'mime_type', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _checksumSha256Meta =
-      const VerificationMeta('checksumSha256');
+      'mime_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sizeMeta = const VerificationMeta('size');
   @override
-  late final GeneratedColumn<String> checksumSha256 = GeneratedColumn<String>(
-      'checksum_sha256', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _fileSizeMeta =
-      const VerificationMeta('fileSize');
+  late final GeneratedColumn<int> size = GeneratedColumn<int>(
+      'size', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
   @override
-  late final GeneratedColumn<int> fileSize = GeneratedColumn<int>(
-      'file_size', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _widthMeta = const VerificationMeta('width');
+  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
+      'sha256', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _relativePathMeta =
+      const VerificationMeta('relativePath');
   @override
-  late final GeneratedColumn<int> width = GeneratedColumn<int>(
-      'width', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _heightMeta = const VerificationMeta('height');
-  @override
-  late final GeneratedColumn<int> height = GeneratedColumn<int>(
-      'height', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _durationMeta =
-      const VerificationMeta('duration');
-  @override
-  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
-      'duration', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+  late final GeneratedColumn<String> relativePath = GeneratedColumn<String>(
+      'relative_path', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _thumbnailPathMeta =
       const VerificationMeta('thumbnailPath');
   @override
   late final GeneratedColumn<String> thumbnailPath = GeneratedColumn<String>(
       'thumbnail_path', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _uploadStatusMeta =
-      const VerificationMeta('uploadStatus');
-  @override
-  late final GeneratedColumn<String> uploadStatus = GeneratedColumn<String>(
-      'upload_status', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
@@ -1160,14 +1200,6 @@ class $AttachmentsTable extends Attachments
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
-  static const VerificationMeta _versionMeta =
-      const VerificationMeta('version');
-  @override
-  late final GeneratedColumn<int> version = GeneratedColumn<int>(
-      'version', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
   static const VerificationMeta _deletedMeta =
       const VerificationMeta('deleted');
   @override
@@ -1181,19 +1213,16 @@ class $AttachmentsTable extends Attachments
   @override
   List<GeneratedColumn> get $columns => [
         id,
-        driveFileId,
-        localPath,
+        pageId,
+        blockId,
+        fileName,
         mimeType,
-        checksumSha256,
-        fileSize,
-        width,
-        height,
-        duration,
+        size,
+        sha256,
+        relativePath,
         thumbnailPath,
-        uploadStatus,
         createdAt,
         updatedAt,
-        version,
         deleted
       ];
   @override
@@ -1202,7 +1231,7 @@ class $AttachmentsTable extends Attachments
   String get actualTableName => $name;
   static const String $name = 'attachments';
   @override
-  VerificationContext validateIntegrity(Insertable<Attachment> instance,
+  VerificationContext validateIntegrity(Insertable<AttachmentData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -1211,53 +1240,55 @@ class $AttachmentsTable extends Attachments
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('drive_file_id')) {
-      context.handle(
-          _driveFileIdMeta,
-          driveFileId.isAcceptableOrUnknown(
-              data['drive_file_id']!, _driveFileIdMeta));
+    if (data.containsKey('page_id')) {
+      context.handle(_pageIdMeta,
+          pageId.isAcceptableOrUnknown(data['page_id']!, _pageIdMeta));
+    } else if (isInserting) {
+      context.missing(_pageIdMeta);
     }
-    if (data.containsKey('local_path')) {
-      context.handle(_localPathMeta,
-          localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta));
+    if (data.containsKey('block_id')) {
+      context.handle(_blockIdMeta,
+          blockId.isAcceptableOrUnknown(data['block_id']!, _blockIdMeta));
+    } else if (isInserting) {
+      context.missing(_blockIdMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(_fileNameMeta,
+          fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta));
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
     }
     if (data.containsKey('mime_type')) {
       context.handle(_mimeTypeMeta,
           mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta));
+    } else if (isInserting) {
+      context.missing(_mimeTypeMeta);
     }
-    if (data.containsKey('checksum_sha256')) {
+    if (data.containsKey('size')) {
       context.handle(
-          _checksumSha256Meta,
-          checksumSha256.isAcceptableOrUnknown(
-              data['checksum_sha256']!, _checksumSha256Meta));
+          _sizeMeta, size.isAcceptableOrUnknown(data['size']!, _sizeMeta));
+    } else if (isInserting) {
+      context.missing(_sizeMeta);
     }
-    if (data.containsKey('file_size')) {
-      context.handle(_fileSizeMeta,
-          fileSize.isAcceptableOrUnknown(data['file_size']!, _fileSizeMeta));
+    if (data.containsKey('sha256')) {
+      context.handle(_sha256Meta,
+          sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta));
+    } else if (isInserting) {
+      context.missing(_sha256Meta);
     }
-    if (data.containsKey('width')) {
+    if (data.containsKey('relative_path')) {
       context.handle(
-          _widthMeta, width.isAcceptableOrUnknown(data['width']!, _widthMeta));
-    }
-    if (data.containsKey('height')) {
-      context.handle(_heightMeta,
-          height.isAcceptableOrUnknown(data['height']!, _heightMeta));
-    }
-    if (data.containsKey('duration')) {
-      context.handle(_durationMeta,
-          duration.isAcceptableOrUnknown(data['duration']!, _durationMeta));
+          _relativePathMeta,
+          relativePath.isAcceptableOrUnknown(
+              data['relative_path']!, _relativePathMeta));
+    } else if (isInserting) {
+      context.missing(_relativePathMeta);
     }
     if (data.containsKey('thumbnail_path')) {
       context.handle(
           _thumbnailPathMeta,
           thumbnailPath.isAcceptableOrUnknown(
               data['thumbnail_path']!, _thumbnailPathMeta));
-    }
-    if (data.containsKey('upload_status')) {
-      context.handle(
-          _uploadStatusMeta,
-          uploadStatus.isAcceptableOrUnknown(
-              data['upload_status']!, _uploadStatusMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -1266,10 +1297,6 @@ class $AttachmentsTable extends Attachments
     if (data.containsKey('updated_at')) {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('version')) {
-      context.handle(_versionMeta,
-          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
     }
     if (data.containsKey('deleted')) {
       context.handle(_deletedMeta,
@@ -1281,37 +1308,31 @@ class $AttachmentsTable extends Attachments
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Attachment map(Map<String, dynamic> data, {String? tablePrefix}) {
+  AttachmentData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Attachment(
+    return AttachmentData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      driveFileId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}drive_file_id']),
-      localPath: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}local_path']),
+      pageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}page_id'])!,
+      blockId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}block_id'])!,
+      fileName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}file_name'])!,
       mimeType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}mime_type']),
-      checksumSha256: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}checksum_sha256']),
-      fileSize: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}file_size']),
-      width: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}width']),
-      height: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}height']),
-      duration: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}duration']),
+          .read(DriftSqlType.string, data['${effectivePrefix}mime_type'])!,
+      size: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}size'])!,
+      sha256: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sha256'])!,
+      relativePath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}relative_path'])!,
       thumbnailPath: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}thumbnail_path']),
-      uploadStatus: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}upload_status']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      version: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       deleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
     );
@@ -1323,75 +1344,48 @@ class $AttachmentsTable extends Attachments
   }
 }
 
-class Attachment extends DataClass implements Insertable<Attachment> {
+class AttachmentData extends DataClass implements Insertable<AttachmentData> {
   final String id;
-  final String? driveFileId;
-  final String? localPath;
-  final String? mimeType;
-  final String? checksumSha256;
-  final int? fileSize;
-  final int? width;
-  final int? height;
-  final int? duration;
+  final String pageId;
+  final String blockId;
+  final String fileName;
+  final String mimeType;
+  final int size;
+  final String sha256;
+  final String relativePath;
   final String? thumbnailPath;
-  final String? uploadStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final int version;
   final bool deleted;
-  const Attachment(
+  const AttachmentData(
       {required this.id,
-      this.driveFileId,
-      this.localPath,
-      this.mimeType,
-      this.checksumSha256,
-      this.fileSize,
-      this.width,
-      this.height,
-      this.duration,
+      required this.pageId,
+      required this.blockId,
+      required this.fileName,
+      required this.mimeType,
+      required this.size,
+      required this.sha256,
+      required this.relativePath,
       this.thumbnailPath,
-      this.uploadStatus,
       required this.createdAt,
       required this.updatedAt,
-      required this.version,
       required this.deleted});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || driveFileId != null) {
-      map['drive_file_id'] = Variable<String>(driveFileId);
-    }
-    if (!nullToAbsent || localPath != null) {
-      map['local_path'] = Variable<String>(localPath);
-    }
-    if (!nullToAbsent || mimeType != null) {
-      map['mime_type'] = Variable<String>(mimeType);
-    }
-    if (!nullToAbsent || checksumSha256 != null) {
-      map['checksum_sha256'] = Variable<String>(checksumSha256);
-    }
-    if (!nullToAbsent || fileSize != null) {
-      map['file_size'] = Variable<int>(fileSize);
-    }
-    if (!nullToAbsent || width != null) {
-      map['width'] = Variable<int>(width);
-    }
-    if (!nullToAbsent || height != null) {
-      map['height'] = Variable<int>(height);
-    }
-    if (!nullToAbsent || duration != null) {
-      map['duration'] = Variable<int>(duration);
-    }
+    map['page_id'] = Variable<String>(pageId);
+    map['block_id'] = Variable<String>(blockId);
+    map['file_name'] = Variable<String>(fileName);
+    map['mime_type'] = Variable<String>(mimeType);
+    map['size'] = Variable<int>(size);
+    map['sha256'] = Variable<String>(sha256);
+    map['relative_path'] = Variable<String>(relativePath);
     if (!nullToAbsent || thumbnailPath != null) {
       map['thumbnail_path'] = Variable<String>(thumbnailPath);
     }
-    if (!nullToAbsent || uploadStatus != null) {
-      map['upload_status'] = Variable<String>(uploadStatus);
-    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['version'] = Variable<int>(version);
     map['deleted'] = Variable<bool>(deleted);
     return map;
   }
@@ -1399,59 +1393,37 @@ class Attachment extends DataClass implements Insertable<Attachment> {
   AttachmentsCompanion toCompanion(bool nullToAbsent) {
     return AttachmentsCompanion(
       id: Value(id),
-      driveFileId: driveFileId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(driveFileId),
-      localPath: localPath == null && nullToAbsent
-          ? const Value.absent()
-          : Value(localPath),
-      mimeType: mimeType == null && nullToAbsent
-          ? const Value.absent()
-          : Value(mimeType),
-      checksumSha256: checksumSha256 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(checksumSha256),
-      fileSize: fileSize == null && nullToAbsent
-          ? const Value.absent()
-          : Value(fileSize),
-      width:
-          width == null && nullToAbsent ? const Value.absent() : Value(width),
-      height:
-          height == null && nullToAbsent ? const Value.absent() : Value(height),
-      duration: duration == null && nullToAbsent
-          ? const Value.absent()
-          : Value(duration),
+      pageId: Value(pageId),
+      blockId: Value(blockId),
+      fileName: Value(fileName),
+      mimeType: Value(mimeType),
+      size: Value(size),
+      sha256: Value(sha256),
+      relativePath: Value(relativePath),
       thumbnailPath: thumbnailPath == null && nullToAbsent
           ? const Value.absent()
           : Value(thumbnailPath),
-      uploadStatus: uploadStatus == null && nullToAbsent
-          ? const Value.absent()
-          : Value(uploadStatus),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
-      version: Value(version),
       deleted: Value(deleted),
     );
   }
 
-  factory Attachment.fromJson(Map<String, dynamic> json,
+  factory AttachmentData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Attachment(
+    return AttachmentData(
       id: serializer.fromJson<String>(json['id']),
-      driveFileId: serializer.fromJson<String?>(json['driveFileId']),
-      localPath: serializer.fromJson<String?>(json['localPath']),
-      mimeType: serializer.fromJson<String?>(json['mimeType']),
-      checksumSha256: serializer.fromJson<String?>(json['checksumSha256']),
-      fileSize: serializer.fromJson<int?>(json['fileSize']),
-      width: serializer.fromJson<int?>(json['width']),
-      height: serializer.fromJson<int?>(json['height']),
-      duration: serializer.fromJson<int?>(json['duration']),
+      pageId: serializer.fromJson<String>(json['pageId']),
+      blockId: serializer.fromJson<String>(json['blockId']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      mimeType: serializer.fromJson<String>(json['mimeType']),
+      size: serializer.fromJson<int>(json['size']),
+      sha256: serializer.fromJson<String>(json['sha256']),
+      relativePath: serializer.fromJson<String>(json['relativePath']),
       thumbnailPath: serializer.fromJson<String?>(json['thumbnailPath']),
-      uploadStatus: serializer.fromJson<String?>(json['uploadStatus']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      version: serializer.fromJson<int>(json['version']),
       deleted: serializer.fromJson<bool>(json['deleted']),
     );
   }
@@ -1460,232 +1432,187 @@ class Attachment extends DataClass implements Insertable<Attachment> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'driveFileId': serializer.toJson<String?>(driveFileId),
-      'localPath': serializer.toJson<String?>(localPath),
-      'mimeType': serializer.toJson<String?>(mimeType),
-      'checksumSha256': serializer.toJson<String?>(checksumSha256),
-      'fileSize': serializer.toJson<int?>(fileSize),
-      'width': serializer.toJson<int?>(width),
-      'height': serializer.toJson<int?>(height),
-      'duration': serializer.toJson<int?>(duration),
+      'pageId': serializer.toJson<String>(pageId),
+      'blockId': serializer.toJson<String>(blockId),
+      'fileName': serializer.toJson<String>(fileName),
+      'mimeType': serializer.toJson<String>(mimeType),
+      'size': serializer.toJson<int>(size),
+      'sha256': serializer.toJson<String>(sha256),
+      'relativePath': serializer.toJson<String>(relativePath),
       'thumbnailPath': serializer.toJson<String?>(thumbnailPath),
-      'uploadStatus': serializer.toJson<String?>(uploadStatus),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'version': serializer.toJson<int>(version),
       'deleted': serializer.toJson<bool>(deleted),
     };
   }
 
-  Attachment copyWith(
+  AttachmentData copyWith(
           {String? id,
-          Value<String?> driveFileId = const Value.absent(),
-          Value<String?> localPath = const Value.absent(),
-          Value<String?> mimeType = const Value.absent(),
-          Value<String?> checksumSha256 = const Value.absent(),
-          Value<int?> fileSize = const Value.absent(),
-          Value<int?> width = const Value.absent(),
-          Value<int?> height = const Value.absent(),
-          Value<int?> duration = const Value.absent(),
+          String? pageId,
+          String? blockId,
+          String? fileName,
+          String? mimeType,
+          int? size,
+          String? sha256,
+          String? relativePath,
           Value<String?> thumbnailPath = const Value.absent(),
-          Value<String?> uploadStatus = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
-          int? version,
           bool? deleted}) =>
-      Attachment(
+      AttachmentData(
         id: id ?? this.id,
-        driveFileId: driveFileId.present ? driveFileId.value : this.driveFileId,
-        localPath: localPath.present ? localPath.value : this.localPath,
-        mimeType: mimeType.present ? mimeType.value : this.mimeType,
-        checksumSha256:
-            checksumSha256.present ? checksumSha256.value : this.checksumSha256,
-        fileSize: fileSize.present ? fileSize.value : this.fileSize,
-        width: width.present ? width.value : this.width,
-        height: height.present ? height.value : this.height,
-        duration: duration.present ? duration.value : this.duration,
+        pageId: pageId ?? this.pageId,
+        blockId: blockId ?? this.blockId,
+        fileName: fileName ?? this.fileName,
+        mimeType: mimeType ?? this.mimeType,
+        size: size ?? this.size,
+        sha256: sha256 ?? this.sha256,
+        relativePath: relativePath ?? this.relativePath,
         thumbnailPath:
             thumbnailPath.present ? thumbnailPath.value : this.thumbnailPath,
-        uploadStatus:
-            uploadStatus.present ? uploadStatus.value : this.uploadStatus,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
-        version: version ?? this.version,
         deleted: deleted ?? this.deleted,
       );
-  Attachment copyWithCompanion(AttachmentsCompanion data) {
-    return Attachment(
+  AttachmentData copyWithCompanion(AttachmentsCompanion data) {
+    return AttachmentData(
       id: data.id.present ? data.id.value : this.id,
-      driveFileId:
-          data.driveFileId.present ? data.driveFileId.value : this.driveFileId,
-      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      pageId: data.pageId.present ? data.pageId.value : this.pageId,
+      blockId: data.blockId.present ? data.blockId.value : this.blockId,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
       mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
-      checksumSha256: data.checksumSha256.present
-          ? data.checksumSha256.value
-          : this.checksumSha256,
-      fileSize: data.fileSize.present ? data.fileSize.value : this.fileSize,
-      width: data.width.present ? data.width.value : this.width,
-      height: data.height.present ? data.height.value : this.height,
-      duration: data.duration.present ? data.duration.value : this.duration,
+      size: data.size.present ? data.size.value : this.size,
+      sha256: data.sha256.present ? data.sha256.value : this.sha256,
+      relativePath: data.relativePath.present
+          ? data.relativePath.value
+          : this.relativePath,
       thumbnailPath: data.thumbnailPath.present
           ? data.thumbnailPath.value
           : this.thumbnailPath,
-      uploadStatus: data.uploadStatus.present
-          ? data.uploadStatus.value
-          : this.uploadStatus,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      version: data.version.present ? data.version.value : this.version,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Attachment(')
+    return (StringBuffer('AttachmentData(')
           ..write('id: $id, ')
-          ..write('driveFileId: $driveFileId, ')
-          ..write('localPath: $localPath, ')
+          ..write('pageId: $pageId, ')
+          ..write('blockId: $blockId, ')
+          ..write('fileName: $fileName, ')
           ..write('mimeType: $mimeType, ')
-          ..write('checksumSha256: $checksumSha256, ')
-          ..write('fileSize: $fileSize, ')
-          ..write('width: $width, ')
-          ..write('height: $height, ')
-          ..write('duration: $duration, ')
+          ..write('size: $size, ')
+          ..write('sha256: $sha256, ')
+          ..write('relativePath: $relativePath, ')
           ..write('thumbnailPath: $thumbnailPath, ')
-          ..write('uploadStatus: $uploadStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('version: $version, ')
           ..write('deleted: $deleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      driveFileId,
-      localPath,
-      mimeType,
-      checksumSha256,
-      fileSize,
-      width,
-      height,
-      duration,
-      thumbnailPath,
-      uploadStatus,
-      createdAt,
-      updatedAt,
-      version,
-      deleted);
+  int get hashCode => Object.hash(id, pageId, blockId, fileName, mimeType, size,
+      sha256, relativePath, thumbnailPath, createdAt, updatedAt, deleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Attachment &&
+      (other is AttachmentData &&
           other.id == this.id &&
-          other.driveFileId == this.driveFileId &&
-          other.localPath == this.localPath &&
+          other.pageId == this.pageId &&
+          other.blockId == this.blockId &&
+          other.fileName == this.fileName &&
           other.mimeType == this.mimeType &&
-          other.checksumSha256 == this.checksumSha256 &&
-          other.fileSize == this.fileSize &&
-          other.width == this.width &&
-          other.height == this.height &&
-          other.duration == this.duration &&
+          other.size == this.size &&
+          other.sha256 == this.sha256 &&
+          other.relativePath == this.relativePath &&
           other.thumbnailPath == this.thumbnailPath &&
-          other.uploadStatus == this.uploadStatus &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.version == this.version &&
           other.deleted == this.deleted);
 }
 
-class AttachmentsCompanion extends UpdateCompanion<Attachment> {
+class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
   final Value<String> id;
-  final Value<String?> driveFileId;
-  final Value<String?> localPath;
-  final Value<String?> mimeType;
-  final Value<String?> checksumSha256;
-  final Value<int?> fileSize;
-  final Value<int?> width;
-  final Value<int?> height;
-  final Value<int?> duration;
+  final Value<String> pageId;
+  final Value<String> blockId;
+  final Value<String> fileName;
+  final Value<String> mimeType;
+  final Value<int> size;
+  final Value<String> sha256;
+  final Value<String> relativePath;
   final Value<String?> thumbnailPath;
-  final Value<String?> uploadStatus;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
-  final Value<int> version;
   final Value<bool> deleted;
   final Value<int> rowid;
   const AttachmentsCompanion({
     this.id = const Value.absent(),
-    this.driveFileId = const Value.absent(),
-    this.localPath = const Value.absent(),
+    this.pageId = const Value.absent(),
+    this.blockId = const Value.absent(),
+    this.fileName = const Value.absent(),
     this.mimeType = const Value.absent(),
-    this.checksumSha256 = const Value.absent(),
-    this.fileSize = const Value.absent(),
-    this.width = const Value.absent(),
-    this.height = const Value.absent(),
-    this.duration = const Value.absent(),
+    this.size = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.relativePath = const Value.absent(),
     this.thumbnailPath = const Value.absent(),
-    this.uploadStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.version = const Value.absent(),
     this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AttachmentsCompanion.insert({
     required String id,
-    this.driveFileId = const Value.absent(),
-    this.localPath = const Value.absent(),
-    this.mimeType = const Value.absent(),
-    this.checksumSha256 = const Value.absent(),
-    this.fileSize = const Value.absent(),
-    this.width = const Value.absent(),
-    this.height = const Value.absent(),
-    this.duration = const Value.absent(),
+    required String pageId,
+    required String blockId,
+    required String fileName,
+    required String mimeType,
+    required int size,
+    required String sha256,
+    required String relativePath,
     this.thumbnailPath = const Value.absent(),
-    this.uploadStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.version = const Value.absent(),
     this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id);
-  static Insertable<Attachment> custom({
+  })  : id = Value(id),
+        pageId = Value(pageId),
+        blockId = Value(blockId),
+        fileName = Value(fileName),
+        mimeType = Value(mimeType),
+        size = Value(size),
+        sha256 = Value(sha256),
+        relativePath = Value(relativePath);
+  static Insertable<AttachmentData> custom({
     Expression<String>? id,
-    Expression<String>? driveFileId,
-    Expression<String>? localPath,
+    Expression<String>? pageId,
+    Expression<String>? blockId,
+    Expression<String>? fileName,
     Expression<String>? mimeType,
-    Expression<String>? checksumSha256,
-    Expression<int>? fileSize,
-    Expression<int>? width,
-    Expression<int>? height,
-    Expression<int>? duration,
+    Expression<int>? size,
+    Expression<String>? sha256,
+    Expression<String>? relativePath,
     Expression<String>? thumbnailPath,
-    Expression<String>? uploadStatus,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
-    Expression<int>? version,
     Expression<bool>? deleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (driveFileId != null) 'drive_file_id': driveFileId,
-      if (localPath != null) 'local_path': localPath,
+      if (pageId != null) 'page_id': pageId,
+      if (blockId != null) 'block_id': blockId,
+      if (fileName != null) 'file_name': fileName,
       if (mimeType != null) 'mime_type': mimeType,
-      if (checksumSha256 != null) 'checksum_sha256': checksumSha256,
-      if (fileSize != null) 'file_size': fileSize,
-      if (width != null) 'width': width,
-      if (height != null) 'height': height,
-      if (duration != null) 'duration': duration,
+      if (size != null) 'size': size,
+      if (sha256 != null) 'sha256': sha256,
+      if (relativePath != null) 'relative_path': relativePath,
       if (thumbnailPath != null) 'thumbnail_path': thumbnailPath,
-      if (uploadStatus != null) 'upload_status': uploadStatus,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (version != null) 'version': version,
       if (deleted != null) 'deleted': deleted,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1693,36 +1620,30 @@ class AttachmentsCompanion extends UpdateCompanion<Attachment> {
 
   AttachmentsCompanion copyWith(
       {Value<String>? id,
-      Value<String?>? driveFileId,
-      Value<String?>? localPath,
-      Value<String?>? mimeType,
-      Value<String?>? checksumSha256,
-      Value<int?>? fileSize,
-      Value<int?>? width,
-      Value<int?>? height,
-      Value<int?>? duration,
+      Value<String>? pageId,
+      Value<String>? blockId,
+      Value<String>? fileName,
+      Value<String>? mimeType,
+      Value<int>? size,
+      Value<String>? sha256,
+      Value<String>? relativePath,
       Value<String?>? thumbnailPath,
-      Value<String?>? uploadStatus,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
-      Value<int>? version,
       Value<bool>? deleted,
       Value<int>? rowid}) {
     return AttachmentsCompanion(
       id: id ?? this.id,
-      driveFileId: driveFileId ?? this.driveFileId,
-      localPath: localPath ?? this.localPath,
+      pageId: pageId ?? this.pageId,
+      blockId: blockId ?? this.blockId,
+      fileName: fileName ?? this.fileName,
       mimeType: mimeType ?? this.mimeType,
-      checksumSha256: checksumSha256 ?? this.checksumSha256,
-      fileSize: fileSize ?? this.fileSize,
-      width: width ?? this.width,
-      height: height ?? this.height,
-      duration: duration ?? this.duration,
+      size: size ?? this.size,
+      sha256: sha256 ?? this.sha256,
+      relativePath: relativePath ?? this.relativePath,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
-      uploadStatus: uploadStatus ?? this.uploadStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      version: version ?? this.version,
       deleted: deleted ?? this.deleted,
       rowid: rowid ?? this.rowid,
     );
@@ -1734,44 +1655,35 @@ class AttachmentsCompanion extends UpdateCompanion<Attachment> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (driveFileId.present) {
-      map['drive_file_id'] = Variable<String>(driveFileId.value);
+    if (pageId.present) {
+      map['page_id'] = Variable<String>(pageId.value);
     }
-    if (localPath.present) {
-      map['local_path'] = Variable<String>(localPath.value);
+    if (blockId.present) {
+      map['block_id'] = Variable<String>(blockId.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
     }
     if (mimeType.present) {
       map['mime_type'] = Variable<String>(mimeType.value);
     }
-    if (checksumSha256.present) {
-      map['checksum_sha256'] = Variable<String>(checksumSha256.value);
+    if (size.present) {
+      map['size'] = Variable<int>(size.value);
     }
-    if (fileSize.present) {
-      map['file_size'] = Variable<int>(fileSize.value);
+    if (sha256.present) {
+      map['sha256'] = Variable<String>(sha256.value);
     }
-    if (width.present) {
-      map['width'] = Variable<int>(width.value);
-    }
-    if (height.present) {
-      map['height'] = Variable<int>(height.value);
-    }
-    if (duration.present) {
-      map['duration'] = Variable<int>(duration.value);
+    if (relativePath.present) {
+      map['relative_path'] = Variable<String>(relativePath.value);
     }
     if (thumbnailPath.present) {
       map['thumbnail_path'] = Variable<String>(thumbnailPath.value);
-    }
-    if (uploadStatus.present) {
-      map['upload_status'] = Variable<String>(uploadStatus.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (version.present) {
-      map['version'] = Variable<int>(version.value);
     }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
@@ -1786,19 +1698,16 @@ class AttachmentsCompanion extends UpdateCompanion<Attachment> {
   String toString() {
     return (StringBuffer('AttachmentsCompanion(')
           ..write('id: $id, ')
-          ..write('driveFileId: $driveFileId, ')
-          ..write('localPath: $localPath, ')
+          ..write('pageId: $pageId, ')
+          ..write('blockId: $blockId, ')
+          ..write('fileName: $fileName, ')
           ..write('mimeType: $mimeType, ')
-          ..write('checksumSha256: $checksumSha256, ')
-          ..write('fileSize: $fileSize, ')
-          ..write('width: $width, ')
-          ..write('height: $height, ')
-          ..write('duration: $duration, ')
+          ..write('size: $size, ')
+          ..write('sha256: $sha256, ')
+          ..write('relativePath: $relativePath, ')
           ..write('thumbnailPath: $thumbnailPath, ')
-          ..write('uploadStatus: $uploadStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('version: $version, ')
           ..write('deleted: $deleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1834,18 +1743,39 @@ class $RemindersTable extends Reminders
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES blocks (id) ON DELETE CASCADE'));
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
   static const VerificationMeta _reminderTimeMeta =
       const VerificationMeta('reminderTime');
   @override
   late final GeneratedColumn<DateTime> reminderTime = GeneratedColumn<DateTime>(
       'reminder_time', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _timezoneMeta =
+      const VerificationMeta('timezone');
+  @override
+  late final GeneratedColumn<String> timezone = GeneratedColumn<String>(
+      'timezone', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('UTC'));
   static const VerificationMeta _recurrenceRuleMeta =
       const VerificationMeta('recurrenceRule');
   @override
   late final GeneratedColumn<String> recurrenceRule = GeneratedColumn<String>(
       'recurrence_rule', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _snoozeUntilMeta =
+      const VerificationMeta('snoozeUntil');
+  @override
+  late final GeneratedColumn<DateTime> snoozeUntil = GeneratedColumn<DateTime>(
+      'snooze_until', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _completedMeta =
       const VerificationMeta('completed');
   @override
@@ -1864,9 +1794,48 @@ class $RemindersTable extends Reminders
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, pageId, blockId, reminderTime, recurrenceRule, completed, version];
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedMeta =
+      const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+      'deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        pageId,
+        blockId,
+        title,
+        reminderTime,
+        timezone,
+        recurrenceRule,
+        snoozeUntil,
+        completed,
+        version,
+        createdAt,
+        updatedAt,
+        deleted
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1892,6 +1861,10 @@ class $RemindersTable extends Reminders
       context.handle(_blockIdMeta,
           blockId.isAcceptableOrUnknown(data['block_id']!, _blockIdMeta));
     }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    }
     if (data.containsKey('reminder_time')) {
       context.handle(
           _reminderTimeMeta,
@@ -1900,11 +1873,21 @@ class $RemindersTable extends Reminders
     } else if (isInserting) {
       context.missing(_reminderTimeMeta);
     }
+    if (data.containsKey('timezone')) {
+      context.handle(_timezoneMeta,
+          timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta));
+    }
     if (data.containsKey('recurrence_rule')) {
       context.handle(
           _recurrenceRuleMeta,
           recurrenceRule.isAcceptableOrUnknown(
               data['recurrence_rule']!, _recurrenceRuleMeta));
+    }
+    if (data.containsKey('snooze_until')) {
+      context.handle(
+          _snoozeUntilMeta,
+          snoozeUntil.isAcceptableOrUnknown(
+              data['snooze_until']!, _snoozeUntilMeta));
     }
     if (data.containsKey('completed')) {
       context.handle(_completedMeta,
@@ -1913,6 +1896,18 @@ class $RemindersTable extends Reminders
     if (data.containsKey('version')) {
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta,
+          deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     return context;
   }
@@ -1929,14 +1924,26 @@ class $RemindersTable extends Reminders
           .read(DriftSqlType.string, data['${effectivePrefix}page_id'])!,
       blockId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}block_id']),
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
       reminderTime: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}reminder_time'])!,
+      timezone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}timezone'])!,
       recurrenceRule: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}recurrence_rule']),
+      snoozeUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}snooze_until']),
       completed: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
     );
   }
 
@@ -1950,18 +1957,30 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   final String id;
   final String pageId;
   final String? blockId;
+  final String title;
   final DateTime reminderTime;
+  final String timezone;
   final String? recurrenceRule;
+  final DateTime? snoozeUntil;
   final bool completed;
   final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool deleted;
   const Reminder(
       {required this.id,
       required this.pageId,
       this.blockId,
+      required this.title,
       required this.reminderTime,
+      required this.timezone,
       this.recurrenceRule,
+      this.snoozeUntil,
       required this.completed,
-      required this.version});
+      required this.version,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.deleted});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1970,12 +1989,20 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     if (!nullToAbsent || blockId != null) {
       map['block_id'] = Variable<String>(blockId);
     }
+    map['title'] = Variable<String>(title);
     map['reminder_time'] = Variable<DateTime>(reminderTime);
+    map['timezone'] = Variable<String>(timezone);
     if (!nullToAbsent || recurrenceRule != null) {
       map['recurrence_rule'] = Variable<String>(recurrenceRule);
     }
+    if (!nullToAbsent || snoozeUntil != null) {
+      map['snooze_until'] = Variable<DateTime>(snoozeUntil);
+    }
     map['completed'] = Variable<bool>(completed);
     map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['deleted'] = Variable<bool>(deleted);
     return map;
   }
 
@@ -1986,12 +2013,20 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       blockId: blockId == null && nullToAbsent
           ? const Value.absent()
           : Value(blockId),
+      title: Value(title),
       reminderTime: Value(reminderTime),
+      timezone: Value(timezone),
       recurrenceRule: recurrenceRule == null && nullToAbsent
           ? const Value.absent()
           : Value(recurrenceRule),
+      snoozeUntil: snoozeUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(snoozeUntil),
       completed: Value(completed),
       version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deleted: Value(deleted),
     );
   }
 
@@ -2002,10 +2037,16 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       id: serializer.fromJson<String>(json['id']),
       pageId: serializer.fromJson<String>(json['pageId']),
       blockId: serializer.fromJson<String?>(json['blockId']),
+      title: serializer.fromJson<String>(json['title']),
       reminderTime: serializer.fromJson<DateTime>(json['reminderTime']),
+      timezone: serializer.fromJson<String>(json['timezone']),
       recurrenceRule: serializer.fromJson<String?>(json['recurrenceRule']),
+      snoozeUntil: serializer.fromJson<DateTime?>(json['snoozeUntil']),
       completed: serializer.fromJson<bool>(json['completed']),
       version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
     );
   }
   @override
@@ -2015,10 +2056,16 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'id': serializer.toJson<String>(id),
       'pageId': serializer.toJson<String>(pageId),
       'blockId': serializer.toJson<String?>(blockId),
+      'title': serializer.toJson<String>(title),
       'reminderTime': serializer.toJson<DateTime>(reminderTime),
+      'timezone': serializer.toJson<String>(timezone),
       'recurrenceRule': serializer.toJson<String?>(recurrenceRule),
+      'snoozeUntil': serializer.toJson<DateTime?>(snoozeUntil),
       'completed': serializer.toJson<bool>(completed),
       'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
     };
   }
 
@@ -2026,33 +2073,52 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           {String? id,
           String? pageId,
           Value<String?> blockId = const Value.absent(),
+          String? title,
           DateTime? reminderTime,
+          String? timezone,
           Value<String?> recurrenceRule = const Value.absent(),
+          Value<DateTime?> snoozeUntil = const Value.absent(),
           bool? completed,
-          int? version}) =>
+          int? version,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? deleted}) =>
       Reminder(
         id: id ?? this.id,
         pageId: pageId ?? this.pageId,
         blockId: blockId.present ? blockId.value : this.blockId,
+        title: title ?? this.title,
         reminderTime: reminderTime ?? this.reminderTime,
+        timezone: timezone ?? this.timezone,
         recurrenceRule:
             recurrenceRule.present ? recurrenceRule.value : this.recurrenceRule,
+        snoozeUntil: snoozeUntil.present ? snoozeUntil.value : this.snoozeUntil,
         completed: completed ?? this.completed,
         version: version ?? this.version,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deleted: deleted ?? this.deleted,
       );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
       id: data.id.present ? data.id.value : this.id,
       pageId: data.pageId.present ? data.pageId.value : this.pageId,
       blockId: data.blockId.present ? data.blockId.value : this.blockId,
+      title: data.title.present ? data.title.value : this.title,
       reminderTime: data.reminderTime.present
           ? data.reminderTime.value
           : this.reminderTime,
+      timezone: data.timezone.present ? data.timezone.value : this.timezone,
       recurrenceRule: data.recurrenceRule.present
           ? data.recurrenceRule.value
           : this.recurrenceRule,
+      snoozeUntil:
+          data.snoozeUntil.present ? data.snoozeUntil.value : this.snoozeUntil,
       completed: data.completed.present ? data.completed.value : this.completed,
       version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
     );
   }
 
@@ -2062,17 +2128,35 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('id: $id, ')
           ..write('pageId: $pageId, ')
           ..write('blockId: $blockId, ')
+          ..write('title: $title, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('timezone: $timezone, ')
           ..write('recurrenceRule: $recurrenceRule, ')
+          ..write('snoozeUntil: $snoozeUntil, ')
           ..write('completed: $completed, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      id, pageId, blockId, reminderTime, recurrenceRule, completed, version);
+      id,
+      pageId,
+      blockId,
+      title,
+      reminderTime,
+      timezone,
+      recurrenceRule,
+      snoozeUntil,
+      completed,
+      version,
+      createdAt,
+      updatedAt,
+      deleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2080,39 +2164,63 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.id == this.id &&
           other.pageId == this.pageId &&
           other.blockId == this.blockId &&
+          other.title == this.title &&
           other.reminderTime == this.reminderTime &&
+          other.timezone == this.timezone &&
           other.recurrenceRule == this.recurrenceRule &&
+          other.snoozeUntil == this.snoozeUntil &&
           other.completed == this.completed &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deleted == this.deleted);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<String> id;
   final Value<String> pageId;
   final Value<String?> blockId;
+  final Value<String> title;
   final Value<DateTime> reminderTime;
+  final Value<String> timezone;
   final Value<String?> recurrenceRule;
+  final Value<DateTime?> snoozeUntil;
   final Value<bool> completed;
   final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> deleted;
   final Value<int> rowid;
   const RemindersCompanion({
     this.id = const Value.absent(),
     this.pageId = const Value.absent(),
     this.blockId = const Value.absent(),
+    this.title = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.timezone = const Value.absent(),
     this.recurrenceRule = const Value.absent(),
+    this.snoozeUntil = const Value.absent(),
     this.completed = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
     required String id,
     required String pageId,
     this.blockId = const Value.absent(),
+    this.title = const Value.absent(),
     required DateTime reminderTime,
+    this.timezone = const Value.absent(),
     this.recurrenceRule = const Value.absent(),
+    this.snoozeUntil = const Value.absent(),
     this.completed = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         pageId = Value(pageId),
@@ -2121,20 +2229,32 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<String>? id,
     Expression<String>? pageId,
     Expression<String>? blockId,
+    Expression<String>? title,
     Expression<DateTime>? reminderTime,
+    Expression<String>? timezone,
     Expression<String>? recurrenceRule,
+    Expression<DateTime>? snoozeUntil,
     Expression<bool>? completed,
     Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? deleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (pageId != null) 'page_id': pageId,
       if (blockId != null) 'block_id': blockId,
+      if (title != null) 'title': title,
       if (reminderTime != null) 'reminder_time': reminderTime,
+      if (timezone != null) 'timezone': timezone,
       if (recurrenceRule != null) 'recurrence_rule': recurrenceRule,
+      if (snoozeUntil != null) 'snooze_until': snoozeUntil,
       if (completed != null) 'completed': completed,
       if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deleted != null) 'deleted': deleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2143,19 +2263,31 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       {Value<String>? id,
       Value<String>? pageId,
       Value<String?>? blockId,
+      Value<String>? title,
       Value<DateTime>? reminderTime,
+      Value<String>? timezone,
       Value<String?>? recurrenceRule,
+      Value<DateTime?>? snoozeUntil,
       Value<bool>? completed,
       Value<int>? version,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? deleted,
       Value<int>? rowid}) {
     return RemindersCompanion(
       id: id ?? this.id,
       pageId: pageId ?? this.pageId,
       blockId: blockId ?? this.blockId,
+      title: title ?? this.title,
       reminderTime: reminderTime ?? this.reminderTime,
+      timezone: timezone ?? this.timezone,
       recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      snoozeUntil: snoozeUntil ?? this.snoozeUntil,
       completed: completed ?? this.completed,
       version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deleted: deleted ?? this.deleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2172,17 +2304,35 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (blockId.present) {
       map['block_id'] = Variable<String>(blockId.value);
     }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
     if (reminderTime.present) {
       map['reminder_time'] = Variable<DateTime>(reminderTime.value);
     }
+    if (timezone.present) {
+      map['timezone'] = Variable<String>(timezone.value);
+    }
     if (recurrenceRule.present) {
       map['recurrence_rule'] = Variable<String>(recurrenceRule.value);
+    }
+    if (snoozeUntil.present) {
+      map['snooze_until'] = Variable<DateTime>(snoozeUntil.value);
     }
     if (completed.present) {
       map['completed'] = Variable<bool>(completed.value);
     }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2196,10 +2346,16 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('id: $id, ')
           ..write('pageId: $pageId, ')
           ..write('blockId: $blockId, ')
+          ..write('title: $title, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('timezone: $timezone, ')
           ..write('recurrenceRule: $recurrenceRule, ')
+          ..write('snoozeUntil: $snoozeUntil, ')
           ..write('completed: $completed, ')
           ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2240,8 +2396,35 @@ class $CollectionsTable extends Collections
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
-  List<GeneratedColumn> get $columns => [id, name, icon, color, version];
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedMeta =
+      const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+      'deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, icon, color, version, createdAt, updatedAt, deleted];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2275,6 +2458,18 @@ class $CollectionsTable extends Collections
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
     }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta,
+          deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
     return context;
   }
 
@@ -2294,6 +2489,12 @@ class $CollectionsTable extends Collections
           .read(DriftSqlType.string, data['${effectivePrefix}color']),
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
     );
   }
 
@@ -2309,12 +2510,18 @@ class Collection extends DataClass implements Insertable<Collection> {
   final String? icon;
   final String? color;
   final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool deleted;
   const Collection(
       {required this.id,
       required this.name,
       this.icon,
       this.color,
-      required this.version});
+      required this.version,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.deleted});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2327,6 +2534,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       map['color'] = Variable<String>(color);
     }
     map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['deleted'] = Variable<bool>(deleted);
     return map;
   }
 
@@ -2338,6 +2548,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       color:
           color == null && nullToAbsent ? const Value.absent() : Value(color),
       version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deleted: Value(deleted),
     );
   }
 
@@ -2350,6 +2563,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       icon: serializer.fromJson<String?>(json['icon']),
       color: serializer.fromJson<String?>(json['color']),
       version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
     );
   }
   @override
@@ -2361,6 +2577,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       'icon': serializer.toJson<String?>(icon),
       'color': serializer.toJson<String?>(color),
       'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
     };
   }
 
@@ -2369,13 +2588,19 @@ class Collection extends DataClass implements Insertable<Collection> {
           String? name,
           Value<String?> icon = const Value.absent(),
           Value<String?> color = const Value.absent(),
-          int? version}) =>
+          int? version,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? deleted}) =>
       Collection(
         id: id ?? this.id,
         name: name ?? this.name,
         icon: icon.present ? icon.value : this.icon,
         color: color.present ? color.value : this.color,
         version: version ?? this.version,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deleted: deleted ?? this.deleted,
       );
   Collection copyWithCompanion(CollectionsCompanion data) {
     return Collection(
@@ -2384,6 +2609,9 @@ class Collection extends DataClass implements Insertable<Collection> {
       icon: data.icon.present ? data.icon.value : this.icon,
       color: data.color.present ? data.color.value : this.color,
       version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
     );
   }
 
@@ -2394,13 +2622,17 @@ class Collection extends DataClass implements Insertable<Collection> {
           ..write('name: $name, ')
           ..write('icon: $icon, ')
           ..write('color: $color, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, icon, color, version);
+  int get hashCode => Object.hash(
+      id, name, icon, color, version, createdAt, updatedAt, deleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2409,7 +2641,10 @@ class Collection extends DataClass implements Insertable<Collection> {
           other.name == this.name &&
           other.icon == this.icon &&
           other.color == this.color &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deleted == this.deleted);
 }
 
 class CollectionsCompanion extends UpdateCompanion<Collection> {
@@ -2418,6 +2653,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
   final Value<String?> icon;
   final Value<String?> color;
   final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> deleted;
   final Value<int> rowid;
   const CollectionsCompanion({
     this.id = const Value.absent(),
@@ -2425,6 +2663,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CollectionsCompanion.insert({
@@ -2433,6 +2674,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name);
@@ -2442,6 +2686,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     Expression<String>? icon,
     Expression<String>? color,
     Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? deleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2450,6 +2697,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       if (icon != null) 'icon': icon,
       if (color != null) 'color': color,
       if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deleted != null) 'deleted': deleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2460,6 +2710,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       Value<String?>? icon,
       Value<String?>? color,
       Value<int>? version,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? deleted,
       Value<int>? rowid}) {
     return CollectionsCompanion(
       id: id ?? this.id,
@@ -2467,6 +2720,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
       icon: icon ?? this.icon,
       color: color ?? this.color,
       version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deleted: deleted ?? this.deleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2489,6 +2745,15 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2503,6 +2768,9 @@ class CollectionsCompanion extends UpdateCompanion<Collection> {
           ..write('icon: $icon, ')
           ..write('color: $color, ')
           ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2537,8 +2805,35 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(1));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
-  List<GeneratedColumn> get $columns => [id, name, color, version];
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _deletedMeta =
+      const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+      'deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, color, version, createdAt, updatedAt, deleted];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2568,6 +2863,18 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
     }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta,
+          deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
     return context;
   }
 
@@ -2585,6 +2892,12 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
           .read(DriftSqlType.string, data['${effectivePrefix}color']),
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
     );
   }
 
@@ -2599,11 +2912,17 @@ class Tag extends DataClass implements Insertable<Tag> {
   final String name;
   final String? color;
   final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool deleted;
   const Tag(
       {required this.id,
       required this.name,
       this.color,
-      required this.version});
+      required this.version,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.deleted});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2613,6 +2932,9 @@ class Tag extends DataClass implements Insertable<Tag> {
       map['color'] = Variable<String>(color);
     }
     map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['deleted'] = Variable<bool>(deleted);
     return map;
   }
 
@@ -2623,6 +2945,9 @@ class Tag extends DataClass implements Insertable<Tag> {
       color:
           color == null && nullToAbsent ? const Value.absent() : Value(color),
       version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deleted: Value(deleted),
     );
   }
 
@@ -2634,6 +2959,9 @@ class Tag extends DataClass implements Insertable<Tag> {
       name: serializer.fromJson<String>(json['name']),
       color: serializer.fromJson<String?>(json['color']),
       version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
     );
   }
   @override
@@ -2644,6 +2972,9 @@ class Tag extends DataClass implements Insertable<Tag> {
       'name': serializer.toJson<String>(name),
       'color': serializer.toJson<String?>(color),
       'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deleted': serializer.toJson<bool>(deleted),
     };
   }
 
@@ -2651,12 +2982,18 @@ class Tag extends DataClass implements Insertable<Tag> {
           {String? id,
           String? name,
           Value<String?> color = const Value.absent(),
-          int? version}) =>
+          int? version,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? deleted}) =>
       Tag(
         id: id ?? this.id,
         name: name ?? this.name,
         color: color.present ? color.value : this.color,
         version: version ?? this.version,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deleted: deleted ?? this.deleted,
       );
   Tag copyWithCompanion(TagsCompanion data) {
     return Tag(
@@ -2664,6 +3001,9 @@ class Tag extends DataClass implements Insertable<Tag> {
       name: data.name.present ? data.name.value : this.name,
       color: data.color.present ? data.color.value : this.color,
       version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
     );
   }
 
@@ -2673,13 +3013,17 @@ class Tag extends DataClass implements Insertable<Tag> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('color: $color, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, color, version);
+  int get hashCode =>
+      Object.hash(id, name, color, version, createdAt, updatedAt, deleted);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2687,7 +3031,10 @@ class Tag extends DataClass implements Insertable<Tag> {
           other.id == this.id &&
           other.name == this.name &&
           other.color == this.color &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deleted == this.deleted);
 }
 
 class TagsCompanion extends UpdateCompanion<Tag> {
@@ -2695,12 +3042,18 @@ class TagsCompanion extends UpdateCompanion<Tag> {
   final Value<String> name;
   final Value<String?> color;
   final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> deleted;
   final Value<int> rowid;
   const TagsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.color = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TagsCompanion.insert({
@@ -2708,6 +3061,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     required String name,
     this.color = const Value.absent(),
     this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name);
@@ -2716,6 +3072,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     Expression<String>? name,
     Expression<String>? color,
     Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? deleted,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2723,6 +3082,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
       if (name != null) 'name': name,
       if (color != null) 'color': color,
       if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deleted != null) 'deleted': deleted,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2732,12 +3094,18 @@ class TagsCompanion extends UpdateCompanion<Tag> {
       Value<String>? name,
       Value<String?>? color,
       Value<int>? version,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? deleted,
       Value<int>? rowid}) {
     return TagsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       color: color ?? this.color,
       version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deleted: deleted ?? this.deleted,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2757,6 +3125,15 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2770,6 +3147,9 @@ class TagsCompanion extends UpdateCompanion<Tag> {
           ..write('name: $name, ')
           ..write('color: $color, ')
           ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deleted: $deleted, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4300,6 +4680,446 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   }
 }
 
+class $AppSettingsTableTable extends AppSettingsTable
+    with TableInfo<$AppSettingsTableTable, AppSettingEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppSettingsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _themeModeMeta =
+      const VerificationMeta('themeMode');
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+      'theme_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('System'));
+  static const VerificationMeta _syncFrequencyMeta =
+      const VerificationMeta('syncFrequency');
+  @override
+  late final GeneratedColumn<String> syncFrequency = GeneratedColumn<String>(
+      'sync_frequency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('15 minutes'));
+  static const VerificationMeta _autoSyncMeta =
+      const VerificationMeta('autoSync');
+  @override
+  late final GeneratedColumn<bool> autoSync = GeneratedColumn<bool>(
+      'auto_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("auto_sync" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _cacheLimitMBMeta =
+      const VerificationMeta('cacheLimitMB');
+  @override
+  late final GeneratedColumn<int> cacheLimitMB = GeneratedColumn<int>(
+      'cache_limit_m_b', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(100));
+  static const VerificationMeta _lastCleanupMeta =
+      const VerificationMeta('lastCleanup');
+  @override
+  late final GeneratedColumn<DateTime> lastCleanup = GeneratedColumn<DateTime>(
+      'last_cleanup', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        themeMode,
+        syncFrequency,
+        autoSync,
+        cacheLimitMB,
+        lastCleanup,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_settings_table';
+  @override
+  VerificationContext validateIntegrity(Insertable<AppSettingEntity> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('theme_mode')) {
+      context.handle(_themeModeMeta,
+          themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta));
+    }
+    if (data.containsKey('sync_frequency')) {
+      context.handle(
+          _syncFrequencyMeta,
+          syncFrequency.isAcceptableOrUnknown(
+              data['sync_frequency']!, _syncFrequencyMeta));
+    }
+    if (data.containsKey('auto_sync')) {
+      context.handle(_autoSyncMeta,
+          autoSync.isAcceptableOrUnknown(data['auto_sync']!, _autoSyncMeta));
+    }
+    if (data.containsKey('cache_limit_m_b')) {
+      context.handle(
+          _cacheLimitMBMeta,
+          cacheLimitMB.isAcceptableOrUnknown(
+              data['cache_limit_m_b']!, _cacheLimitMBMeta));
+    }
+    if (data.containsKey('last_cleanup')) {
+      context.handle(
+          _lastCleanupMeta,
+          lastCleanup.isAcceptableOrUnknown(
+              data['last_cleanup']!, _lastCleanupMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppSettingEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppSettingEntity(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      themeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}theme_mode'])!,
+      syncFrequency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_frequency'])!,
+      autoSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}auto_sync'])!,
+      cacheLimitMB: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cache_limit_m_b'])!,
+      lastCleanup: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_cleanup']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $AppSettingsTableTable createAlias(String alias) {
+    return $AppSettingsTableTable(attachedDatabase, alias);
+  }
+}
+
+class AppSettingEntity extends DataClass
+    implements Insertable<AppSettingEntity> {
+  final String id;
+  final String themeMode;
+  final String syncFrequency;
+  final bool autoSync;
+  final int cacheLimitMB;
+  final DateTime? lastCleanup;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const AppSettingEntity(
+      {required this.id,
+      required this.themeMode,
+      required this.syncFrequency,
+      required this.autoSync,
+      required this.cacheLimitMB,
+      this.lastCleanup,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['theme_mode'] = Variable<String>(themeMode);
+    map['sync_frequency'] = Variable<String>(syncFrequency);
+    map['auto_sync'] = Variable<bool>(autoSync);
+    map['cache_limit_m_b'] = Variable<int>(cacheLimitMB);
+    if (!nullToAbsent || lastCleanup != null) {
+      map['last_cleanup'] = Variable<DateTime>(lastCleanup);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AppSettingsTableCompanion toCompanion(bool nullToAbsent) {
+    return AppSettingsTableCompanion(
+      id: Value(id),
+      themeMode: Value(themeMode),
+      syncFrequency: Value(syncFrequency),
+      autoSync: Value(autoSync),
+      cacheLimitMB: Value(cacheLimitMB),
+      lastCleanup: lastCleanup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCleanup),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AppSettingEntity.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppSettingEntity(
+      id: serializer.fromJson<String>(json['id']),
+      themeMode: serializer.fromJson<String>(json['themeMode']),
+      syncFrequency: serializer.fromJson<String>(json['syncFrequency']),
+      autoSync: serializer.fromJson<bool>(json['autoSync']),
+      cacheLimitMB: serializer.fromJson<int>(json['cacheLimitMB']),
+      lastCleanup: serializer.fromJson<DateTime?>(json['lastCleanup']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'themeMode': serializer.toJson<String>(themeMode),
+      'syncFrequency': serializer.toJson<String>(syncFrequency),
+      'autoSync': serializer.toJson<bool>(autoSync),
+      'cacheLimitMB': serializer.toJson<int>(cacheLimitMB),
+      'lastCleanup': serializer.toJson<DateTime?>(lastCleanup),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AppSettingEntity copyWith(
+          {String? id,
+          String? themeMode,
+          String? syncFrequency,
+          bool? autoSync,
+          int? cacheLimitMB,
+          Value<DateTime?> lastCleanup = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      AppSettingEntity(
+        id: id ?? this.id,
+        themeMode: themeMode ?? this.themeMode,
+        syncFrequency: syncFrequency ?? this.syncFrequency,
+        autoSync: autoSync ?? this.autoSync,
+        cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
+        lastCleanup: lastCleanup.present ? lastCleanup.value : this.lastCleanup,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  AppSettingEntity copyWithCompanion(AppSettingsTableCompanion data) {
+    return AppSettingEntity(
+      id: data.id.present ? data.id.value : this.id,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
+      syncFrequency: data.syncFrequency.present
+          ? data.syncFrequency.value
+          : this.syncFrequency,
+      autoSync: data.autoSync.present ? data.autoSync.value : this.autoSync,
+      cacheLimitMB: data.cacheLimitMB.present
+          ? data.cacheLimitMB.value
+          : this.cacheLimitMB,
+      lastCleanup:
+          data.lastCleanup.present ? data.lastCleanup.value : this.lastCleanup,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppSettingEntity(')
+          ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('syncFrequency: $syncFrequency, ')
+          ..write('autoSync: $autoSync, ')
+          ..write('cacheLimitMB: $cacheLimitMB, ')
+          ..write('lastCleanup: $lastCleanup, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, themeMode, syncFrequency, autoSync,
+      cacheLimitMB, lastCleanup, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppSettingEntity &&
+          other.id == this.id &&
+          other.themeMode == this.themeMode &&
+          other.syncFrequency == this.syncFrequency &&
+          other.autoSync == this.autoSync &&
+          other.cacheLimitMB == this.cacheLimitMB &&
+          other.lastCleanup == this.lastCleanup &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
+  final Value<String> id;
+  final Value<String> themeMode;
+  final Value<String> syncFrequency;
+  final Value<bool> autoSync;
+  final Value<int> cacheLimitMB;
+  final Value<DateTime?> lastCleanup;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AppSettingsTableCompanion({
+    this.id = const Value.absent(),
+    this.themeMode = const Value.absent(),
+    this.syncFrequency = const Value.absent(),
+    this.autoSync = const Value.absent(),
+    this.cacheLimitMB = const Value.absent(),
+    this.lastCleanup = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AppSettingsTableCompanion.insert({
+    required String id,
+    this.themeMode = const Value.absent(),
+    this.syncFrequency = const Value.absent(),
+    this.autoSync = const Value.absent(),
+    this.cacheLimitMB = const Value.absent(),
+    this.lastCleanup = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<AppSettingEntity> custom({
+    Expression<String>? id,
+    Expression<String>? themeMode,
+    Expression<String>? syncFrequency,
+    Expression<bool>? autoSync,
+    Expression<int>? cacheLimitMB,
+    Expression<DateTime>? lastCleanup,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (themeMode != null) 'theme_mode': themeMode,
+      if (syncFrequency != null) 'sync_frequency': syncFrequency,
+      if (autoSync != null) 'auto_sync': autoSync,
+      if (cacheLimitMB != null) 'cache_limit_m_b': cacheLimitMB,
+      if (lastCleanup != null) 'last_cleanup': lastCleanup,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AppSettingsTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? themeMode,
+      Value<String>? syncFrequency,
+      Value<bool>? autoSync,
+      Value<int>? cacheLimitMB,
+      Value<DateTime?>? lastCleanup,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return AppSettingsTableCompanion(
+      id: id ?? this.id,
+      themeMode: themeMode ?? this.themeMode,
+      syncFrequency: syncFrequency ?? this.syncFrequency,
+      autoSync: autoSync ?? this.autoSync,
+      cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
+      lastCleanup: lastCleanup ?? this.lastCleanup,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
+    }
+    if (syncFrequency.present) {
+      map['sync_frequency'] = Variable<String>(syncFrequency.value);
+    }
+    if (autoSync.present) {
+      map['auto_sync'] = Variable<bool>(autoSync.value);
+    }
+    if (cacheLimitMB.present) {
+      map['cache_limit_m_b'] = Variable<int>(cacheLimitMB.value);
+    }
+    if (lastCleanup.present) {
+      map['last_cleanup'] = Variable<DateTime>(lastCleanup.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppSettingsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('themeMode: $themeMode, ')
+          ..write('syncFrequency: $syncFrequency, ')
+          ..write('autoSync: $autoSync, ')
+          ..write('cacheLimitMB: $cacheLimitMB, ')
+          ..write('lastCleanup: $lastCleanup, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4315,6 +5135,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PageTagsTable pageTags = $PageTagsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final $SyncStatesTable syncStates = $SyncStatesTable(this);
+  late final $AppSettingsTableTable appSettingsTable =
+      $AppSettingsTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4330,7 +5152,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         pageCollections,
         pageTags,
         syncQueue,
-        syncStates
+        syncStates,
+        appSettingsTable
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -4418,6 +5241,7 @@ typedef $$PagesTableCreateCompanionBuilder = PagesCompanion Function({
   Value<bool> isFavorite,
   Value<bool> isArchived,
   Value<bool> deleted,
+  Value<bool> isTemplate,
   Value<int> version,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -4432,6 +5256,7 @@ typedef $$PagesTableUpdateCompanionBuilder = PagesCompanion Function({
   Value<bool> isFavorite,
   Value<bool> isArchived,
   Value<bool> deleted,
+  Value<bool> isTemplate,
   Value<int> version,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -4557,6 +5382,9 @@ class $$PagesTableFilterComposer extends Composer<_$AppDatabase, $PagesTable> {
 
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isTemplate => $composableBuilder(
+      column: $table.isTemplate, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
@@ -4723,6 +5551,9 @@ class $$PagesTableOrderingComposer
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isTemplate => $composableBuilder(
+      column: $table.isTemplate, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
 
@@ -4782,6 +5613,9 @@ class $$PagesTableAnnotationComposer
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTemplate => $composableBuilder(
+      column: $table.isTemplate, builder: (column) => column);
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
@@ -4955,6 +5789,7 @@ class $$PagesTableTableManager extends RootTableManager<
             Value<bool> isFavorite = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<bool> isTemplate = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -4969,6 +5804,7 @@ class $$PagesTableTableManager extends RootTableManager<
             isFavorite: isFavorite,
             isArchived: isArchived,
             deleted: deleted,
+            isTemplate: isTemplate,
             version: version,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -4983,6 +5819,7 @@ class $$PagesTableTableManager extends RootTableManager<
             Value<bool> isFavorite = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<bool> isTemplate = const Value.absent(),
             Value<int> version = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -4997,6 +5834,7 @@ class $$PagesTableTableManager extends RootTableManager<
             isFavorite: isFavorite,
             isArchived: isArchived,
             deleted: deleted,
+            isTemplate: isTemplate,
             version: version,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -5624,38 +6462,32 @@ typedef $$BlocksTableProcessedTableManager = ProcessedTableManager<
 typedef $$AttachmentsTableCreateCompanionBuilder = AttachmentsCompanion
     Function({
   required String id,
-  Value<String?> driveFileId,
-  Value<String?> localPath,
-  Value<String?> mimeType,
-  Value<String?> checksumSha256,
-  Value<int?> fileSize,
-  Value<int?> width,
-  Value<int?> height,
-  Value<int?> duration,
+  required String pageId,
+  required String blockId,
+  required String fileName,
+  required String mimeType,
+  required int size,
+  required String sha256,
+  required String relativePath,
   Value<String?> thumbnailPath,
-  Value<String?> uploadStatus,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
-  Value<int> version,
   Value<bool> deleted,
   Value<int> rowid,
 });
 typedef $$AttachmentsTableUpdateCompanionBuilder = AttachmentsCompanion
     Function({
   Value<String> id,
-  Value<String?> driveFileId,
-  Value<String?> localPath,
-  Value<String?> mimeType,
-  Value<String?> checksumSha256,
-  Value<int?> fileSize,
-  Value<int?> width,
-  Value<int?> height,
-  Value<int?> duration,
+  Value<String> pageId,
+  Value<String> blockId,
+  Value<String> fileName,
+  Value<String> mimeType,
+  Value<int> size,
+  Value<String> sha256,
+  Value<String> relativePath,
   Value<String?> thumbnailPath,
-  Value<String?> uploadStatus,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
-  Value<int> version,
   Value<bool> deleted,
   Value<int> rowid,
 });
@@ -5672,45 +6504,35 @@ class $$AttachmentsTableFilterComposer
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get driveFileId => $composableBuilder(
-      column: $table.driveFileId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get pageId => $composableBuilder(
+      column: $table.pageId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get localPath => $composableBuilder(
-      column: $table.localPath, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get blockId => $composableBuilder(
+      column: $table.blockId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+      column: $table.fileName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get mimeType => $composableBuilder(
       column: $table.mimeType, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get checksumSha256 => $composableBuilder(
-      column: $table.checksumSha256,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get size => $composableBuilder(
+      column: $table.size, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get fileSize => $composableBuilder(
-      column: $table.fileSize, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sha256 => $composableBuilder(
+      column: $table.sha256, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get width => $composableBuilder(
-      column: $table.width, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get height => $composableBuilder(
-      column: $table.height, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get duration => $composableBuilder(
-      column: $table.duration, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get relativePath => $composableBuilder(
+      column: $table.relativePath, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get uploadStatus => $composableBuilder(
-      column: $table.uploadStatus, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
@@ -5728,37 +6550,30 @@ class $$AttachmentsTableOrderingComposer
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get driveFileId => $composableBuilder(
-      column: $table.driveFileId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get pageId => $composableBuilder(
+      column: $table.pageId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get localPath => $composableBuilder(
-      column: $table.localPath, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get blockId => $composableBuilder(
+      column: $table.blockId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+      column: $table.fileName, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get mimeType => $composableBuilder(
       column: $table.mimeType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get checksumSha256 => $composableBuilder(
-      column: $table.checksumSha256,
+  ColumnOrderings<int> get size => $composableBuilder(
+      column: $table.size, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sha256 => $composableBuilder(
+      column: $table.sha256, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get relativePath => $composableBuilder(
+      column: $table.relativePath,
       builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get fileSize => $composableBuilder(
-      column: $table.fileSize, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get width => $composableBuilder(
-      column: $table.width, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get height => $composableBuilder(
-      column: $table.height, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get duration => $composableBuilder(
-      column: $table.duration, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get uploadStatus => $composableBuilder(
-      column: $table.uploadStatus,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
@@ -5766,9 +6581,6 @@ class $$AttachmentsTableOrderingComposer
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
@@ -5786,44 +6598,35 @@ class $$AttachmentsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get driveFileId => $composableBuilder(
-      column: $table.driveFileId, builder: (column) => column);
+  GeneratedColumn<String> get pageId =>
+      $composableBuilder(column: $table.pageId, builder: (column) => column);
 
-  GeneratedColumn<String> get localPath =>
-      $composableBuilder(column: $table.localPath, builder: (column) => column);
+  GeneratedColumn<String> get blockId =>
+      $composableBuilder(column: $table.blockId, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
 
   GeneratedColumn<String> get mimeType =>
       $composableBuilder(column: $table.mimeType, builder: (column) => column);
 
-  GeneratedColumn<String> get checksumSha256 => $composableBuilder(
-      column: $table.checksumSha256, builder: (column) => column);
+  GeneratedColumn<int> get size =>
+      $composableBuilder(column: $table.size, builder: (column) => column);
 
-  GeneratedColumn<int> get fileSize =>
-      $composableBuilder(column: $table.fileSize, builder: (column) => column);
+  GeneratedColumn<String> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => column);
 
-  GeneratedColumn<int> get width =>
-      $composableBuilder(column: $table.width, builder: (column) => column);
-
-  GeneratedColumn<int> get height =>
-      $composableBuilder(column: $table.height, builder: (column) => column);
-
-  GeneratedColumn<int> get duration =>
-      $composableBuilder(column: $table.duration, builder: (column) => column);
+  GeneratedColumn<String> get relativePath => $composableBuilder(
+      column: $table.relativePath, builder: (column) => column);
 
   GeneratedColumn<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath, builder: (column) => column);
-
-  GeneratedColumn<String> get uploadStatus => $composableBuilder(
-      column: $table.uploadStatus, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<int> get version =>
-      $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -5832,14 +6635,17 @@ class $$AttachmentsTableAnnotationComposer
 class $$AttachmentsTableTableManager extends RootTableManager<
     _$AppDatabase,
     $AttachmentsTable,
-    Attachment,
+    AttachmentData,
     $$AttachmentsTableFilterComposer,
     $$AttachmentsTableOrderingComposer,
     $$AttachmentsTableAnnotationComposer,
     $$AttachmentsTableCreateCompanionBuilder,
     $$AttachmentsTableUpdateCompanionBuilder,
-    (Attachment, BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment>),
-    Attachment,
+    (
+      AttachmentData,
+      BaseReferences<_$AppDatabase, $AttachmentsTable, AttachmentData>
+    ),
+    AttachmentData,
     PrefetchHooks Function()> {
   $$AttachmentsTableTableManager(_$AppDatabase db, $AttachmentsTable table)
       : super(TableManagerState(
@@ -5853,73 +6659,61 @@ class $$AttachmentsTableTableManager extends RootTableManager<
               $$AttachmentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
-            Value<String?> driveFileId = const Value.absent(),
-            Value<String?> localPath = const Value.absent(),
-            Value<String?> mimeType = const Value.absent(),
-            Value<String?> checksumSha256 = const Value.absent(),
-            Value<int?> fileSize = const Value.absent(),
-            Value<int?> width = const Value.absent(),
-            Value<int?> height = const Value.absent(),
-            Value<int?> duration = const Value.absent(),
+            Value<String> pageId = const Value.absent(),
+            Value<String> blockId = const Value.absent(),
+            Value<String> fileName = const Value.absent(),
+            Value<String> mimeType = const Value.absent(),
+            Value<int> size = const Value.absent(),
+            Value<String> sha256 = const Value.absent(),
+            Value<String> relativePath = const Value.absent(),
             Value<String?> thumbnailPath = const Value.absent(),
-            Value<String?> uploadStatus = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
-            Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AttachmentsCompanion(
             id: id,
-            driveFileId: driveFileId,
-            localPath: localPath,
+            pageId: pageId,
+            blockId: blockId,
+            fileName: fileName,
             mimeType: mimeType,
-            checksumSha256: checksumSha256,
-            fileSize: fileSize,
-            width: width,
-            height: height,
-            duration: duration,
+            size: size,
+            sha256: sha256,
+            relativePath: relativePath,
             thumbnailPath: thumbnailPath,
-            uploadStatus: uploadStatus,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            version: version,
             deleted: deleted,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
-            Value<String?> driveFileId = const Value.absent(),
-            Value<String?> localPath = const Value.absent(),
-            Value<String?> mimeType = const Value.absent(),
-            Value<String?> checksumSha256 = const Value.absent(),
-            Value<int?> fileSize = const Value.absent(),
-            Value<int?> width = const Value.absent(),
-            Value<int?> height = const Value.absent(),
-            Value<int?> duration = const Value.absent(),
+            required String pageId,
+            required String blockId,
+            required String fileName,
+            required String mimeType,
+            required int size,
+            required String sha256,
+            required String relativePath,
             Value<String?> thumbnailPath = const Value.absent(),
-            Value<String?> uploadStatus = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
-            Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AttachmentsCompanion.insert(
             id: id,
-            driveFileId: driveFileId,
-            localPath: localPath,
+            pageId: pageId,
+            blockId: blockId,
+            fileName: fileName,
             mimeType: mimeType,
-            checksumSha256: checksumSha256,
-            fileSize: fileSize,
-            width: width,
-            height: height,
-            duration: duration,
+            size: size,
+            sha256: sha256,
+            relativePath: relativePath,
             thumbnailPath: thumbnailPath,
-            uploadStatus: uploadStatus,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            version: version,
             deleted: deleted,
             rowid: rowid,
           ),
@@ -5933,33 +6727,48 @@ class $$AttachmentsTableTableManager extends RootTableManager<
 typedef $$AttachmentsTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $AttachmentsTable,
-    Attachment,
+    AttachmentData,
     $$AttachmentsTableFilterComposer,
     $$AttachmentsTableOrderingComposer,
     $$AttachmentsTableAnnotationComposer,
     $$AttachmentsTableCreateCompanionBuilder,
     $$AttachmentsTableUpdateCompanionBuilder,
-    (Attachment, BaseReferences<_$AppDatabase, $AttachmentsTable, Attachment>),
-    Attachment,
+    (
+      AttachmentData,
+      BaseReferences<_$AppDatabase, $AttachmentsTable, AttachmentData>
+    ),
+    AttachmentData,
     PrefetchHooks Function()>;
 typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   required String id,
   required String pageId,
   Value<String?> blockId,
+  Value<String> title,
   required DateTime reminderTime,
+  Value<String> timezone,
   Value<String?> recurrenceRule,
+  Value<DateTime?> snoozeUntil,
   Value<bool> completed,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
   Value<String> id,
   Value<String> pageId,
   Value<String?> blockId,
+  Value<String> title,
   Value<DateTime> reminderTime,
+  Value<String> timezone,
   Value<String?> recurrenceRule,
+  Value<DateTime?> snoozeUntil,
   Value<bool> completed,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 
@@ -6006,18 +6815,36 @@ class $$RemindersTableFilterComposer
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get reminderTime => $composableBuilder(
       column: $table.reminderTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get timezone => $composableBuilder(
+      column: $table.timezone, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get snoozeUntil => $composableBuilder(
+      column: $table.snoozeUntil, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get completed => $composableBuilder(
       column: $table.completed, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnFilters(column));
 
   $$PagesTableFilterComposer get pageId {
     final $$PagesTableFilterComposer composer = $composerBuilder(
@@ -6072,19 +6899,37 @@ class $$RemindersTableOrderingComposer
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get reminderTime => $composableBuilder(
       column: $table.reminderTime,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get timezone => $composableBuilder(
+      column: $table.timezone, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get snoozeUntil => $composableBuilder(
+      column: $table.snoozeUntil, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get completed => $composableBuilder(
       column: $table.completed, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
   $$PagesTableOrderingComposer get pageId {
     final $$PagesTableOrderingComposer composer = $composerBuilder(
@@ -6139,17 +6984,35 @@ class $$RemindersTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
   GeneratedColumn<DateTime> get reminderTime => $composableBuilder(
       column: $table.reminderTime, builder: (column) => column);
 
+  GeneratedColumn<String> get timezone =>
+      $composableBuilder(column: $table.timezone, builder: (column) => column);
+
   GeneratedColumn<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get snoozeUntil => $composableBuilder(
+      column: $table.snoozeUntil, builder: (column) => column);
 
   GeneratedColumn<bool> get completed =>
       $composableBuilder(column: $table.completed, builder: (column) => column);
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
 
   $$PagesTableAnnotationComposer get pageId {
     final $$PagesTableAnnotationComposer composer = $composerBuilder(
@@ -6218,40 +7081,64 @@ class $$RemindersTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> pageId = const Value.absent(),
             Value<String?> blockId = const Value.absent(),
+            Value<String> title = const Value.absent(),
             Value<DateTime> reminderTime = const Value.absent(),
+            Value<String> timezone = const Value.absent(),
             Value<String?> recurrenceRule = const Value.absent(),
+            Value<DateTime?> snoozeUntil = const Value.absent(),
             Value<bool> completed = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RemindersCompanion(
             id: id,
             pageId: pageId,
             blockId: blockId,
+            title: title,
             reminderTime: reminderTime,
+            timezone: timezone,
             recurrenceRule: recurrenceRule,
+            snoozeUntil: snoozeUntil,
             completed: completed,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
             required String pageId,
             Value<String?> blockId = const Value.absent(),
+            Value<String> title = const Value.absent(),
             required DateTime reminderTime,
+            Value<String> timezone = const Value.absent(),
             Value<String?> recurrenceRule = const Value.absent(),
+            Value<DateTime?> snoozeUntil = const Value.absent(),
             Value<bool> completed = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RemindersCompanion.insert(
             id: id,
             pageId: pageId,
             blockId: blockId,
+            title: title,
             reminderTime: reminderTime,
+            timezone: timezone,
             recurrenceRule: recurrenceRule,
+            snoozeUntil: snoozeUntil,
             completed: completed,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -6327,6 +7214,9 @@ typedef $$CollectionsTableCreateCompanionBuilder = CollectionsCompanion
   Value<String?> icon,
   Value<String?> color,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 typedef $$CollectionsTableUpdateCompanionBuilder = CollectionsCompanion
@@ -6336,6 +7226,9 @@ typedef $$CollectionsTableUpdateCompanionBuilder = CollectionsCompanion
   Value<String?> icon,
   Value<String?> color,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 
@@ -6385,6 +7278,15 @@ class $$CollectionsTableFilterComposer
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnFilters(column));
+
   Expression<bool> pageCollectionsRefs(
       Expression<bool> Function($$PageCollectionsTableFilterComposer f) f) {
     final $$PageCollectionsTableFilterComposer composer = $composerBuilder(
@@ -6430,6 +7332,15 @@ class $$CollectionsTableOrderingComposer
 
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CollectionsTableAnnotationComposer
@@ -6455,6 +7366,15 @@ class $$CollectionsTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
 
   Expression<T> pageCollectionsRefs<T extends Object>(
       Expression<T> Function($$PageCollectionsTableAnnotationComposer a) f) {
@@ -6506,6 +7426,9 @@ class $$CollectionsTableTableManager extends RootTableManager<
             Value<String?> icon = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CollectionsCompanion(
@@ -6514,6 +7437,9 @@ class $$CollectionsTableTableManager extends RootTableManager<
             icon: icon,
             color: color,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -6522,6 +7448,9 @@ class $$CollectionsTableTableManager extends RootTableManager<
             Value<String?> icon = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CollectionsCompanion.insert(
@@ -6530,6 +7459,9 @@ class $$CollectionsTableTableManager extends RootTableManager<
             icon: icon,
             color: color,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -6583,6 +7515,9 @@ typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
   required String name,
   Value<String?> color,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
@@ -6590,6 +7525,9 @@ typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
   Value<String> name,
   Value<String?> color,
   Value<int> version,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> deleted,
   Value<int> rowid,
 });
 
@@ -6632,6 +7570,15 @@ class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnFilters(column));
+
   Expression<bool> pageTagsRefs(
       Expression<bool> Function($$PageTagsTableFilterComposer f) f) {
     final $$PageTagsTableFilterComposer composer = $composerBuilder(
@@ -6673,6 +7620,15 @@ class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
 
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnOrderings(column));
 }
 
 class $$TagsTableAnnotationComposer
@@ -6695,6 +7651,15 @@ class $$TagsTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
 
   Expression<T> pageTagsRefs<T extends Object>(
       Expression<T> Function($$PageTagsTableAnnotationComposer a) f) {
@@ -6745,6 +7710,9 @@ class $$TagsTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<String?> color = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TagsCompanion(
@@ -6752,6 +7720,9 @@ class $$TagsTableTableManager extends RootTableManager<
             name: name,
             color: color,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -6759,6 +7730,9 @@ class $$TagsTableTableManager extends RootTableManager<
             required String name,
             Value<String?> color = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TagsCompanion.insert(
@@ -6766,6 +7740,9 @@ class $$TagsTableTableManager extends RootTableManager<
             name: name,
             color: color,
             version: version,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            deleted: deleted,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -8096,6 +9073,227 @@ typedef $$SyncStatesTableProcessedTableManager = ProcessedTableManager<
     ),
     SyncStateData,
     PrefetchHooks Function()>;
+typedef $$AppSettingsTableTableCreateCompanionBuilder
+    = AppSettingsTableCompanion Function({
+  required String id,
+  Value<String> themeMode,
+  Value<String> syncFrequency,
+  Value<bool> autoSync,
+  Value<int> cacheLimitMB,
+  Value<DateTime?> lastCleanup,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$AppSettingsTableTableUpdateCompanionBuilder
+    = AppSettingsTableCompanion Function({
+  Value<String> id,
+  Value<String> themeMode,
+  Value<String> syncFrequency,
+  Value<bool> autoSync,
+  Value<int> cacheLimitMB,
+  Value<DateTime?> lastCleanup,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$AppSettingsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AppSettingsTableTable> {
+  $$AppSettingsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get themeMode => $composableBuilder(
+      column: $table.themeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncFrequency => $composableBuilder(
+      column: $table.syncFrequency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get autoSync => $composableBuilder(
+      column: $table.autoSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cacheLimitMB => $composableBuilder(
+      column: $table.cacheLimitMB, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastCleanup => $composableBuilder(
+      column: $table.lastCleanup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$AppSettingsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppSettingsTableTable> {
+  $$AppSettingsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+      column: $table.themeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncFrequency => $composableBuilder(
+      column: $table.syncFrequency,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get autoSync => $composableBuilder(
+      column: $table.autoSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cacheLimitMB => $composableBuilder(
+      column: $table.cacheLimitMB,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastCleanup => $composableBuilder(
+      column: $table.lastCleanup, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AppSettingsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppSettingsTableTable> {
+  $$AppSettingsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get syncFrequency => $composableBuilder(
+      column: $table.syncFrequency, builder: (column) => column);
+
+  GeneratedColumn<bool> get autoSync =>
+      $composableBuilder(column: $table.autoSync, builder: (column) => column);
+
+  GeneratedColumn<int> get cacheLimitMB => $composableBuilder(
+      column: $table.cacheLimitMB, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastCleanup => $composableBuilder(
+      column: $table.lastCleanup, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AppSettingsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AppSettingsTableTable,
+    AppSettingEntity,
+    $$AppSettingsTableTableFilterComposer,
+    $$AppSettingsTableTableOrderingComposer,
+    $$AppSettingsTableTableAnnotationComposer,
+    $$AppSettingsTableTableCreateCompanionBuilder,
+    $$AppSettingsTableTableUpdateCompanionBuilder,
+    (
+      AppSettingEntity,
+      BaseReferences<_$AppDatabase, $AppSettingsTableTable, AppSettingEntity>
+    ),
+    AppSettingEntity,
+    PrefetchHooks Function()> {
+  $$AppSettingsTableTableTableManager(
+      _$AppDatabase db, $AppSettingsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppSettingsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppSettingsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppSettingsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> themeMode = const Value.absent(),
+            Value<String> syncFrequency = const Value.absent(),
+            Value<bool> autoSync = const Value.absent(),
+            Value<int> cacheLimitMB = const Value.absent(),
+            Value<DateTime?> lastCleanup = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AppSettingsTableCompanion(
+            id: id,
+            themeMode: themeMode,
+            syncFrequency: syncFrequency,
+            autoSync: autoSync,
+            cacheLimitMB: cacheLimitMB,
+            lastCleanup: lastCleanup,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> themeMode = const Value.absent(),
+            Value<String> syncFrequency = const Value.absent(),
+            Value<bool> autoSync = const Value.absent(),
+            Value<int> cacheLimitMB = const Value.absent(),
+            Value<DateTime?> lastCleanup = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AppSettingsTableCompanion.insert(
+            id: id,
+            themeMode: themeMode,
+            syncFrequency: syncFrequency,
+            autoSync: autoSync,
+            cacheLimitMB: cacheLimitMB,
+            lastCleanup: lastCleanup,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AppSettingsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AppSettingsTableTable,
+    AppSettingEntity,
+    $$AppSettingsTableTableFilterComposer,
+    $$AppSettingsTableTableOrderingComposer,
+    $$AppSettingsTableTableAnnotationComposer,
+    $$AppSettingsTableTableCreateCompanionBuilder,
+    $$AppSettingsTableTableUpdateCompanionBuilder,
+    (
+      AppSettingEntity,
+      BaseReferences<_$AppDatabase, $AppSettingsTableTable, AppSettingEntity>
+    ),
+    AppSettingEntity,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8121,4 +9319,6 @@ class $AppDatabaseManager {
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
   $$SyncStatesTableTableManager get syncStates =>
       $$SyncStatesTableTableManager(_db, _db.syncStates);
+  $$AppSettingsTableTableTableManager get appSettingsTable =>
+      $$AppSettingsTableTableTableManager(_db, _db.appSettingsTable);
 }

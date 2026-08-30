@@ -8,7 +8,7 @@ QueryExecutor connect() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'ketion.sqlite'));
-    
+
     // SQLite optimizations as per documentation
     return NativeDatabase.createInBackground(
       file,

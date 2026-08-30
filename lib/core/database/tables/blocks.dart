@@ -4,8 +4,10 @@ import 'pages.dart';
 @DataClassName('Block')
 class Blocks extends Table {
   TextColumn get id => text()();
-  TextColumn get pageId => text().references(Pages, #id, onDelete: KeyAction.cascade)();
-  TextColumn get parentBlockId => text().nullable().references(Blocks, #id, onDelete: KeyAction.cascade)();
+  TextColumn get pageId =>
+      text().references(Pages, #id, onDelete: KeyAction.cascade)();
+  TextColumn get parentBlockId =>
+      text().nullable().references(Blocks, #id, onDelete: KeyAction.cascade)();
   TextColumn get type => text()();
   RealColumn get position => real()();
   TextColumn get data => text()(); // JSON string

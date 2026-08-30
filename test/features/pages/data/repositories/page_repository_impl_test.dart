@@ -5,7 +5,44 @@ import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/pages/data/repositories/page_repository_impl.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as domain;
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
+import 'package:ketion/features/sync/domain/entities/sync_queue_item.dart';
+import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.dart';
+import 'package:ketion/core/errors/failures.dart';
+import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/core/utils/logger.dart';
+
+class _FailingSyncQueueRepository implements SyncQueueRepository {
+  @override
+  Future<Result<void>> enqueue(SyncQueueItem item) async =>
+      const Error(StorageFailure('Queue unavailable'));
+
+  @override
+  Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item) => enqueue(item);
+
+  @override
+  Future<Result<List<SyncQueueItem>>> claimNextBatch({
+    int limit = 50,
+    required Duration leaseDuration,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<void>> clearCompleted() => throw UnimplementedError();
+
+  @override
+  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Result<void>> updateStatus(
+    String id,
+    SyncQueueItemStatus status, {
+    int? attemptCount,
+    DateTime? lastAttemptAt,
+    DateTime? nextRetryAt,
+    DateTime? leaseUntil,
+    String? lastError,
+  }) => throw UnimplementedError();
+}
 
 void main() {
   late AppDatabase database;
@@ -95,6 +132,58 @@ void main() {
       final payload = jsonDecode(queueItems.first.payload!) as Map<String, dynamic>;
       expect(payload['title'], 'Updated Page');
       expect(payload['version'], 2);
+    });
+
+    test('rolls back page and initial block when queue insertion fails', () async {
+      final failingRepository = PageRepositoryImpl(
+        database,
+        _FailingSyncQueueRepository(),
+        AppLogger(),
+      );
+      final page = domain.Page(
+        id: 'queue-failure-page',
+        title: '',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final result = await failingRepository.createPage(page);
+
+      expect(result, isA<Error<void>>());
+      expect(await database.select(database.pages).get(), isEmpty);
+      expect(await database.select(database.blocks).get(), isEmpty);
+      expect(await database.select(database.syncQueue).get(), isEmpty);
+    });
+
+    test('rolls back updates and deletes when queue insertion fails', () async {
+      final page = domain.Page(
+        id: 'rollback-update-page',
+        title: 'Original',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await repository.createPage(page);
+      final failingRepository = PageRepositoryImpl(
+        database,
+        _FailingSyncQueueRepository(),
+        AppLogger(),
+      );
+
+      expect(
+        await failingRepository.updatePage(page.copyWith(title: 'Changed')),
+        isA<Error<void>>(),
+      );
+      expect(
+        await failingRepository.deletePage(page.id),
+        isA<Error<void>>(),
+      );
+
+      final stored = await (database.select(database.pages)
+            ..where((t) => t.id.equals(page.id)))
+          .getSingle();
+      expect(stored.title, 'Original');
+      expect(stored.deleted, isFalse);
+      expect(stored.version, 1);
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../pages/domain/entities/page.dart' as page_entity;
@@ -14,8 +15,8 @@ import '../../providers/editor_state_provider.dart';
 class TextBlockWidget extends ConsumerStatefulWidget {
   final Block block;
   final ValueChanged<Block> onUpdate;
-  final VoidCallback onSplit;
-  final VoidCallback onMergePrevious;
+  final Future<void> Function(String before, String after) onSplit;
+  final Future<void> Function() onMergePrevious;
 
   const TextBlockWidget({
     super.key,
@@ -44,6 +45,14 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     _focusNode = FocusNode();
 
     _focusNode.addListener(_onFocusChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final pending = ref.read(pendingBlockFocusProvider);
+      if (pending == widget.block.id) {
+        _focusNode.requestFocus();
+        ref.read(pendingBlockFocusProvider.notifier).state = null;
+      }
+    });
   }
 
   void _parseData() {
@@ -125,6 +134,36 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     widget.onUpdate(updatedBlock);
   }
 
+  KeyEventResult _handleKeyEvent(FocusNode _, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      final selection = _controller.selection;
+      final cursor = selection.isValid ? selection.start : _controller.text.length;
+      final before = _controller.text.substring(0, cursor);
+      final after = _controller.text.substring(selection.end);
+      _controller.value = TextEditingValue(
+        text: before,
+        selection: TextSelection.collapsed(offset: before.length),
+      );
+      unawaited(widget.onSplit(before, after));
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.backspace && _controller.text.isEmpty) {
+      unawaited(widget.onMergePrevious());
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.tab) {
+      final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+      if (HardwareKeyboard.instance.isShiftPressed) {
+        unawaited(editor.outdentBlock(widget.block.id));
+      } else {
+        unawaited(editor.indentBlock(widget.block.id));
+      }
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   void didUpdateWidget(covariant TextBlockWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -162,23 +201,24 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       fontWeight = FontWeight.bold;
     }
 
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      maxLines: null,
-      decoration: const InputDecoration(
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-        isDense: true,
-      ),
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: fontWeight,
-      ),
-      onSubmitted: (_) => widget.onSplit(),
-      textInputAction: TextInputAction.newline,
-      keyboardType: TextInputType.multiline,
-      onChanged: (value) {
+    return Focus(
+      onKeyEvent: _handleKeyEvent,
+      child: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        maxLines: null,
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+          isDense: true,
+        ),
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+        ),
+        textInputAction: TextInputAction.newline,
+        keyboardType: TextInputType.multiline,
+        onChanged: (value) {
         if (value.trim() == '/') {
           _showSlashMenu();
         } else if (value.endsWith('[[')) {
@@ -201,7 +241,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
             _saveChanges();
           });
         }
-      },
+        },
+      ),
     );
   }
 

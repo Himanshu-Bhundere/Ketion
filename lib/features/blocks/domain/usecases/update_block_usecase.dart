@@ -7,11 +7,7 @@ class UpdateBlockUseCase {
 
   UpdateBlockUseCase(this._repository);
 
-  Future<Result<void>> call(Block block) {
-    final updatedBlock = block.copyWith(
-      updatedAt: DateTime.now(),
-      version: block.version + 1,
-    );
-    return _repository.updateBlock(updatedBlock);
-  }
+  /// The repository transaction is the sole authority for block versions and
+  /// timestamps, so callers can safely submit a stale editor model.
+  Future<Result<void>> call(Block block) => _repository.updateBlock(block);
 }

@@ -32,7 +32,7 @@ class CreateActionSheet extends ConsumerWidget {
 
               // Execute use case
               final createPage = ref.read(createPageUseCaseProvider);
-              final result = await createPage(title: 'Untitled Note');
+              final result = await createPage(title: '');
 
               result.fold(
                 (page) {

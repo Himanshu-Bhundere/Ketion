@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -7,8 +9,10 @@ import '../../domain/commands/editor_command.dart';
 import '../../domain/models/visible_block.dart';
 import '../../domain/models/drop_intent.dart';
 import '../../domain/services/block_tree_service.dart';
+import '../../domain/services/sibling_position_manager.dart';
 
 final focusedBlockIdProvider = StateProvider<String?>((ref) => null);
+final pendingBlockFocusProvider = StateProvider<String?>((ref) => null);
 
 // A derived provider that builds the visible tree automatically
 final visibleBlocksProvider =
@@ -77,37 +81,30 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
 
   Future<void> insertBlockDirectly(Block block, int index) async {
     final currentBlocks = state.valueOrNull ?? [];
-    final newBlocks = List<Block>.from(currentBlocks);
-    newBlocks.insert(index, block);
+    final result = await ref.read(blockRepositoryProvider).createBlock(block);
+    if (result.isError) throw Exception('Could not create block');
+    final newBlocks = List<Block>.from(currentBlocks)..insert(index, block);
     state = AsyncData(newBlocks);
-
-    // If block doesn't exist in DB (e.g. from scratch), create it.
-    // The createBlockUseCase does creation from raw properties, but here we have the Block.
-    // Instead of duplicating create vs update logic, we'll just use update (UPSERT behavior) or create if we can.
-    // Assuming updateBlockUseCase can handle UPSERT or we just use it directly.
-    final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
-    await updateBlockUseCase(block);
   }
 
   Future<void> deleteBlockDirectly(String blockId) async {
     final currentBlocks = state.valueOrNull ?? [];
-    final newBlocks = currentBlocks.where((b) => b.id != blockId).toList();
-    state = AsyncData(newBlocks);
-
     final deleteBlockUseCase = ref.read(deleteBlockUseCaseProvider);
-    await deleteBlockUseCase(blockId);
+    final result = await deleteBlockUseCase(blockId);
+    if (result.isError) throw Exception('Could not delete block');
+    state = AsyncData(currentBlocks.where((b) => b.id != blockId).toList());
   }
 
   Future<void> updateBlockDirectly(Block block) async {
     final currentBlocks = state.valueOrNull ?? [];
     final index = currentBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
+      final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
+      final result = await updateBlockUseCase(block);
+      if (result.isError) throw Exception('Could not save block');
       final newBlocks = List<Block>.from(currentBlocks);
       newBlocks[index] = block;
       state = AsyncData(newBlocks);
-
-      final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
-      await updateBlockUseCase(block);
     }
   }
 
@@ -126,20 +123,69 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final index = currentBlocks.indexWhere((b) => b.id == existingBlock.id);
     if (index == -1) return;
 
+    final siblings = currentBlocks
+        .where((block) => block.parentBlockId == existingBlock.parentBlockId && !block.deleted)
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final siblingIndex = siblings.indexWhere((block) => block.id == existingBlock.id);
+    final nextSibling = siblingIndex >= 0 && siblingIndex < siblings.length - 1
+        ? siblings[siblingIndex + 1]
+        : null;
     final newBlock = Block(
       id: const Uuid().v7(),
       pageId: _pageId,
       parentBlockId: existingBlock.parentBlockId,
       type: 'text',
-      position: existingBlock.position +
-          10.0, // Simplified for now, real app should use SiblingPositionManager
+      position: SiblingPositionManager.calculatePositionBetweenBlocks(existingBlock, nextSibling),
       data: '{"spans": [], "headingLevel": 0}',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     await executeCommand(InsertBlockCommand(block: newBlock, index: index + 1));
+    ref.read(pendingBlockFocusProvider.notifier).state = newBlock.id;
   }
+
+  Future<void> splitTextBlock(Block block, String before, String after) async {
+    final currentBlocks = state.valueOrNull ?? [];
+    final index = currentBlocks.indexWhere((item) => item.id == block.id);
+    if (index == -1) return;
+    final updated = block.copyWith(data: _textData(before));
+    final siblings = currentBlocks.where((item) => item.parentBlockId == block.parentBlockId && !item.deleted).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final siblingIndex = siblings.indexWhere((item) => item.id == block.id);
+    final next = siblingIndex >= 0 && siblingIndex < siblings.length - 1 ? siblings[siblingIndex + 1] : null;
+    final inserted = Block(
+      id: const Uuid().v7(), pageId: _pageId, parentBlockId: block.parentBlockId,
+      type: 'text', position: SiblingPositionManager.calculatePositionBetweenBlocks(block, next),
+      data: _textData(after), createdAt: DateTime.now().toUtc(), updatedAt: DateTime.now().toUtc(),
+    );
+    await executeCommand(BatchCommand([
+      UpdateBlockCommand(oldBlock: block, newBlock: updated),
+      InsertBlockCommand(block: inserted, index: index + 1),
+    ]));
+    ref.read(pendingBlockFocusProvider.notifier).state = inserted.id;
+  }
+
+  Future<void> mergeEmptyBlockWithPrevious(Block block) async {
+    final currentBlocks = state.valueOrNull ?? [];
+    final index = currentBlocks.indexWhere((item) => item.id == block.id);
+    if (index == -1) return;
+    final siblings = currentBlocks.where((item) => item.parentBlockId == block.parentBlockId && !item.deleted).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final siblingIndex = siblings.indexWhere((item) => item.id == block.id);
+    if (siblingIndex <= 0) return;
+    final previous = siblings[siblingIndex - 1];
+    await executeCommand(DeleteBlockCommand(block: block, index: index));
+    ref.read(pendingBlockFocusProvider.notifier).state = previous.id;
+  }
+
+  String _textData(String text) => jsonEncode({
+        'spans': [
+          {'text': text, 'bold': false, 'italic': false, 'underline': false, 'strikethrough': false, 'code': false},
+        ],
+        'headingLevel': 0,
+      });
 
   Future<void> deleteBlock(String blockId) async {
     final currentBlocks = state.valueOrNull ?? [];

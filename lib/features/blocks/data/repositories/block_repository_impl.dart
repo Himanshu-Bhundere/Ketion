@@ -19,13 +19,23 @@ class BlockRepositoryImpl implements BlockRepository {
 
   BlockRepositoryImpl(this._db, this._syncQueue, this._logger);
 
+  Future<void> _enqueueOrThrow(SyncQueueItem item) async {
+    final result = await _syncQueue.enqueueOrCoalesce(item);
+    if (result is Error<void>) throw result.failure;
+  }
+
   @override
   Future<Result<void>> createBlock(domain.Block block) async {
     try {
-      final newBlock = block.copyWith(version: 1, updatedAt: DateTime.now());
+      final now = DateTime.now().toUtc();
+      final newBlock = block.copyWith(
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      );
       await _db.transaction(() async {
         await _db.into(_db.blocks).insert(newBlock.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(
+        await _enqueueOrThrow(
           SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'blocks',
@@ -83,7 +93,7 @@ class BlockRepositoryImpl implements BlockRepository {
             .into(_db.blocks)
             .insertOnConflictUpdate(newBlock.toCompanion());
 
-        await _syncQueue.enqueueOrCoalesce(
+        await _enqueueOrThrow(
           SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'blocks',
@@ -133,7 +143,7 @@ class BlockRepositoryImpl implements BlockRepository {
             .write(newBlock.toCompanion());
 
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(
+          await _enqueueOrThrow(
             SyncQueueItem(
               id: const Uuid().v7(),
               entityTable: 'blocks',

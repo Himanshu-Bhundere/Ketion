@@ -1,105 +1,120 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../pages/domain/entities/page.dart' as entity;
-import '../../../pages/presentation/providers/page_providers.dart';
 
-class EditablePageTitle extends ConsumerStatefulWidget {
+import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/result.dart';
+import '../../../pages/domain/entities/page.dart' as entity;
+
+class EditablePageTitle extends StatefulWidget {
   final entity.Page page;
-  final ValueChanged<String>? onTitleChanged;
+  final Future<Result<void>> Function(String title) onTitleChanged;
   final bool autofocus;
 
   const EditablePageTitle({
     super.key,
     required this.page,
-    this.onTitleChanged,
+    required this.onTitleChanged,
     this.autofocus = false,
   });
 
   @override
-  ConsumerState<EditablePageTitle> createState() => _EditablePageTitleState();
+  State<EditablePageTitle> createState() => _EditablePageTitleState();
 }
 
-class _EditablePageTitleState extends ConsumerState<EditablePageTitle> {
-  late TextEditingController _controller;
-  late FocusNode _focusNode;
+class _EditablePageTitleState extends State<EditablePageTitle> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   Timer? _debounce;
-  String _lastSavedTitle = '';
+  late String _lastPersistedTitle;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _lastSavedTitle = widget.page.title;
-    _controller = TextEditingController(text: _lastSavedTitle);
-    _focusNode = FocusNode();
-
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) {
-        _saveTitleIfChanged();
-      }
-    });
+    _lastPersistedTitle = widget.page.title;
+    _controller = TextEditingController(text: _lastPersistedTitle);
+    _focusNode = FocusNode()
+      ..addListener(() {
+        if (!_focusNode.hasFocus) unawaited(_flushTitle());
+      });
   }
 
   @override
   void didUpdateWidget(EditablePageTitle oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.page.id != oldWidget.page.id) {
-      _lastSavedTitle = widget.page.title;
-      _controller.text = _lastSavedTitle;
+    final pageChanged = widget.page.id != oldWidget.page.id;
+    final receivedExternalTitle = widget.page.title != oldWidget.page.title;
+    final hasLocalEdit = _controller.text != _lastPersistedTitle || _isSaving;
+    if (pageChanged || (receivedExternalTitle && !_focusNode.hasFocus && !hasLocalEdit)) {
+      _lastPersistedTitle = widget.page.title;
+      _controller.value = TextEditingValue(
+        text: _lastPersistedTitle,
+        selection: TextSelection.collapsed(offset: _lastPersistedTitle.length),
+      );
     }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    _saveTitleIfChanged();
+    unawaited(_flushTitle());
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  void _onChanged(String value) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _saveTitleIfChanged();
-    });
+  void _onChanged(String _) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () => unawaited(_flushTitle()));
   }
 
-  void _saveTitleIfChanged() {
-    final newTitle = _controller.text;
-    
-    if (newTitle != _lastSavedTitle) {
-      _lastSavedTitle = newTitle;
-      
-      final updatedPage = widget.page.copyWith(title: newTitle);
-      ref.read(updatePageUseCaseProvider)(updatedPage);
-      
-      widget.onTitleChanged?.call(newTitle);
+  Future<void> _flushTitle() async {
+    _debounce?.cancel();
+    if (_isSaving || _controller.text == _lastPersistedTitle) return;
+    _isSaving = true;
+    try {
+      while (_controller.text != _lastPersistedTitle) {
+        final titleToPersist = _controller.text;
+        final result = await widget.onTitleChanged(titleToPersist);
+        if (result is Error<void>) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not save title. Your edit will be retried.')),
+            );
+            _debounce = Timer(
+              const Duration(seconds: 2),
+              () => unawaited(_flushTitle()),
+            );
+          }
+          return;
+        }
+        _lastPersistedTitle = titleToPersist;
+      }
+    } finally {
+      _isSaving = false;
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Page Title',
-      textField: true,
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        autofocus: widget.autofocus,
-        style: AppTypography.pageTitle,
-        decoration: const InputDecoration(
-          hintText: 'Untitled',
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: EdgeInsets.zero,
+  Widget build(BuildContext context) => Semantics(
+        label: 'Page Title',
+        textField: true,
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          autofocus: widget.autofocus,
+          style: AppTypography.pageTitle,
+          decoration: const InputDecoration(
+            hintText: 'Untitled',
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+          onChanged: _onChanged,
+          maxLines: null,
+          keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.next,
         ),
-        onChanged: _onChanged,
-        maxLines: null,
-        keyboardType: TextInputType.text,
-        textInputAction: TextInputAction.next,
-      ),
-    );
-  }
+      );
 }

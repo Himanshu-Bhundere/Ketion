@@ -10,11 +10,10 @@ class UpdatePageUseCase {
   UpdatePageUseCase(this._repository, this._updateWidgetsUseCase);
 
   Future<Result<void>> call(Page page) async {
-    final updatedPage = page.copyWith(
-      updatedAt: DateTime.now(),
-      version: page.version + 1,
-    );
-    final result = await _repository.updatePage(updatedPage);
+    // The repository transaction owns the authoritative timestamp and version.
+    // Callers can safely submit a stale page model without creating a competing
+    // versioning policy in the presentation/application layers.
+    final result = await _repository.updatePage(page);
     if (result is Success) {
       await _updateWidgetsUseCase();
     }

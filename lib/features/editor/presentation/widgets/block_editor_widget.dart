@@ -25,16 +25,21 @@ import '../../domain/models/visible_block.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../../../core/theme/editor_layout_config.dart';
+import '../../../../core/utils/result.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
 import 'page_header.dart';
 
 class BlockEditorWidget extends ConsumerStatefulWidget {
   final String pageId;
   final bool focusTitle;
+  final Future<Result<void>> Function(String title) onTitleChanged;
+  final Future<Result<void>> Function(String icon) onIconChanged;
 
   const BlockEditorWidget({
     super.key,
     required this.pageId,
+    required this.onTitleChanged,
+    required this.onIconChanged,
     this.focusTitle = false,
   });
 
@@ -55,6 +60,18 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         .insertBlockAfter(existingBlock);
   }
 
+  Future<void> _handleSplitBlock(Block block, String before, String after) {
+    return ref
+        .read(editorStateProvider(widget.pageId).notifier)
+        .splitTextBlock(block, before, after);
+  }
+
+  Future<void> _handleMergeEmptyBlock(Block block) {
+    return ref
+        .read(editorStateProvider(widget.pageId).notifier)
+        .mergeEmptyBlockWithPrevious(block);
+  }
+
   void _handleDeleteBlock(String blockId) {
     ref.read(editorStateProvider(widget.pageId).notifier).deleteBlock(blockId);
   }
@@ -70,9 +87,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
           onUpdate: _handleBlockUpdate,
           onSplit: () => _handleInsertBlock(block),
           onMergePrevious: () {
-            if (index > 0) {
-              _handleDeleteBlock(block.id);
-            }
+            if (index > 0) _handleDeleteBlock(block.id);
           },
         );
         break;
@@ -111,12 +126,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         content = TextBlockWidget(
           block: block,
           onUpdate: _handleBlockUpdate,
-          onSplit: () => _handleInsertBlock(block),
-          onMergePrevious: () {
-            if (index > 0) {
-              _handleDeleteBlock(block.id);
-            }
-          },
+          onSplit: (before, after) => _handleSplitBlock(block, before, after),
+          onMergePrevious: () => _handleMergeEmptyBlock(block),
         );
     }
 
@@ -531,7 +542,12 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                               final pageAsync = ref.watch(pageProvider(widget.pageId));
                               final page = pageAsync.valueOrNull;
                               if (page == null) return const SizedBox.shrink();
-                              return PageHeader(page: page, focusTitle: widget.focusTitle);
+                              return PageHeader(
+                                page: page,
+                                focusTitle: widget.focusTitle,
+                                onTitleChanged: widget.onTitleChanged,
+                                onIconChanged: widget.onIconChanged,
+                              );
                             },
                           ),
                         ),

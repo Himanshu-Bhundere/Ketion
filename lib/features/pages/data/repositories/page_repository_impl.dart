@@ -21,10 +21,22 @@ class PageRepositoryImpl implements PageRepository {
 
   PageRepositoryImpl(this._db, this._syncQueue, this._logger);
 
+  Future<void> _enqueueOrThrow(SyncQueueItem item) async {
+    final result = await _syncQueue.enqueueOrCoalesce(item);
+    if (result is Error<void>) {
+      throw result.failure;
+    }
+  }
+
   @override
   Future<Result<void>> createPage(domain.Page page) async {
     try {
-      final newPage = page.copyWith(version: 1, updatedAt: DateTime.now());
+      final now = DateTime.now().toUtc();
+      final newPage = page.copyWith(
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      );
       final initialBlock = block_domain.Block(
         id: const Uuid().v7(),
         pageId: newPage.id,
@@ -40,7 +52,7 @@ class PageRepositoryImpl implements PageRepository {
         await _db.into(_db.pages).insert(newPage.toCompanion());
         await _db.into(_db.blocks).insert(initialBlock.toCompanion());
 
-        await _syncQueue.enqueueOrCoalesce(
+        await _enqueueOrThrow(
           SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'pages',
@@ -54,7 +66,7 @@ class PageRepositoryImpl implements PageRepository {
           ),
         );
 
-        await _syncQueue.enqueueOrCoalesce(
+        await _enqueueOrThrow(
           SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'blocks',
@@ -113,7 +125,7 @@ class PageRepositoryImpl implements PageRepository {
             .write(newPage.toCompanion());
 
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(
+          await _enqueueOrThrow(
             SyncQueueItem(
               id: const Uuid().v7(),
               entityTable: 'pages',
@@ -164,7 +176,7 @@ class PageRepositoryImpl implements PageRepository {
             .write(newPage.toCompanion());
 
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(
+          await _enqueueOrThrow(
             SyncQueueItem(
               id: const Uuid().v7(),
               entityTable: 'pages',

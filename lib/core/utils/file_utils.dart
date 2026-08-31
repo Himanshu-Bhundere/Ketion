@@ -11,7 +11,11 @@ class FileUtils {
     return hash.toString();
   }
 
-  static Future<File> copyToLocalDirectory(File source, String subDir, String newFileName) async {
+  static Future<File> copyToLocalDirectory(
+    File source,
+    String subDir,
+    String newFileName,
+  ) async {
     final appDir = await getApplicationDocumentsDirectory();
     final targetDir = Directory(p.join(appDir.path, 'Attachments', subDir));
     if (!await targetDir.exists()) {
@@ -21,23 +25,28 @@ class FileUtils {
     return await source.copy(targetPath);
   }
 
-  static Future<File?> generateThumbnail(File source, String newFileName) async {
+  static Future<File?> generateThumbnail(
+    File source,
+    String newFileName,
+  ) async {
     final bytes = await source.readAsBytes();
     final image = img.decodeImage(bytes);
     if (image == null) return null;
 
-    final thumbnail = img.copyResize(image, width: 320); // Resize width to 320px
-    
+    final thumbnail =
+        img.copyResize(image, width: 320); // Resize width to 320px
+
     final appDir = await getApplicationDocumentsDirectory();
-    final targetDir = Directory(p.join(appDir.path, 'Attachments', 'Thumbnails'));
+    final targetDir =
+        Directory(p.join(appDir.path, 'Attachments', 'Thumbnails'));
     if (!await targetDir.exists()) {
       await targetDir.create(recursive: true);
     }
-    
+
     final targetPath = p.join(targetDir.path, newFileName);
     final thumbnailFile = File(targetPath);
     await thumbnailFile.writeAsBytes(img.encodeJpg(thumbnail, quality: 85));
-    
+
     return thumbnailFile;
   }
 }

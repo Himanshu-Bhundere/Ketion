@@ -7,19 +7,16 @@ part 'attachment.g.dart';
 class Attachment with _$Attachment {
   const factory Attachment({
     required String id,
-    String? driveFileId,
-    String? localPath,
-    String? mimeType,
-    String? checksumSha256,
-    int? fileSize,
-    int? width,
-    int? height,
-    int? duration,
+    required String pageId,
+    required String blockId,
+    required String fileName,
+    required String mimeType,
+    required int size,
+    required String sha256,
+    required String relativePath,
     String? thumbnailPath,
-    String? uploadStatus,
     required DateTime createdAt,
     required DateTime updatedAt,
-    required int version,
     @Default(false) bool deleted,
   }) = _Attachment;
 

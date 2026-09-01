@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../blocks/domain/entities/block.dart';
 import '../../../domain/models/block_data_models.dart';
+import '../../providers/editor_state_provider.dart';
 
-class ListBlockWidget extends StatefulWidget {
+class ListBlockWidget extends ConsumerStatefulWidget {
   final Block block;
   final ValueChanged<Block> onUpdate;
   final VoidCallback onSplit;
@@ -19,10 +21,10 @@ class ListBlockWidget extends StatefulWidget {
   });
 
   @override
-  State<ListBlockWidget> createState() => _ListBlockWidgetState();
+  ConsumerState<ListBlockWidget> createState() => _ListBlockWidgetState();
 }
 
-class _ListBlockWidgetState extends State<ListBlockWidget> {
+class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   late ListBlockData _blockData;
@@ -33,13 +35,14 @@ class _ListBlockWidgetState extends State<ListBlockWidget> {
     _parseData();
     _controller = TextEditingController(text: _getPlainText());
     _focusNode = FocusNode();
-    
+
     _focusNode.addListener(_onFocusChange);
   }
 
   void _parseData() {
     try {
-      final Map<String, dynamic> json = jsonDecode(widget.block.data) as Map<String, dynamic>;
+      final Map<String, dynamic> json =
+          jsonDecode(widget.block.data) as Map<String, dynamic>;
       json['runtimeType'] = 'list';
       _blockData = BlockDataModel.fromJson(json) as ListBlockData;
     } catch (e) {
@@ -53,37 +56,39 @@ class _ListBlockWidgetState extends State<ListBlockWidget> {
   }
 
   void _onFocusChange() {
-    if (!_focusNode.hasFocus) {
+    if (_focusNode.hasFocus) {
+      ref.read(focusedBlockIdProvider.notifier).state = widget.block.id;
+    } else {
       _saveChanges();
     }
   }
 
   void _saveChanges() {
     final text = _controller.text;
-    
+
     // Simple span creation for now
     final newSpans = [TextSpanData(text: text)];
     final newData = _blockData.copyWith(spans: newSpans);
-    
+
     final json = newData.toJson();
     json.remove('runtimeType');
-    
+
     final updatedBlock = widget.block.copyWith(
       data: jsonEncode(json),
     );
-    
+
     // Check if anything actually changed
     if (widget.block.data != updatedBlock.data) {
       widget.onUpdate(updatedBlock);
     }
   }
-  
+
   void _toggleChecked(bool? value) {
     final checked = value ?? false;
     final newData = _blockData.copyWith(checked: checked);
     final json = newData.toJson();
     json.remove('runtimeType');
-    
+
     final updatedBlock = widget.block.copyWith(
       data: jsonEncode(json),
     );
@@ -123,7 +128,8 @@ class _ListBlockWidgetState extends State<ListBlockWidget> {
       case 'numbered':
         leadingWidget = const Padding(
           padding: EdgeInsets.only(top: 4.0, right: 8.0),
-          child: Text('1.', style: TextStyle(fontSize: 16)), // Hardcoded for now
+          child:
+              Text('1.', style: TextStyle(fontSize: 16)), // Hardcoded for now
         );
         break;
       case 'checklist':
@@ -152,7 +158,8 @@ class _ListBlockWidgetState extends State<ListBlockWidget> {
             ),
             style: TextStyle(
               fontSize: 16.0,
-              decoration: _blockData.checked ? TextDecoration.lineThrough : null,
+              decoration:
+                  _blockData.checked ? TextDecoration.lineThrough : null,
               color: _blockData.checked ? Colors.grey : null,
             ),
             onSubmitted: (_) {

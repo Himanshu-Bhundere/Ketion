@@ -8,7 +8,8 @@ class CreateBlockUseCase {
   final BlockRepository _repository;
   final Uuid _uuid;
 
-  CreateBlockUseCase(this._repository, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  CreateBlockUseCase(this._repository, {Uuid? uuid})
+      : _uuid = uuid ?? const Uuid();
 
   Future<Result<Block>> call({
     required String pageId,
@@ -28,7 +29,7 @@ class CreateBlockUseCase {
       createdAt: now,
       updatedAt: now,
     );
-    
+
     final result = await _repository.createBlock(block);
     return result.fold(
       (_) => Success(block),

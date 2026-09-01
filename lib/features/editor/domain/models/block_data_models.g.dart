@@ -15,6 +15,8 @@ _$TextSpanDataImpl _$$TextSpanDataImplFromJson(Map<String, dynamic> json) =>
       strikethrough: json['strikethrough'] as bool? ?? false,
       code: json['code'] as bool? ?? false,
       link: json['link'] as String?,
+      pageLink: json['pageLink'] as String?,
+      pageLinkTitle: json['pageLinkTitle'] as String?,
     );
 
 Map<String, dynamic> _$$TextSpanDataImplToJson(_$TextSpanDataImpl instance) =>
@@ -26,6 +28,8 @@ Map<String, dynamic> _$$TextSpanDataImplToJson(_$TextSpanDataImpl instance) =>
       'strikethrough': instance.strikethrough,
       'code': instance.code,
       'link': instance.link,
+      'pageLink': instance.pageLink,
+      'pageLinkTitle': instance.pageLinkTitle,
     };
 
 _$TextBlockDataImpl _$$TextBlockDataImplFromJson(Map<String, dynamic> json) =>

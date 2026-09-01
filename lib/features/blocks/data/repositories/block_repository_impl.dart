@@ -28,7 +28,9 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<domain.Block>> getBlock(String id) async {
     try {
-      final blockRecord = await (_db.select(_db.blocks)..where((t) => t.id.equals(id))).getSingleOrNull();
+      final blockRecord = await (_db.select(_db.blocks)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
       if (blockRecord == null) {
         return const Error(StorageFailure('Block not found'));
       }
@@ -42,10 +44,7 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> updateBlock(domain.Block block) async {
     try {
-      final updatedRows = await (_db.update(_db.blocks)..where((t) => t.id.equals(block.id))).write(block.toCompanion());
-      if (updatedRows == 0) {
-        return const Error(StorageFailure('Block not found for update'));
-      }
+      await _db.into(_db.blocks).insertOnConflictUpdate(block.toCompanion());
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to update block', e, stackTrace);
@@ -56,7 +55,8 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> deleteBlock(String id) async {
     try {
-      final deletedRows = await (_db.delete(_db.blocks)..where((t) => t.id.equals(id))).go();
+      final deletedRows =
+          await (_db.delete(_db.blocks)..where((t) => t.id.equals(id))).go();
       if (deletedRows == 0) {
         return const Error(StorageFailure('Block not found for deletion'));
       }
@@ -73,7 +73,10 @@ class BlockRepositoryImpl implements BlockRepository {
       final records = await (_db.select(_db.blocks)
             ..where((t) => t.pageId.equals(pageId))
             ..where((t) => t.deleted.equals(false))
-            ..orderBy([(t) => OrderingTerm(expression: t.position, mode: OrderingMode.asc)]))
+            ..orderBy([
+              (t) =>
+                  OrderingTerm(expression: t.position, mode: OrderingMode.asc),
+            ]))
           .get();
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
@@ -83,12 +86,17 @@ class BlockRepositoryImpl implements BlockRepository {
   }
 
   @override
-  Future<Result<List<domain.Block>>> getChildBlocks(String parentBlockId) async {
+  Future<Result<List<domain.Block>>> getChildBlocks(
+    String parentBlockId,
+  ) async {
     try {
       final records = await (_db.select(_db.blocks)
             ..where((t) => t.parentBlockId.equals(parentBlockId))
             ..where((t) => t.deleted.equals(false))
-            ..orderBy([(t) => OrderingTerm(expression: t.position, mode: OrderingMode.asc)]))
+            ..orderBy([
+              (t) =>
+                  OrderingTerm(expression: t.position, mode: OrderingMode.asc),
+            ]))
           .get();
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {

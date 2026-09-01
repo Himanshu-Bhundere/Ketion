@@ -42,7 +42,8 @@ class SlashCommandMenu extends StatelessWidget {
             return ListTile(
               leading: Icon(option.icon),
               title: Text(option.title),
-              subtitle: Text(option.subtitle, style: const TextStyle(fontSize: 12)),
+              subtitle:
+                  Text(option.subtitle, style: const TextStyle(fontSize: 12)),
               onTap: option.onSelected,
             );
           },

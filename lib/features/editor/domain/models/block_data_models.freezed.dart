@@ -27,6 +27,8 @@ mixin _$TextSpanData {
   bool get strikethrough => throw _privateConstructorUsedError;
   bool get code => throw _privateConstructorUsedError;
   String? get link => throw _privateConstructorUsedError;
+  String? get pageLink => throw _privateConstructorUsedError;
+  String? get pageLinkTitle => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -47,7 +49,9 @@ abstract class $TextSpanDataCopyWith<$Res> {
       bool underline,
       bool strikethrough,
       bool code,
-      String? link});
+      String? link,
+      String? pageLink,
+      String? pageLinkTitle});
 }
 
 /// @nodoc
@@ -70,6 +74,8 @@ class _$TextSpanDataCopyWithImpl<$Res, $Val extends TextSpanData>
     Object? strikethrough = null,
     Object? code = null,
     Object? link = freezed,
+    Object? pageLink = freezed,
+    Object? pageLinkTitle = freezed,
   }) {
     return _then(_value.copyWith(
       text: null == text
@@ -100,6 +106,14 @@ class _$TextSpanDataCopyWithImpl<$Res, $Val extends TextSpanData>
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
               as String?,
+      pageLink: freezed == pageLink
+          ? _value.pageLink
+          : pageLink // ignore: cast_nullable_to_non_nullable
+              as String?,
+      pageLinkTitle: freezed == pageLinkTitle
+          ? _value.pageLinkTitle
+          : pageLinkTitle // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -119,7 +133,9 @@ abstract class _$$TextSpanDataImplCopyWith<$Res>
       bool underline,
       bool strikethrough,
       bool code,
-      String? link});
+      String? link,
+      String? pageLink,
+      String? pageLinkTitle});
 }
 
 /// @nodoc
@@ -140,6 +156,8 @@ class __$$TextSpanDataImplCopyWithImpl<$Res>
     Object? strikethrough = null,
     Object? code = null,
     Object? link = freezed,
+    Object? pageLink = freezed,
+    Object? pageLinkTitle = freezed,
   }) {
     return _then(_$TextSpanDataImpl(
       text: null == text
@@ -170,6 +188,14 @@ class __$$TextSpanDataImplCopyWithImpl<$Res>
           ? _value.link
           : link // ignore: cast_nullable_to_non_nullable
               as String?,
+      pageLink: freezed == pageLink
+          ? _value.pageLink
+          : pageLink // ignore: cast_nullable_to_non_nullable
+              as String?,
+      pageLinkTitle: freezed == pageLinkTitle
+          ? _value.pageLinkTitle
+          : pageLinkTitle // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -184,7 +210,9 @@ class _$TextSpanDataImpl implements _TextSpanData {
       this.underline = false,
       this.strikethrough = false,
       this.code = false,
-      this.link});
+      this.link,
+      this.pageLink,
+      this.pageLinkTitle});
 
   factory _$TextSpanDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$TextSpanDataImplFromJson(json);
@@ -208,10 +236,14 @@ class _$TextSpanDataImpl implements _TextSpanData {
   final bool code;
   @override
   final String? link;
+  @override
+  final String? pageLink;
+  @override
+  final String? pageLinkTitle;
 
   @override
   String toString() {
-    return 'TextSpanData(text: $text, bold: $bold, italic: $italic, underline: $underline, strikethrough: $strikethrough, code: $code, link: $link)';
+    return 'TextSpanData(text: $text, bold: $bold, italic: $italic, underline: $underline, strikethrough: $strikethrough, code: $code, link: $link, pageLink: $pageLink, pageLinkTitle: $pageLinkTitle)';
   }
 
   @override
@@ -227,13 +259,17 @@ class _$TextSpanDataImpl implements _TextSpanData {
             (identical(other.strikethrough, strikethrough) ||
                 other.strikethrough == strikethrough) &&
             (identical(other.code, code) || other.code == code) &&
-            (identical(other.link, link) || other.link == link));
+            (identical(other.link, link) || other.link == link) &&
+            (identical(other.pageLink, pageLink) ||
+                other.pageLink == pageLink) &&
+            (identical(other.pageLinkTitle, pageLinkTitle) ||
+                other.pageLinkTitle == pageLinkTitle));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, text, bold, italic, underline, strikethrough, code, link);
+  int get hashCode => Object.hash(runtimeType, text, bold, italic, underline,
+      strikethrough, code, link, pageLink, pageLinkTitle);
 
   @JsonKey(ignore: true)
   @override
@@ -257,7 +293,9 @@ abstract class _TextSpanData implements TextSpanData {
       final bool underline,
       final bool strikethrough,
       final bool code,
-      final String? link}) = _$TextSpanDataImpl;
+      final String? link,
+      final String? pageLink,
+      final String? pageLinkTitle}) = _$TextSpanDataImpl;
 
   factory _TextSpanData.fromJson(Map<String, dynamic> json) =
       _$TextSpanDataImpl.fromJson;
@@ -276,6 +314,10 @@ abstract class _TextSpanData implements TextSpanData {
   bool get code;
   @override
   String? get link;
+  @override
+  String? get pageLink;
+  @override
+  String? get pageLinkTitle;
   @override
   @JsonKey(ignore: true)
   _$$TextSpanDataImplCopyWith<_$TextSpanDataImpl> get copyWith =>

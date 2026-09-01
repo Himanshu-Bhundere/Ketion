@@ -13,6 +13,8 @@ class TextSpanData with _$TextSpanData {
     @Default(false) bool strikethrough,
     @Default(false) bool code,
     String? link,
+    String? pageLink,
+    String? pageLinkTitle,
   }) = _TextSpanData;
 
   factory TextSpanData.fromJson(Map<String, dynamic> json) =>
@@ -29,7 +31,8 @@ sealed class BlockDataModel with _$BlockDataModel {
   const factory BlockDataModel.list({
     @Default([]) List<TextSpanData> spans,
     @Default(false) bool checked,
-    @Default('bullet') String listType, // 'bullet', 'numbered', 'checklist', 'toggle'
+    @Default('bullet')
+    String listType, // 'bullet', 'numbered', 'checklist', 'toggle'
   }) = ListBlockData;
 
   const factory BlockDataModel.unknown({

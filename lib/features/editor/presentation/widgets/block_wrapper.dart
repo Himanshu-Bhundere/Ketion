@@ -21,6 +21,10 @@ class _BlockWrapperState extends State<BlockWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = Theme.of(context).platform == TargetPlatform.macOS ||
+        Theme.of(context).platform == TargetPlatform.windows ||
+        Theme.of(context).platform == TargetPlatform.linux;
+        
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -31,22 +35,27 @@ class _BlockWrapperState extends State<BlockWrapper> {
           SizedBox(
             width: 32,
             child: AnimatedOpacity(
-              opacity: _isHovered ? 1.0 : 0.0,
+              opacity: (!isDesktop || _isHovered) ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 150),
               child: ReorderableDragStartListener(
                 index: widget.index,
                 child: IconButton(
-                  icon: const Icon(Icons.drag_indicator, size: 18, color: Colors.grey),
+                  icon: const Icon(
+                    Icons.drag_indicator,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
                   onPressed: () {
                     // Show block options menu
                   },
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints:
+                      const BoxConstraints(minWidth: 24, minHeight: 24),
                 ),
               ),
             ),
           ),
-          
+
           // The block content
           Expanded(child: widget.child),
         ],

@@ -23,7 +23,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<SearchResult>>> {
 
   SearchNotifier(this._searchNotes) : super(const AsyncValue.data([]));
 
-  void search(String query) {
+  void search(String query, {String? typeFilter}) {
     if (query.trim().isEmpty) {
       state = const AsyncValue.data([]);
       return;
@@ -31,9 +31,9 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<SearchResult>>> {
 
     _debounceTimer?.cancel();
     state = const AsyncValue.loading();
-    
+
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-      final result = await _searchNotes(query);
+      final result = await _searchNotes(query, typeFilter: typeFilter);
       result.fold(
         (results) {
           if (mounted) {
@@ -48,7 +48,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<SearchResult>>> {
       );
     });
   }
-  
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -56,7 +56,9 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<SearchResult>>> {
   }
 }
 
-final searchNotifierProvider = StateNotifierProvider<SearchNotifier, AsyncValue<List<SearchResult>>>((ref) {
+final searchNotifierProvider =
+    StateNotifierProvider<SearchNotifier, AsyncValue<List<SearchResult>>>(
+        (ref) {
   final useCase = ref.watch(searchNotesUseCaseProvider);
   return SearchNotifier(useCase);
 });

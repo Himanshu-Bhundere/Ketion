@@ -10,6 +10,9 @@ extension CollectionMapper on db.Collection {
       icon: icon,
       color: color,
       version: version,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      deleted: deleted,
     );
   }
 }
@@ -22,6 +25,9 @@ extension DomainCollectionMapper on domain.Collection {
       icon: drift.Value(icon),
       color: drift.Value(color),
       version: drift.Value(version),
+      createdAt: drift.Value(createdAt),
+      updatedAt: drift.Value(updatedAt),
+      deleted: drift.Value(deleted),
     );
   }
 }

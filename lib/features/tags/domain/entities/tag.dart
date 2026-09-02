@@ -10,6 +10,9 @@ class Tag with _$Tag {
     required String name,
     String? color,
     @Default(1) int version,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    @Default(false) bool deleted,
   }) = _Tag;
 
   factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);

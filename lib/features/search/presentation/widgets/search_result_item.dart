@@ -23,7 +23,7 @@ class SearchResultItem extends StatelessWidget {
 
     final spans = <TextSpan>[];
     final parts = text.split('<mark>');
-    
+
     for (int i = 0; i < parts.length; i++) {
       final part = parts[i];
       if (i == 0) {
@@ -40,27 +40,43 @@ class SearchResultItem extends StatelessWidget {
         }
       }
     }
-    
+
     return spans;
+  }
+
+  String _formatTitle() {
+    switch (result.entityType) {
+      case 'page':
+        return 'Page Title Match';
+      case 'tag':
+        return 'Tag Match';
+      case 'block':
+        return 'Page: ${result.pageId ?? "Unknown"}';
+      default:
+        return 'Result';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     IconData icon;
-    switch (result.blockType) {
-      case 'text':
-        icon = Icons.text_fields;
+    switch (result.entityType) {
+      case 'page':
+        icon = Icons.insert_drive_file_outlined;
         break;
-      case 'list':
-        icon = Icons.list;
+      case 'tag':
+        icon = Icons.tag;
+        break;
+      case 'block':
+        icon = Icons.text_snippet_outlined;
         break;
       default:
-        icon = Icons.insert_drive_file;
+        icon = Icons.search;
     }
 
     return ListTile(
       leading: Icon(icon),
-      title: Text('Page: ${result.pageId}'), // Ideally join with page title
+      title: Text(_formatTitle()),
       subtitle: RichText(
         text: TextSpan(
           children: _buildHighlightedSpans(result.snippet, context),

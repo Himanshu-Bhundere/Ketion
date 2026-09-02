@@ -12,32 +12,36 @@ class SearchRepositoryImpl implements SearchRepository {
   SearchRepositoryImpl(this._database);
 
   @override
-  Future<Result<List<SearchResult>>> searchNotes(String query) async {
+  Future<Result<List<SearchResult>>> searchNotes(String query, {String? typeFilter}) async {
     try {
+      final String whereClause = typeFilter != null 
+          ? 'search_fts MATCH ? AND entityType = ?'
+          : 'search_fts MATCH ?';
+          
+      final variables = typeFilter != null 
+          ? [Variable.withString(query), Variable.withString(typeFilter)]
+          : [Variable.withString(query)];
+
       final rows = await _database.customSelect(
         '''
         SELECT 
-          f.id, 
-          f.pageId, 
-          f.type, 
-          snippet(blocks_fts, 3, '<mark>', '</mark>', '...', 64) as snippet
-        FROM blocks_fts f
-        INNER JOIN blocks b ON f.id = b.id
-        INNER JOIN pages p ON b.page_id = p.id
-        WHERE blocks_fts MATCH ?
-          AND b.deleted = 0
-          AND p.deleted = 0
+          entityId, 
+          pageId, 
+          entityType, 
+          snippet(search_fts, 3, '<mark>', '</mark>', '...', 64) as snippet
+        FROM search_fts
+        WHERE $whereClause
         ORDER BY rank
         LIMIT 50
         ''',
-        variables: [Variable.withString(query)],
+        variables: variables,
       ).get();
 
       final results = rows.map((row) {
         return SearchResult(
-          blockId: row.read<String>('id'),
-          pageId: row.read<String>('pageId'),
-          blockType: row.read<String>('type'),
+          entityId: row.read<String>('entityId'),
+          pageId: row.read<String?>('pageId'),
+          entityType: row.read<String>('entityType'),
           snippet: row.read<String>('snippet'),
         );
       }).toList();

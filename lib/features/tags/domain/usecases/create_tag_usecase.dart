@@ -8,7 +8,8 @@ class CreateTagUseCase {
   final TagRepository _repository;
   final Uuid _uuid;
 
-  CreateTagUseCase(this._repository, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  CreateTagUseCase(this._repository, {Uuid? uuid})
+      : _uuid = uuid ?? const Uuid();
 
   Future<Result<Tag>> call({
     required String name,
@@ -18,8 +19,10 @@ class CreateTagUseCase {
       id: _uuid.v7(),
       name: name,
       color: color,
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
     );
-    
+
     final result = await _repository.createTag(tag);
     return result.fold(
       (_) => Success(tag),

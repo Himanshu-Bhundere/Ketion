@@ -24,6 +24,9 @@ mixin _$Tag {
   String get name => throw _privateConstructorUsedError;
   String? get color => throw _privateConstructorUsedError;
   int get version => throw _privateConstructorUsedError;
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  DateTime get updatedAt => throw _privateConstructorUsedError;
+  bool get deleted => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -35,7 +38,14 @@ abstract class $TagCopyWith<$Res> {
   factory $TagCopyWith(Tag value, $Res Function(Tag) then) =
       _$TagCopyWithImpl<$Res, Tag>;
   @useResult
-  $Res call({String id, String name, String? color, int version});
+  $Res call(
+      {String id,
+      String name,
+      String? color,
+      int version,
+      DateTime createdAt,
+      DateTime updatedAt,
+      bool deleted});
 }
 
 /// @nodoc
@@ -54,6 +64,9 @@ class _$TagCopyWithImpl<$Res, $Val extends Tag> implements $TagCopyWith<$Res> {
     Object? name = null,
     Object? color = freezed,
     Object? version = null,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+    Object? deleted = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -72,6 +85,18 @@ class _$TagCopyWithImpl<$Res, $Val extends Tag> implements $TagCopyWith<$Res> {
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
               as int,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      deleted: null == deleted
+          ? _value.deleted
+          : deleted // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -82,7 +107,14 @@ abstract class _$$TagImplCopyWith<$Res> implements $TagCopyWith<$Res> {
       __$$TagImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String id, String name, String? color, int version});
+  $Res call(
+      {String id,
+      String name,
+      String? color,
+      int version,
+      DateTime createdAt,
+      DateTime updatedAt,
+      bool deleted});
 }
 
 /// @nodoc
@@ -98,6 +130,9 @@ class __$$TagImplCopyWithImpl<$Res> extends _$TagCopyWithImpl<$Res, _$TagImpl>
     Object? name = null,
     Object? color = freezed,
     Object? version = null,
+    Object? createdAt = null,
+    Object? updatedAt = null,
+    Object? deleted = null,
   }) {
     return _then(_$TagImpl(
       id: null == id
@@ -116,6 +151,18 @@ class __$$TagImplCopyWithImpl<$Res> extends _$TagCopyWithImpl<$Res, _$TagImpl>
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
               as int,
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      updatedAt: null == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      deleted: null == deleted
+          ? _value.deleted
+          : deleted // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -124,7 +171,13 @@ class __$$TagImplCopyWithImpl<$Res> extends _$TagCopyWithImpl<$Res, _$TagImpl>
 @JsonSerializable()
 class _$TagImpl implements _Tag {
   const _$TagImpl(
-      {required this.id, required this.name, this.color, this.version = 1});
+      {required this.id,
+      required this.name,
+      this.color,
+      this.version = 1,
+      required this.createdAt,
+      required this.updatedAt,
+      this.deleted = false});
 
   factory _$TagImpl.fromJson(Map<String, dynamic> json) =>
       _$$TagImplFromJson(json);
@@ -138,10 +191,17 @@ class _$TagImpl implements _Tag {
   @override
   @JsonKey()
   final int version;
+  @override
+  final DateTime createdAt;
+  @override
+  final DateTime updatedAt;
+  @override
+  @JsonKey()
+  final bool deleted;
 
   @override
   String toString() {
-    return 'Tag(id: $id, name: $name, color: $color, version: $version)';
+    return 'Tag(id: $id, name: $name, color: $color, version: $version, createdAt: $createdAt, updatedAt: $updatedAt, deleted: $deleted)';
   }
 
   @override
@@ -152,12 +212,18 @@ class _$TagImpl implements _Tag {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.color, color) || other.color == color) &&
-            (identical(other.version, version) || other.version == version));
+            (identical(other.version, version) || other.version == version) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt) &&
+            (identical(other.deleted, deleted) || other.deleted == deleted));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, color, version);
+  int get hashCode => Object.hash(
+      runtimeType, id, name, color, version, createdAt, updatedAt, deleted);
 
   @JsonKey(ignore: true)
   @override
@@ -178,7 +244,10 @@ abstract class _Tag implements Tag {
       {required final String id,
       required final String name,
       final String? color,
-      final int version}) = _$TagImpl;
+      final int version,
+      required final DateTime createdAt,
+      required final DateTime updatedAt,
+      final bool deleted}) = _$TagImpl;
 
   factory _Tag.fromJson(Map<String, dynamic> json) = _$TagImpl.fromJson;
 
@@ -190,6 +259,12 @@ abstract class _Tag implements Tag {
   String? get color;
   @override
   int get version;
+  @override
+  DateTime get createdAt;
+  @override
+  DateTime get updatedAt;
+  @override
+  bool get deleted;
   @override
   @JsonKey(ignore: true)
   _$$TagImplCopyWith<_$TagImpl> get copyWith =>

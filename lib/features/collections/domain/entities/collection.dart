@@ -11,7 +11,11 @@ class Collection with _$Collection {
     String? icon,
     String? color,
     @Default(1) int version,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    @Default(false) bool deleted,
   }) = _Collection;
 
-  factory Collection.fromJson(Map<String, dynamic> json) => _$CollectionFromJson(json);
+  factory Collection.fromJson(Map<String, dynamic> json) =>
+      _$CollectionFromJson(json);
 }

@@ -8,7 +8,8 @@ class CreateCollectionUseCase {
   final CollectionRepository _repository;
   final Uuid _uuid;
 
-  CreateCollectionUseCase(this._repository, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  CreateCollectionUseCase(this._repository, {Uuid? uuid})
+      : _uuid = uuid ?? const Uuid();
 
   Future<Result<Collection>> call({
     required String name,
@@ -20,8 +21,10 @@ class CreateCollectionUseCase {
       name: name,
       icon: icon,
       color: color,
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
     );
-    
+
     final result = await _repository.createCollection(collection);
     return result.fold(
       (_) => Success(collection),

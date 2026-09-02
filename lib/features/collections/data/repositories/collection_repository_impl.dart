@@ -26,7 +26,9 @@ class CollectionRepositoryImpl implements CollectionRepository {
   @override
   Future<Result<domain.Collection>> getCollection(String id) async {
     try {
-      final collectionRecord = await (_db.select(_db.collections)..where((t) => t.id.equals(id))).getSingleOrNull();
+      final collectionRecord = await (_db.select(_db.collections)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
       if (collectionRecord == null) {
         return const Error(StorageFailure('Collection not found'));
       }
@@ -40,7 +42,9 @@ class CollectionRepositoryImpl implements CollectionRepository {
   @override
   Future<Result<void>> updateCollection(domain.Collection collection) async {
     try {
-      final updatedRows = await (_db.update(_db.collections)..where((t) => t.id.equals(collection.id))).write(collection.toCompanion());
+      final updatedRows = await (_db.update(_db.collections)
+            ..where((t) => t.id.equals(collection.id)))
+          .write(collection.toCompanion());
       if (updatedRows == 0) {
         return const Error(StorageFailure('Collection not found for update'));
       }
@@ -54,7 +58,9 @@ class CollectionRepositoryImpl implements CollectionRepository {
   @override
   Future<Result<void>> deleteCollection(String id) async {
     try {
-      final deletedRows = await (_db.delete(_db.collections)..where((t) => t.id.equals(id))).go();
+      final deletedRows = await (_db.delete(_db.collections)
+            ..where((t) => t.id.equals(id)))
+          .go();
       if (deletedRows == 0) {
         return const Error(StorageFailure('Collection not found for deletion'));
       }

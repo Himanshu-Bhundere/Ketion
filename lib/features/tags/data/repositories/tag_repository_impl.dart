@@ -26,7 +26,9 @@ class TagRepositoryImpl implements TagRepository {
   @override
   Future<Result<domain.Tag>> getTag(String id) async {
     try {
-      final tagRecord = await (_db.select(_db.tags)..where((t) => t.id.equals(id))).getSingleOrNull();
+      final tagRecord = await (_db.select(_db.tags)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
       if (tagRecord == null) {
         return const Error(StorageFailure('Tag not found'));
       }
@@ -40,7 +42,9 @@ class TagRepositoryImpl implements TagRepository {
   @override
   Future<Result<void>> updateTag(domain.Tag tag) async {
     try {
-      final updatedRows = await (_db.update(_db.tags)..where((t) => t.id.equals(tag.id))).write(tag.toCompanion());
+      final updatedRows = await (_db.update(_db.tags)
+            ..where((t) => t.id.equals(tag.id)))
+          .write(tag.toCompanion());
       if (updatedRows == 0) {
         return const Error(StorageFailure('Tag not found for update'));
       }
@@ -54,7 +58,8 @@ class TagRepositoryImpl implements TagRepository {
   @override
   Future<Result<void>> deleteTag(String id) async {
     try {
-      final deletedRows = await (_db.delete(_db.tags)..where((t) => t.id.equals(id))).go();
+      final deletedRows =
+          await (_db.delete(_db.tags)..where((t) => t.id.equals(id))).go();
       if (deletedRows == 0) {
         return const Error(StorageFailure('Tag not found for deletion'));
       }

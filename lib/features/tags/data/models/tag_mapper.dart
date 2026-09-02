@@ -9,6 +9,9 @@ extension TagMapper on db.Tag {
       name: name,
       color: color,
       version: version,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      deleted: deleted,
     );
   }
 }
@@ -20,6 +23,9 @@ extension DomainTagMapper on domain.Tag {
       name: name,
       color: drift.Value(color),
       version: drift.Value(version),
+      createdAt: drift.Value(createdAt),
+      updatedAt: drift.Value(updatedAt),
+      deleted: drift.Value(deleted),
     );
   }
 }

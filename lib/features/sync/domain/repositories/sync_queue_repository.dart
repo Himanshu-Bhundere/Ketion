@@ -9,7 +9,12 @@ abstract class SyncQueueRepository {
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50});
 
   /// Update the status of a sync item
-  Future<Result<void>> updateStatus(String id, String status, {int? retryCount, String? errorMessage});
+  Future<Result<void>> updateStatus(
+    String id,
+    String status, {
+    int? retryCount,
+    String? errorMessage,
+  });
 
   /// Clear completed items
   Future<Result<void>> clearCompleted();

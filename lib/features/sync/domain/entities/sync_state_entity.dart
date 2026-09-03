@@ -13,5 +13,6 @@ class SyncStateEntity with _$SyncStateEntity {
     String? remoteSyncCursor,
   }) = _SyncStateEntity;
 
-  factory SyncStateEntity.fromJson(Map<String, dynamic> json) => _$SyncStateEntityFromJson(json);
+  factory SyncStateEntity.fromJson(Map<String, dynamic> json) =>
+      _$SyncStateEntityFromJson(json);
 }

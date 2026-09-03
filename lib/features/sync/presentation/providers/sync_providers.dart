@@ -12,6 +12,7 @@ import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.d
 import 'package:ketion/features/sync/domain/repositories/sync_state_repository.dart';
 import 'package:ketion/features/sync/domain/usecases/enqueue_sync_usecase.dart';
 import 'package:ketion/features/sync/domain/usecases/sync_now_usecase.dart';
+import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 
 final syncProviderInterfaceProvider = Provider<SyncProvider>((ref) {
   return GoogleDriveSyncProvider();
@@ -32,12 +33,14 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
   final authService = ref.watch(authServiceProvider);
   final queueRepo = ref.watch(syncQueueRepositoryProvider);
   final stateRepo = ref.watch(syncStateRepositoryProvider);
+  final conflictResolver = ConflictResolver(ref.watch(appDatabaseProvider));
 
   return SyncEngineRepositoryImpl(
     syncProvider: syncProvider,
     authService: authService,
     queueRepository: queueRepo,
     stateRepository: stateRepo,
+    conflictResolver: conflictResolver,
   );
 });
 final syncNowUseCaseProvider = Provider<SyncNowUseCase>((ref) {

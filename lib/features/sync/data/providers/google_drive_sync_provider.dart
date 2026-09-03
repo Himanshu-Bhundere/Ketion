@@ -38,16 +38,25 @@ class GoogleDriveSyncProvider implements SyncProvider {
       _driveApi = drive.DriveApi(authClient);
 
       // Locate or create Root Folder
-      _rootFolderId = await _getOrCreateFolder(DriveConstants.rootFolder, 'root');
+      _rootFolderId =
+          await _getOrCreateFolder(DriveConstants.rootFolder, 'root');
       if (_rootFolderId == null) {
-        return const Error(SyncFailure('Failed to locate or create root folder on Drive'));
+        return const Error(
+          SyncFailure('Failed to locate or create root folder on Drive'),
+        );
       }
 
       // Locate or create Database/Sync Folder
-      _syncFolderId = await _getOrCreateFolder(DriveConstants.databaseFolder, _rootFolderId!);
+      _syncFolderId = await _getOrCreateFolder(
+        DriveConstants.databaseFolder,
+        _rootFolderId!,
+      );
 
       // Locate or create Attachments Folder
-      _attachmentsFolderId = await _getOrCreateFolder(DriveConstants.attachmentsFolder, _rootFolderId!);
+      _attachmentsFolderId = await _getOrCreateFolder(
+        DriveConstants.attachmentsFolder,
+        _rootFolderId!,
+      );
 
       return const Success(null);
     } catch (e) {
@@ -58,7 +67,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
   Future<String?> _getOrCreateFolder(String folderName, String parentId) async {
     if (_driveApi == null) return null;
     try {
-      final q = "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
+      final q =
+          "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
       final list = await _driveApi!.files.list(q: q);
       if (list.files != null && list.files!.isNotEmpty) {
         return list.files!.first.id;
@@ -77,7 +87,11 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<String>> uploadAttachment(String localPath, String mimeType, String checksum) async {
+  Future<Result<String>> uploadAttachment(
+    String localPath,
+    String mimeType,
+    String checksum,
+  ) async {
     if (_driveApi == null || _attachmentsFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
@@ -105,7 +119,10 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<void>> downloadAttachment(String remoteFileId, String destinationPath) async {
+  Future<Result<void>> downloadAttachment(
+    String remoteFileId,
+    String destinationPath,
+  ) async {
     if (_driveApi == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
@@ -127,7 +144,10 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<void>> uploadChanges(String batchId, Map<String, dynamic> payload) async {
+  Future<Result<void>> uploadChanges(
+    String batchId,
+    Map<String, dynamic> payload,
+  ) async {
     if (_driveApi == null || _syncFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
@@ -149,12 +169,15 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<List<Map<String, dynamic>>>> downloadChanges(String? cursor) async {
+  Future<Result<List<Map<String, dynamic>>>> downloadChanges(
+    String? cursor,
+  ) async {
     if (_driveApi == null || _syncFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
-      final q = "'$_syncFolderId' in parents and mimeType = 'application/json' and trashed = false";
+      final q =
+          "'$_syncFolderId' in parents and mimeType = 'application/json' and trashed = false";
       final fileList = await _driveApi!.files.list(q: q, pageToken: cursor);
 
       final results = <Map<String, dynamic>>[];
@@ -166,7 +189,10 @@ class GoogleDriveSyncProvider implements SyncProvider {
             downloadOptions: drive.DownloadOptions.fullMedia,
           ) as drive.Media;
 
-          final contentBytes = await media.stream.fold<List<int>>([], (previous, element) => previous..addAll(element));
+          final contentBytes = await media.stream.fold<List<int>>(
+            [],
+            (previous, element) => previous..addAll(element),
+          );
           final contentString = utf8.decode(contentBytes);
           results.add(jsonDecode(contentString) as Map<String, dynamic>);
         }

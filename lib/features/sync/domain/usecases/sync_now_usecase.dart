@@ -11,7 +11,10 @@ class SyncNowUseCase {
   Future<Result<void>> call() async {
     final result = await repository.syncNow();
     if (result is Success) {
-      await widgetService.updateSimpleWidgetData('last_sync_time', DateTime.now().toIso8601String());
+      await widgetService.updateSimpleWidgetData(
+        'last_sync_time',
+        DateTime.now().toIso8601String(),
+      );
       await widgetService.updateSimpleWidgetData('sync_status', 'Success');
       await widgetService.triggerWidgetUpdate();
     } else {

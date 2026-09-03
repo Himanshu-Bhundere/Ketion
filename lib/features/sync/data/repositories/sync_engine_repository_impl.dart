@@ -7,12 +7,15 @@ import 'package:ketion/features/sync/domain/providers/sync_provider.dart';
 import 'package:ketion/features/sync/domain/repositories/sync_engine_repository.dart';
 import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.dart';
 import 'package:ketion/features/sync/domain/repositories/sync_state_repository.dart';
+import 'package:ketion/features/sync/domain/entities/sync_state_entity.dart';
+import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 
 class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncProvider _syncProvider;
   final AuthService _authService;
   final SyncQueueRepository _queueRepository;
   final SyncStateRepository _stateRepository;
+  final ConflictResolver _conflictResolver;
 
   static const List<String> _driveScopes = [
     'https://www.googleapis.com/auth/drive.appdata',
@@ -24,13 +27,20 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     required AuthService authService,
     required SyncQueueRepository queueRepository,
     required SyncStateRepository stateRepository,
+    required ConflictResolver conflictResolver,
   })  : _syncProvider = syncProvider,
         _authService = authService,
         _queueRepository = queueRepository,
-        _stateRepository = stateRepository;
+        _stateRepository = stateRepository,
+        _conflictResolver = conflictResolver;
 
   @override
-  Future<Result<void>> enqueueOperation(String table, String entityId, String operation, {String? payload}) async {
+  Future<Result<void>> enqueueOperation(
+    String table,
+    String entityId,
+    String operation, {
+    String? payload,
+  }) async {
     final item = SyncQueueItem(
       id: const Uuid().v7(),
       entityTable: table,
@@ -66,13 +76,17 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         final payload = {
           'batchId': batchId,
           'timestamp': DateTime.now().toIso8601String(),
-          'changes': items.map((e) => {
-            'id': e.id,
-            'table': e.entityTable,
-            'entityId': e.entityId,
-            'operation': e.operation,
-            'payload': e.payload != null ? jsonDecode(e.payload!) : null,
-          }).toList(),
+          'changes': items
+              .map(
+                (e) => {
+                  'id': e.id,
+                  'table': e.entityTable,
+                  'entityId': e.entityId,
+                  'operation': e.operation,
+                  'payload': e.payload != null ? jsonDecode(e.payload!) : null,
+                },
+              )
+              .toList(),
         };
 
         final uploadRes = await _syncProvider.uploadChanges(batchId, payload);
@@ -85,9 +99,19 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
           for (final item in items) {
             final nextRetry = item.retryCount + 1;
             if (nextRetry > 5) {
-              await _queueRepository.updateStatus(item.id, 'failed', retryCount: nextRetry, errorMessage: uploadRes.failure.message);
+              await _queueRepository.updateStatus(
+                item.id,
+                'failed',
+                retryCount: nextRetry,
+                errorMessage: uploadRes.failure.message,
+              );
             } else {
-              await _queueRepository.updateStatus(item.id, 'pending', retryCount: nextRetry, errorMessage: uploadRes.failure.message);
+              await _queueRepository.updateStatus(
+                item.id,
+                'pending',
+                retryCount: nextRetry,
+                errorMessage: uploadRes.failure.message,
+              );
             }
           }
         }
@@ -95,12 +119,50 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     }
 
     // 4. Download remote changes
-    // ignore: unused_local_variable
-    final stateRepo = _stateRepository; // Silence unused field warning
-    final downloadRes = await _syncProvider.downloadChanges(null);
+    final stateRes = await _stateRepository.getSyncState('local_device', 'google_drive');
+    String? lastCursor;
+    SyncStateEntity syncState = const SyncStateEntity(
+      deviceId: 'local_device',
+      provider: 'google_drive',
+    );
+    if (stateRes is Success<SyncStateEntity?> && stateRes.value != null) {
+      syncState = stateRes.value!;
+      lastCursor = syncState.remoteSyncCursor;
+    }
+
+    final downloadRes = await _syncProvider.downloadChanges(lastCursor);
     if (downloadRes is Error<List<Map<String, dynamic>>>) {
       return Error(downloadRes.failure);
     }
+    
+    final changes = (downloadRes as Success<List<Map<String, dynamic>>>).value;
+    String? newCursor = lastCursor;
+
+    for (final change in changes) {
+       final table = change['table'] as String?;
+       final entityId = change['entityId'] as String?;
+       final operation = change['operation'] as String?;
+       final payload = change['payload'] as Map<String, dynamic>?;
+
+       if (table != null && entityId != null && operation != null) {
+          await _conflictResolver.resolveAndApply(
+             table: table,
+             entityId: entityId,
+             operation: operation,
+             remotePayload: payload,
+          );
+       }
+       if (change['batchId'] != null) {
+          newCursor = change['batchId'] as String;
+       }
+    }
+
+    // 5. Update sync state
+    final newState = syncState.copyWith(
+      lastSyncTime: DateTime.now(),
+      remoteSyncCursor: newCursor,
+    );
+    await _stateRepository.saveSyncState(newState);
 
     return const Success(null);
   }

@@ -5,5 +5,10 @@ abstract class SyncEngineRepository {
   Future<Result<void>> syncNow();
 
   /// Enqueue an operation and optionally trigger sync
-  Future<Result<void>> enqueueOperation(String table, String entityId, String operation, {String? payload});
+  Future<Result<void>> enqueueOperation(
+    String table,
+    String entityId,
+    String operation, {
+    String? payload,
+  });
 }

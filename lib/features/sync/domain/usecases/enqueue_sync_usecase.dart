@@ -6,7 +6,17 @@ class EnqueueSyncUseCase {
 
   EnqueueSyncUseCase(this.repository);
 
-  Future<Result<void>> call(String table, String entityId, String operation, {String? payload}) {
-    return repository.enqueueOperation(table, entityId, operation, payload: payload);
+  Future<Result<void>> call(
+    String table,
+    String entityId,
+    String operation, {
+    String? payload,
+  }) {
+    return repository.enqueueOperation(
+      table,
+      entityId,
+      operation,
+      payload: payload,
+    );
   }
 }

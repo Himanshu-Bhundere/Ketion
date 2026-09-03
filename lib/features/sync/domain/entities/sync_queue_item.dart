@@ -17,5 +17,6 @@ class SyncQueueItem with _$SyncQueueItem {
     String? errorMessage,
   }) = _SyncQueueItem;
 
-  factory SyncQueueItem.fromJson(Map<String, dynamic> json) => _$SyncQueueItemFromJson(json);
+  factory SyncQueueItem.fromJson(Map<String, dynamic> json) =>
+      _$SyncQueueItemFromJson(json);
 }

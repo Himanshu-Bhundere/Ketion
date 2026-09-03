@@ -8,13 +8,23 @@ abstract class SyncProvider {
   Future<Result<void>> initialize(String accessToken);
 
   /// Upload an attachment to the remote storage
-  Future<Result<String>> uploadAttachment(String localPath, String mimeType, String checksum);
+  Future<Result<String>> uploadAttachment(
+    String localPath,
+    String mimeType,
+    String checksum,
+  );
 
   /// Download an attachment from remote storage
-  Future<Result<void>> downloadAttachment(String remoteFileId, String destinationPath);
+  Future<Result<void>> downloadAttachment(
+    String remoteFileId,
+    String destinationPath,
+  );
 
   /// Upload metadata/changes (in a batch)
-  Future<Result<void>> uploadChanges(String batchId, Map<String, dynamic> payload);
+  Future<Result<void>> uploadChanges(
+    String batchId,
+    Map<String, dynamic> payload,
+  );
 
   /// Download unseen changes
   Future<Result<List<Map<String, dynamic>>>> downloadChanges(String? cursor);

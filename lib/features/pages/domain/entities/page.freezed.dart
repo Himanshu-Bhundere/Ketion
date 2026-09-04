@@ -28,6 +28,7 @@ mixin _$Page {
   bool get isFavorite => throw _privateConstructorUsedError;
   bool get isArchived => throw _privateConstructorUsedError;
   bool get deleted => throw _privateConstructorUsedError;
+  bool get isTemplate => throw _privateConstructorUsedError;
   int get version => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
@@ -51,6 +52,7 @@ abstract class $PageCopyWith<$Res> {
       bool isFavorite,
       bool isArchived,
       bool deleted,
+      bool isTemplate,
       int version,
       DateTime createdAt,
       DateTime updatedAt});
@@ -77,6 +79,7 @@ class _$PageCopyWithImpl<$Res, $Val extends Page>
     Object? isFavorite = null,
     Object? isArchived = null,
     Object? deleted = null,
+    Object? isTemplate = null,
     Object? version = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -114,6 +117,10 @@ class _$PageCopyWithImpl<$Res, $Val extends Page>
           ? _value.deleted
           : deleted // ignore: cast_nullable_to_non_nullable
               as bool,
+      isTemplate: null == isTemplate
+          ? _value.isTemplate
+          : isTemplate // ignore: cast_nullable_to_non_nullable
+              as bool,
       version: null == version
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
@@ -146,6 +153,7 @@ abstract class _$$PageImplCopyWith<$Res> implements $PageCopyWith<$Res> {
       bool isFavorite,
       bool isArchived,
       bool deleted,
+      bool isTemplate,
       int version,
       DateTime createdAt,
       DateTime updatedAt});
@@ -169,6 +177,7 @@ class __$$PageImplCopyWithImpl<$Res>
     Object? isFavorite = null,
     Object? isArchived = null,
     Object? deleted = null,
+    Object? isTemplate = null,
     Object? version = null,
     Object? createdAt = null,
     Object? updatedAt = null,
@@ -206,6 +215,10 @@ class __$$PageImplCopyWithImpl<$Res>
           ? _value.deleted
           : deleted // ignore: cast_nullable_to_non_nullable
               as bool,
+      isTemplate: null == isTemplate
+          ? _value.isTemplate
+          : isTemplate // ignore: cast_nullable_to_non_nullable
+              as bool,
       version: null == version
           ? _value.version
           : version // ignore: cast_nullable_to_non_nullable
@@ -234,6 +247,7 @@ class _$PageImpl implements _Page {
       this.isFavorite = false,
       this.isArchived = false,
       this.deleted = false,
+      this.isTemplate = false,
       this.version = 1,
       required this.createdAt,
       required this.updatedAt});
@@ -262,6 +276,9 @@ class _$PageImpl implements _Page {
   final bool deleted;
   @override
   @JsonKey()
+  final bool isTemplate;
+  @override
+  @JsonKey()
   final int version;
   @override
   final DateTime createdAt;
@@ -270,7 +287,7 @@ class _$PageImpl implements _Page {
 
   @override
   String toString() {
-    return 'Page(id: $id, parentPageId: $parentPageId, title: $title, icon: $icon, coverImage: $coverImage, isFavorite: $isFavorite, isArchived: $isArchived, deleted: $deleted, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Page(id: $id, parentPageId: $parentPageId, title: $title, icon: $icon, coverImage: $coverImage, isFavorite: $isFavorite, isArchived: $isArchived, deleted: $deleted, isTemplate: $isTemplate, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -290,6 +307,8 @@ class _$PageImpl implements _Page {
             (identical(other.isArchived, isArchived) ||
                 other.isArchived == isArchived) &&
             (identical(other.deleted, deleted) || other.deleted == deleted) &&
+            (identical(other.isTemplate, isTemplate) ||
+                other.isTemplate == isTemplate) &&
             (identical(other.version, version) || other.version == version) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
@@ -309,6 +328,7 @@ class _$PageImpl implements _Page {
       isFavorite,
       isArchived,
       deleted,
+      isTemplate,
       version,
       createdAt,
       updatedAt);
@@ -337,6 +357,7 @@ abstract class _Page implements Page {
       final bool isFavorite,
       final bool isArchived,
       final bool deleted,
+      final bool isTemplate,
       final int version,
       required final DateTime createdAt,
       required final DateTime updatedAt}) = _$PageImpl;
@@ -359,6 +380,8 @@ abstract class _Page implements Page {
   bool get isArchived;
   @override
   bool get deleted;
+  @override
+  bool get isTemplate;
   @override
   int get version;
   @override

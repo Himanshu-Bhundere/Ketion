@@ -14,6 +14,7 @@ class Page with _$Page {
     @Default(false) bool isFavorite,
     @Default(false) bool isArchived,
     @Default(false) bool deleted,
+    @Default(false) bool isTemplate,
     @Default(1) int version,
     required DateTime createdAt,
     required DateTime updatedAt,

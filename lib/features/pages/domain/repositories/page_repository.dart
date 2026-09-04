@@ -9,4 +9,5 @@ abstract class PageRepository {
   Future<Result<List<Page>>> getRecentPages();
   Future<Result<List<Page>>> getFavoritePages();
   Future<Result<List<Page>>> getChildPages(String parentId);
+  Future<Result<List<Page>>> getTemplatePages();
 }

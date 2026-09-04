@@ -10,13 +10,15 @@ class CreatePageUseCase {
   final UpdateWidgetsUseCase _updateWidgetsUseCase;
   final Uuid _uuid;
 
-  CreatePageUseCase(this._repository, this._updateWidgetsUseCase, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  CreatePageUseCase(this._repository, this._updateWidgetsUseCase, {Uuid? uuid})
+      : _uuid = uuid ?? const Uuid();
 
   Future<Result<Page>> call({
     required String title,
     String? parentPageId,
     String? icon,
     String? coverImage,
+    bool isTemplate = false,
   }) async {
     final now = DateTime.now();
     final page = Page(
@@ -25,10 +27,11 @@ class CreatePageUseCase {
       title: title,
       icon: icon,
       coverImage: coverImage,
+      isTemplate: isTemplate,
       createdAt: now,
       updatedAt: now,
     );
-    
+
     final result = await _repository.createPage(page);
     if (result is Success) {
       await _updateWidgetsUseCase();

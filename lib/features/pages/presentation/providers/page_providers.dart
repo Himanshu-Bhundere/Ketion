@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/entities/page.dart' as entity;
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/logger.dart';
@@ -36,4 +37,34 @@ final deletePageUseCaseProvider = Provider<DeletePageUseCase>((ref) {
   final repository = ref.watch(pageRepositoryProvider);
   final updateWidgetsUseCase = ref.watch(updateWidgetsUseCaseProvider);
   return DeletePageUseCase(repository, updateWidgetsUseCase);
+});
+
+final pageProvider = FutureProvider.family<entity.Page?, String>((ref, id) async {
+  final usecase = ref.watch(getPageUseCaseProvider);
+  final result = await usecase(id);
+  return result.fold(
+    (page) => page,
+    (error) => null,
+  );
+});
+
+final recentPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
+  final repo = ref.watch(pageRepositoryProvider);
+  final result = await repo.getRecentPages();
+  return result.fold((pages) => pages, (error) => []);
+});
+
+final favoritePagesProvider = FutureProvider<List<entity.Page>>((ref) async {
+  final repo = ref.watch(pageRepositoryProvider);
+  final result = await repo.getFavoritePages();
+  return result.fold((pages) => pages, (error) => []);
+});
+
+final templatePagesProvider = FutureProvider<List<entity.Page>>((ref) async {
+  final repository = ref.watch(pageRepositoryProvider);
+  final result = await repository.getTemplatePages();
+  return result.fold(
+    (pages) => pages,
+    (error) => [],
+  );
 });

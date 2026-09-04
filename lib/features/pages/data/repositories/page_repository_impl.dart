@@ -28,7 +28,9 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<domain.Page>> getPage(String id) async {
     try {
-      final pageRecord = await (_db.select(_db.pages)..where((t) => t.id.equals(id))).getSingleOrNull();
+      final pageRecord = await (_db.select(_db.pages)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
       if (pageRecord == null) {
         return const Error(StorageFailure('Page not found'));
       }
@@ -42,7 +44,9 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> updatePage(domain.Page page) async {
     try {
-      final updatedRows = await (_db.update(_db.pages)..where((t) => t.id.equals(page.id))).write(page.toCompanion());
+      final updatedRows = await (_db.update(_db.pages)
+            ..where((t) => t.id.equals(page.id)))
+          .write(page.toCompanion());
       if (updatedRows == 0) {
         return const Error(StorageFailure('Page not found for update'));
       }
@@ -56,7 +60,8 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> deletePage(String id) async {
     try {
-      final deletedRows = await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
+      final deletedRows =
+          await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
       if (deletedRows == 0) {
         return const Error(StorageFailure('Page not found for deletion'));
       }
@@ -73,7 +78,13 @@ class PageRepositoryImpl implements PageRepository {
       final records = await (_db.select(_db.pages)
             ..where((t) => t.deleted.equals(false))
             ..where((t) => t.isArchived.equals(false))
-            ..orderBy([(t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.desc)])
+            ..where((t) => t.isTemplate.equals(false))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.updatedAt,
+                    mode: OrderingMode.desc,
+                  ),
+            ])
             ..limit(20))
           .get();
       return Success(records.map((r) => r.toDomain()).toList());
@@ -89,7 +100,13 @@ class PageRepositoryImpl implements PageRepository {
       final records = await (_db.select(_db.pages)
             ..where((t) => t.isFavorite.equals(true))
             ..where((t) => t.deleted.equals(false))
-            ..orderBy([(t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.desc)]))
+            ..where((t) => t.isTemplate.equals(false))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.updatedAt,
+                    mode: OrderingMode.desc,
+                  ),
+            ]))
           .get();
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
@@ -104,11 +121,36 @@ class PageRepositoryImpl implements PageRepository {
       final records = await (_db.select(_db.pages)
             ..where((t) => t.parentPageId.equals(parentId))
             ..where((t) => t.deleted.equals(false))
-            ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc)]))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.createdAt,
+                    mode: OrderingMode.asc,
+                  ),
+            ]))
           .get();
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
       _logger.e('Failed to get child pages', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<domain.Page>>> getTemplatePages() async {
+    try {
+      final records = await (_db.select(_db.pages)
+            ..where((t) => t.isTemplate.equals(true))
+            ..where((t) => t.deleted.equals(false))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.updatedAt,
+                    mode: OrderingMode.desc,
+                  ),
+            ]))
+          .get();
+      return Success(records.map((r) => r.toDomain()).toList());
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get template pages', e, stackTrace);
       return Error(StorageFailure(e.toString()));
     }
   }

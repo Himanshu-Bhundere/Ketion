@@ -13,4 +13,3 @@ final updateWidgetsUseCaseProvider = Provider<UpdateWidgetsUseCase>((ref) {
   final service = ref.watch(widgetServiceProvider);
   return UpdateWidgetsUseCase(service);
 });
-

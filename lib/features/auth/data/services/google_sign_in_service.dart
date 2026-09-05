@@ -15,7 +15,7 @@ class GoogleSignInService implements AuthService {
       if (account == null) {
         return const Error(UnknownFailure('User canceled sign in'));
       }
-      
+
       final auth = await account.authentication;
       final accessToken = auth.accessToken;
       if (accessToken == null) {
@@ -33,7 +33,7 @@ class GoogleSignInService implements AuthService {
     try {
       final googleSignIn = GoogleSignIn(scopes: scopes);
       var account = googleSignIn.currentUser;
-      
+
       account ??= await googleSignIn.signInSilently();
 
       if (account == null) {
@@ -64,6 +64,7 @@ class GoogleSignInService implements AuthService {
 
   @override
   Future<bool> isSignedIn() async {
-    return _googleSignIn.currentUser != null || await _googleSignIn.signInSilently() != null;
+    return _googleSignIn.currentUser != null ||
+        await _googleSignIn.signInSilently() != null;
   }
 }

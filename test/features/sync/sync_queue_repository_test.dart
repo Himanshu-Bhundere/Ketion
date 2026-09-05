@@ -18,7 +18,8 @@ void main() {
     await db.close();
   });
 
-  test('enqueue inserts item into sync queue and getPendingItems retrieves it', () async {
+  test('enqueue inserts item into sync queue and getPendingItems retrieves it',
+      () async {
     final item = SyncQueueItem(
       id: 'item-1',
       entityTable: 'pages',

@@ -3,6 +3,8 @@ import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/features/home/presentation/pages/home_page.dart';
 import 'package:ketion/features/editor/presentation/pages/editor_page.dart';
 import 'package:ketion/features/search/presentation/pages/search_page.dart';
+import 'package:ketion/features/settings/presentation/pages/settings_page.dart';
+
 final appRouter = GoRouter(
   initialLocation: Routes.home,
   routes: [
@@ -20,6 +22,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: Routes.search,
       builder: (context, state) => const SearchPage(),
+    ),
+    GoRoute(
+      path: Routes.settings,
+      builder: (context, state) => const SettingsPage(),
     ),
   ],
 );

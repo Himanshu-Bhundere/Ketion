@@ -43,15 +43,18 @@ class WidgetServiceImpl implements WidgetService {
   Future<Result<void>> triggerWidgetUpdate() async {
     try {
       await HomeWidget.updateWidget(
-        androidName: 'com.example.ketion.widgets.quick_note.QuickNoteWidgetProvider',
+        androidName:
+            'com.example.ketion.widgets.quick_note.QuickNoteWidgetProvider',
         iOSName: 'QuickNoteWidget',
       );
       await HomeWidget.updateWidget(
-        androidName: 'com.example.ketion.widgets.sync_status.SyncStatusWidgetProvider',
+        androidName:
+            'com.example.ketion.widgets.sync_status.SyncStatusWidgetProvider',
         iOSName: 'SyncStatusWidget',
       );
       await HomeWidget.updateWidget(
-        androidName: 'com.example.ketion.widgets.recent_notes.RecentNotesWidgetProvider',
+        androidName:
+            'com.example.ketion.widgets.recent_notes.RecentNotesWidgetProvider',
         iOSName: 'RecentNotesWidget',
       );
       return const Success(null);
@@ -65,13 +68,15 @@ class WidgetServiceImpl implements WidgetService {
   Future<Result<void>> generateWidgetSnapshot() async {
     try {
       // Get the 5 most recently updated pages
-      final recentPages = await _db.customSelect(
-        'SELECT id, title, updated_at FROM pages WHERE is_trashed = 0 ORDER BY updated_at DESC LIMIT 5',
-      ).get();
+      final recentPages = await _db
+          .customSelect(
+            'SELECT id, title, updated_at FROM pages WHERE is_trashed = 0 ORDER BY updated_at DESC LIMIT 5',
+          )
+          .get();
 
       final docsDir = await getApplicationDocumentsDirectory();
       final snapshotPath = p.join(docsDir.path, 'widget_snapshot.sqlite');
-      
+
       // Delete old snapshot if it exists
       final snapshotFile = File(snapshotPath);
       if (snapshotFile.existsSync()) {
@@ -80,7 +85,7 @@ class WidgetServiceImpl implements WidgetService {
 
       // Create a fresh SQLite database for the snapshot
       final snapshotDb = sqlite.sqlite3.open(snapshotPath);
-      
+
       snapshotDb.execute('''
         CREATE TABLE recent_pages (
           id TEXT PRIMARY KEY,
@@ -89,7 +94,9 @@ class WidgetServiceImpl implements WidgetService {
         );
       ''');
 
-      final stmt = snapshotDb.prepare('INSERT INTO recent_pages (id, title, updated_at) VALUES (?, ?, ?)');
+      final stmt = snapshotDb.prepare(
+        'INSERT INTO recent_pages (id, title, updated_at) VALUES (?, ?, ?)',
+      );
       for (final row in recentPages) {
         stmt.execute([
           row.read<String>('id'),
@@ -102,7 +109,7 @@ class WidgetServiceImpl implements WidgetService {
 
       // Pass the snapshot path to home_widget so the native code knows where to find it
       await updateSimpleWidgetData('snapshot_db_path', snapshotPath);
-      
+
       return const Success(null);
     } catch (e) {
       appLogger.e('Failed to generate widget snapshot', e);

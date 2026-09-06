@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/domain/models/block_data_models.dart';
@@ -33,7 +34,8 @@ class ExportUseCase {
     final nodes = <DocumentNode>[];
 
     for (final block in blocks) {
-      block.data.map(
+      final blockDataModel = BlockDataModel.fromJson(jsonDecode(block.data) as Map<String, dynamic>);
+      blockDataModel.map(
         text: (TextBlockData textBlock) {
           if (textBlock.headingLevel > 0) {
             nodes.add(DocumentNode.heading(

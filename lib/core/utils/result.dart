@@ -9,6 +9,11 @@ sealed class Result<T> {
     R Function(T value) onSuccess,
     R Function(Failure failure) onFailure,
   );
+
+  bool get isError => this is Error<T>;
+  bool get isSuccess => this is Success<T>;
+  T? get valueOrNull => fold((value) => value, (failure) => null);
+  Success<T>? get asValue => this is Success<T> ? this as Success<T> : null;
 }
 
 /// Represents a successful operation.

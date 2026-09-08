@@ -12,8 +12,10 @@ abstract class SyncQueueRepository {
   Future<Result<void>> updateStatus(
     String id,
     String status, {
-    int? retryCount,
-    String? errorMessage,
+    int? attemptCount,
+    DateTime? lastAttemptAt,
+    DateTime? nextRetryAt,
+    String? lastError,
   });
 
   /// Clear completed items

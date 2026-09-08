@@ -13,8 +13,10 @@ class SyncQueueItem with _$SyncQueueItem {
     String? payload,
     required DateTime createdAt,
     @Default('pending') String status,
-    @Default(0) int retryCount,
-    String? errorMessage,
+    @Default(0) int attemptCount,
+    DateTime? lastAttemptAt,
+    DateTime? nextRetryAt,
+    String? lastError,
   }) = _SyncQueueItem;
 
   factory SyncQueueItem.fromJson(Map<String, dynamic> json) =>

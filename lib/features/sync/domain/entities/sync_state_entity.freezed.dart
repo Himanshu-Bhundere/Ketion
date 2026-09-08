@@ -22,9 +22,8 @@ SyncStateEntity _$SyncStateEntityFromJson(Map<String, dynamic> json) {
 mixin _$SyncStateEntity {
   String get deviceId => throw _privateConstructorUsedError;
   String get provider => throw _privateConstructorUsedError;
-  int get lastSyncedVersion => throw _privateConstructorUsedError;
+  int get lastAppliedGeneration => throw _privateConstructorUsedError;
   DateTime? get lastSyncTime => throw _privateConstructorUsedError;
-  String? get remoteSyncCursor => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -41,9 +40,8 @@ abstract class $SyncStateEntityCopyWith<$Res> {
   $Res call(
       {String deviceId,
       String provider,
-      int lastSyncedVersion,
-      DateTime? lastSyncTime,
-      String? remoteSyncCursor});
+      int lastAppliedGeneration,
+      DateTime? lastSyncTime});
 }
 
 /// @nodoc
@@ -61,9 +59,8 @@ class _$SyncStateEntityCopyWithImpl<$Res, $Val extends SyncStateEntity>
   $Res call({
     Object? deviceId = null,
     Object? provider = null,
-    Object? lastSyncedVersion = null,
+    Object? lastAppliedGeneration = null,
     Object? lastSyncTime = freezed,
-    Object? remoteSyncCursor = freezed,
   }) {
     return _then(_value.copyWith(
       deviceId: null == deviceId
@@ -74,18 +71,14 @@ class _$SyncStateEntityCopyWithImpl<$Res, $Val extends SyncStateEntity>
           ? _value.provider
           : provider // ignore: cast_nullable_to_non_nullable
               as String,
-      lastSyncedVersion: null == lastSyncedVersion
-          ? _value.lastSyncedVersion
-          : lastSyncedVersion // ignore: cast_nullable_to_non_nullable
+      lastAppliedGeneration: null == lastAppliedGeneration
+          ? _value.lastAppliedGeneration
+          : lastAppliedGeneration // ignore: cast_nullable_to_non_nullable
               as int,
       lastSyncTime: freezed == lastSyncTime
           ? _value.lastSyncTime
           : lastSyncTime // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      remoteSyncCursor: freezed == remoteSyncCursor
-          ? _value.remoteSyncCursor
-          : remoteSyncCursor // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -101,9 +94,8 @@ abstract class _$$SyncStateEntityImplCopyWith<$Res>
   $Res call(
       {String deviceId,
       String provider,
-      int lastSyncedVersion,
-      DateTime? lastSyncTime,
-      String? remoteSyncCursor});
+      int lastAppliedGeneration,
+      DateTime? lastSyncTime});
 }
 
 /// @nodoc
@@ -119,9 +111,8 @@ class __$$SyncStateEntityImplCopyWithImpl<$Res>
   $Res call({
     Object? deviceId = null,
     Object? provider = null,
-    Object? lastSyncedVersion = null,
+    Object? lastAppliedGeneration = null,
     Object? lastSyncTime = freezed,
-    Object? remoteSyncCursor = freezed,
   }) {
     return _then(_$SyncStateEntityImpl(
       deviceId: null == deviceId
@@ -132,18 +123,14 @@ class __$$SyncStateEntityImplCopyWithImpl<$Res>
           ? _value.provider
           : provider // ignore: cast_nullable_to_non_nullable
               as String,
-      lastSyncedVersion: null == lastSyncedVersion
-          ? _value.lastSyncedVersion
-          : lastSyncedVersion // ignore: cast_nullable_to_non_nullable
+      lastAppliedGeneration: null == lastAppliedGeneration
+          ? _value.lastAppliedGeneration
+          : lastAppliedGeneration // ignore: cast_nullable_to_non_nullable
               as int,
       lastSyncTime: freezed == lastSyncTime
           ? _value.lastSyncTime
           : lastSyncTime // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      remoteSyncCursor: freezed == remoteSyncCursor
-          ? _value.remoteSyncCursor
-          : remoteSyncCursor // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -154,9 +141,8 @@ class _$SyncStateEntityImpl implements _SyncStateEntity {
   const _$SyncStateEntityImpl(
       {required this.deviceId,
       required this.provider,
-      this.lastSyncedVersion = 0,
-      this.lastSyncTime,
-      this.remoteSyncCursor});
+      this.lastAppliedGeneration = 0,
+      this.lastSyncTime});
 
   factory _$SyncStateEntityImpl.fromJson(Map<String, dynamic> json) =>
       _$$SyncStateEntityImplFromJson(json);
@@ -167,15 +153,13 @@ class _$SyncStateEntityImpl implements _SyncStateEntity {
   final String provider;
   @override
   @JsonKey()
-  final int lastSyncedVersion;
+  final int lastAppliedGeneration;
   @override
   final DateTime? lastSyncTime;
-  @override
-  final String? remoteSyncCursor;
 
   @override
   String toString() {
-    return 'SyncStateEntity(deviceId: $deviceId, provider: $provider, lastSyncedVersion: $lastSyncedVersion, lastSyncTime: $lastSyncTime, remoteSyncCursor: $remoteSyncCursor)';
+    return 'SyncStateEntity(deviceId: $deviceId, provider: $provider, lastAppliedGeneration: $lastAppliedGeneration, lastSyncTime: $lastSyncTime)';
   }
 
   @override
@@ -187,18 +171,16 @@ class _$SyncStateEntityImpl implements _SyncStateEntity {
                 other.deviceId == deviceId) &&
             (identical(other.provider, provider) ||
                 other.provider == provider) &&
-            (identical(other.lastSyncedVersion, lastSyncedVersion) ||
-                other.lastSyncedVersion == lastSyncedVersion) &&
+            (identical(other.lastAppliedGeneration, lastAppliedGeneration) ||
+                other.lastAppliedGeneration == lastAppliedGeneration) &&
             (identical(other.lastSyncTime, lastSyncTime) ||
-                other.lastSyncTime == lastSyncTime) &&
-            (identical(other.remoteSyncCursor, remoteSyncCursor) ||
-                other.remoteSyncCursor == remoteSyncCursor));
+                other.lastSyncTime == lastSyncTime));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, deviceId, provider,
-      lastSyncedVersion, lastSyncTime, remoteSyncCursor);
+  int get hashCode => Object.hash(
+      runtimeType, deviceId, provider, lastAppliedGeneration, lastSyncTime);
 
   @JsonKey(ignore: true)
   @override
@@ -219,9 +201,8 @@ abstract class _SyncStateEntity implements SyncStateEntity {
   const factory _SyncStateEntity(
       {required final String deviceId,
       required final String provider,
-      final int lastSyncedVersion,
-      final DateTime? lastSyncTime,
-      final String? remoteSyncCursor}) = _$SyncStateEntityImpl;
+      final int lastAppliedGeneration,
+      final DateTime? lastSyncTime}) = _$SyncStateEntityImpl;
 
   factory _SyncStateEntity.fromJson(Map<String, dynamic> json) =
       _$SyncStateEntityImpl.fromJson;
@@ -231,11 +212,9 @@ abstract class _SyncStateEntity implements SyncStateEntity {
   @override
   String get provider;
   @override
-  int get lastSyncedVersion;
+  int get lastAppliedGeneration;
   @override
   DateTime? get lastSyncTime;
-  @override
-  String? get remoteSyncCursor;
   @override
   @JsonKey(ignore: true)
   _$$SyncStateEntityImplCopyWith<_$SyncStateEntityImpl> get copyWith =>

@@ -12,8 +12,10 @@ class SyncQueueItemMapper {
       payload: data.payload,
       createdAt: data.createdAt,
       status: data.status,
-      retryCount: data.retryCount,
-      errorMessage: data.errorMessage,
+      attemptCount: data.attemptCount,
+      lastAttemptAt: data.lastAttemptAt,
+      nextRetryAt: data.nextRetryAt,
+      lastError: data.lastError,
     );
   }
 
@@ -26,8 +28,10 @@ class SyncQueueItemMapper {
       payload: Value(entity.payload),
       createdAt: Value(entity.createdAt),
       status: Value(entity.status),
-      retryCount: Value(entity.retryCount),
-      errorMessage: Value(entity.errorMessage),
+      attemptCount: Value(entity.attemptCount),
+      lastAttemptAt: Value(entity.lastAttemptAt),
+      nextRetryAt: Value(entity.nextRetryAt),
+      lastError: Value(entity.lastError),
     );
   }
 }

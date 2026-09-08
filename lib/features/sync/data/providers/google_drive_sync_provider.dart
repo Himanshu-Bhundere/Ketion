@@ -96,6 +96,13 @@ class GoogleDriveSyncProvider implements SyncProvider {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
+      // 1. Check if an attachment with this checksum already exists
+      final q = "'$_attachmentsFolderId' in parents and appProperties has { key='checksum' and value='$checksum' } and trashed = false";
+      final fileList = await _driveApi!.files.list(q: q);
+      if (fileList.files != null && fileList.files!.isNotEmpty) {
+        return Success(fileList.files!.first.id ?? '');
+      }
+
       final file = File(localPath);
       if (!await file.exists()) {
         return const Error(SyncFailure('Local file does not exist'));
@@ -105,7 +112,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
       final media = drive.Media(file.openRead(), await file.length());
       final driveFile = drive.File()
         ..name = fileName
-        ..parents = [_attachmentsFolderId!];
+        ..parents = [_attachmentsFolderId!]
+        ..appProperties = {'checksum': checksum};
 
       final uploaded = await _driveApi!.files.create(
         driveFile,
@@ -143,6 +151,26 @@ class GoogleDriveSyncProvider implements SyncProvider {
     }
   }
 
+  Future<int> _incrementAndGetGeneration() async {
+    final folder = await _driveApi!.files.get(
+      _syncFolderId!,
+      $fields: 'appProperties',
+    ) as drive.File;
+    
+    int currentGen = 0;
+    if (folder.appProperties != null && folder.appProperties!['generation'] != null) {
+      currentGen = int.tryParse(folder.appProperties!['generation']!) ?? 0;
+    }
+    
+    int nextGen = currentGen + 1;
+    
+    final updateMetadata = drive.File()
+      ..appProperties = {'generation': nextGen.toString()};
+    await _driveApi!.files.update(updateMetadata, _syncFolderId!);
+    
+    return nextGen;
+  }
+
   @override
   Future<Result<void>> uploadChanges(
     String batchId,
@@ -152,13 +180,16 @@ class GoogleDriveSyncProvider implements SyncProvider {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
+      final generation = await _incrementAndGetGeneration();
+      final genString = generation.toString().padLeft(10, '0');
+      
       final content = jsonEncode(payload);
       final bytes = utf8.encode(content);
       final stream = Stream.value(bytes);
       final media = drive.Media(stream, bytes.length);
 
       final driveFile = drive.File()
-        ..name = 'batch_$batchId.json'
+        ..name = 'gen_$genString.json'
         ..parents = [_syncFolderId!];
 
       await _driveApi!.files.create(driveFile, uploadMedia: media);
@@ -176,25 +207,46 @@ class GoogleDriveSyncProvider implements SyncProvider {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
+      int currentCursor = int.tryParse(cursor ?? '0') ?? 0;
       final q =
           "'$_syncFolderId' in parents and mimeType = 'application/json' and trashed = false";
-      final fileList = await _driveApi!.files.list(q: q, pageToken: cursor);
+      // We sort by name client-side as Drive's orderBy='name' can be flaky, but we'll try to request it anyway
+      final fileList = await _driveApi!.files.list(q: q, orderBy: 'name');
 
       final results = <Map<String, dynamic>>[];
       if (fileList.files != null) {
-        for (final file in fileList.files!) {
-          if (file.id == null) continue;
-          final drive.Media media = await _driveApi!.files.get(
-            file.id!,
-            downloadOptions: drive.DownloadOptions.fullMedia,
-          ) as drive.Media;
+        // Sort explicitly just in case
+        final files = fileList.files!.where((f) => f.name?.startsWith('gen_') ?? false).toList();
+        files.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
 
-          final contentBytes = await media.stream.fold<List<int>>(
-            [],
-            (previous, element) => previous..addAll(element),
-          );
-          final contentString = utf8.decode(contentBytes);
-          results.add(jsonDecode(contentString) as Map<String, dynamic>);
+        for (final file in files) {
+          if (file.id == null || file.name == null) continue;
+          
+          final match = RegExp(r'gen_(\d+)\.json').firstMatch(file.name!);
+          if (match == null) continue;
+          final fileGen = int.parse(match.group(1)!);
+          
+          if (fileGen > currentCursor) {
+            final drive.Media media = await _driveApi!.files.get(
+              file.id!,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            ) as drive.Media;
+
+            final contentBytes = await media.stream.fold<List<int>>(
+              [],
+              (previous, element) => previous..addAll(element),
+            );
+            final contentString = utf8.decode(contentBytes);
+            final data = jsonDecode(contentString) as Map<String, dynamic>;
+            
+            final changes = data['changes'] as List<dynamic>? ?? [];
+            for (final change in changes) {
+              if (change is Map<String, dynamic>) {
+                change['batchId'] = fileGen.toString();
+                results.add(change);
+              }
+            }
+          }
         }
       }
 

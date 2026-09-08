@@ -15,8 +15,14 @@ _$SyncQueueItemImpl _$$SyncQueueItemImplFromJson(Map<String, dynamic> json) =>
       payload: json['payload'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       status: json['status'] as String? ?? 'pending',
-      retryCount: (json['retryCount'] as num?)?.toInt() ?? 0,
-      errorMessage: json['errorMessage'] as String?,
+      attemptCount: (json['attemptCount'] as num?)?.toInt() ?? 0,
+      lastAttemptAt: json['lastAttemptAt'] == null
+          ? null
+          : DateTime.parse(json['lastAttemptAt'] as String),
+      nextRetryAt: json['nextRetryAt'] == null
+          ? null
+          : DateTime.parse(json['nextRetryAt'] as String),
+      lastError: json['lastError'] as String?,
     );
 
 Map<String, dynamic> _$$SyncQueueItemImplToJson(_$SyncQueueItemImpl instance) =>
@@ -28,6 +34,8 @@ Map<String, dynamic> _$$SyncQueueItemImplToJson(_$SyncQueueItemImpl instance) =>
       'payload': instance.payload,
       'createdAt': instance.createdAt.toIso8601String(),
       'status': instance.status,
-      'retryCount': instance.retryCount,
-      'errorMessage': instance.errorMessage,
+      'attemptCount': instance.attemptCount,
+      'lastAttemptAt': instance.lastAttemptAt?.toIso8601String(),
+      'nextRetryAt': instance.nextRetryAt?.toIso8601String(),
+      'lastError': instance.lastError,
     };

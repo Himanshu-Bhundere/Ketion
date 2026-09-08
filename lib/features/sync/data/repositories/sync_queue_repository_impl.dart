@@ -45,8 +45,10 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   Future<Result<void>> updateStatus(
     String id,
     String status, {
-    int? retryCount,
-    String? errorMessage,
+    int? attemptCount,
+    DateTime? lastAttemptAt,
+    DateTime? nextRetryAt,
+    String? lastError,
   }) async {
     try {
       final statement = _db.update(_db.syncQueue)
@@ -54,10 +56,14 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
       await statement.write(
         SyncQueueCompanion(
           status: Value(status),
-          retryCount:
-              retryCount != null ? Value(retryCount) : const Value.absent(),
-          errorMessage:
-              errorMessage != null ? Value(errorMessage) : const Value.absent(),
+          attemptCount:
+              attemptCount != null ? Value(attemptCount) : const Value.absent(),
+          lastAttemptAt:
+              lastAttemptAt != null ? Value(lastAttemptAt) : const Value.absent(),
+          nextRetryAt:
+              nextRetryAt != null ? Value(nextRetryAt) : const Value.absent(),
+          lastError:
+              lastError != null ? Value(lastError) : const Value.absent(),
         ),
       );
       return const Success(null);

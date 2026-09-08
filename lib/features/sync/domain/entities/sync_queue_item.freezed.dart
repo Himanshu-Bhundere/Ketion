@@ -27,8 +27,10 @@ mixin _$SyncQueueItem {
   String? get payload => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
-  int get retryCount => throw _privateConstructorUsedError;
-  String? get errorMessage => throw _privateConstructorUsedError;
+  int get attemptCount => throw _privateConstructorUsedError;
+  DateTime? get lastAttemptAt => throw _privateConstructorUsedError;
+  DateTime? get nextRetryAt => throw _privateConstructorUsedError;
+  String? get lastError => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -50,8 +52,10 @@ abstract class $SyncQueueItemCopyWith<$Res> {
       String? payload,
       DateTime createdAt,
       String status,
-      int retryCount,
-      String? errorMessage});
+      int attemptCount,
+      DateTime? lastAttemptAt,
+      DateTime? nextRetryAt,
+      String? lastError});
 }
 
 /// @nodoc
@@ -74,8 +78,10 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
     Object? payload = freezed,
     Object? createdAt = null,
     Object? status = null,
-    Object? retryCount = null,
-    Object? errorMessage = freezed,
+    Object? attemptCount = null,
+    Object? lastAttemptAt = freezed,
+    Object? nextRetryAt = freezed,
+    Object? lastError = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -106,13 +112,21 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
-      retryCount: null == retryCount
-          ? _value.retryCount
-          : retryCount // ignore: cast_nullable_to_non_nullable
+      attemptCount: null == attemptCount
+          ? _value.attemptCount
+          : attemptCount // ignore: cast_nullable_to_non_nullable
               as int,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
+      lastAttemptAt: freezed == lastAttemptAt
+          ? _value.lastAttemptAt
+          : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      nextRetryAt: freezed == nextRetryAt
+          ? _value.nextRetryAt
+          : nextRetryAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      lastError: freezed == lastError
+          ? _value.lastError
+          : lastError // ignore: cast_nullable_to_non_nullable
               as String?,
     ) as $Val);
   }
@@ -134,8 +148,10 @@ abstract class _$$SyncQueueItemImplCopyWith<$Res>
       String? payload,
       DateTime createdAt,
       String status,
-      int retryCount,
-      String? errorMessage});
+      int attemptCount,
+      DateTime? lastAttemptAt,
+      DateTime? nextRetryAt,
+      String? lastError});
 }
 
 /// @nodoc
@@ -156,8 +172,10 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
     Object? payload = freezed,
     Object? createdAt = null,
     Object? status = null,
-    Object? retryCount = null,
-    Object? errorMessage = freezed,
+    Object? attemptCount = null,
+    Object? lastAttemptAt = freezed,
+    Object? nextRetryAt = freezed,
+    Object? lastError = freezed,
   }) {
     return _then(_$SyncQueueItemImpl(
       id: null == id
@@ -188,13 +206,21 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
               as String,
-      retryCount: null == retryCount
-          ? _value.retryCount
-          : retryCount // ignore: cast_nullable_to_non_nullable
+      attemptCount: null == attemptCount
+          ? _value.attemptCount
+          : attemptCount // ignore: cast_nullable_to_non_nullable
               as int,
-      errorMessage: freezed == errorMessage
-          ? _value.errorMessage
-          : errorMessage // ignore: cast_nullable_to_non_nullable
+      lastAttemptAt: freezed == lastAttemptAt
+          ? _value.lastAttemptAt
+          : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      nextRetryAt: freezed == nextRetryAt
+          ? _value.nextRetryAt
+          : nextRetryAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
+      lastError: freezed == lastError
+          ? _value.lastError
+          : lastError // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -211,8 +237,10 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       this.payload,
       required this.createdAt,
       this.status = 'pending',
-      this.retryCount = 0,
-      this.errorMessage});
+      this.attemptCount = 0,
+      this.lastAttemptAt,
+      this.nextRetryAt,
+      this.lastError});
 
   factory _$SyncQueueItemImpl.fromJson(Map<String, dynamic> json) =>
       _$$SyncQueueItemImplFromJson(json);
@@ -234,13 +262,17 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
   final String status;
   @override
   @JsonKey()
-  final int retryCount;
+  final int attemptCount;
   @override
-  final String? errorMessage;
+  final DateTime? lastAttemptAt;
+  @override
+  final DateTime? nextRetryAt;
+  @override
+  final String? lastError;
 
   @override
   String toString() {
-    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, createdAt: $createdAt, status: $status, retryCount: $retryCount, errorMessage: $errorMessage)';
+    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, createdAt: $createdAt, status: $status, attemptCount: $attemptCount, lastAttemptAt: $lastAttemptAt, nextRetryAt: $nextRetryAt, lastError: $lastError)';
   }
 
   @override
@@ -259,16 +291,31 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.status, status) || other.status == status) &&
-            (identical(other.retryCount, retryCount) ||
-                other.retryCount == retryCount) &&
-            (identical(other.errorMessage, errorMessage) ||
-                other.errorMessage == errorMessage));
+            (identical(other.attemptCount, attemptCount) ||
+                other.attemptCount == attemptCount) &&
+            (identical(other.lastAttemptAt, lastAttemptAt) ||
+                other.lastAttemptAt == lastAttemptAt) &&
+            (identical(other.nextRetryAt, nextRetryAt) ||
+                other.nextRetryAt == nextRetryAt) &&
+            (identical(other.lastError, lastError) ||
+                other.lastError == lastError));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, entityTable, entityId,
-      operation, payload, createdAt, status, retryCount, errorMessage);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      entityTable,
+      entityId,
+      operation,
+      payload,
+      createdAt,
+      status,
+      attemptCount,
+      lastAttemptAt,
+      nextRetryAt,
+      lastError);
 
   @JsonKey(ignore: true)
   @override
@@ -293,8 +340,10 @@ abstract class _SyncQueueItem implements SyncQueueItem {
       final String? payload,
       required final DateTime createdAt,
       final String status,
-      final int retryCount,
-      final String? errorMessage}) = _$SyncQueueItemImpl;
+      final int attemptCount,
+      final DateTime? lastAttemptAt,
+      final DateTime? nextRetryAt,
+      final String? lastError}) = _$SyncQueueItemImpl;
 
   factory _SyncQueueItem.fromJson(Map<String, dynamic> json) =
       _$SyncQueueItemImpl.fromJson;
@@ -314,9 +363,13 @@ abstract class _SyncQueueItem implements SyncQueueItem {
   @override
   String get status;
   @override
-  int get retryCount;
+  int get attemptCount;
   @override
-  String? get errorMessage;
+  DateTime? get lastAttemptAt;
+  @override
+  DateTime? get nextRetryAt;
+  @override
+  String? get lastError;
   @override
   @JsonKey(ignore: true)
   _$$SyncQueueItemImplCopyWith<_$SyncQueueItemImpl> get copyWith =>

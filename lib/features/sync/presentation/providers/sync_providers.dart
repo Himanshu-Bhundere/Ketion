@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ketion/core/services/background_sync_scheduler.dart';
+import 'package:ketion/core/services/background_sync_scheduler_factory.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
 import 'package:ketion/features/auth/presentation/providers/auth_providers.dart';
@@ -13,6 +15,11 @@ import 'package:ketion/features/sync/domain/repositories/sync_state_repository.d
 import 'package:ketion/features/sync/domain/usecases/enqueue_sync_usecase.dart';
 import 'package:ketion/features/sync/domain/usecases/sync_now_usecase.dart';
 import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
+import 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
+import 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
+
+export 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
+export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
 
 final syncProviderInterfaceProvider = Provider<SyncProvider>((ref) {
   return GoogleDriveSyncProvider();
@@ -41,8 +48,10 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
     queueRepository: queueRepo,
     stateRepository: stateRepo,
     conflictResolver: conflictResolver,
+    db: ref.watch(appDatabaseProvider),
   );
 });
+
 final syncNowUseCaseProvider = Provider<SyncNowUseCase>((ref) {
   final engineRepo = ref.watch(syncEngineRepositoryProvider);
   final widgetService = ref.watch(widgetServiceProvider);
@@ -53,3 +62,15 @@ final enqueueSyncUseCaseProvider = Provider<EnqueueSyncUseCase>((ref) {
   final engineRepo = ref.watch(syncEngineRepositoryProvider);
   return EnqueueSyncUseCase(engineRepo);
 });
+
+final backgroundSyncSchedulerProvider = Provider<BackgroundSyncScheduler>((ref) {
+  return getBackgroundSyncScheduler();
+});
+
+final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
+  final mutex = ref.watch(syncMutexProvider);
+  final useCase = ref.watch(syncNowUseCaseProvider);
+  final scheduler = ref.watch(backgroundSyncSchedulerProvider);
+  return SyncScheduler(mutex, useCase, scheduler);
+});
+

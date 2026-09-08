@@ -10,12 +10,15 @@ import 'package:ketion/features/sync/domain/repositories/sync_state_repository.d
 import 'package:ketion/features/sync/domain/entities/sync_state_entity.dart';
 import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 
+import 'package:ketion/core/database/app_database.dart';
+
 class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncProvider _syncProvider;
   final AuthService _authService;
   final SyncQueueRepository _queueRepository;
   final SyncStateRepository _stateRepository;
   final ConflictResolver _conflictResolver;
+  final AppDatabase _db;
 
   static const List<String> _driveScopes = [
     'https://www.googleapis.com/auth/drive.appdata',
@@ -28,11 +31,13 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     required SyncQueueRepository queueRepository,
     required SyncStateRepository stateRepository,
     required ConflictResolver conflictResolver,
+    required AppDatabase db,
   })  : _syncProvider = syncProvider,
         _authService = authService,
         _queueRepository = queueRepository,
         _stateRepository = stateRepository,
-        _conflictResolver = conflictResolver;
+        _conflictResolver = conflictResolver,
+        _db = db;
 
   @override
   Future<Result<void>> enqueueOperation(
@@ -97,20 +102,20 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         } else if (uploadRes is Error<void>) {
           // Bounded exponential backoff update
           for (final item in items) {
-            final nextRetry = item.retryCount + 1;
+            final nextRetry = item.attemptCount + 1;
             if (nextRetry > 5) {
               await _queueRepository.updateStatus(
                 item.id,
                 'failed',
-                retryCount: nextRetry,
-                errorMessage: uploadRes.failure.message,
+                attemptCount: nextRetry,
+                lastError: uploadRes.failure.message,
               );
             } else {
               await _queueRepository.updateStatus(
                 item.id,
                 'pending',
-                retryCount: nextRetry,
-                errorMessage: uploadRes.failure.message,
+                attemptCount: nextRetry,
+                lastError: uploadRes.failure.message,
               );
             }
           }
@@ -127,7 +132,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     );
     if (stateRes is Success<SyncStateEntity?> && stateRes.value != null) {
       syncState = stateRes.value!;
-      lastCursor = syncState.remoteSyncCursor;
+      lastCursor = syncState.lastAppliedGeneration.toString();
     }
 
     final downloadRes = await _syncProvider.downloadChanges(lastCursor);
@@ -138,31 +143,36 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     final changes = (downloadRes as Success<List<Map<String, dynamic>>>).value;
     String? newCursor = lastCursor;
 
-    for (final change in changes) {
-       final table = change['table'] as String?;
-       final entityId = change['entityId'] as String?;
-       final operation = change['operation'] as String?;
-       final payload = change['payload'] as Map<String, dynamic>?;
+    // Apply all changes and advance cursor atomically
+    await _db.transaction(() async {
+      for (final change in changes) {
+         final table = change['table'] as String?;
+         final entityId = change['entityId'] as String?;
+         final operation = change['operation'] as String?;
+         final payload = change['payload'] as Map<String, dynamic>?;
 
-       if (table != null && entityId != null && operation != null) {
-          await _conflictResolver.resolveAndApply(
-             table: table,
-             entityId: entityId,
-             operation: operation,
-             remotePayload: payload,
-          );
-       }
-       if (change['batchId'] != null) {
-          newCursor = change['batchId'] as String;
-       }
-    }
+         if (table != null && entityId != null && operation != null) {
+            await _conflictResolver.resolveAndApply(
+               table: table,
+               entityId: entityId,
+               operation: operation,
+               remotePayload: payload,
+            );
+         }
+         if (change['batchId'] != null) {
+            newCursor = change['batchId'] as String;
+         }
+      }
 
-    // 5. Update sync state
-    final newState = syncState.copyWith(
-      lastSyncTime: DateTime.now(),
-      remoteSyncCursor: newCursor,
-    );
-    await _stateRepository.saveSyncState(newState);
+      // 5. Update sync state within the same transaction
+      if (newCursor != lastCursor || changes.isNotEmpty) {
+        final newState = syncState.copyWith(
+          lastSyncTime: DateTime.now(),
+          lastAppliedGeneration: int.tryParse(newCursor ?? '0') ?? syncState.lastAppliedGeneration,
+        );
+        await _stateRepository.saveSyncState(newState);
+      }
+    });
 
     return const Success(null);
   }

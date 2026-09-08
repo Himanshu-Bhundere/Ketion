@@ -15,9 +15,11 @@ class SyncQueue extends Table {
         const Constant(
           'pending',
         ),
-      )(); // 'pending', 'processing', 'failed', 'completed'
-  IntColumn get retryCount => integer().withDefault(const Constant(0))();
-  TextColumn get errorMessage => text().nullable()();
+      )(); // 'pending', 'uploading', 'uploaded', 'failed'
+  IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastAttemptAt => dateTime().nullable()();
+  DateTimeColumn get nextRetryAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

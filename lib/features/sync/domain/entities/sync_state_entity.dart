@@ -8,9 +8,8 @@ class SyncStateEntity with _$SyncStateEntity {
   const factory SyncStateEntity({
     required String deviceId,
     required String provider,
-    @Default(0) int lastSyncedVersion,
+    @Default(0) int lastAppliedGeneration,
     DateTime? lastSyncTime,
-    String? remoteSyncCursor,
   }) = _SyncStateEntity;
 
   factory SyncStateEntity.fromJson(Map<String, dynamic> json) =>

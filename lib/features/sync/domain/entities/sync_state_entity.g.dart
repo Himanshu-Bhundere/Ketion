@@ -11,11 +11,11 @@ _$SyncStateEntityImpl _$$SyncStateEntityImplFromJson(
     _$SyncStateEntityImpl(
       deviceId: json['deviceId'] as String,
       provider: json['provider'] as String,
-      lastSyncedVersion: (json['lastSyncedVersion'] as num?)?.toInt() ?? 0,
+      lastAppliedGeneration:
+          (json['lastAppliedGeneration'] as num?)?.toInt() ?? 0,
       lastSyncTime: json['lastSyncTime'] == null
           ? null
           : DateTime.parse(json['lastSyncTime'] as String),
-      remoteSyncCursor: json['remoteSyncCursor'] as String?,
     );
 
 Map<String, dynamic> _$$SyncStateEntityImplToJson(
@@ -23,7 +23,6 @@ Map<String, dynamic> _$$SyncStateEntityImplToJson(
     <String, dynamic>{
       'deviceId': instance.deviceId,
       'provider': instance.provider,
-      'lastSyncedVersion': instance.lastSyncedVersion,
+      'lastAppliedGeneration': instance.lastAppliedGeneration,
       'lastSyncTime': instance.lastSyncTime?.toIso8601String(),
-      'remoteSyncCursor': instance.remoteSyncCursor,
     };

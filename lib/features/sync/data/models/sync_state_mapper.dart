@@ -7,9 +7,8 @@ class SyncStateMapper {
     return SyncStateEntity(
       deviceId: data.deviceId,
       provider: data.provider,
-      lastSyncedVersion: data.lastSyncedVersion,
+      lastAppliedGeneration: data.lastAppliedGeneration,
       lastSyncTime: data.lastSyncTime,
-      remoteSyncCursor: data.remoteSyncCursor,
     );
   }
 
@@ -17,9 +16,8 @@ class SyncStateMapper {
     return SyncStatesCompanion(
       deviceId: Value(entity.deviceId),
       provider: Value(entity.provider),
-      lastSyncedVersion: Value(entity.lastSyncedVersion),
+      lastAppliedGeneration: Value(entity.lastAppliedGeneration),
       lastSyncTime: Value(entity.lastSyncTime),
-      remoteSyncCursor: Value(entity.remoteSyncCursor),
     );
   }
 }

@@ -14,13 +14,18 @@ class SearchRepositoryImpl implements SearchRepository {
   @override
   Future<Result<List<SearchResult>>> searchNotes(String query, {String? typeFilter}) async {
     try {
+      // Sanitize the query to treat it as pure text, not FTS syntax.
+      // Escape double quotes and wrap in quotes for a phrase match.
+      // We append a * for prefix matching.
+      final sanitizedQuery = '"${query.replaceAll('"', '""')}"*';
+
       final String whereClause = typeFilter != null 
           ? 'search_fts MATCH ? AND entityType = ?'
           : 'search_fts MATCH ?';
           
       final variables = typeFilter != null 
-          ? [Variable.withString(query), Variable.withString(typeFilter)]
-          : [Variable.withString(query)];
+          ? [Variable.withString(sanitizedQuery), Variable.withString(typeFilter)]
+          : [Variable.withString(sanitizedQuery)];
 
       final rows = await _database.customSelect(
         '''

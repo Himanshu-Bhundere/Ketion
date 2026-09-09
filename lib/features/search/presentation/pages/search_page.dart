@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/search_providers.dart';
 import '../widgets/search_result_item.dart';
+import 'package:ketion/core/theme/app_spacing.dart';
+import 'package:ketion/core/theme/app_typography.dart';
+import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -15,16 +19,21 @@ class SearchPage extends ConsumerStatefulWidget {
 class _SearchPageState extends ConsumerState<SearchPage> {
   String? _selectedFilter;
   final TextEditingController _controller = TextEditingController();
+  Timer? _debounce;
 
   void _onSearch() {
-    ref.read(searchNotifierProvider.notifier).search(
-      _controller.text, 
-      typeFilter: _selectedFilter,
-    );
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      ref.read(searchNotifierProvider.notifier).search(
+        _controller.text, 
+        typeFilter: _selectedFilter,
+      );
+    });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -94,7 +103,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       body: searchState.when(
         data: (results) {
           if (results.isEmpty) {
-            return const Center(child: Text('No results found.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 48, color: Theme.of(context).colorScheme.outline),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('No results found', style: AppTypography.title),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text('Try adjusting your search terms or filters.', style: AppTypography.body),
+                ],
+              ),
+            );
           }
           return ListView.builder(
             itemCount: results.length,
@@ -121,11 +141,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.separated(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          itemCount: 5,
+          separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+          itemBuilder: (context, index) => SkeletonLoader(
+            width: double.infinity,
+            height: 80,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
         error: (error, stack) => Center(
-          child: Text(
-            'Error: $error',
-            style: const TextStyle(color: Colors.red),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              const SizedBox(height: AppSpacing.md),
+              Text('Search Failed', style: AppTypography.title),
+              const SizedBox(height: AppSpacing.sm),
+              Text(error.toString(), style: AppTypography.body),
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: _onSearch,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Try Again'),
+              ),
+            ],
           ),
         ),
       ),

@@ -3926,19 +3926,31 @@ class $SyncQueueTable extends SyncQueue
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('pending'));
-  static const VerificationMeta _retryCountMeta =
-      const VerificationMeta('retryCount');
+  static const VerificationMeta _attemptCountMeta =
+      const VerificationMeta('attemptCount');
   @override
-  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
-      'retry_count', aliasedName, false,
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+      'attempt_count', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
-  static const VerificationMeta _errorMessageMeta =
-      const VerificationMeta('errorMessage');
+  static const VerificationMeta _lastAttemptAtMeta =
+      const VerificationMeta('lastAttemptAt');
   @override
-  late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
-      'error_message', aliasedName, true,
+  late final GeneratedColumn<DateTime> lastAttemptAt =
+      GeneratedColumn<DateTime>('last_attempt_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _nextRetryAtMeta =
+      const VerificationMeta('nextRetryAt');
+  @override
+  late final GeneratedColumn<DateTime> nextRetryAt = GeneratedColumn<DateTime>(
+      'next_retry_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastErrorMeta =
+      const VerificationMeta('lastError');
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+      'last_error', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
@@ -3949,8 +3961,10 @@ class $SyncQueueTable extends SyncQueue
         payload,
         createdAt,
         status,
-        retryCount,
-        errorMessage
+        attemptCount,
+        lastAttemptAt,
+        nextRetryAt,
+        lastError
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3999,17 +4013,27 @@ class $SyncQueueTable extends SyncQueue
       context.handle(_statusMeta,
           status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     }
-    if (data.containsKey('retry_count')) {
+    if (data.containsKey('attempt_count')) {
       context.handle(
-          _retryCountMeta,
-          retryCount.isAcceptableOrUnknown(
-              data['retry_count']!, _retryCountMeta));
+          _attemptCountMeta,
+          attemptCount.isAcceptableOrUnknown(
+              data['attempt_count']!, _attemptCountMeta));
     }
-    if (data.containsKey('error_message')) {
+    if (data.containsKey('last_attempt_at')) {
       context.handle(
-          _errorMessageMeta,
-          errorMessage.isAcceptableOrUnknown(
-              data['error_message']!, _errorMessageMeta));
+          _lastAttemptAtMeta,
+          lastAttemptAt.isAcceptableOrUnknown(
+              data['last_attempt_at']!, _lastAttemptAtMeta));
+    }
+    if (data.containsKey('next_retry_at')) {
+      context.handle(
+          _nextRetryAtMeta,
+          nextRetryAt.isAcceptableOrUnknown(
+              data['next_retry_at']!, _nextRetryAtMeta));
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(_lastErrorMeta,
+          lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta));
     }
     return context;
   }
@@ -4034,10 +4058,14 @@ class $SyncQueueTable extends SyncQueue
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       status: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
-      retryCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
-      errorMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}error_message']),
+      attemptCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempt_count'])!,
+      lastAttemptAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_attempt_at']),
+      nextRetryAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}next_retry_at']),
+      lastError: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_error']),
     );
   }
 
@@ -4055,8 +4083,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final String? payload;
   final DateTime createdAt;
   final String status;
-  final int retryCount;
-  final String? errorMessage;
+  final int attemptCount;
+  final DateTime? lastAttemptAt;
+  final DateTime? nextRetryAt;
+  final String? lastError;
   const SyncQueueData(
       {required this.id,
       required this.entityTable,
@@ -4065,8 +4095,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       this.payload,
       required this.createdAt,
       required this.status,
-      required this.retryCount,
-      this.errorMessage});
+      required this.attemptCount,
+      this.lastAttemptAt,
+      this.nextRetryAt,
+      this.lastError});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4079,9 +4111,15 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['status'] = Variable<String>(status);
-    map['retry_count'] = Variable<int>(retryCount);
-    if (!nullToAbsent || errorMessage != null) {
-      map['error_message'] = Variable<String>(errorMessage);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || lastAttemptAt != null) {
+      map['last_attempt_at'] = Variable<DateTime>(lastAttemptAt);
+    }
+    if (!nullToAbsent || nextRetryAt != null) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
     }
     return map;
   }
@@ -4097,10 +4135,16 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           : Value(payload),
       createdAt: Value(createdAt),
       status: Value(status),
-      retryCount: Value(retryCount),
-      errorMessage: errorMessage == null && nullToAbsent
+      attemptCount: Value(attemptCount),
+      lastAttemptAt: lastAttemptAt == null && nullToAbsent
           ? const Value.absent()
-          : Value(errorMessage),
+          : Value(lastAttemptAt),
+      nextRetryAt: nextRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRetryAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
     );
   }
 
@@ -4115,8 +4159,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       payload: serializer.fromJson<String?>(json['payload']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       status: serializer.fromJson<String>(json['status']),
-      retryCount: serializer.fromJson<int>(json['retryCount']),
-      errorMessage: serializer.fromJson<String?>(json['errorMessage']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      lastAttemptAt: serializer.fromJson<DateTime?>(json['lastAttemptAt']),
+      nextRetryAt: serializer.fromJson<DateTime?>(json['nextRetryAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
     );
   }
   @override
@@ -4130,8 +4176,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       'payload': serializer.toJson<String?>(payload),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'status': serializer.toJson<String>(status),
-      'retryCount': serializer.toJson<int>(retryCount),
-      'errorMessage': serializer.toJson<String?>(errorMessage),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'lastAttemptAt': serializer.toJson<DateTime?>(lastAttemptAt),
+      'nextRetryAt': serializer.toJson<DateTime?>(nextRetryAt),
+      'lastError': serializer.toJson<String?>(lastError),
     };
   }
 
@@ -4143,8 +4191,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           Value<String?> payload = const Value.absent(),
           DateTime? createdAt,
           String? status,
-          int? retryCount,
-          Value<String?> errorMessage = const Value.absent()}) =>
+          int? attemptCount,
+          Value<DateTime?> lastAttemptAt = const Value.absent(),
+          Value<DateTime?> nextRetryAt = const Value.absent(),
+          Value<String?> lastError = const Value.absent()}) =>
       SyncQueueData(
         id: id ?? this.id,
         entityTable: entityTable ?? this.entityTable,
@@ -4153,9 +4203,11 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
         payload: payload.present ? payload.value : this.payload,
         createdAt: createdAt ?? this.createdAt,
         status: status ?? this.status,
-        retryCount: retryCount ?? this.retryCount,
-        errorMessage:
-            errorMessage.present ? errorMessage.value : this.errorMessage,
+        attemptCount: attemptCount ?? this.attemptCount,
+        lastAttemptAt:
+            lastAttemptAt.present ? lastAttemptAt.value : this.lastAttemptAt,
+        nextRetryAt: nextRetryAt.present ? nextRetryAt.value : this.nextRetryAt,
+        lastError: lastError.present ? lastError.value : this.lastError,
       );
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
     return SyncQueueData(
@@ -4167,11 +4219,15 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       payload: data.payload.present ? data.payload.value : this.payload,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       status: data.status.present ? data.status.value : this.status,
-      retryCount:
-          data.retryCount.present ? data.retryCount.value : this.retryCount,
-      errorMessage: data.errorMessage.present
-          ? data.errorMessage.value
-          : this.errorMessage,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      lastAttemptAt: data.lastAttemptAt.present
+          ? data.lastAttemptAt.value
+          : this.lastAttemptAt,
+      nextRetryAt:
+          data.nextRetryAt.present ? data.nextRetryAt.value : this.nextRetryAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
     );
   }
 
@@ -4185,15 +4241,17 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
           ..write('status: $status, ')
-          ..write('retryCount: $retryCount, ')
-          ..write('errorMessage: $errorMessage')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('lastAttemptAt: $lastAttemptAt, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('lastError: $lastError')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, entityTable, entityId, operation, payload,
-      createdAt, status, retryCount, errorMessage);
+      createdAt, status, attemptCount, lastAttemptAt, nextRetryAt, lastError);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4205,8 +4263,10 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           other.payload == this.payload &&
           other.createdAt == this.createdAt &&
           other.status == this.status &&
-          other.retryCount == this.retryCount &&
-          other.errorMessage == this.errorMessage);
+          other.attemptCount == this.attemptCount &&
+          other.lastAttemptAt == this.lastAttemptAt &&
+          other.nextRetryAt == this.nextRetryAt &&
+          other.lastError == this.lastError);
 }
 
 class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
@@ -4217,8 +4277,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<String?> payload;
   final Value<DateTime> createdAt;
   final Value<String> status;
-  final Value<int> retryCount;
-  final Value<String?> errorMessage;
+  final Value<int> attemptCount;
+  final Value<DateTime?> lastAttemptAt;
+  final Value<DateTime?> nextRetryAt;
+  final Value<String?> lastError;
   final Value<int> rowid;
   const SyncQueueCompanion({
     this.id = const Value.absent(),
@@ -4228,8 +4290,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.payload = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.status = const Value.absent(),
-    this.retryCount = const Value.absent(),
-    this.errorMessage = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SyncQueueCompanion.insert({
@@ -4240,8 +4304,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.payload = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.status = const Value.absent(),
-    this.retryCount = const Value.absent(),
-    this.errorMessage = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         entityTable = Value(entityTable),
@@ -4255,8 +4321,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     Expression<String>? payload,
     Expression<DateTime>? createdAt,
     Expression<String>? status,
-    Expression<int>? retryCount,
-    Expression<String>? errorMessage,
+    Expression<int>? attemptCount,
+    Expression<DateTime>? lastAttemptAt,
+    Expression<DateTime>? nextRetryAt,
+    Expression<String>? lastError,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4267,8 +4335,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       if (payload != null) 'payload': payload,
       if (createdAt != null) 'created_at': createdAt,
       if (status != null) 'status': status,
-      if (retryCount != null) 'retry_count': retryCount,
-      if (errorMessage != null) 'error_message': errorMessage,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (lastAttemptAt != null) 'last_attempt_at': lastAttemptAt,
+      if (nextRetryAt != null) 'next_retry_at': nextRetryAt,
+      if (lastError != null) 'last_error': lastError,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4281,8 +4351,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       Value<String?>? payload,
       Value<DateTime>? createdAt,
       Value<String>? status,
-      Value<int>? retryCount,
-      Value<String?>? errorMessage,
+      Value<int>? attemptCount,
+      Value<DateTime?>? lastAttemptAt,
+      Value<DateTime?>? nextRetryAt,
+      Value<String?>? lastError,
       Value<int>? rowid}) {
     return SyncQueueCompanion(
       id: id ?? this.id,
@@ -4292,8 +4364,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       payload: payload ?? this.payload,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
-      retryCount: retryCount ?? this.retryCount,
-      errorMessage: errorMessage ?? this.errorMessage,
+      attemptCount: attemptCount ?? this.attemptCount,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
+      nextRetryAt: nextRetryAt ?? this.nextRetryAt,
+      lastError: lastError ?? this.lastError,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4322,11 +4396,17 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
-    if (retryCount.present) {
-      map['retry_count'] = Variable<int>(retryCount.value);
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
     }
-    if (errorMessage.present) {
-      map['error_message'] = Variable<String>(errorMessage.value);
+    if (lastAttemptAt.present) {
+      map['last_attempt_at'] = Variable<DateTime>(lastAttemptAt.value);
+    }
+    if (nextRetryAt.present) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4344,8 +4424,10 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
           ..write('status: $status, ')
-          ..write('retryCount: $retryCount, ')
-          ..write('errorMessage: $errorMessage, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('lastAttemptAt: $lastAttemptAt, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('lastError: $lastError, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4370,11 +4452,11 @@ class $SyncStatesTable extends SyncStates
   late final GeneratedColumn<String> provider = GeneratedColumn<String>(
       'provider', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _lastSyncedVersionMeta =
-      const VerificationMeta('lastSyncedVersion');
+  static const VerificationMeta _lastAppliedGenerationMeta =
+      const VerificationMeta('lastAppliedGeneration');
   @override
-  late final GeneratedColumn<int> lastSyncedVersion = GeneratedColumn<int>(
-      'last_synced_version', aliasedName, false,
+  late final GeneratedColumn<int> lastAppliedGeneration = GeneratedColumn<int>(
+      'last_applied_generation', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
@@ -4384,15 +4466,9 @@ class $SyncStatesTable extends SyncStates
   late final GeneratedColumn<DateTime> lastSyncTime = GeneratedColumn<DateTime>(
       'last_sync_time', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _remoteSyncCursorMeta =
-      const VerificationMeta('remoteSyncCursor');
-  @override
-  late final GeneratedColumn<String> remoteSyncCursor = GeneratedColumn<String>(
-      'remote_sync_cursor', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [deviceId, provider, lastSyncedVersion, lastSyncTime, remoteSyncCursor];
+      [deviceId, provider, lastAppliedGeneration, lastSyncTime];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4415,23 +4491,17 @@ class $SyncStatesTable extends SyncStates
     } else if (isInserting) {
       context.missing(_providerMeta);
     }
-    if (data.containsKey('last_synced_version')) {
+    if (data.containsKey('last_applied_generation')) {
       context.handle(
-          _lastSyncedVersionMeta,
-          lastSyncedVersion.isAcceptableOrUnknown(
-              data['last_synced_version']!, _lastSyncedVersionMeta));
+          _lastAppliedGenerationMeta,
+          lastAppliedGeneration.isAcceptableOrUnknown(
+              data['last_applied_generation']!, _lastAppliedGenerationMeta));
     }
     if (data.containsKey('last_sync_time')) {
       context.handle(
           _lastSyncTimeMeta,
           lastSyncTime.isAcceptableOrUnknown(
               data['last_sync_time']!, _lastSyncTimeMeta));
-    }
-    if (data.containsKey('remote_sync_cursor')) {
-      context.handle(
-          _remoteSyncCursorMeta,
-          remoteSyncCursor.isAcceptableOrUnknown(
-              data['remote_sync_cursor']!, _remoteSyncCursorMeta));
     }
     return context;
   }
@@ -4446,12 +4516,10 @@ class $SyncStatesTable extends SyncStates
           .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
       provider: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}provider'])!,
-      lastSyncedVersion: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_synced_version'])!,
+      lastAppliedGeneration: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}last_applied_generation'])!,
       lastSyncTime: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_sync_time']),
-      remoteSyncCursor: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}remote_sync_cursor']),
     );
   }
 
@@ -4464,26 +4532,21 @@ class $SyncStatesTable extends SyncStates
 class SyncStateData extends DataClass implements Insertable<SyncStateData> {
   final String deviceId;
   final String provider;
-  final int lastSyncedVersion;
+  final int lastAppliedGeneration;
   final DateTime? lastSyncTime;
-  final String? remoteSyncCursor;
   const SyncStateData(
       {required this.deviceId,
       required this.provider,
-      required this.lastSyncedVersion,
-      this.lastSyncTime,
-      this.remoteSyncCursor});
+      required this.lastAppliedGeneration,
+      this.lastSyncTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['device_id'] = Variable<String>(deviceId);
     map['provider'] = Variable<String>(provider);
-    map['last_synced_version'] = Variable<int>(lastSyncedVersion);
+    map['last_applied_generation'] = Variable<int>(lastAppliedGeneration);
     if (!nullToAbsent || lastSyncTime != null) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
-    }
-    if (!nullToAbsent || remoteSyncCursor != null) {
-      map['remote_sync_cursor'] = Variable<String>(remoteSyncCursor);
     }
     return map;
   }
@@ -4492,13 +4555,10 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return SyncStatesCompanion(
       deviceId: Value(deviceId),
       provider: Value(provider),
-      lastSyncedVersion: Value(lastSyncedVersion),
+      lastAppliedGeneration: Value(lastAppliedGeneration),
       lastSyncTime: lastSyncTime == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncTime),
-      remoteSyncCursor: remoteSyncCursor == null && nullToAbsent
-          ? const Value.absent()
-          : Value(remoteSyncCursor),
     );
   }
 
@@ -4508,9 +4568,9 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return SyncStateData(
       deviceId: serializer.fromJson<String>(json['deviceId']),
       provider: serializer.fromJson<String>(json['provider']),
-      lastSyncedVersion: serializer.fromJson<int>(json['lastSyncedVersion']),
+      lastAppliedGeneration:
+          serializer.fromJson<int>(json['lastAppliedGeneration']),
       lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
-      remoteSyncCursor: serializer.fromJson<String?>(json['remoteSyncCursor']),
     );
   }
   @override
@@ -4519,41 +4579,34 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return <String, dynamic>{
       'deviceId': serializer.toJson<String>(deviceId),
       'provider': serializer.toJson<String>(provider),
-      'lastSyncedVersion': serializer.toJson<int>(lastSyncedVersion),
+      'lastAppliedGeneration': serializer.toJson<int>(lastAppliedGeneration),
       'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
-      'remoteSyncCursor': serializer.toJson<String?>(remoteSyncCursor),
     };
   }
 
   SyncStateData copyWith(
           {String? deviceId,
           String? provider,
-          int? lastSyncedVersion,
-          Value<DateTime?> lastSyncTime = const Value.absent(),
-          Value<String?> remoteSyncCursor = const Value.absent()}) =>
+          int? lastAppliedGeneration,
+          Value<DateTime?> lastSyncTime = const Value.absent()}) =>
       SyncStateData(
         deviceId: deviceId ?? this.deviceId,
         provider: provider ?? this.provider,
-        lastSyncedVersion: lastSyncedVersion ?? this.lastSyncedVersion,
+        lastAppliedGeneration:
+            lastAppliedGeneration ?? this.lastAppliedGeneration,
         lastSyncTime:
             lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
-        remoteSyncCursor: remoteSyncCursor.present
-            ? remoteSyncCursor.value
-            : this.remoteSyncCursor,
       );
   SyncStateData copyWithCompanion(SyncStatesCompanion data) {
     return SyncStateData(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       provider: data.provider.present ? data.provider.value : this.provider,
-      lastSyncedVersion: data.lastSyncedVersion.present
-          ? data.lastSyncedVersion.value
-          : this.lastSyncedVersion,
+      lastAppliedGeneration: data.lastAppliedGeneration.present
+          ? data.lastAppliedGeneration.value
+          : this.lastAppliedGeneration,
       lastSyncTime: data.lastSyncTime.present
           ? data.lastSyncTime.value
           : this.lastSyncTime,
-      remoteSyncCursor: data.remoteSyncCursor.present
-          ? data.remoteSyncCursor.value
-          : this.remoteSyncCursor,
     );
   }
 
@@ -4562,65 +4615,59 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return (StringBuffer('SyncStateData(')
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
-          ..write('lastSyncedVersion: $lastSyncedVersion, ')
-          ..write('lastSyncTime: $lastSyncTime, ')
-          ..write('remoteSyncCursor: $remoteSyncCursor')
+          ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
+          ..write('lastSyncTime: $lastSyncTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      deviceId, provider, lastSyncedVersion, lastSyncTime, remoteSyncCursor);
+  int get hashCode =>
+      Object.hash(deviceId, provider, lastAppliedGeneration, lastSyncTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncStateData &&
           other.deviceId == this.deviceId &&
           other.provider == this.provider &&
-          other.lastSyncedVersion == this.lastSyncedVersion &&
-          other.lastSyncTime == this.lastSyncTime &&
-          other.remoteSyncCursor == this.remoteSyncCursor);
+          other.lastAppliedGeneration == this.lastAppliedGeneration &&
+          other.lastSyncTime == this.lastSyncTime);
 }
 
 class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   final Value<String> deviceId;
   final Value<String> provider;
-  final Value<int> lastSyncedVersion;
+  final Value<int> lastAppliedGeneration;
   final Value<DateTime?> lastSyncTime;
-  final Value<String?> remoteSyncCursor;
   final Value<int> rowid;
   const SyncStatesCompanion({
     this.deviceId = const Value.absent(),
     this.provider = const Value.absent(),
-    this.lastSyncedVersion = const Value.absent(),
+    this.lastAppliedGeneration = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
-    this.remoteSyncCursor = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SyncStatesCompanion.insert({
     required String deviceId,
     required String provider,
-    this.lastSyncedVersion = const Value.absent(),
+    this.lastAppliedGeneration = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
-    this.remoteSyncCursor = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : deviceId = Value(deviceId),
         provider = Value(provider);
   static Insertable<SyncStateData> custom({
     Expression<String>? deviceId,
     Expression<String>? provider,
-    Expression<int>? lastSyncedVersion,
+    Expression<int>? lastAppliedGeneration,
     Expression<DateTime>? lastSyncTime,
-    Expression<String>? remoteSyncCursor,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (deviceId != null) 'device_id': deviceId,
       if (provider != null) 'provider': provider,
-      if (lastSyncedVersion != null) 'last_synced_version': lastSyncedVersion,
+      if (lastAppliedGeneration != null)
+        'last_applied_generation': lastAppliedGeneration,
       if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
-      if (remoteSyncCursor != null) 'remote_sync_cursor': remoteSyncCursor,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4628,16 +4675,15 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   SyncStatesCompanion copyWith(
       {Value<String>? deviceId,
       Value<String>? provider,
-      Value<int>? lastSyncedVersion,
+      Value<int>? lastAppliedGeneration,
       Value<DateTime?>? lastSyncTime,
-      Value<String?>? remoteSyncCursor,
       Value<int>? rowid}) {
     return SyncStatesCompanion(
       deviceId: deviceId ?? this.deviceId,
       provider: provider ?? this.provider,
-      lastSyncedVersion: lastSyncedVersion ?? this.lastSyncedVersion,
+      lastAppliedGeneration:
+          lastAppliedGeneration ?? this.lastAppliedGeneration,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
-      remoteSyncCursor: remoteSyncCursor ?? this.remoteSyncCursor,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4651,14 +4697,12 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     if (provider.present) {
       map['provider'] = Variable<String>(provider.value);
     }
-    if (lastSyncedVersion.present) {
-      map['last_synced_version'] = Variable<int>(lastSyncedVersion.value);
+    if (lastAppliedGeneration.present) {
+      map['last_applied_generation'] =
+          Variable<int>(lastAppliedGeneration.value);
     }
     if (lastSyncTime.present) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
-    }
-    if (remoteSyncCursor.present) {
-      map['remote_sync_cursor'] = Variable<String>(remoteSyncCursor.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4671,9 +4715,8 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     return (StringBuffer('SyncStatesCompanion(')
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
-          ..write('lastSyncedVersion: $lastSyncedVersion, ')
+          ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
           ..write('lastSyncTime: $lastSyncTime, ')
-          ..write('remoteSyncCursor: $remoteSyncCursor, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8673,8 +8716,10 @@ typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   Value<String?> payload,
   Value<DateTime> createdAt,
   Value<String> status,
-  Value<int> retryCount,
-  Value<String?> errorMessage,
+  Value<int> attemptCount,
+  Value<DateTime?> lastAttemptAt,
+  Value<DateTime?> nextRetryAt,
+  Value<String?> lastError,
   Value<int> rowid,
 });
 typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
@@ -8685,8 +8730,10 @@ typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<String?> payload,
   Value<DateTime> createdAt,
   Value<String> status,
-  Value<int> retryCount,
-  Value<String?> errorMessage,
+  Value<int> attemptCount,
+  Value<DateTime?> lastAttemptAt,
+  Value<DateTime?> nextRetryAt,
+  Value<String?> lastError,
   Value<int> rowid,
 });
 
@@ -8720,11 +8767,17 @@ class $$SyncQueueTableFilterComposer
   ColumnFilters<String> get status => $composableBuilder(
       column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get lastAttemptAt => $composableBuilder(
+      column: $table.lastAttemptAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+      column: $table.lastError, builder: (column) => ColumnFilters(column));
 }
 
 class $$SyncQueueTableOrderingComposer
@@ -8757,12 +8810,19 @@ class $$SyncQueueTableOrderingComposer
   ColumnOrderings<String> get status => $composableBuilder(
       column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage,
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastAttemptAt => $composableBuilder(
+      column: $table.lastAttemptAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+      column: $table.lastError, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SyncQueueTableAnnotationComposer
@@ -8795,11 +8855,17 @@ class $$SyncQueueTableAnnotationComposer
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<int> get retryCount => $composableBuilder(
-      column: $table.retryCount, builder: (column) => column);
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+      column: $table.attemptCount, builder: (column) => column);
 
-  GeneratedColumn<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => column);
+  GeneratedColumn<DateTime> get lastAttemptAt => $composableBuilder(
+      column: $table.lastAttemptAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
 }
 
 class $$SyncQueueTableTableManager extends RootTableManager<
@@ -8835,8 +8901,10 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             Value<String?> payload = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> status = const Value.absent(),
-            Value<int> retryCount = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
+            Value<int> attemptCount = const Value.absent(),
+            Value<DateTime?> lastAttemptAt = const Value.absent(),
+            Value<DateTime?> nextRetryAt = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncQueueCompanion(
@@ -8847,8 +8915,10 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             payload: payload,
             createdAt: createdAt,
             status: status,
-            retryCount: retryCount,
-            errorMessage: errorMessage,
+            attemptCount: attemptCount,
+            lastAttemptAt: lastAttemptAt,
+            nextRetryAt: nextRetryAt,
+            lastError: lastError,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8859,8 +8929,10 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             Value<String?> payload = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> status = const Value.absent(),
-            Value<int> retryCount = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
+            Value<int> attemptCount = const Value.absent(),
+            Value<DateTime?> lastAttemptAt = const Value.absent(),
+            Value<DateTime?> nextRetryAt = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncQueueCompanion.insert(
@@ -8871,8 +8943,10 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             payload: payload,
             createdAt: createdAt,
             status: status,
-            retryCount: retryCount,
-            errorMessage: errorMessage,
+            attemptCount: attemptCount,
+            lastAttemptAt: lastAttemptAt,
+            nextRetryAt: nextRetryAt,
+            lastError: lastError,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -8900,17 +8974,15 @@ typedef $$SyncQueueTableProcessedTableManager = ProcessedTableManager<
 typedef $$SyncStatesTableCreateCompanionBuilder = SyncStatesCompanion Function({
   required String deviceId,
   required String provider,
-  Value<int> lastSyncedVersion,
+  Value<int> lastAppliedGeneration,
   Value<DateTime?> lastSyncTime,
-  Value<String?> remoteSyncCursor,
   Value<int> rowid,
 });
 typedef $$SyncStatesTableUpdateCompanionBuilder = SyncStatesCompanion Function({
   Value<String> deviceId,
   Value<String> provider,
-  Value<int> lastSyncedVersion,
+  Value<int> lastAppliedGeneration,
   Value<DateTime?> lastSyncTime,
-  Value<String?> remoteSyncCursor,
   Value<int> rowid,
 });
 
@@ -8929,16 +9001,12 @@ class $$SyncStatesTableFilterComposer
   ColumnFilters<String> get provider => $composableBuilder(
       column: $table.provider, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastSyncedVersion => $composableBuilder(
-      column: $table.lastSyncedVersion,
+  ColumnFilters<int> get lastAppliedGeneration => $composableBuilder(
+      column: $table.lastAppliedGeneration,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get remoteSyncCursor => $composableBuilder(
-      column: $table.remoteSyncCursor,
-      builder: (column) => ColumnFilters(column));
 }
 
 class $$SyncStatesTableOrderingComposer
@@ -8956,16 +9024,12 @@ class $$SyncStatesTableOrderingComposer
   ColumnOrderings<String> get provider => $composableBuilder(
       column: $table.provider, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastSyncedVersion => $composableBuilder(
-      column: $table.lastSyncedVersion,
+  ColumnOrderings<int> get lastAppliedGeneration => $composableBuilder(
+      column: $table.lastAppliedGeneration,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get remoteSyncCursor => $composableBuilder(
-      column: $table.remoteSyncCursor,
       builder: (column) => ColumnOrderings(column));
 }
 
@@ -8984,14 +9048,11 @@ class $$SyncStatesTableAnnotationComposer
   GeneratedColumn<String> get provider =>
       $composableBuilder(column: $table.provider, builder: (column) => column);
 
-  GeneratedColumn<int> get lastSyncedVersion => $composableBuilder(
-      column: $table.lastSyncedVersion, builder: (column) => column);
+  GeneratedColumn<int> get lastAppliedGeneration => $composableBuilder(
+      column: $table.lastAppliedGeneration, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteSyncCursor => $composableBuilder(
-      column: $table.remoteSyncCursor, builder: (column) => column);
 }
 
 class $$SyncStatesTableTableManager extends RootTableManager<
@@ -9022,33 +9083,29 @@ class $$SyncStatesTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> deviceId = const Value.absent(),
             Value<String> provider = const Value.absent(),
-            Value<int> lastSyncedVersion = const Value.absent(),
+            Value<int> lastAppliedGeneration = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
-            Value<String?> remoteSyncCursor = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncStatesCompanion(
             deviceId: deviceId,
             provider: provider,
-            lastSyncedVersion: lastSyncedVersion,
+            lastAppliedGeneration: lastAppliedGeneration,
             lastSyncTime: lastSyncTime,
-            remoteSyncCursor: remoteSyncCursor,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String deviceId,
             required String provider,
-            Value<int> lastSyncedVersion = const Value.absent(),
+            Value<int> lastAppliedGeneration = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
-            Value<String?> remoteSyncCursor = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncStatesCompanion.insert(
             deviceId: deviceId,
             provider: provider,
-            lastSyncedVersion: lastSyncedVersion,
+            lastAppliedGeneration: lastAppliedGeneration,
             lastSyncTime: lastSyncTime,
-            remoteSyncCursor: remoteSyncCursor,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

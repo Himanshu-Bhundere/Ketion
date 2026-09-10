@@ -166,15 +166,8 @@ class EditorPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: blocksAsync.when(
-        data: (blocks) {
-          return BlockEditorWidget(
-            pageId: pageId,
-            blocks: blocks,
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+      body: BlockEditorWidget(
+        pageId: pageId,
       ),
     );
   }

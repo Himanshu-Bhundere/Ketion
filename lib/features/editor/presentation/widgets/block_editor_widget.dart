@@ -11,17 +11,16 @@ import 'blocks/file_block_widget.dart';
 import 'floating_toolbar.dart';
 import '../../../media/presentation/providers/media_picker_provider.dart';
 import '../../domain/models/block_data_models.dart';
+import '../../domain/models/visible_block.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 
 class BlockEditorWidget extends ConsumerStatefulWidget {
   final String pageId;
-  final List<Block> blocks;
 
   const BlockEditorWidget({
     super.key,
     required this.pageId,
-    required this.blocks,
   });
 
   @override
@@ -45,14 +44,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     ref.read(editorStateProvider(widget.pageId).notifier).deleteBlock(blockId);
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
-    ref
-        .read(editorStateProvider(widget.pageId).notifier)
-        .reorderBlocks(oldIndex, newIndex);
-  }
-
-  Widget _buildBlockWidget(Block block, int index) {
-    // Factory method for rendering different block types
+  Widget _buildBlockWidget(VisibleBlock visibleBlock, int index) {
+    final block = visibleBlock.block;
+    
     Widget content;
     switch (block.type) {
       case 'list':
@@ -97,6 +91,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
       key: ValueKey(block.id),
       blockId: block.id,
       index: index,
+      depth: visibleBlock.depth,
+      pageId: widget.pageId,
       child: content,
     );
   }
@@ -105,7 +101,10 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
     
-    final block = widget.blocks.firstWhere((b) => b.id == focusedId, orElse: () => widget.blocks.first);
+    final blocks = ref.read(visibleBlocksProvider(widget.pageId));
+    final visibleBlock = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first);
+    final block = visibleBlock.block;
+    
     final mediaPicker = ref.read(mediaPickerProvider);
     
     Future<bool> handleSizeCheck(int sizeInBytes) async {
@@ -155,7 +154,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
     
-    final block = widget.blocks.firstWhere((b) => b.id == focusedId, orElse: () => widget.blocks.first);
+    final blocks = ref.read(visibleBlocksProvider(widget.pageId));
+    final block = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first).block;
+    
     if (block.type == 'text') {
       try {
         final Map<String, dynamic> json = jsonDecode(block.data) as Map<String, dynamic>;
@@ -169,7 +170,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
     
-    final block = widget.blocks.firstWhere((b) => b.id == focusedId, orElse: () => widget.blocks.first);
+    final blocks = ref.read(visibleBlocksProvider(widget.pageId));
+    final block = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first).block;
+    
     if (block.type == 'text') {
       try {
         final Map<String, dynamic> json = jsonDecode(block.data) as Map<String, dynamic>;
@@ -190,6 +193,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   @override
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    final visibleBlocks = ref.watch(visibleBlocksProvider(widget.pageId));
     
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
@@ -210,40 +214,32 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         autofocus: true,
         child: Stack(
           children: [
-        Theme(
-          data: Theme.of(context).copyWith(
-            canvasColor: Colors.transparent,
-          ),
-          child: ReorderableListView.builder(
-            scrollController: _scrollController,
-            padding: EdgeInsets.only(
-              left: 16.0, 
-              right: 16.0, 
-              top: 24.0, 
-              bottom: isKeyboardVisible ? 80.0 : 24.0,
+            ListView.builder(
+              controller: _scrollController,
+              padding: EdgeInsets.only(
+                left: 16.0, 
+                right: 16.0, 
+                top: 24.0, 
+                bottom: isKeyboardVisible ? 80.0 : 24.0,
+              ),
+              itemCount: visibleBlocks.length,
+              itemBuilder: (context, index) {
+                return _buildBlockWidget(visibleBlocks[index], index);
+              },
             ),
-            itemCount: widget.blocks.length,
-            itemBuilder: (context, index) {
-              final block = widget.blocks[index];
-              return _buildBlockWidget(block, index);
-            },
-            onReorder: _onReorder,
-            buildDefaultDragHandles: false,
-          ),
-        ),
-        if (isKeyboardVisible)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: FloatingToolbar(
-              onAddHeading: _convertFocusedToHeading,
-              onAddList: _convertFocusedToList,
-              onAddImage: () => _addMedia('image'),
-              onAddFile: () => _addMedia('file'),
-            ),
-          ),
-      ],
+            if (isKeyboardVisible)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: FloatingToolbar(
+                  onAddHeading: _convertFocusedToHeading,
+                  onAddList: _convertFocusedToList,
+                  onAddImage: () => _addMedia('image'),
+                  onAddFile: () => _addMedia('file'),
+                ),
+              ),
+          ],
         ),
       ),
     );

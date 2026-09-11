@@ -117,3 +117,5 @@ class WidgetServiceImpl implements WidgetService {
     }
   }
 }
+
+WidgetService getWidgetService(dynamic db) => WidgetServiceImpl(db as AppDatabase);

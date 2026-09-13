@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+import 'package:ketion/core/services/file_picker_service.dart';
 import 'package:ketion/features/blocks/domain/usecases/create_block_usecase.dart';
 import 'package:ketion/features/editor/domain/models/block_data_models.dart';
 import 'package:ketion/features/pages/domain/usecases/create_page_usecase.dart';
@@ -8,29 +7,26 @@ import 'package:ketion/features/pages/domain/usecases/create_page_usecase.dart';
 class ImportService {
   final CreatePageUseCase _createPageUseCase;
   final CreateBlockUseCase _createBlockUseCase;
+  final FilePickerService _filePickerService;
 
-  ImportService(this._createPageUseCase, this._createBlockUseCase);
+  ImportService(this._createPageUseCase, this._createBlockUseCase, this._filePickerService);
 
   Future<void> importMarkdownFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
+    final result = await _filePickerService.pickFiles(
       allowedExtensions: ['md', 'txt'],
     );
 
-    if (result == null || result.files.single.path == null) {
+    if (result.isEmpty) {
       return; // User canceled
     }
 
-    await importMarkdownFromPath(result.files.single.path!);
+    await importMarkdownFromBytes(result.first.name, result.first.bytes);
   }
 
-  Future<void> importMarkdownFromPath(String path) async {
-    final file = File(path);
-    if (!await file.exists()) return;
-
-    final fileName = path.split(Platform.pathSeparator).last;
+  Future<void> importMarkdownFromBytes(String fileName, List<int> bytes) async {
     final title = fileName.replaceAll(RegExp(r'\.md$|\.txt$'), '');
-    final lines = await file.readAsLines();
+    final content = utf8.decode(bytes);
+    final lines = const LineSplitter().convert(content);
 
     // 1. Create page
     final pageResult = await _createPageUseCase(title: title);

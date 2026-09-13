@@ -16,7 +16,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
     if (entity == null) {
       // Create default settings if not exists
-      final newModel = const AppSettingsModel();
+      const newModel = AppSettingsModel();
       await _db.into(_db.appSettingsTable).insert(
             AppSettingsTableCompanion.insert(
               id: 'default',

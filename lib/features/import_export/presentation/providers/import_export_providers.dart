@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ketion/core/services/file_picker_service.dart';
+import 'package:ketion/core/services/file_picker_service_factory.dart';
 import 'package:ketion/features/blocks/presentation/providers/block_providers.dart';
 import 'package:ketion/features/import_export/domain/services/export_repository.dart';
 import 'package:ketion/features/import_export/domain/services/html_exporter.dart';
@@ -20,9 +22,14 @@ final exportUseCaseProvider = Provider<ExportUseCase>((ref) {
   return ExportUseCase(ref.watch(exportRepositoriesProvider));
 });
 
+final filePickerServiceProvider = Provider<FilePickerService>((ref) {
+  return getFilePickerService();
+});
+
 final importServiceProvider = Provider<ImportService>((ref) {
   return ImportService(
     ref.watch(createPageUseCaseProvider),
     ref.watch(createBlockUseCaseProvider),
+    ref.watch(filePickerServiceProvider),
   );
 });

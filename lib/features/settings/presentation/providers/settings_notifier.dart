@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 import '../../domain/models/app_settings_model.dart';
 import 'settings_providers.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
@@ -29,7 +28,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
     
     // Update Workmanager
-    Workmanager().cancelAll();
+    await Workmanager().cancelAll();
     
     if (frequency == 'Manual') return;
     

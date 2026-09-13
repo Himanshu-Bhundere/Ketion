@@ -24,10 +24,10 @@ class ExportUseCase {
     final file = File('${dir.path}/${page.title.replaceAll(' ', '_')}.$extension');
     await file.writeAsBytes(bytes);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(file.path)],
       subject: page.title,
-    );
+    ),);
   }
 
   ExportDocument _mapToDocument(Page page, List<Block> blocks) {
@@ -41,11 +41,11 @@ class ExportUseCase {
             nodes.add(DocumentNode.heading(
               level: textBlock.headingLevel,
               spans: _mapSpans(textBlock.spans),
-            ));
+            ),);
           } else {
             nodes.add(DocumentNode.paragraph(
               spans: _mapSpans(textBlock.spans),
-            ));
+            ),);
           }
         },
         list: (ListBlockData listBlock) {
@@ -53,19 +53,19 @@ class ExportUseCase {
             listType: listBlock.listType,
             checked: listBlock.checked,
             spans: _mapSpans(listBlock.spans),
-          ));
+          ),);
         },
         image: (ImageBlockData imgBlock) {
           nodes.add(DocumentNode.image(
             attachmentId: imgBlock.attachmentId,
             caption: imgBlock.caption,
-          ));
+          ),);
         },
         file: (FileBlockData fileBlock) {
           nodes.add(DocumentNode.file(
             attachmentId: fileBlock.attachmentId,
             caption: fileBlock.caption,
-          ));
+          ),);
         },
         unknown: (UnknownBlockData _) {
           // Skip or handle unknown
@@ -91,6 +91,6 @@ class ExportUseCase {
       code: s.code,
       link: s.link,
       pageLink: s.pageLinkTitle,
-    )).toList();
+    ),).toList();
   }
 }

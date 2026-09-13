@@ -56,6 +56,23 @@ class SettingsPage extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
+                  'Editor',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              const ListTile(
+                leading: Icon(Icons.text_format),
+                title: Text('Default Typography'),
+                subtitle: Text('Set standard text formatting for new notes'),
+              ),
+              const Divider(),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
                   'Storage & Cache',
                   style: TextStyle(
                     fontSize: 14,
@@ -69,7 +86,7 @@ class SettingsPage extends ConsumerWidget {
                 title: const Text('Clear Cache'),
                 subtitle: Text(settings.lastCleanup != null 
                     ? 'Last cleaned: ${settings.lastCleanup.toString().split('.')[0]}'
-                    : 'Clear temporary files and image cache'),
+                    : 'Clear temporary files and image cache',),
                 onTap: () async {
                   await ref.read(appSettingsProvider.notifier).clearCache();
                   if (context.mounted) {
@@ -199,6 +216,41 @@ class SettingsPage extends ConsumerWidget {
                 }
               }
             },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Accessibility',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          const ListTile(
+            leading: Icon(Icons.accessibility),
+            title: Text('High Contrast'),
+            subtitle: Text('Increase color contrast across the app'),
+            trailing: Switch(value: false, onChanged: null),
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Diagnostics',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          const ListTile(
+            leading: Icon(Icons.bug_report),
+            title: Text('Export Debug Logs'),
+            subtitle: Text('Save error and sync logs for troubleshooting'),
           ),
         ],
       );

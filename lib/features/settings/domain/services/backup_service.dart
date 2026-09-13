@@ -28,8 +28,10 @@ class BackupService {
     
     await encoder.close();
     
-    final xFile = XFile(zipPath, mimeType: 'application/zip');
-    await Share.shareXFiles([xFile], text: 'Ketion Backup');
+    await SharePlus.instance.share(ShareParams(
+      files: [XFile(zipPath, mimeType: 'application/zip')],
+      text: 'Ketion Backup',
+    ),);
   }
   
   Future<void> restoreBackup() async {
@@ -55,7 +57,7 @@ class BackupService {
     }
     
     if (!hasDb) {
-      throw Exception("Invalid backup file: ketion.sqlite not found");
+      throw Exception('Invalid backup file: ketion.sqlite not found');
     }
     
     final appDir = await getApplicationDocumentsDirectory();

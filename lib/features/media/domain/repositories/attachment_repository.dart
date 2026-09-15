@@ -22,4 +22,17 @@ abstract class AttachmentRepository {
 
   /// Resolves the absolute path for an attachment's relative path.
   Future<String> resolveAttachmentPath(Attachment attachment);
+
+  /// Performs garbage collection to remove physical files that are no longer referenced
+  /// by any non-deleted attachment in the database.
+  Future<void> garbageCollectOrphanedFiles();
+
+  /// Updates the sync status and drive file ID for an attachment.
+  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus, {String? driveFileId, String? localPath});
+
+  /// Retrieves all attachments that are pending upload or failed.
+  Future<List<Attachment>> getPendingUploads();
+
+  /// Retrieves all attachments that are pending download (have a driveFileId but no local file).
+  Future<List<Attachment>> getPendingDownloads();
 }

@@ -21,17 +21,22 @@ Attachment _$AttachmentFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Attachment {
   String get id => throw _privateConstructorUsedError;
-  String get pageId => throw _privateConstructorUsedError;
   String get blockId => throw _privateConstructorUsedError;
-  String get fileName => throw _privateConstructorUsedError;
+  String? get driveFileId => throw _privateConstructorUsedError;
+  String? get localPath => throw _privateConstructorUsedError;
   String get mimeType => throw _privateConstructorUsedError;
-  int get size => throw _privateConstructorUsedError;
-  String get sha256 => throw _privateConstructorUsedError;
-  String get relativePath => throw _privateConstructorUsedError;
+  String? get checksumSha256 => throw _privateConstructorUsedError;
+  int get fileSize => throw _privateConstructorUsedError;
+  int? get width => throw _privateConstructorUsedError;
+  int? get height => throw _privateConstructorUsedError;
+  int? get duration => throw _privateConstructorUsedError;
   String? get thumbnailPath => throw _privateConstructorUsedError;
+  AttachmentUploadStatus get uploadStatus => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
+  int get version => throw _privateConstructorUsedError;
   bool get deleted => throw _privateConstructorUsedError;
+  bool get isPinnedOffline => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -47,17 +52,22 @@ abstract class $AttachmentCopyWith<$Res> {
   @useResult
   $Res call(
       {String id,
-      String pageId,
       String blockId,
-      String fileName,
+      String? driveFileId,
+      String? localPath,
       String mimeType,
-      int size,
-      String sha256,
-      String relativePath,
+      String? checksumSha256,
+      int fileSize,
+      int? width,
+      int? height,
+      int? duration,
       String? thumbnailPath,
+      AttachmentUploadStatus uploadStatus,
       DateTime createdAt,
       DateTime updatedAt,
-      bool deleted});
+      int version,
+      bool deleted,
+      bool isPinnedOffline});
 }
 
 /// @nodoc
@@ -74,55 +84,72 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
   @override
   $Res call({
     Object? id = null,
-    Object? pageId = null,
     Object? blockId = null,
-    Object? fileName = null,
+    Object? driveFileId = freezed,
+    Object? localPath = freezed,
     Object? mimeType = null,
-    Object? size = null,
-    Object? sha256 = null,
-    Object? relativePath = null,
+    Object? checksumSha256 = freezed,
+    Object? fileSize = null,
+    Object? width = freezed,
+    Object? height = freezed,
+    Object? duration = freezed,
     Object? thumbnailPath = freezed,
+    Object? uploadStatus = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? version = null,
     Object? deleted = null,
+    Object? isPinnedOffline = null,
   }) {
     return _then(_value.copyWith(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      pageId: null == pageId
-          ? _value.pageId
-          : pageId // ignore: cast_nullable_to_non_nullable
-              as String,
       blockId: null == blockId
           ? _value.blockId
           : blockId // ignore: cast_nullable_to_non_nullable
               as String,
-      fileName: null == fileName
-          ? _value.fileName
-          : fileName // ignore: cast_nullable_to_non_nullable
-              as String,
+      driveFileId: freezed == driveFileId
+          ? _value.driveFileId
+          : driveFileId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      localPath: freezed == localPath
+          ? _value.localPath
+          : localPath // ignore: cast_nullable_to_non_nullable
+              as String?,
       mimeType: null == mimeType
           ? _value.mimeType
           : mimeType // ignore: cast_nullable_to_non_nullable
               as String,
-      size: null == size
-          ? _value.size
-          : size // ignore: cast_nullable_to_non_nullable
+      checksumSha256: freezed == checksumSha256
+          ? _value.checksumSha256
+          : checksumSha256 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      fileSize: null == fileSize
+          ? _value.fileSize
+          : fileSize // ignore: cast_nullable_to_non_nullable
               as int,
-      sha256: null == sha256
-          ? _value.sha256
-          : sha256 // ignore: cast_nullable_to_non_nullable
-              as String,
-      relativePath: null == relativePath
-          ? _value.relativePath
-          : relativePath // ignore: cast_nullable_to_non_nullable
-              as String,
+      width: freezed == width
+          ? _value.width
+          : width // ignore: cast_nullable_to_non_nullable
+              as int?,
+      height: freezed == height
+          ? _value.height
+          : height // ignore: cast_nullable_to_non_nullable
+              as int?,
+      duration: freezed == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
+              as int?,
       thumbnailPath: freezed == thumbnailPath
           ? _value.thumbnailPath
           : thumbnailPath // ignore: cast_nullable_to_non_nullable
               as String?,
+      uploadStatus: null == uploadStatus
+          ? _value.uploadStatus
+          : uploadStatus // ignore: cast_nullable_to_non_nullable
+              as AttachmentUploadStatus,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -131,9 +158,17 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      version: null == version
+          ? _value.version
+          : version // ignore: cast_nullable_to_non_nullable
+              as int,
       deleted: null == deleted
           ? _value.deleted
           : deleted // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isPinnedOffline: null == isPinnedOffline
+          ? _value.isPinnedOffline
+          : isPinnedOffline // ignore: cast_nullable_to_non_nullable
               as bool,
     ) as $Val);
   }
@@ -149,17 +184,22 @@ abstract class _$$AttachmentImplCopyWith<$Res>
   @useResult
   $Res call(
       {String id,
-      String pageId,
       String blockId,
-      String fileName,
+      String? driveFileId,
+      String? localPath,
       String mimeType,
-      int size,
-      String sha256,
-      String relativePath,
+      String? checksumSha256,
+      int fileSize,
+      int? width,
+      int? height,
+      int? duration,
       String? thumbnailPath,
+      AttachmentUploadStatus uploadStatus,
       DateTime createdAt,
       DateTime updatedAt,
-      bool deleted});
+      int version,
+      bool deleted,
+      bool isPinnedOffline});
 }
 
 /// @nodoc
@@ -174,55 +214,72 @@ class __$$AttachmentImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? pageId = null,
     Object? blockId = null,
-    Object? fileName = null,
+    Object? driveFileId = freezed,
+    Object? localPath = freezed,
     Object? mimeType = null,
-    Object? size = null,
-    Object? sha256 = null,
-    Object? relativePath = null,
+    Object? checksumSha256 = freezed,
+    Object? fileSize = null,
+    Object? width = freezed,
+    Object? height = freezed,
+    Object? duration = freezed,
     Object? thumbnailPath = freezed,
+    Object? uploadStatus = null,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? version = null,
     Object? deleted = null,
+    Object? isPinnedOffline = null,
   }) {
     return _then(_$AttachmentImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as String,
-      pageId: null == pageId
-          ? _value.pageId
-          : pageId // ignore: cast_nullable_to_non_nullable
-              as String,
       blockId: null == blockId
           ? _value.blockId
           : blockId // ignore: cast_nullable_to_non_nullable
               as String,
-      fileName: null == fileName
-          ? _value.fileName
-          : fileName // ignore: cast_nullable_to_non_nullable
-              as String,
+      driveFileId: freezed == driveFileId
+          ? _value.driveFileId
+          : driveFileId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      localPath: freezed == localPath
+          ? _value.localPath
+          : localPath // ignore: cast_nullable_to_non_nullable
+              as String?,
       mimeType: null == mimeType
           ? _value.mimeType
           : mimeType // ignore: cast_nullable_to_non_nullable
               as String,
-      size: null == size
-          ? _value.size
-          : size // ignore: cast_nullable_to_non_nullable
+      checksumSha256: freezed == checksumSha256
+          ? _value.checksumSha256
+          : checksumSha256 // ignore: cast_nullable_to_non_nullable
+              as String?,
+      fileSize: null == fileSize
+          ? _value.fileSize
+          : fileSize // ignore: cast_nullable_to_non_nullable
               as int,
-      sha256: null == sha256
-          ? _value.sha256
-          : sha256 // ignore: cast_nullable_to_non_nullable
-              as String,
-      relativePath: null == relativePath
-          ? _value.relativePath
-          : relativePath // ignore: cast_nullable_to_non_nullable
-              as String,
+      width: freezed == width
+          ? _value.width
+          : width // ignore: cast_nullable_to_non_nullable
+              as int?,
+      height: freezed == height
+          ? _value.height
+          : height // ignore: cast_nullable_to_non_nullable
+              as int?,
+      duration: freezed == duration
+          ? _value.duration
+          : duration // ignore: cast_nullable_to_non_nullable
+              as int?,
       thumbnailPath: freezed == thumbnailPath
           ? _value.thumbnailPath
           : thumbnailPath // ignore: cast_nullable_to_non_nullable
               as String?,
+      uploadStatus: null == uploadStatus
+          ? _value.uploadStatus
+          : uploadStatus // ignore: cast_nullable_to_non_nullable
+              as AttachmentUploadStatus,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -231,9 +288,17 @@ class __$$AttachmentImplCopyWithImpl<$Res>
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      version: null == version
+          ? _value.version
+          : version // ignore: cast_nullable_to_non_nullable
+              as int,
       deleted: null == deleted
           ? _value.deleted
           : deleted // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isPinnedOffline: null == isPinnedOffline
+          ? _value.isPinnedOffline
+          : isPinnedOffline // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -244,17 +309,22 @@ class __$$AttachmentImplCopyWithImpl<$Res>
 class _$AttachmentImpl implements _Attachment {
   const _$AttachmentImpl(
       {required this.id,
-      required this.pageId,
       required this.blockId,
-      required this.fileName,
+      this.driveFileId,
+      this.localPath,
       required this.mimeType,
-      required this.size,
-      required this.sha256,
-      required this.relativePath,
+      this.checksumSha256,
+      required this.fileSize,
+      this.width,
+      this.height,
+      this.duration,
       this.thumbnailPath,
+      this.uploadStatus = AttachmentUploadStatus.pending,
       required this.createdAt,
       required this.updatedAt,
-      this.deleted = false});
+      this.version = 1,
+      this.deleted = false,
+      this.isPinnedOffline = false});
 
   factory _$AttachmentImpl.fromJson(Map<String, dynamic> json) =>
       _$$AttachmentImplFromJson(json);
@@ -262,32 +332,45 @@ class _$AttachmentImpl implements _Attachment {
   @override
   final String id;
   @override
-  final String pageId;
-  @override
   final String blockId;
   @override
-  final String fileName;
+  final String? driveFileId;
+  @override
+  final String? localPath;
   @override
   final String mimeType;
   @override
-  final int size;
+  final String? checksumSha256;
   @override
-  final String sha256;
+  final int fileSize;
   @override
-  final String relativePath;
+  final int? width;
+  @override
+  final int? height;
+  @override
+  final int? duration;
   @override
   final String? thumbnailPath;
+  @override
+  @JsonKey()
+  final AttachmentUploadStatus uploadStatus;
   @override
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
   @override
   @JsonKey()
+  final int version;
+  @override
+  @JsonKey()
   final bool deleted;
+  @override
+  @JsonKey()
+  final bool isPinnedOffline;
 
   @override
   String toString() {
-    return 'Attachment(id: $id, pageId: $pageId, blockId: $blockId, fileName: $fileName, mimeType: $mimeType, size: $size, sha256: $sha256, relativePath: $relativePath, thumbnailPath: $thumbnailPath, createdAt: $createdAt, updatedAt: $updatedAt, deleted: $deleted)';
+    return 'Attachment(id: $id, blockId: $blockId, driveFileId: $driveFileId, localPath: $localPath, mimeType: $mimeType, checksumSha256: $checksumSha256, fileSize: $fileSize, width: $width, height: $height, duration: $duration, thumbnailPath: $thumbnailPath, uploadStatus: $uploadStatus, createdAt: $createdAt, updatedAt: $updatedAt, version: $version, deleted: $deleted, isPinnedOffline: $isPinnedOffline)';
   }
 
   @override
@@ -296,23 +379,33 @@ class _$AttachmentImpl implements _Attachment {
         (other.runtimeType == runtimeType &&
             other is _$AttachmentImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.pageId, pageId) || other.pageId == pageId) &&
             (identical(other.blockId, blockId) || other.blockId == blockId) &&
-            (identical(other.fileName, fileName) ||
-                other.fileName == fileName) &&
+            (identical(other.driveFileId, driveFileId) ||
+                other.driveFileId == driveFileId) &&
+            (identical(other.localPath, localPath) ||
+                other.localPath == localPath) &&
             (identical(other.mimeType, mimeType) ||
                 other.mimeType == mimeType) &&
-            (identical(other.size, size) || other.size == size) &&
-            (identical(other.sha256, sha256) || other.sha256 == sha256) &&
-            (identical(other.relativePath, relativePath) ||
-                other.relativePath == relativePath) &&
+            (identical(other.checksumSha256, checksumSha256) ||
+                other.checksumSha256 == checksumSha256) &&
+            (identical(other.fileSize, fileSize) ||
+                other.fileSize == fileSize) &&
+            (identical(other.width, width) || other.width == width) &&
+            (identical(other.height, height) || other.height == height) &&
+            (identical(other.duration, duration) ||
+                other.duration == duration) &&
             (identical(other.thumbnailPath, thumbnailPath) ||
                 other.thumbnailPath == thumbnailPath) &&
+            (identical(other.uploadStatus, uploadStatus) ||
+                other.uploadStatus == uploadStatus) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
-            (identical(other.deleted, deleted) || other.deleted == deleted));
+            (identical(other.version, version) || other.version == version) &&
+            (identical(other.deleted, deleted) || other.deleted == deleted) &&
+            (identical(other.isPinnedOffline, isPinnedOffline) ||
+                other.isPinnedOffline == isPinnedOffline));
   }
 
   @JsonKey(ignore: true)
@@ -320,17 +413,22 @@ class _$AttachmentImpl implements _Attachment {
   int get hashCode => Object.hash(
       runtimeType,
       id,
-      pageId,
       blockId,
-      fileName,
+      driveFileId,
+      localPath,
       mimeType,
-      size,
-      sha256,
-      relativePath,
+      checksumSha256,
+      fileSize,
+      width,
+      height,
+      duration,
       thumbnailPath,
+      uploadStatus,
       createdAt,
       updatedAt,
-      deleted);
+      version,
+      deleted,
+      isPinnedOffline);
 
   @JsonKey(ignore: true)
   @override
@@ -349,17 +447,22 @@ class _$AttachmentImpl implements _Attachment {
 abstract class _Attachment implements Attachment {
   const factory _Attachment(
       {required final String id,
-      required final String pageId,
       required final String blockId,
-      required final String fileName,
+      final String? driveFileId,
+      final String? localPath,
       required final String mimeType,
-      required final int size,
-      required final String sha256,
-      required final String relativePath,
+      final String? checksumSha256,
+      required final int fileSize,
+      final int? width,
+      final int? height,
+      final int? duration,
       final String? thumbnailPath,
+      final AttachmentUploadStatus uploadStatus,
       required final DateTime createdAt,
       required final DateTime updatedAt,
-      final bool deleted}) = _$AttachmentImpl;
+      final int version,
+      final bool deleted,
+      final bool isPinnedOffline}) = _$AttachmentImpl;
 
   factory _Attachment.fromJson(Map<String, dynamic> json) =
       _$AttachmentImpl.fromJson;
@@ -367,27 +470,37 @@ abstract class _Attachment implements Attachment {
   @override
   String get id;
   @override
-  String get pageId;
-  @override
   String get blockId;
   @override
-  String get fileName;
+  String? get driveFileId;
+  @override
+  String? get localPath;
   @override
   String get mimeType;
   @override
-  int get size;
+  String? get checksumSha256;
   @override
-  String get sha256;
+  int get fileSize;
   @override
-  String get relativePath;
+  int? get width;
+  @override
+  int? get height;
+  @override
+  int? get duration;
   @override
   String? get thumbnailPath;
+  @override
+  AttachmentUploadStatus get uploadStatus;
   @override
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
   @override
+  int get version;
+  @override
   bool get deleted;
+  @override
+  bool get isPinnedOffline;
   @override
   @JsonKey(ignore: true)
   _$$AttachmentImplCopyWith<_$AttachmentImpl> get copyWith =>

@@ -40,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -337,6 +337,12 @@ class AppDatabase extends _$AppDatabase {
           // Ensure they are created if they somehow don't exist.
           await m.createTable(syncStates);
           await m.createTable(syncQueue);
+        }
+        if (from < 11) {
+          // Phase 2: Schema changed significantly for attachments.
+          // Since attachments are not heavily populated in Phase 1, drop and recreate.
+          await m.deleteTable(attachments.actualTableName);
+          await m.createTable(attachments);
         }
       },
       beforeOpen: (details) async {

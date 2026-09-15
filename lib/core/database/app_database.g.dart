@@ -1139,51 +1139,72 @@ class $AttachmentsTable extends Attachments
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _pageIdMeta = const VerificationMeta('pageId');
-  @override
-  late final GeneratedColumn<String> pageId = GeneratedColumn<String>(
-      'page_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _blockIdMeta =
       const VerificationMeta('blockId');
   @override
   late final GeneratedColumn<String> blockId = GeneratedColumn<String>(
       'block_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _fileNameMeta =
-      const VerificationMeta('fileName');
+  static const VerificationMeta _driveFileIdMeta =
+      const VerificationMeta('driveFileId');
   @override
-  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
-      'file_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+  late final GeneratedColumn<String> driveFileId = GeneratedColumn<String>(
+      'drive_file_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _localPathMeta =
+      const VerificationMeta('localPath');
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+      'local_path', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _mimeTypeMeta =
       const VerificationMeta('mimeType');
   @override
   late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
       'mime_type', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _sizeMeta = const VerificationMeta('size');
+  static const VerificationMeta _checksumSha256Meta =
+      const VerificationMeta('checksumSha256');
   @override
-  late final GeneratedColumn<int> size = GeneratedColumn<int>(
-      'size', aliasedName, false,
+  late final GeneratedColumn<String> checksumSha256 = GeneratedColumn<String>(
+      'checksum_sha256', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _fileSizeMeta =
+      const VerificationMeta('fileSize');
+  @override
+  late final GeneratedColumn<int> fileSize = GeneratedColumn<int>(
+      'file_size', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
+  static const VerificationMeta _widthMeta = const VerificationMeta('width');
   @override
-  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
-      'sha256', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _relativePathMeta =
-      const VerificationMeta('relativePath');
+  late final GeneratedColumn<int> width = GeneratedColumn<int>(
+      'width', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _heightMeta = const VerificationMeta('height');
   @override
-  late final GeneratedColumn<String> relativePath = GeneratedColumn<String>(
-      'relative_path', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+  late final GeneratedColumn<int> height = GeneratedColumn<int>(
+      'height', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _durationMeta =
+      const VerificationMeta('duration');
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+      'duration', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _thumbnailPathMeta =
       const VerificationMeta('thumbnailPath');
   @override
   late final GeneratedColumn<String> thumbnailPath = GeneratedColumn<String>(
       'thumbnail_path', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _uploadStatusMeta =
+      const VerificationMeta('uploadStatus');
+  @override
+  late final GeneratedColumn<String> uploadStatus = GeneratedColumn<String>(
+      'upload_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pending'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1200,6 +1221,14 @@ class $AttachmentsTable extends Attachments
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+      'version', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
   static const VerificationMeta _deletedMeta =
       const VerificationMeta('deleted');
   @override
@@ -1210,20 +1239,35 @@ class $AttachmentsTable extends Attachments
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _isPinnedOfflineMeta =
+      const VerificationMeta('isPinnedOffline');
+  @override
+  late final GeneratedColumn<bool> isPinnedOffline = GeneratedColumn<bool>(
+      'is_pinned_offline', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_pinned_offline" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
-        pageId,
         blockId,
-        fileName,
+        driveFileId,
+        localPath,
         mimeType,
-        size,
-        sha256,
-        relativePath,
+        checksumSha256,
+        fileSize,
+        width,
+        height,
+        duration,
         thumbnailPath,
+        uploadStatus,
         createdAt,
         updatedAt,
-        deleted
+        version,
+        deleted,
+        isPinnedOffline
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1240,23 +1284,21 @@ class $AttachmentsTable extends Attachments
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('page_id')) {
-      context.handle(_pageIdMeta,
-          pageId.isAcceptableOrUnknown(data['page_id']!, _pageIdMeta));
-    } else if (isInserting) {
-      context.missing(_pageIdMeta);
-    }
     if (data.containsKey('block_id')) {
       context.handle(_blockIdMeta,
           blockId.isAcceptableOrUnknown(data['block_id']!, _blockIdMeta));
     } else if (isInserting) {
       context.missing(_blockIdMeta);
     }
-    if (data.containsKey('file_name')) {
-      context.handle(_fileNameMeta,
-          fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta));
-    } else if (isInserting) {
-      context.missing(_fileNameMeta);
+    if (data.containsKey('drive_file_id')) {
+      context.handle(
+          _driveFileIdMeta,
+          driveFileId.isAcceptableOrUnknown(
+              data['drive_file_id']!, _driveFileIdMeta));
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(_localPathMeta,
+          localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta));
     }
     if (data.containsKey('mime_type')) {
       context.handle(_mimeTypeMeta,
@@ -1264,31 +1306,41 @@ class $AttachmentsTable extends Attachments
     } else if (isInserting) {
       context.missing(_mimeTypeMeta);
     }
-    if (data.containsKey('size')) {
+    if (data.containsKey('checksum_sha256')) {
       context.handle(
-          _sizeMeta, size.isAcceptableOrUnknown(data['size']!, _sizeMeta));
-    } else if (isInserting) {
-      context.missing(_sizeMeta);
+          _checksumSha256Meta,
+          checksumSha256.isAcceptableOrUnknown(
+              data['checksum_sha256']!, _checksumSha256Meta));
     }
-    if (data.containsKey('sha256')) {
-      context.handle(_sha256Meta,
-          sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta));
+    if (data.containsKey('file_size')) {
+      context.handle(_fileSizeMeta,
+          fileSize.isAcceptableOrUnknown(data['file_size']!, _fileSizeMeta));
     } else if (isInserting) {
-      context.missing(_sha256Meta);
+      context.missing(_fileSizeMeta);
     }
-    if (data.containsKey('relative_path')) {
+    if (data.containsKey('width')) {
       context.handle(
-          _relativePathMeta,
-          relativePath.isAcceptableOrUnknown(
-              data['relative_path']!, _relativePathMeta));
-    } else if (isInserting) {
-      context.missing(_relativePathMeta);
+          _widthMeta, width.isAcceptableOrUnknown(data['width']!, _widthMeta));
+    }
+    if (data.containsKey('height')) {
+      context.handle(_heightMeta,
+          height.isAcceptableOrUnknown(data['height']!, _heightMeta));
+    }
+    if (data.containsKey('duration')) {
+      context.handle(_durationMeta,
+          duration.isAcceptableOrUnknown(data['duration']!, _durationMeta));
     }
     if (data.containsKey('thumbnail_path')) {
       context.handle(
           _thumbnailPathMeta,
           thumbnailPath.isAcceptableOrUnknown(
               data['thumbnail_path']!, _thumbnailPathMeta));
+    }
+    if (data.containsKey('upload_status')) {
+      context.handle(
+          _uploadStatusMeta,
+          uploadStatus.isAcceptableOrUnknown(
+              data['upload_status']!, _uploadStatusMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -1298,9 +1350,19 @@ class $AttachmentsTable extends Attachments
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    }
     if (data.containsKey('deleted')) {
       context.handle(_deletedMeta,
           deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
+    if (data.containsKey('is_pinned_offline')) {
+      context.handle(
+          _isPinnedOfflineMeta,
+          isPinnedOffline.isAcceptableOrUnknown(
+              data['is_pinned_offline']!, _isPinnedOfflineMeta));
     }
     return context;
   }
@@ -1313,28 +1375,38 @@ class $AttachmentsTable extends Attachments
     return AttachmentData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
-      pageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}page_id'])!,
       blockId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}block_id'])!,
-      fileName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}file_name'])!,
+      driveFileId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}drive_file_id']),
+      localPath: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}local_path']),
       mimeType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}mime_type'])!,
-      size: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}size'])!,
-      sha256: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sha256'])!,
-      relativePath: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}relative_path'])!,
+      checksumSha256: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}checksum_sha256']),
+      fileSize: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}file_size'])!,
+      width: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}width']),
+      height: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}height']),
+      duration: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration']),
       thumbnailPath: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}thumbnail_path']),
+      uploadStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}upload_status'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       deleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      isPinnedOffline: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_pinned_offline'])!,
     );
   }
 
@@ -1346,66 +1418,108 @@ class $AttachmentsTable extends Attachments
 
 class AttachmentData extends DataClass implements Insertable<AttachmentData> {
   final String id;
-  final String pageId;
   final String blockId;
-  final String fileName;
+  final String? driveFileId;
+  final String? localPath;
   final String mimeType;
-  final int size;
-  final String sha256;
-  final String relativePath;
+  final String? checksumSha256;
+  final int fileSize;
+  final int? width;
+  final int? height;
+  final int? duration;
   final String? thumbnailPath;
+  final String uploadStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int version;
   final bool deleted;
+  final bool isPinnedOffline;
   const AttachmentData(
       {required this.id,
-      required this.pageId,
       required this.blockId,
-      required this.fileName,
+      this.driveFileId,
+      this.localPath,
       required this.mimeType,
-      required this.size,
-      required this.sha256,
-      required this.relativePath,
+      this.checksumSha256,
+      required this.fileSize,
+      this.width,
+      this.height,
+      this.duration,
       this.thumbnailPath,
+      required this.uploadStatus,
       required this.createdAt,
       required this.updatedAt,
-      required this.deleted});
+      required this.version,
+      required this.deleted,
+      required this.isPinnedOffline});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['page_id'] = Variable<String>(pageId);
     map['block_id'] = Variable<String>(blockId);
-    map['file_name'] = Variable<String>(fileName);
+    if (!nullToAbsent || driveFileId != null) {
+      map['drive_file_id'] = Variable<String>(driveFileId);
+    }
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
     map['mime_type'] = Variable<String>(mimeType);
-    map['size'] = Variable<int>(size);
-    map['sha256'] = Variable<String>(sha256);
-    map['relative_path'] = Variable<String>(relativePath);
+    if (!nullToAbsent || checksumSha256 != null) {
+      map['checksum_sha256'] = Variable<String>(checksumSha256);
+    }
+    map['file_size'] = Variable<int>(fileSize);
+    if (!nullToAbsent || width != null) {
+      map['width'] = Variable<int>(width);
+    }
+    if (!nullToAbsent || height != null) {
+      map['height'] = Variable<int>(height);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
     if (!nullToAbsent || thumbnailPath != null) {
       map['thumbnail_path'] = Variable<String>(thumbnailPath);
     }
+    map['upload_status'] = Variable<String>(uploadStatus);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['version'] = Variable<int>(version);
     map['deleted'] = Variable<bool>(deleted);
+    map['is_pinned_offline'] = Variable<bool>(isPinnedOffline);
     return map;
   }
 
   AttachmentsCompanion toCompanion(bool nullToAbsent) {
     return AttachmentsCompanion(
       id: Value(id),
-      pageId: Value(pageId),
       blockId: Value(blockId),
-      fileName: Value(fileName),
+      driveFileId: driveFileId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driveFileId),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
       mimeType: Value(mimeType),
-      size: Value(size),
-      sha256: Value(sha256),
-      relativePath: Value(relativePath),
+      checksumSha256: checksumSha256 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checksumSha256),
+      fileSize: Value(fileSize),
+      width:
+          width == null && nullToAbsent ? const Value.absent() : Value(width),
+      height:
+          height == null && nullToAbsent ? const Value.absent() : Value(height),
+      duration: duration == null && nullToAbsent
+          ? const Value.absent()
+          : Value(duration),
       thumbnailPath: thumbnailPath == null && nullToAbsent
           ? const Value.absent()
           : Value(thumbnailPath),
+      uploadStatus: Value(uploadStatus),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      version: Value(version),
       deleted: Value(deleted),
+      isPinnedOffline: Value(isPinnedOffline),
     );
   }
 
@@ -1414,17 +1528,22 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AttachmentData(
       id: serializer.fromJson<String>(json['id']),
-      pageId: serializer.fromJson<String>(json['pageId']),
       blockId: serializer.fromJson<String>(json['blockId']),
-      fileName: serializer.fromJson<String>(json['fileName']),
+      driveFileId: serializer.fromJson<String?>(json['driveFileId']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
       mimeType: serializer.fromJson<String>(json['mimeType']),
-      size: serializer.fromJson<int>(json['size']),
-      sha256: serializer.fromJson<String>(json['sha256']),
-      relativePath: serializer.fromJson<String>(json['relativePath']),
+      checksumSha256: serializer.fromJson<String?>(json['checksumSha256']),
+      fileSize: serializer.fromJson<int>(json['fileSize']),
+      width: serializer.fromJson<int?>(json['width']),
+      height: serializer.fromJson<int?>(json['height']),
+      duration: serializer.fromJson<int?>(json['duration']),
       thumbnailPath: serializer.fromJson<String?>(json['thumbnailPath']),
+      uploadStatus: serializer.fromJson<String>(json['uploadStatus']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      version: serializer.fromJson<int>(json['version']),
       deleted: serializer.fromJson<bool>(json['deleted']),
+      isPinnedOffline: serializer.fromJson<bool>(json['isPinnedOffline']),
     );
   }
   @override
@@ -1432,66 +1551,92 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'pageId': serializer.toJson<String>(pageId),
       'blockId': serializer.toJson<String>(blockId),
-      'fileName': serializer.toJson<String>(fileName),
+      'driveFileId': serializer.toJson<String?>(driveFileId),
+      'localPath': serializer.toJson<String?>(localPath),
       'mimeType': serializer.toJson<String>(mimeType),
-      'size': serializer.toJson<int>(size),
-      'sha256': serializer.toJson<String>(sha256),
-      'relativePath': serializer.toJson<String>(relativePath),
+      'checksumSha256': serializer.toJson<String?>(checksumSha256),
+      'fileSize': serializer.toJson<int>(fileSize),
+      'width': serializer.toJson<int?>(width),
+      'height': serializer.toJson<int?>(height),
+      'duration': serializer.toJson<int?>(duration),
       'thumbnailPath': serializer.toJson<String?>(thumbnailPath),
+      'uploadStatus': serializer.toJson<String>(uploadStatus),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'version': serializer.toJson<int>(version),
       'deleted': serializer.toJson<bool>(deleted),
+      'isPinnedOffline': serializer.toJson<bool>(isPinnedOffline),
     };
   }
 
   AttachmentData copyWith(
           {String? id,
-          String? pageId,
           String? blockId,
-          String? fileName,
+          Value<String?> driveFileId = const Value.absent(),
+          Value<String?> localPath = const Value.absent(),
           String? mimeType,
-          int? size,
-          String? sha256,
-          String? relativePath,
+          Value<String?> checksumSha256 = const Value.absent(),
+          int? fileSize,
+          Value<int?> width = const Value.absent(),
+          Value<int?> height = const Value.absent(),
+          Value<int?> duration = const Value.absent(),
           Value<String?> thumbnailPath = const Value.absent(),
+          String? uploadStatus,
           DateTime? createdAt,
           DateTime? updatedAt,
-          bool? deleted}) =>
+          int? version,
+          bool? deleted,
+          bool? isPinnedOffline}) =>
       AttachmentData(
         id: id ?? this.id,
-        pageId: pageId ?? this.pageId,
         blockId: blockId ?? this.blockId,
-        fileName: fileName ?? this.fileName,
+        driveFileId: driveFileId.present ? driveFileId.value : this.driveFileId,
+        localPath: localPath.present ? localPath.value : this.localPath,
         mimeType: mimeType ?? this.mimeType,
-        size: size ?? this.size,
-        sha256: sha256 ?? this.sha256,
-        relativePath: relativePath ?? this.relativePath,
+        checksumSha256:
+            checksumSha256.present ? checksumSha256.value : this.checksumSha256,
+        fileSize: fileSize ?? this.fileSize,
+        width: width.present ? width.value : this.width,
+        height: height.present ? height.value : this.height,
+        duration: duration.present ? duration.value : this.duration,
         thumbnailPath:
             thumbnailPath.present ? thumbnailPath.value : this.thumbnailPath,
+        uploadStatus: uploadStatus ?? this.uploadStatus,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        version: version ?? this.version,
         deleted: deleted ?? this.deleted,
+        isPinnedOffline: isPinnedOffline ?? this.isPinnedOffline,
       );
   AttachmentData copyWithCompanion(AttachmentsCompanion data) {
     return AttachmentData(
       id: data.id.present ? data.id.value : this.id,
-      pageId: data.pageId.present ? data.pageId.value : this.pageId,
       blockId: data.blockId.present ? data.blockId.value : this.blockId,
-      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      driveFileId:
+          data.driveFileId.present ? data.driveFileId.value : this.driveFileId,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
       mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
-      size: data.size.present ? data.size.value : this.size,
-      sha256: data.sha256.present ? data.sha256.value : this.sha256,
-      relativePath: data.relativePath.present
-          ? data.relativePath.value
-          : this.relativePath,
+      checksumSha256: data.checksumSha256.present
+          ? data.checksumSha256.value
+          : this.checksumSha256,
+      fileSize: data.fileSize.present ? data.fileSize.value : this.fileSize,
+      width: data.width.present ? data.width.value : this.width,
+      height: data.height.present ? data.height.value : this.height,
+      duration: data.duration.present ? data.duration.value : this.duration,
       thumbnailPath: data.thumbnailPath.present
           ? data.thumbnailPath.value
           : this.thumbnailPath,
+      uploadStatus: data.uploadStatus.present
+          ? data.uploadStatus.value
+          : this.uploadStatus,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      version: data.version.present ? data.version.value : this.version,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      isPinnedOffline: data.isPinnedOffline.present
+          ? data.isPinnedOffline.value
+          : this.isPinnedOffline,
     );
   }
 
@@ -1499,152 +1644,209 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
   String toString() {
     return (StringBuffer('AttachmentData(')
           ..write('id: $id, ')
-          ..write('pageId: $pageId, ')
           ..write('blockId: $blockId, ')
-          ..write('fileName: $fileName, ')
+          ..write('driveFileId: $driveFileId, ')
+          ..write('localPath: $localPath, ')
           ..write('mimeType: $mimeType, ')
-          ..write('size: $size, ')
-          ..write('sha256: $sha256, ')
-          ..write('relativePath: $relativePath, ')
+          ..write('checksumSha256: $checksumSha256, ')
+          ..write('fileSize: $fileSize, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('duration: $duration, ')
           ..write('thumbnailPath: $thumbnailPath, ')
+          ..write('uploadStatus: $uploadStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deleted: $deleted')
+          ..write('version: $version, ')
+          ..write('deleted: $deleted, ')
+          ..write('isPinnedOffline: $isPinnedOffline')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, pageId, blockId, fileName, mimeType, size,
-      sha256, relativePath, thumbnailPath, createdAt, updatedAt, deleted);
+  int get hashCode => Object.hash(
+      id,
+      blockId,
+      driveFileId,
+      localPath,
+      mimeType,
+      checksumSha256,
+      fileSize,
+      width,
+      height,
+      duration,
+      thumbnailPath,
+      uploadStatus,
+      createdAt,
+      updatedAt,
+      version,
+      deleted,
+      isPinnedOffline);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AttachmentData &&
           other.id == this.id &&
-          other.pageId == this.pageId &&
           other.blockId == this.blockId &&
-          other.fileName == this.fileName &&
+          other.driveFileId == this.driveFileId &&
+          other.localPath == this.localPath &&
           other.mimeType == this.mimeType &&
-          other.size == this.size &&
-          other.sha256 == this.sha256 &&
-          other.relativePath == this.relativePath &&
+          other.checksumSha256 == this.checksumSha256 &&
+          other.fileSize == this.fileSize &&
+          other.width == this.width &&
+          other.height == this.height &&
+          other.duration == this.duration &&
           other.thumbnailPath == this.thumbnailPath &&
+          other.uploadStatus == this.uploadStatus &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.deleted == this.deleted);
+          other.version == this.version &&
+          other.deleted == this.deleted &&
+          other.isPinnedOffline == this.isPinnedOffline);
 }
 
 class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
   final Value<String> id;
-  final Value<String> pageId;
   final Value<String> blockId;
-  final Value<String> fileName;
+  final Value<String?> driveFileId;
+  final Value<String?> localPath;
   final Value<String> mimeType;
-  final Value<int> size;
-  final Value<String> sha256;
-  final Value<String> relativePath;
+  final Value<String?> checksumSha256;
+  final Value<int> fileSize;
+  final Value<int?> width;
+  final Value<int?> height;
+  final Value<int?> duration;
   final Value<String?> thumbnailPath;
+  final Value<String> uploadStatus;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<int> version;
   final Value<bool> deleted;
+  final Value<bool> isPinnedOffline;
   final Value<int> rowid;
   const AttachmentsCompanion({
     this.id = const Value.absent(),
-    this.pageId = const Value.absent(),
     this.blockId = const Value.absent(),
-    this.fileName = const Value.absent(),
+    this.driveFileId = const Value.absent(),
+    this.localPath = const Value.absent(),
     this.mimeType = const Value.absent(),
-    this.size = const Value.absent(),
-    this.sha256 = const Value.absent(),
-    this.relativePath = const Value.absent(),
+    this.checksumSha256 = const Value.absent(),
+    this.fileSize = const Value.absent(),
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.duration = const Value.absent(),
     this.thumbnailPath = const Value.absent(),
+    this.uploadStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.isPinnedOffline = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AttachmentsCompanion.insert({
     required String id,
-    required String pageId,
     required String blockId,
-    required String fileName,
+    this.driveFileId = const Value.absent(),
+    this.localPath = const Value.absent(),
     required String mimeType,
-    required int size,
-    required String sha256,
-    required String relativePath,
+    this.checksumSha256 = const Value.absent(),
+    required int fileSize,
+    this.width = const Value.absent(),
+    this.height = const Value.absent(),
+    this.duration = const Value.absent(),
     this.thumbnailPath = const Value.absent(),
+    this.uploadStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.isPinnedOffline = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
-        pageId = Value(pageId),
         blockId = Value(blockId),
-        fileName = Value(fileName),
         mimeType = Value(mimeType),
-        size = Value(size),
-        sha256 = Value(sha256),
-        relativePath = Value(relativePath);
+        fileSize = Value(fileSize);
   static Insertable<AttachmentData> custom({
     Expression<String>? id,
-    Expression<String>? pageId,
     Expression<String>? blockId,
-    Expression<String>? fileName,
+    Expression<String>? driveFileId,
+    Expression<String>? localPath,
     Expression<String>? mimeType,
-    Expression<int>? size,
-    Expression<String>? sha256,
-    Expression<String>? relativePath,
+    Expression<String>? checksumSha256,
+    Expression<int>? fileSize,
+    Expression<int>? width,
+    Expression<int>? height,
+    Expression<int>? duration,
     Expression<String>? thumbnailPath,
+    Expression<String>? uploadStatus,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<int>? version,
     Expression<bool>? deleted,
+    Expression<bool>? isPinnedOffline,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (pageId != null) 'page_id': pageId,
       if (blockId != null) 'block_id': blockId,
-      if (fileName != null) 'file_name': fileName,
+      if (driveFileId != null) 'drive_file_id': driveFileId,
+      if (localPath != null) 'local_path': localPath,
       if (mimeType != null) 'mime_type': mimeType,
-      if (size != null) 'size': size,
-      if (sha256 != null) 'sha256': sha256,
-      if (relativePath != null) 'relative_path': relativePath,
+      if (checksumSha256 != null) 'checksum_sha256': checksumSha256,
+      if (fileSize != null) 'file_size': fileSize,
+      if (width != null) 'width': width,
+      if (height != null) 'height': height,
+      if (duration != null) 'duration': duration,
       if (thumbnailPath != null) 'thumbnail_path': thumbnailPath,
+      if (uploadStatus != null) 'upload_status': uploadStatus,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (version != null) 'version': version,
       if (deleted != null) 'deleted': deleted,
+      if (isPinnedOffline != null) 'is_pinned_offline': isPinnedOffline,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   AttachmentsCompanion copyWith(
       {Value<String>? id,
-      Value<String>? pageId,
       Value<String>? blockId,
-      Value<String>? fileName,
+      Value<String?>? driveFileId,
+      Value<String?>? localPath,
       Value<String>? mimeType,
-      Value<int>? size,
-      Value<String>? sha256,
-      Value<String>? relativePath,
+      Value<String?>? checksumSha256,
+      Value<int>? fileSize,
+      Value<int?>? width,
+      Value<int?>? height,
+      Value<int?>? duration,
       Value<String?>? thumbnailPath,
+      Value<String>? uploadStatus,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
+      Value<int>? version,
       Value<bool>? deleted,
+      Value<bool>? isPinnedOffline,
       Value<int>? rowid}) {
     return AttachmentsCompanion(
       id: id ?? this.id,
-      pageId: pageId ?? this.pageId,
       blockId: blockId ?? this.blockId,
-      fileName: fileName ?? this.fileName,
+      driveFileId: driveFileId ?? this.driveFileId,
+      localPath: localPath ?? this.localPath,
       mimeType: mimeType ?? this.mimeType,
-      size: size ?? this.size,
-      sha256: sha256 ?? this.sha256,
-      relativePath: relativePath ?? this.relativePath,
+      checksumSha256: checksumSha256 ?? this.checksumSha256,
+      fileSize: fileSize ?? this.fileSize,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      duration: duration ?? this.duration,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
+      uploadStatus: uploadStatus ?? this.uploadStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      version: version ?? this.version,
       deleted: deleted ?? this.deleted,
+      isPinnedOffline: isPinnedOffline ?? this.isPinnedOffline,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1655,29 +1857,38 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (pageId.present) {
-      map['page_id'] = Variable<String>(pageId.value);
-    }
     if (blockId.present) {
       map['block_id'] = Variable<String>(blockId.value);
     }
-    if (fileName.present) {
-      map['file_name'] = Variable<String>(fileName.value);
+    if (driveFileId.present) {
+      map['drive_file_id'] = Variable<String>(driveFileId.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
     }
     if (mimeType.present) {
       map['mime_type'] = Variable<String>(mimeType.value);
     }
-    if (size.present) {
-      map['size'] = Variable<int>(size.value);
+    if (checksumSha256.present) {
+      map['checksum_sha256'] = Variable<String>(checksumSha256.value);
     }
-    if (sha256.present) {
-      map['sha256'] = Variable<String>(sha256.value);
+    if (fileSize.present) {
+      map['file_size'] = Variable<int>(fileSize.value);
     }
-    if (relativePath.present) {
-      map['relative_path'] = Variable<String>(relativePath.value);
+    if (width.present) {
+      map['width'] = Variable<int>(width.value);
+    }
+    if (height.present) {
+      map['height'] = Variable<int>(height.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
     }
     if (thumbnailPath.present) {
       map['thumbnail_path'] = Variable<String>(thumbnailPath.value);
+    }
+    if (uploadStatus.present) {
+      map['upload_status'] = Variable<String>(uploadStatus.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1685,8 +1896,14 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (isPinnedOffline.present) {
+      map['is_pinned_offline'] = Variable<bool>(isPinnedOffline.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1698,17 +1915,22 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
   String toString() {
     return (StringBuffer('AttachmentsCompanion(')
           ..write('id: $id, ')
-          ..write('pageId: $pageId, ')
           ..write('blockId: $blockId, ')
-          ..write('fileName: $fileName, ')
+          ..write('driveFileId: $driveFileId, ')
+          ..write('localPath: $localPath, ')
           ..write('mimeType: $mimeType, ')
-          ..write('size: $size, ')
-          ..write('sha256: $sha256, ')
-          ..write('relativePath: $relativePath, ')
+          ..write('checksumSha256: $checksumSha256, ')
+          ..write('fileSize: $fileSize, ')
+          ..write('width: $width, ')
+          ..write('height: $height, ')
+          ..write('duration: $duration, ')
           ..write('thumbnailPath: $thumbnailPath, ')
+          ..write('uploadStatus: $uploadStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('version: $version, ')
           ..write('deleted: $deleted, ')
+          ..write('isPinnedOffline: $isPinnedOffline, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6505,33 +6727,43 @@ typedef $$BlocksTableProcessedTableManager = ProcessedTableManager<
 typedef $$AttachmentsTableCreateCompanionBuilder = AttachmentsCompanion
     Function({
   required String id,
-  required String pageId,
   required String blockId,
-  required String fileName,
+  Value<String?> driveFileId,
+  Value<String?> localPath,
   required String mimeType,
-  required int size,
-  required String sha256,
-  required String relativePath,
+  Value<String?> checksumSha256,
+  required int fileSize,
+  Value<int?> width,
+  Value<int?> height,
+  Value<int?> duration,
   Value<String?> thumbnailPath,
+  Value<String> uploadStatus,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<int> version,
   Value<bool> deleted,
+  Value<bool> isPinnedOffline,
   Value<int> rowid,
 });
 typedef $$AttachmentsTableUpdateCompanionBuilder = AttachmentsCompanion
     Function({
   Value<String> id,
-  Value<String> pageId,
   Value<String> blockId,
-  Value<String> fileName,
+  Value<String?> driveFileId,
+  Value<String?> localPath,
   Value<String> mimeType,
-  Value<int> size,
-  Value<String> sha256,
-  Value<String> relativePath,
+  Value<String?> checksumSha256,
+  Value<int> fileSize,
+  Value<int?> width,
+  Value<int?> height,
+  Value<int?> duration,
   Value<String?> thumbnailPath,
+  Value<String> uploadStatus,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<int> version,
   Value<bool> deleted,
+  Value<bool> isPinnedOffline,
   Value<int> rowid,
 });
 
@@ -6547,29 +6779,39 @@ class $$AttachmentsTableFilterComposer
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get pageId => $composableBuilder(
-      column: $table.pageId, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<String> get blockId => $composableBuilder(
       column: $table.blockId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get fileName => $composableBuilder(
-      column: $table.fileName, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get driveFileId => $composableBuilder(
+      column: $table.driveFileId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+      column: $table.localPath, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get mimeType => $composableBuilder(
       column: $table.mimeType, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get size => $composableBuilder(
-      column: $table.size, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get checksumSha256 => $composableBuilder(
+      column: $table.checksumSha256,
+      builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get sha256 => $composableBuilder(
-      column: $table.sha256, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get fileSize => $composableBuilder(
+      column: $table.fileSize, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get relativePath => $composableBuilder(
-      column: $table.relativePath, builder: (column) => ColumnFilters(column));
+  ColumnFilters<int> get width => $composableBuilder(
+      column: $table.width, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get height => $composableBuilder(
+      column: $table.height, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get duration => $composableBuilder(
+      column: $table.duration, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get uploadStatus => $composableBuilder(
+      column: $table.uploadStatus, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -6577,8 +6819,15 @@ class $$AttachmentsTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isPinnedOffline => $composableBuilder(
+      column: $table.isPinnedOffline,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$AttachmentsTableOrderingComposer
@@ -6593,30 +6842,40 @@ class $$AttachmentsTableOrderingComposer
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get pageId => $composableBuilder(
-      column: $table.pageId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get blockId => $composableBuilder(
       column: $table.blockId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get fileName => $composableBuilder(
-      column: $table.fileName, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get driveFileId => $composableBuilder(
+      column: $table.driveFileId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+      column: $table.localPath, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get mimeType => $composableBuilder(
       column: $table.mimeType, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get size => $composableBuilder(
-      column: $table.size, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get sha256 => $composableBuilder(
-      column: $table.sha256, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get relativePath => $composableBuilder(
-      column: $table.relativePath,
+  ColumnOrderings<String> get checksumSha256 => $composableBuilder(
+      column: $table.checksumSha256,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get fileSize => $composableBuilder(
+      column: $table.fileSize, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get width => $composableBuilder(
+      column: $table.width, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get height => $composableBuilder(
+      column: $table.height, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+      column: $table.duration, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get uploadStatus => $composableBuilder(
+      column: $table.uploadStatus,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
@@ -6625,8 +6884,15 @@ class $$AttachmentsTableOrderingComposer
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isPinnedOffline => $composableBuilder(
+      column: $table.isPinnedOffline,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$AttachmentsTableAnnotationComposer
@@ -6641,29 +6907,38 @@ class $$AttachmentsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get pageId =>
-      $composableBuilder(column: $table.pageId, builder: (column) => column);
-
   GeneratedColumn<String> get blockId =>
       $composableBuilder(column: $table.blockId, builder: (column) => column);
 
-  GeneratedColumn<String> get fileName =>
-      $composableBuilder(column: $table.fileName, builder: (column) => column);
+  GeneratedColumn<String> get driveFileId => $composableBuilder(
+      column: $table.driveFileId, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
 
   GeneratedColumn<String> get mimeType =>
       $composableBuilder(column: $table.mimeType, builder: (column) => column);
 
-  GeneratedColumn<int> get size =>
-      $composableBuilder(column: $table.size, builder: (column) => column);
+  GeneratedColumn<String> get checksumSha256 => $composableBuilder(
+      column: $table.checksumSha256, builder: (column) => column);
 
-  GeneratedColumn<String> get sha256 =>
-      $composableBuilder(column: $table.sha256, builder: (column) => column);
+  GeneratedColumn<int> get fileSize =>
+      $composableBuilder(column: $table.fileSize, builder: (column) => column);
 
-  GeneratedColumn<String> get relativePath => $composableBuilder(
-      column: $table.relativePath, builder: (column) => column);
+  GeneratedColumn<int> get width =>
+      $composableBuilder(column: $table.width, builder: (column) => column);
+
+  GeneratedColumn<int> get height =>
+      $composableBuilder(column: $table.height, builder: (column) => column);
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
 
   GeneratedColumn<String> get thumbnailPath => $composableBuilder(
       column: $table.thumbnailPath, builder: (column) => column);
+
+  GeneratedColumn<String> get uploadStatus => $composableBuilder(
+      column: $table.uploadStatus, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -6671,8 +6946,14 @@ class $$AttachmentsTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isPinnedOffline => $composableBuilder(
+      column: $table.isPinnedOffline, builder: (column) => column);
 }
 
 class $$AttachmentsTableTableManager extends RootTableManager<
@@ -6702,62 +6983,82 @@ class $$AttachmentsTableTableManager extends RootTableManager<
               $$AttachmentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
-            Value<String> pageId = const Value.absent(),
             Value<String> blockId = const Value.absent(),
-            Value<String> fileName = const Value.absent(),
+            Value<String?> driveFileId = const Value.absent(),
+            Value<String?> localPath = const Value.absent(),
             Value<String> mimeType = const Value.absent(),
-            Value<int> size = const Value.absent(),
-            Value<String> sha256 = const Value.absent(),
-            Value<String> relativePath = const Value.absent(),
+            Value<String?> checksumSha256 = const Value.absent(),
+            Value<int> fileSize = const Value.absent(),
+            Value<int?> width = const Value.absent(),
+            Value<int?> height = const Value.absent(),
+            Value<int?> duration = const Value.absent(),
             Value<String?> thumbnailPath = const Value.absent(),
+            Value<String> uploadStatus = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<bool> isPinnedOffline = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AttachmentsCompanion(
             id: id,
-            pageId: pageId,
             blockId: blockId,
-            fileName: fileName,
+            driveFileId: driveFileId,
+            localPath: localPath,
             mimeType: mimeType,
-            size: size,
-            sha256: sha256,
-            relativePath: relativePath,
+            checksumSha256: checksumSha256,
+            fileSize: fileSize,
+            width: width,
+            height: height,
+            duration: duration,
             thumbnailPath: thumbnailPath,
+            uploadStatus: uploadStatus,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            version: version,
             deleted: deleted,
+            isPinnedOffline: isPinnedOffline,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
-            required String pageId,
             required String blockId,
-            required String fileName,
+            Value<String?> driveFileId = const Value.absent(),
+            Value<String?> localPath = const Value.absent(),
             required String mimeType,
-            required int size,
-            required String sha256,
-            required String relativePath,
+            Value<String?> checksumSha256 = const Value.absent(),
+            required int fileSize,
+            Value<int?> width = const Value.absent(),
+            Value<int?> height = const Value.absent(),
+            Value<int?> duration = const Value.absent(),
             Value<String?> thumbnailPath = const Value.absent(),
+            Value<String> uploadStatus = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<bool> isPinnedOffline = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AttachmentsCompanion.insert(
             id: id,
-            pageId: pageId,
             blockId: blockId,
-            fileName: fileName,
+            driveFileId: driveFileId,
+            localPath: localPath,
             mimeType: mimeType,
-            size: size,
-            sha256: sha256,
-            relativePath: relativePath,
+            checksumSha256: checksumSha256,
+            fileSize: fileSize,
+            width: width,
+            height: height,
+            duration: duration,
             thumbnailPath: thumbnailPath,
+            uploadStatus: uploadStatus,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            version: version,
             deleted: deleted,
+            isPinnedOffline: isPinnedOffline,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

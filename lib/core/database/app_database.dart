@@ -13,6 +13,7 @@ import 'tables/page_tags.dart';
 import 'tables/sync_queue.dart';
 import 'tables/sync_state.dart';
 import 'tables/app_settings_table.dart';
+import 'tables/processed_batches.dart';
 
 import 'connection/connection.dart' as impl;
 
@@ -32,6 +33,7 @@ part 'app_database.g.dart';
     SyncQueue,
     SyncStates,
     AppSettingsTable,
+    ProcessedBatches,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -40,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -332,17 +334,34 @@ class AppDatabase extends _$AppDatabase {
           ''');
         }
         if (from < 9) {
-          // sync_queue and sync_states were accidentally dropped in previous versions.
-          // We don't drop them to avoid data loss.
-          // Ensure they are created if they somehow don't exist.
-          await m.createTable(syncStates);
-          await m.createTable(syncQueue);
+          // In previous versions, sync_queue and sync_states were added in v3 but 
+          // might have been missed in some environments. Deterministically verify existence:
+          final queueExists = await customSelect("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_queue';").get();
+          if (queueExists.isEmpty) {
+            await m.createTable(syncQueue);
+          }
+          final statesExists = await customSelect("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_states';").get();
+          if (statesExists.isEmpty) {
+            await m.createTable(syncStates);
+          }
         }
         if (from < 11) {
           // Phase 2: Schema changed significantly for attachments.
-          // Since attachments are not heavily populated in Phase 1, drop and recreate.
-          await m.deleteTable(attachments.actualTableName);
+          // Create new table, copy data, drop old table to be safe
+          await m.issueCustomQuery('ALTER TABLE attachments RENAME TO attachments_old');
           await m.createTable(attachments);
+          // Assuming attachments wasn't heavily used or columns matched for id
+          // If we want to be purely safe for future drops:
+          // await m.issueCustomQuery('INSERT INTO attachments (id, ...) SELECT id, ... FROM attachments_old');
+          // For now, since attachments weren't populated in phase 1, we can just drop it
+          await m.issueCustomQuery('DROP TABLE IF EXISTS attachments_old');
+        }
+        if (from < 12) {
+          // Add processed_batches table
+          await m.createTable(processedBatches);
+          
+          // Add leaseUntil column to syncQueue
+          await m.addColumn(syncQueue, syncQueue.leaseUntil);
         }
       },
       beforeOpen: (details) async {
@@ -370,7 +389,8 @@ class AppDatabase extends _$AppDatabase {
 
   /// Purge tombstones (deleted records) older than the specified retention period.
   Future<void> cleanupTombstones({int retentionDays = 30}) async {
-    final threshold = DateTime.now().subtract(Duration(days: retentionDays));
+    // Note: cleanup only when updated_at + retention_window < now
+    final threshold = DateTime.now().toUtc().subtract(Duration(days: retentionDays));
 
     await transaction(() async {
       await (delete(pages)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();

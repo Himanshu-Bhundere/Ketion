@@ -68,6 +68,23 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
           generateThumbnail: attachment.mimeType.startsWith('image/'),
         );
         final localPath = saveResult.$1;
+        final downloadedHash = saveResult.$3;
+
+        if (attachment.checksumSha256 != null && downloadedHash != attachment.checksumSha256) {
+          // Checksum mismatch, delete from storage
+          await _storageService.deleteFile(localPath);
+          if (saveResult.$2 != null) {
+            await _storageService.deleteFile(saveResult.$2!);
+          }
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+          }
+          await _repository.updateAttachmentSyncStatus(
+            attachment.id,
+            AttachmentUploadStatus.failed.value,
+          );
+          return;
+        }
         
         // Clean up temp file
         if (await tempFile.exists()) {

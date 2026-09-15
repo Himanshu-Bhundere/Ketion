@@ -8,13 +8,16 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/page.dart' as domain;
 import '../../domain/repositories/page_repository.dart';
+import '../../../sync/domain/repositories/sync_queue_repository.dart';
+import '../../../sync/domain/entities/sync_queue_item.dart';
 import '../models/page_mapper.dart';
 
 class PageRepositoryImpl implements PageRepository {
   final AppDatabase _db;
+  final SyncQueueRepository _syncQueue;
   final AppLogger _logger;
 
-  PageRepositoryImpl(this._db, this._logger);
+  PageRepositoryImpl(this._db, this._syncQueue, this._logger);
 
   @override
   Future<Result<void>> createPage(domain.Page page) async {
@@ -22,13 +25,13 @@ class PageRepositoryImpl implements PageRepository {
       final newPage = page.copyWith(version: 1, updatedAt: DateTime.now());
       await _db.transaction(() async {
         await _db.into(_db.pages).insert(newPage.toCompanion());
-        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
           id: const Uuid().v7(),
           entityTable: 'pages',
           entityId: newPage.id,
           operation: 'create',
-          payload: Value(jsonEncode(newPage.toJson())),
-          createdAt: DateTime.now(),
+          payload: jsonEncode(newPage.toJson()),
+          createdAt: DateTime.now().toUtc(),
         ));
       });
       return const Success(null);
@@ -59,20 +62,20 @@ class PageRepositoryImpl implements PageRepository {
     try {
       final newPage = page.copyWith(
         version: page.version + 1,
-        updatedAt: DateTime.now(),
+        updatedAt: DateTime.now().toUtc(),
       );
       await _db.transaction(() async {
         final updatedRows = await (_db.update(_db.pages)
               ..where((t) => t.id.equals(newPage.id)))
             .write(newPage.toCompanion());
         if (updatedRows > 0) {
-          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'pages',
             entityId: newPage.id,
             operation: 'update',
-            payload: Value(jsonEncode(newPage.toJson())),
-            createdAt: DateTime.now(),
+            payload: jsonEncode(newPage.toJson()),
+            createdAt: DateTime.now().toUtc(),
           ));
         }
       });
@@ -86,17 +89,31 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> deletePage(String id) async {
     try {
+      final pageRecord = await getPage(id);
+      if (pageRecord is Error) {
+        return const Success(null);
+      }
+      final page = (pageRecord as Success<domain.Page>).value;
+
+      final newPage = page.copyWith(
+        deleted: true,
+        version: page.version + 1,
+        updatedAt: DateTime.now().toUtc(),
+      );
+
       await _db.transaction(() async {
-        final deletedRows =
-            await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
-        if (deletedRows > 0) {
-          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+        final updatedRows = await (_db.update(_db.pages)
+              ..where((t) => t.id.equals(id)))
+            .write(newPage.toCompanion());
+        
+        if (updatedRows > 0) {
+          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'pages',
             entityId: id,
             operation: 'delete',
-            payload: const Value(null),
-            createdAt: DateTime.now(),
+            payload: null,
+            createdAt: DateTime.now().toUtc(),
           ));
         }
       });

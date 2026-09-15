@@ -9,13 +9,17 @@ import '../../domain/entities/attachment.dart';
 import '../../domain/entities/attachment_upload_status.dart';
 import '../../domain/repositories/attachment_repository.dart';
 import '../services/attachment_storage_service.dart';
+import '../../../sync/domain/repositories/sync_queue_repository.dart';
+import '../../../sync/domain/entities/sync_queue_item.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 
 class AttachmentRepositoryImpl implements AttachmentRepository {
   final AppDatabase _db;
   final AttachmentStorageService _storageService;
+  final SyncQueueRepository _syncQueue;
   final Uuid _uuid = const Uuid();
 
-  AttachmentRepositoryImpl(this._db, this._storageService);
+  AttachmentRepositoryImpl(this._db, this._storageService, this._syncQueue);
 
   @override
   Future<Attachment> saveAttachment({
@@ -74,13 +78,13 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             ),
           );
 
-      await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
         id: const Uuid().v7(),
         entityTable: 'attachments',
         entityId: id,
         operation: 'create',
-        payload: Value(jsonEncode(attachment.toJson())),
-        createdAt: DateTime.now(),
+        payload: jsonEncode(attachment.toJson()),
+        createdAt: DateTime.now().toUtc(),
       ));
     });
 
@@ -112,23 +116,32 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
   @override
   Future<void> deleteAttachment(String id) async {
     await _db.transaction(() async {
+      final attachment = await getAttachment(id);
+      if (attachment == null) return;
+
+      final newVersion = attachment.version + 1;
+
       // Soft delete in database
       final updatedRows = await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
         AttachmentsCompanion(
           deleted: const Value(true),
+          version: Value(newVersion),
           updatedAt: Value(DateTime.now()),
         ),
       );
 
       if (updatedRows > 0) {
-        // Also fetch to increment version? The companion above doesn't bump version. Let's just enqueue delete
-        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
           id: const Uuid().v7(),
           entityTable: 'attachments',
           entityId: id,
-          operation: 'delete',
-          payload: const Value(null),
-          createdAt: DateTime.now(),
+          operation: 'update',
+          payload: jsonEncode(attachment.copyWith(
+            deleted: true,
+            version: newVersion,
+            updatedAt: DateTime.now(),
+          ).toJson()),
+          createdAt: DateTime.now().toUtc(),
         ));
       }
     });
@@ -186,13 +199,13 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             AttachmentsCompanion(version: Value(newVersion))
           );
           
-          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
             id: const Uuid().v7(),
             entityTable: 'attachments',
             entityId: id,
             operation: 'update',
-            payload: Value(jsonEncode(attachment.copyWith(version: newVersion).toJson())),
-            createdAt: DateTime.now(),
+            payload: jsonEncode(attachment.copyWith(version: newVersion).toJson()),
+            createdAt: DateTime.now().toUtc(),
           ));
         }
       }
@@ -251,5 +264,6 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
 final attachmentRepositoryProvider = Provider<AttachmentRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   final storageService = ref.watch(attachmentStorageServiceProvider);
-  return AttachmentRepositoryImpl(db, storageService);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return AttachmentRepositoryImpl(db, storageService, syncQueue);
 });

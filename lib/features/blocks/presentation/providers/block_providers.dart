@@ -9,10 +9,12 @@ import '../../domain/usecases/delete_block_usecase.dart';
 import '../../domain/usecases/get_block_usecase.dart';
 import '../../domain/usecases/get_page_blocks_usecase.dart';
 import '../../domain/usecases/update_block_usecase.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 
 final blockRepositoryProvider = Provider<BlockRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return BlockRepositoryImpl(db, appLogger);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return BlockRepositoryImpl(db, syncQueue, appLogger);
 });
 
 final createBlockUseCaseProvider = Provider<CreateBlockUseCase>((ref) {

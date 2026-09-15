@@ -19,6 +19,7 @@ class SyncQueue extends Table {
   IntColumn get attemptCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastAttemptAt => dateTime().nullable()();
   DateTimeColumn get nextRetryAt => dateTime().nullable()();
+  DateTimeColumn get leaseUntil => dateTime().nullable()();
   TextColumn get lastError => text().nullable()();
 
   @override

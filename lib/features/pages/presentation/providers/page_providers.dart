@@ -10,10 +10,12 @@ import '../../domain/usecases/create_page_usecase.dart';
 import '../../domain/usecases/delete_page_usecase.dart';
 import '../../domain/usecases/get_page_usecase.dart';
 import '../../domain/usecases/update_page_usecase.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 
 final pageRepositoryProvider = Provider<PageRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return PageRepositoryImpl(db, appLogger);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return PageRepositoryImpl(db, syncQueue, appLogger);
 });
 
 final createPageUseCaseProvider = Provider<CreatePageUseCase>((ref) {

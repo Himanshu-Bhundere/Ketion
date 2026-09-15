@@ -4168,6 +4168,12 @@ class $SyncQueueTable extends SyncQueue
   late final GeneratedColumn<DateTime> nextRetryAt = GeneratedColumn<DateTime>(
       'next_retry_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _leaseUntilMeta =
+      const VerificationMeta('leaseUntil');
+  @override
+  late final GeneratedColumn<DateTime> leaseUntil = GeneratedColumn<DateTime>(
+      'lease_until', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _lastErrorMeta =
       const VerificationMeta('lastError');
   @override
@@ -4186,6 +4192,7 @@ class $SyncQueueTable extends SyncQueue
         attemptCount,
         lastAttemptAt,
         nextRetryAt,
+        leaseUntil,
         lastError
       ];
   @override
@@ -4253,6 +4260,12 @@ class $SyncQueueTable extends SyncQueue
           nextRetryAt.isAcceptableOrUnknown(
               data['next_retry_at']!, _nextRetryAtMeta));
     }
+    if (data.containsKey('lease_until')) {
+      context.handle(
+          _leaseUntilMeta,
+          leaseUntil.isAcceptableOrUnknown(
+              data['lease_until']!, _leaseUntilMeta));
+    }
     if (data.containsKey('last_error')) {
       context.handle(_lastErrorMeta,
           lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta));
@@ -4286,6 +4299,8 @@ class $SyncQueueTable extends SyncQueue
           DriftSqlType.dateTime, data['${effectivePrefix}last_attempt_at']),
       nextRetryAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}next_retry_at']),
+      leaseUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}lease_until']),
       lastError: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}last_error']),
     );
@@ -4308,6 +4323,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final int attemptCount;
   final DateTime? lastAttemptAt;
   final DateTime? nextRetryAt;
+  final DateTime? leaseUntil;
   final String? lastError;
   const SyncQueueData(
       {required this.id,
@@ -4320,6 +4336,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       required this.attemptCount,
       this.lastAttemptAt,
       this.nextRetryAt,
+      this.leaseUntil,
       this.lastError});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4339,6 +4356,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     }
     if (!nullToAbsent || nextRetryAt != null) {
       map['next_retry_at'] = Variable<DateTime>(nextRetryAt);
+    }
+    if (!nullToAbsent || leaseUntil != null) {
+      map['lease_until'] = Variable<DateTime>(leaseUntil);
     }
     if (!nullToAbsent || lastError != null) {
       map['last_error'] = Variable<String>(lastError);
@@ -4364,6 +4384,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       nextRetryAt: nextRetryAt == null && nullToAbsent
           ? const Value.absent()
           : Value(nextRetryAt),
+      leaseUntil: leaseUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leaseUntil),
       lastError: lastError == null && nullToAbsent
           ? const Value.absent()
           : Value(lastError),
@@ -4384,6 +4407,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       attemptCount: serializer.fromJson<int>(json['attemptCount']),
       lastAttemptAt: serializer.fromJson<DateTime?>(json['lastAttemptAt']),
       nextRetryAt: serializer.fromJson<DateTime?>(json['nextRetryAt']),
+      leaseUntil: serializer.fromJson<DateTime?>(json['leaseUntil']),
       lastError: serializer.fromJson<String?>(json['lastError']),
     );
   }
@@ -4401,6 +4425,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       'attemptCount': serializer.toJson<int>(attemptCount),
       'lastAttemptAt': serializer.toJson<DateTime?>(lastAttemptAt),
       'nextRetryAt': serializer.toJson<DateTime?>(nextRetryAt),
+      'leaseUntil': serializer.toJson<DateTime?>(leaseUntil),
       'lastError': serializer.toJson<String?>(lastError),
     };
   }
@@ -4416,6 +4441,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           int? attemptCount,
           Value<DateTime?> lastAttemptAt = const Value.absent(),
           Value<DateTime?> nextRetryAt = const Value.absent(),
+          Value<DateTime?> leaseUntil = const Value.absent(),
           Value<String?> lastError = const Value.absent()}) =>
       SyncQueueData(
         id: id ?? this.id,
@@ -4429,6 +4455,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
         lastAttemptAt:
             lastAttemptAt.present ? lastAttemptAt.value : this.lastAttemptAt,
         nextRetryAt: nextRetryAt.present ? nextRetryAt.value : this.nextRetryAt,
+        leaseUntil: leaseUntil.present ? leaseUntil.value : this.leaseUntil,
         lastError: lastError.present ? lastError.value : this.lastError,
       );
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
@@ -4449,6 +4476,8 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           : this.lastAttemptAt,
       nextRetryAt:
           data.nextRetryAt.present ? data.nextRetryAt.value : this.nextRetryAt,
+      leaseUntil:
+          data.leaseUntil.present ? data.leaseUntil.value : this.leaseUntil,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
     );
   }
@@ -4466,14 +4495,26 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ..write('attemptCount: $attemptCount, ')
           ..write('lastAttemptAt: $lastAttemptAt, ')
           ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('leaseUntil: $leaseUntil, ')
           ..write('lastError: $lastError')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, entityTable, entityId, operation, payload,
-      createdAt, status, attemptCount, lastAttemptAt, nextRetryAt, lastError);
+  int get hashCode => Object.hash(
+      id,
+      entityTable,
+      entityId,
+      operation,
+      payload,
+      createdAt,
+      status,
+      attemptCount,
+      lastAttemptAt,
+      nextRetryAt,
+      leaseUntil,
+      lastError);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4488,6 +4529,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           other.attemptCount == this.attemptCount &&
           other.lastAttemptAt == this.lastAttemptAt &&
           other.nextRetryAt == this.nextRetryAt &&
+          other.leaseUntil == this.leaseUntil &&
           other.lastError == this.lastError);
 }
 
@@ -4502,6 +4544,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<int> attemptCount;
   final Value<DateTime?> lastAttemptAt;
   final Value<DateTime?> nextRetryAt;
+  final Value<DateTime?> leaseUntil;
   final Value<String?> lastError;
   final Value<int> rowid;
   const SyncQueueCompanion({
@@ -4515,6 +4558,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.attemptCount = const Value.absent(),
     this.lastAttemptAt = const Value.absent(),
     this.nextRetryAt = const Value.absent(),
+    this.leaseUntil = const Value.absent(),
     this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4529,6 +4573,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.attemptCount = const Value.absent(),
     this.lastAttemptAt = const Value.absent(),
     this.nextRetryAt = const Value.absent(),
+    this.leaseUntil = const Value.absent(),
     this.lastError = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
@@ -4546,6 +4591,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     Expression<int>? attemptCount,
     Expression<DateTime>? lastAttemptAt,
     Expression<DateTime>? nextRetryAt,
+    Expression<DateTime>? leaseUntil,
     Expression<String>? lastError,
     Expression<int>? rowid,
   }) {
@@ -4560,6 +4606,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       if (attemptCount != null) 'attempt_count': attemptCount,
       if (lastAttemptAt != null) 'last_attempt_at': lastAttemptAt,
       if (nextRetryAt != null) 'next_retry_at': nextRetryAt,
+      if (leaseUntil != null) 'lease_until': leaseUntil,
       if (lastError != null) 'last_error': lastError,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4576,6 +4623,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       Value<int>? attemptCount,
       Value<DateTime?>? lastAttemptAt,
       Value<DateTime?>? nextRetryAt,
+      Value<DateTime?>? leaseUntil,
       Value<String?>? lastError,
       Value<int>? rowid}) {
     return SyncQueueCompanion(
@@ -4589,6 +4637,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       attemptCount: attemptCount ?? this.attemptCount,
       lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
       nextRetryAt: nextRetryAt ?? this.nextRetryAt,
+      leaseUntil: leaseUntil ?? this.leaseUntil,
       lastError: lastError ?? this.lastError,
       rowid: rowid ?? this.rowid,
     );
@@ -4627,6 +4676,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     if (nextRetryAt.present) {
       map['next_retry_at'] = Variable<DateTime>(nextRetryAt.value);
     }
+    if (leaseUntil.present) {
+      map['lease_until'] = Variable<DateTime>(leaseUntil.value);
+    }
     if (lastError.present) {
       map['last_error'] = Variable<String>(lastError.value);
     }
@@ -4649,6 +4701,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
           ..write('attemptCount: $attemptCount, ')
           ..write('lastAttemptAt: $lastAttemptAt, ')
           ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('leaseUntil: $leaseUntil, ')
           ..write('lastError: $lastError, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4682,6 +4735,12 @@ class $SyncStatesTable extends SyncStates
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _pageCursorMeta =
+      const VerificationMeta('pageCursor');
+  @override
+  late final GeneratedColumn<String> pageCursor = GeneratedColumn<String>(
+      'page_cursor', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _lastSyncTimeMeta =
       const VerificationMeta('lastSyncTime');
   @override
@@ -4690,7 +4749,7 @@ class $SyncStatesTable extends SyncStates
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [deviceId, provider, lastAppliedGeneration, lastSyncTime];
+      [deviceId, provider, lastAppliedGeneration, pageCursor, lastSyncTime];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4719,6 +4778,12 @@ class $SyncStatesTable extends SyncStates
           lastAppliedGeneration.isAcceptableOrUnknown(
               data['last_applied_generation']!, _lastAppliedGenerationMeta));
     }
+    if (data.containsKey('page_cursor')) {
+      context.handle(
+          _pageCursorMeta,
+          pageCursor.isAcceptableOrUnknown(
+              data['page_cursor']!, _pageCursorMeta));
+    }
     if (data.containsKey('last_sync_time')) {
       context.handle(
           _lastSyncTimeMeta,
@@ -4740,6 +4805,8 @@ class $SyncStatesTable extends SyncStates
           .read(DriftSqlType.string, data['${effectivePrefix}provider'])!,
       lastAppliedGeneration: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}last_applied_generation'])!,
+      pageCursor: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}page_cursor']),
       lastSyncTime: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_sync_time']),
     );
@@ -4755,11 +4822,13 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
   final String deviceId;
   final String provider;
   final int lastAppliedGeneration;
+  final String? pageCursor;
   final DateTime? lastSyncTime;
   const SyncStateData(
       {required this.deviceId,
       required this.provider,
       required this.lastAppliedGeneration,
+      this.pageCursor,
       this.lastSyncTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4767,6 +4836,9 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     map['device_id'] = Variable<String>(deviceId);
     map['provider'] = Variable<String>(provider);
     map['last_applied_generation'] = Variable<int>(lastAppliedGeneration);
+    if (!nullToAbsent || pageCursor != null) {
+      map['page_cursor'] = Variable<String>(pageCursor);
+    }
     if (!nullToAbsent || lastSyncTime != null) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
     }
@@ -4778,6 +4850,9 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
       deviceId: Value(deviceId),
       provider: Value(provider),
       lastAppliedGeneration: Value(lastAppliedGeneration),
+      pageCursor: pageCursor == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pageCursor),
       lastSyncTime: lastSyncTime == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncTime),
@@ -4792,6 +4867,7 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
       provider: serializer.fromJson<String>(json['provider']),
       lastAppliedGeneration:
           serializer.fromJson<int>(json['lastAppliedGeneration']),
+      pageCursor: serializer.fromJson<String?>(json['pageCursor']),
       lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
     );
   }
@@ -4802,6 +4878,7 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
       'deviceId': serializer.toJson<String>(deviceId),
       'provider': serializer.toJson<String>(provider),
       'lastAppliedGeneration': serializer.toJson<int>(lastAppliedGeneration),
+      'pageCursor': serializer.toJson<String?>(pageCursor),
       'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
     };
   }
@@ -4810,12 +4887,14 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
           {String? deviceId,
           String? provider,
           int? lastAppliedGeneration,
+          Value<String?> pageCursor = const Value.absent(),
           Value<DateTime?> lastSyncTime = const Value.absent()}) =>
       SyncStateData(
         deviceId: deviceId ?? this.deviceId,
         provider: provider ?? this.provider,
         lastAppliedGeneration:
             lastAppliedGeneration ?? this.lastAppliedGeneration,
+        pageCursor: pageCursor.present ? pageCursor.value : this.pageCursor,
         lastSyncTime:
             lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
       );
@@ -4826,6 +4905,8 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
       lastAppliedGeneration: data.lastAppliedGeneration.present
           ? data.lastAppliedGeneration.value
           : this.lastAppliedGeneration,
+      pageCursor:
+          data.pageCursor.present ? data.pageCursor.value : this.pageCursor,
       lastSyncTime: data.lastSyncTime.present
           ? data.lastSyncTime.value
           : this.lastSyncTime,
@@ -4838,14 +4919,15 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
           ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
+          ..write('pageCursor: $pageCursor, ')
           ..write('lastSyncTime: $lastSyncTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(deviceId, provider, lastAppliedGeneration, lastSyncTime);
+  int get hashCode => Object.hash(
+      deviceId, provider, lastAppliedGeneration, pageCursor, lastSyncTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4853,6 +4935,7 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
           other.deviceId == this.deviceId &&
           other.provider == this.provider &&
           other.lastAppliedGeneration == this.lastAppliedGeneration &&
+          other.pageCursor == this.pageCursor &&
           other.lastSyncTime == this.lastSyncTime);
 }
 
@@ -4860,12 +4943,14 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   final Value<String> deviceId;
   final Value<String> provider;
   final Value<int> lastAppliedGeneration;
+  final Value<String?> pageCursor;
   final Value<DateTime?> lastSyncTime;
   final Value<int> rowid;
   const SyncStatesCompanion({
     this.deviceId = const Value.absent(),
     this.provider = const Value.absent(),
     this.lastAppliedGeneration = const Value.absent(),
+    this.pageCursor = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4873,6 +4958,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     required String deviceId,
     required String provider,
     this.lastAppliedGeneration = const Value.absent(),
+    this.pageCursor = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : deviceId = Value(deviceId),
@@ -4881,6 +4967,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     Expression<String>? deviceId,
     Expression<String>? provider,
     Expression<int>? lastAppliedGeneration,
+    Expression<String>? pageCursor,
     Expression<DateTime>? lastSyncTime,
     Expression<int>? rowid,
   }) {
@@ -4889,6 +4976,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
       if (provider != null) 'provider': provider,
       if (lastAppliedGeneration != null)
         'last_applied_generation': lastAppliedGeneration,
+      if (pageCursor != null) 'page_cursor': pageCursor,
       if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4898,6 +4986,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
       {Value<String>? deviceId,
       Value<String>? provider,
       Value<int>? lastAppliedGeneration,
+      Value<String?>? pageCursor,
       Value<DateTime?>? lastSyncTime,
       Value<int>? rowid}) {
     return SyncStatesCompanion(
@@ -4905,6 +4994,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
       provider: provider ?? this.provider,
       lastAppliedGeneration:
           lastAppliedGeneration ?? this.lastAppliedGeneration,
+      pageCursor: pageCursor ?? this.pageCursor,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       rowid: rowid ?? this.rowid,
     );
@@ -4923,6 +5013,9 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
       map['last_applied_generation'] =
           Variable<int>(lastAppliedGeneration.value);
     }
+    if (pageCursor.present) {
+      map['page_cursor'] = Variable<String>(pageCursor.value);
+    }
     if (lastSyncTime.present) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
     }
@@ -4938,6 +5031,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
           ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
+          ..write('pageCursor: $pageCursor, ')
           ..write('lastSyncTime: $lastSyncTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5432,6 +5526,243 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
   }
 }
 
+class $ProcessedBatchesTable extends ProcessedBatches
+    with TableInfo<$ProcessedBatchesTable, ProcessedBatchData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProcessedBatchesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _batchIdMeta =
+      const VerificationMeta('batchId');
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+      'batch_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _deviceIdMeta =
+      const VerificationMeta('deviceId');
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+      'device_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _processedAtMeta =
+      const VerificationMeta('processedAt');
+  @override
+  late final GeneratedColumn<DateTime> processedAt = GeneratedColumn<DateTime>(
+      'processed_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [batchId, deviceId, processedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'processed_batches';
+  @override
+  VerificationContext validateIntegrity(Insertable<ProcessedBatchData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('batch_id')) {
+      context.handle(_batchIdMeta,
+          batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta));
+    } else if (isInserting) {
+      context.missing(_batchIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(_deviceIdMeta,
+          deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('processed_at')) {
+      context.handle(
+          _processedAtMeta,
+          processedAt.isAcceptableOrUnknown(
+              data['processed_at']!, _processedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {batchId};
+  @override
+  ProcessedBatchData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProcessedBatchData(
+      batchId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_id'])!,
+      deviceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
+      processedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}processed_at'])!,
+    );
+  }
+
+  @override
+  $ProcessedBatchesTable createAlias(String alias) {
+    return $ProcessedBatchesTable(attachedDatabase, alias);
+  }
+}
+
+class ProcessedBatchData extends DataClass
+    implements Insertable<ProcessedBatchData> {
+  final String batchId;
+  final String deviceId;
+  final DateTime processedAt;
+  const ProcessedBatchData(
+      {required this.batchId,
+      required this.deviceId,
+      required this.processedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['batch_id'] = Variable<String>(batchId);
+    map['device_id'] = Variable<String>(deviceId);
+    map['processed_at'] = Variable<DateTime>(processedAt);
+    return map;
+  }
+
+  ProcessedBatchesCompanion toCompanion(bool nullToAbsent) {
+    return ProcessedBatchesCompanion(
+      batchId: Value(batchId),
+      deviceId: Value(deviceId),
+      processedAt: Value(processedAt),
+    );
+  }
+
+  factory ProcessedBatchData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProcessedBatchData(
+      batchId: serializer.fromJson<String>(json['batchId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      processedAt: serializer.fromJson<DateTime>(json['processedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'batchId': serializer.toJson<String>(batchId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'processedAt': serializer.toJson<DateTime>(processedAt),
+    };
+  }
+
+  ProcessedBatchData copyWith(
+          {String? batchId, String? deviceId, DateTime? processedAt}) =>
+      ProcessedBatchData(
+        batchId: batchId ?? this.batchId,
+        deviceId: deviceId ?? this.deviceId,
+        processedAt: processedAt ?? this.processedAt,
+      );
+  ProcessedBatchData copyWithCompanion(ProcessedBatchesCompanion data) {
+    return ProcessedBatchData(
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      processedAt:
+          data.processedAt.present ? data.processedAt.value : this.processedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProcessedBatchData(')
+          ..write('batchId: $batchId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('processedAt: $processedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(batchId, deviceId, processedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProcessedBatchData &&
+          other.batchId == this.batchId &&
+          other.deviceId == this.deviceId &&
+          other.processedAt == this.processedAt);
+}
+
+class ProcessedBatchesCompanion extends UpdateCompanion<ProcessedBatchData> {
+  final Value<String> batchId;
+  final Value<String> deviceId;
+  final Value<DateTime> processedAt;
+  final Value<int> rowid;
+  const ProcessedBatchesCompanion({
+    this.batchId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.processedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProcessedBatchesCompanion.insert({
+    required String batchId,
+    required String deviceId,
+    this.processedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : batchId = Value(batchId),
+        deviceId = Value(deviceId);
+  static Insertable<ProcessedBatchData> custom({
+    Expression<String>? batchId,
+    Expression<String>? deviceId,
+    Expression<DateTime>? processedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (batchId != null) 'batch_id': batchId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (processedAt != null) 'processed_at': processedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProcessedBatchesCompanion copyWith(
+      {Value<String>? batchId,
+      Value<String>? deviceId,
+      Value<DateTime>? processedAt,
+      Value<int>? rowid}) {
+    return ProcessedBatchesCompanion(
+      batchId: batchId ?? this.batchId,
+      deviceId: deviceId ?? this.deviceId,
+      processedAt: processedAt ?? this.processedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (processedAt.present) {
+      map['processed_at'] = Variable<DateTime>(processedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProcessedBatchesCompanion(')
+          ..write('batchId: $batchId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('processedAt: $processedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5449,6 +5780,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncStatesTable syncStates = $SyncStatesTable(this);
   late final $AppSettingsTableTable appSettingsTable =
       $AppSettingsTableTable(this);
+  late final $ProcessedBatchesTable processedBatches =
+      $ProcessedBatchesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5465,7 +5798,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         pageTags,
         syncQueue,
         syncStates,
-        appSettingsTable
+        appSettingsTable,
+        processedBatches
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -9067,6 +9401,7 @@ typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> attemptCount,
   Value<DateTime?> lastAttemptAt,
   Value<DateTime?> nextRetryAt,
+  Value<DateTime?> leaseUntil,
   Value<String?> lastError,
   Value<int> rowid,
 });
@@ -9081,6 +9416,7 @@ typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> attemptCount,
   Value<DateTime?> lastAttemptAt,
   Value<DateTime?> nextRetryAt,
+  Value<DateTime?> leaseUntil,
   Value<String?> lastError,
   Value<int> rowid,
 });
@@ -9123,6 +9459,9 @@ class $$SyncQueueTableFilterComposer
 
   ColumnFilters<DateTime> get nextRetryAt => $composableBuilder(
       column: $table.nextRetryAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get leaseUntil => $composableBuilder(
+      column: $table.leaseUntil, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get lastError => $composableBuilder(
       column: $table.lastError, builder: (column) => ColumnFilters(column));
@@ -9169,6 +9508,9 @@ class $$SyncQueueTableOrderingComposer
   ColumnOrderings<DateTime> get nextRetryAt => $composableBuilder(
       column: $table.nextRetryAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get leaseUntil => $composableBuilder(
+      column: $table.leaseUntil, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get lastError => $composableBuilder(
       column: $table.lastError, builder: (column) => ColumnOrderings(column));
 }
@@ -9212,6 +9554,9 @@ class $$SyncQueueTableAnnotationComposer
   GeneratedColumn<DateTime> get nextRetryAt => $composableBuilder(
       column: $table.nextRetryAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get leaseUntil => $composableBuilder(
+      column: $table.leaseUntil, builder: (column) => column);
+
   GeneratedColumn<String> get lastError =>
       $composableBuilder(column: $table.lastError, builder: (column) => column);
 }
@@ -9252,6 +9597,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             Value<int> attemptCount = const Value.absent(),
             Value<DateTime?> lastAttemptAt = const Value.absent(),
             Value<DateTime?> nextRetryAt = const Value.absent(),
+            Value<DateTime?> leaseUntil = const Value.absent(),
             Value<String?> lastError = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9266,6 +9612,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             attemptCount: attemptCount,
             lastAttemptAt: lastAttemptAt,
             nextRetryAt: nextRetryAt,
+            leaseUntil: leaseUntil,
             lastError: lastError,
             rowid: rowid,
           ),
@@ -9280,6 +9627,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             Value<int> attemptCount = const Value.absent(),
             Value<DateTime?> lastAttemptAt = const Value.absent(),
             Value<DateTime?> nextRetryAt = const Value.absent(),
+            Value<DateTime?> leaseUntil = const Value.absent(),
             Value<String?> lastError = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9294,6 +9642,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             attemptCount: attemptCount,
             lastAttemptAt: lastAttemptAt,
             nextRetryAt: nextRetryAt,
+            leaseUntil: leaseUntil,
             lastError: lastError,
             rowid: rowid,
           ),
@@ -9323,6 +9672,7 @@ typedef $$SyncStatesTableCreateCompanionBuilder = SyncStatesCompanion Function({
   required String deviceId,
   required String provider,
   Value<int> lastAppliedGeneration,
+  Value<String?> pageCursor,
   Value<DateTime?> lastSyncTime,
   Value<int> rowid,
 });
@@ -9330,6 +9680,7 @@ typedef $$SyncStatesTableUpdateCompanionBuilder = SyncStatesCompanion Function({
   Value<String> deviceId,
   Value<String> provider,
   Value<int> lastAppliedGeneration,
+  Value<String?> pageCursor,
   Value<DateTime?> lastSyncTime,
   Value<int> rowid,
 });
@@ -9352,6 +9703,9 @@ class $$SyncStatesTableFilterComposer
   ColumnFilters<int> get lastAppliedGeneration => $composableBuilder(
       column: $table.lastAppliedGeneration,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get pageCursor => $composableBuilder(
+      column: $table.pageCursor, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => ColumnFilters(column));
@@ -9376,6 +9730,9 @@ class $$SyncStatesTableOrderingComposer
       column: $table.lastAppliedGeneration,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get pageCursor => $composableBuilder(
+      column: $table.pageCursor, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime,
       builder: (column) => ColumnOrderings(column));
@@ -9398,6 +9755,9 @@ class $$SyncStatesTableAnnotationComposer
 
   GeneratedColumn<int> get lastAppliedGeneration => $composableBuilder(
       column: $table.lastAppliedGeneration, builder: (column) => column);
+
+  GeneratedColumn<String> get pageCursor => $composableBuilder(
+      column: $table.pageCursor, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => column);
@@ -9432,6 +9792,7 @@ class $$SyncStatesTableTableManager extends RootTableManager<
             Value<String> deviceId = const Value.absent(),
             Value<String> provider = const Value.absent(),
             Value<int> lastAppliedGeneration = const Value.absent(),
+            Value<String?> pageCursor = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9439,6 +9800,7 @@ class $$SyncStatesTableTableManager extends RootTableManager<
             deviceId: deviceId,
             provider: provider,
             lastAppliedGeneration: lastAppliedGeneration,
+            pageCursor: pageCursor,
             lastSyncTime: lastSyncTime,
             rowid: rowid,
           ),
@@ -9446,6 +9808,7 @@ class $$SyncStatesTableTableManager extends RootTableManager<
             required String deviceId,
             required String provider,
             Value<int> lastAppliedGeneration = const Value.absent(),
+            Value<String?> pageCursor = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9453,6 +9816,7 @@ class $$SyncStatesTableTableManager extends RootTableManager<
             deviceId: deviceId,
             provider: provider,
             lastAppliedGeneration: lastAppliedGeneration,
+            pageCursor: pageCursor,
             lastSyncTime: lastSyncTime,
             rowid: rowid,
           ),
@@ -9716,6 +10080,150 @@ typedef $$AppSettingsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     AppSettingEntity,
     PrefetchHooks Function()>;
+typedef $$ProcessedBatchesTableCreateCompanionBuilder
+    = ProcessedBatchesCompanion Function({
+  required String batchId,
+  required String deviceId,
+  Value<DateTime> processedAt,
+  Value<int> rowid,
+});
+typedef $$ProcessedBatchesTableUpdateCompanionBuilder
+    = ProcessedBatchesCompanion Function({
+  Value<String> batchId,
+  Value<String> deviceId,
+  Value<DateTime> processedAt,
+  Value<int> rowid,
+});
+
+class $$ProcessedBatchesTableFilterComposer
+    extends Composer<_$AppDatabase, $ProcessedBatchesTable> {
+  $$ProcessedBatchesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get batchId => $composableBuilder(
+      column: $table.batchId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+      column: $table.deviceId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get processedAt => $composableBuilder(
+      column: $table.processedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$ProcessedBatchesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProcessedBatchesTable> {
+  $$ProcessedBatchesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get batchId => $composableBuilder(
+      column: $table.batchId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+      column: $table.deviceId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get processedAt => $composableBuilder(
+      column: $table.processedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ProcessedBatchesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProcessedBatchesTable> {
+  $$ProcessedBatchesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get batchId =>
+      $composableBuilder(column: $table.batchId, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get processedAt => $composableBuilder(
+      column: $table.processedAt, builder: (column) => column);
+}
+
+class $$ProcessedBatchesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProcessedBatchesTable,
+    ProcessedBatchData,
+    $$ProcessedBatchesTableFilterComposer,
+    $$ProcessedBatchesTableOrderingComposer,
+    $$ProcessedBatchesTableAnnotationComposer,
+    $$ProcessedBatchesTableCreateCompanionBuilder,
+    $$ProcessedBatchesTableUpdateCompanionBuilder,
+    (
+      ProcessedBatchData,
+      BaseReferences<_$AppDatabase, $ProcessedBatchesTable, ProcessedBatchData>
+    ),
+    ProcessedBatchData,
+    PrefetchHooks Function()> {
+  $$ProcessedBatchesTableTableManager(
+      _$AppDatabase db, $ProcessedBatchesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProcessedBatchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProcessedBatchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProcessedBatchesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> batchId = const Value.absent(),
+            Value<String> deviceId = const Value.absent(),
+            Value<DateTime> processedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProcessedBatchesCompanion(
+            batchId: batchId,
+            deviceId: deviceId,
+            processedAt: processedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String batchId,
+            required String deviceId,
+            Value<DateTime> processedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProcessedBatchesCompanion.insert(
+            batchId: batchId,
+            deviceId: deviceId,
+            processedAt: processedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ProcessedBatchesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ProcessedBatchesTable,
+    ProcessedBatchData,
+    $$ProcessedBatchesTableFilterComposer,
+    $$ProcessedBatchesTableOrderingComposer,
+    $$ProcessedBatchesTableAnnotationComposer,
+    $$ProcessedBatchesTableCreateCompanionBuilder,
+    $$ProcessedBatchesTableUpdateCompanionBuilder,
+    (
+      ProcessedBatchData,
+      BaseReferences<_$AppDatabase, $ProcessedBatchesTable, ProcessedBatchData>
+    ),
+    ProcessedBatchData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9743,4 +10251,6 @@ class $AppDatabaseManager {
       $$SyncStatesTableTableManager(_db, _db.syncStates);
   $$AppSettingsTableTableTableManager get appSettingsTable =>
       $$AppSettingsTableTableTableManager(_db, _db.appSettingsTable);
+  $$ProcessedBatchesTableTableManager get processedBatches =>
+      $$ProcessedBatchesTableTableManager(_db, _db.processedBatches);
 }

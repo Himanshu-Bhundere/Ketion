@@ -18,6 +18,7 @@ class SyncQueueItemMapper {
       attemptCount: data.attemptCount,
       lastAttemptAt: data.lastAttemptAt,
       nextRetryAt: data.nextRetryAt,
+      leaseUntil: data.leaseUntil,
       lastError: data.lastError,
     );
   }
@@ -34,6 +35,7 @@ class SyncQueueItemMapper {
       attemptCount: Value(entity.attemptCount),
       lastAttemptAt: Value(entity.lastAttemptAt),
       nextRetryAt: Value(entity.nextRetryAt),
+      leaseUntil: Value(entity.leaseUntil),
       lastError: Value(entity.lastError),
     );
   }

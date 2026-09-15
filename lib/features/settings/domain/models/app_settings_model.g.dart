@@ -13,6 +13,8 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
       syncFrequency: json['syncFrequency'] as String? ?? '15 minutes',
       autoSync: json['autoSync'] as bool? ?? true,
       cacheLimitMB: (json['cacheLimitMB'] as num?)?.toInt() ?? 100,
+      tombstoneRetentionDays:
+          (json['tombstoneRetentionDays'] as num?)?.toInt() ?? 30,
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),
@@ -25,5 +27,6 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'syncFrequency': instance.syncFrequency,
       'autoSync': instance.autoSync,
       'cacheLimitMB': instance.cacheLimitMB,
+      'tombstoneRetentionDays': instance.tombstoneRetentionDays,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };

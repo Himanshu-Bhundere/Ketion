@@ -24,6 +24,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
               syncFrequency: const Value('15 minutes'),
               autoSync: const Value(true),
               cacheLimitMB: const Value(100),
+              tombstoneRetentionDays: const Value(30),
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             ),
@@ -36,6 +37,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       syncFrequency: entity.syncFrequency,
       autoSync: entity.autoSync,
       cacheLimitMB: entity.cacheLimitMB,
+      tombstoneRetentionDays: entity.tombstoneRetentionDays,
       lastCleanup: entity.lastCleanup,
     );
   }
@@ -50,6 +52,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         syncFrequency: Value(settings.syncFrequency),
         autoSync: Value(settings.autoSync),
         cacheLimitMB: Value(settings.cacheLimitMB),
+        tombstoneRetentionDays: Value(settings.tombstoneRetentionDays),
         lastCleanup: Value(settings.lastCleanup),
         updatedAt: Value(DateTime.now()),
       ),

@@ -366,8 +366,20 @@ class AppDatabase extends _$AppDatabase {
       INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, page_id, 'block', data FROM blocks WHERE deleted = 0;
     ''');
+  }
 
-    
+  /// Purge tombstones (deleted records) older than the specified retention period.
+  Future<void> cleanupTombstones({int retentionDays = 30}) async {
+    final threshold = DateTime.now().subtract(Duration(days: retentionDays));
+
+    await transaction(() async {
+      await (delete(pages)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+      await (delete(blocks)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+      await (delete(tags)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+      await (delete(collections)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+      await (delete(reminders)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+      await (delete(attachments)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
+    });
   }
 }
 

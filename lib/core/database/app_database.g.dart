@@ -4990,6 +4990,14 @@ class $AppSettingsTableTable extends AppSettingsTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(100));
+  static const VerificationMeta _tombstoneRetentionDaysMeta =
+      const VerificationMeta('tombstoneRetentionDays');
+  @override
+  late final GeneratedColumn<int> tombstoneRetentionDays = GeneratedColumn<int>(
+      'tombstone_retention_days', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(30));
   static const VerificationMeta _lastCleanupMeta =
       const VerificationMeta('lastCleanup');
   @override
@@ -5015,6 +5023,7 @@ class $AppSettingsTableTable extends AppSettingsTable
         syncFrequency,
         autoSync,
         cacheLimitMB,
+        tombstoneRetentionDays,
         lastCleanup,
         createdAt,
         updatedAt
@@ -5054,6 +5063,12 @@ class $AppSettingsTableTable extends AppSettingsTable
           cacheLimitMB.isAcceptableOrUnknown(
               data['cache_limit_m_b']!, _cacheLimitMBMeta));
     }
+    if (data.containsKey('tombstone_retention_days')) {
+      context.handle(
+          _tombstoneRetentionDaysMeta,
+          tombstoneRetentionDays.isAcceptableOrUnknown(
+              data['tombstone_retention_days']!, _tombstoneRetentionDaysMeta));
+    }
     if (data.containsKey('last_cleanup')) {
       context.handle(
           _lastCleanupMeta,
@@ -5091,6 +5106,9 @@ class $AppSettingsTableTable extends AppSettingsTable
           .read(DriftSqlType.bool, data['${effectivePrefix}auto_sync'])!,
       cacheLimitMB: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}cache_limit_m_b'])!,
+      tombstoneRetentionDays: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}tombstone_retention_days'])!,
       lastCleanup: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_cleanup']),
       createdAt: attachedDatabase.typeMapping
@@ -5113,6 +5131,7 @@ class AppSettingEntity extends DataClass
   final String syncFrequency;
   final bool autoSync;
   final int cacheLimitMB;
+  final int tombstoneRetentionDays;
   final DateTime? lastCleanup;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5122,6 +5141,7 @@ class AppSettingEntity extends DataClass
       required this.syncFrequency,
       required this.autoSync,
       required this.cacheLimitMB,
+      required this.tombstoneRetentionDays,
       this.lastCleanup,
       required this.createdAt,
       required this.updatedAt});
@@ -5133,6 +5153,7 @@ class AppSettingEntity extends DataClass
     map['sync_frequency'] = Variable<String>(syncFrequency);
     map['auto_sync'] = Variable<bool>(autoSync);
     map['cache_limit_m_b'] = Variable<int>(cacheLimitMB);
+    map['tombstone_retention_days'] = Variable<int>(tombstoneRetentionDays);
     if (!nullToAbsent || lastCleanup != null) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup);
     }
@@ -5148,6 +5169,7 @@ class AppSettingEntity extends DataClass
       syncFrequency: Value(syncFrequency),
       autoSync: Value(autoSync),
       cacheLimitMB: Value(cacheLimitMB),
+      tombstoneRetentionDays: Value(tombstoneRetentionDays),
       lastCleanup: lastCleanup == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCleanup),
@@ -5165,6 +5187,8 @@ class AppSettingEntity extends DataClass
       syncFrequency: serializer.fromJson<String>(json['syncFrequency']),
       autoSync: serializer.fromJson<bool>(json['autoSync']),
       cacheLimitMB: serializer.fromJson<int>(json['cacheLimitMB']),
+      tombstoneRetentionDays:
+          serializer.fromJson<int>(json['tombstoneRetentionDays']),
       lastCleanup: serializer.fromJson<DateTime?>(json['lastCleanup']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -5179,6 +5203,7 @@ class AppSettingEntity extends DataClass
       'syncFrequency': serializer.toJson<String>(syncFrequency),
       'autoSync': serializer.toJson<bool>(autoSync),
       'cacheLimitMB': serializer.toJson<int>(cacheLimitMB),
+      'tombstoneRetentionDays': serializer.toJson<int>(tombstoneRetentionDays),
       'lastCleanup': serializer.toJson<DateTime?>(lastCleanup),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -5191,6 +5216,7 @@ class AppSettingEntity extends DataClass
           String? syncFrequency,
           bool? autoSync,
           int? cacheLimitMB,
+          int? tombstoneRetentionDays,
           Value<DateTime?> lastCleanup = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -5200,6 +5226,8 @@ class AppSettingEntity extends DataClass
         syncFrequency: syncFrequency ?? this.syncFrequency,
         autoSync: autoSync ?? this.autoSync,
         cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
+        tombstoneRetentionDays:
+            tombstoneRetentionDays ?? this.tombstoneRetentionDays,
         lastCleanup: lastCleanup.present ? lastCleanup.value : this.lastCleanup,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -5215,6 +5243,9 @@ class AppSettingEntity extends DataClass
       cacheLimitMB: data.cacheLimitMB.present
           ? data.cacheLimitMB.value
           : this.cacheLimitMB,
+      tombstoneRetentionDays: data.tombstoneRetentionDays.present
+          ? data.tombstoneRetentionDays.value
+          : this.tombstoneRetentionDays,
       lastCleanup:
           data.lastCleanup.present ? data.lastCleanup.value : this.lastCleanup,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -5230,6 +5261,7 @@ class AppSettingEntity extends DataClass
           ..write('syncFrequency: $syncFrequency, ')
           ..write('autoSync: $autoSync, ')
           ..write('cacheLimitMB: $cacheLimitMB, ')
+          ..write('tombstoneRetentionDays: $tombstoneRetentionDays, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -5239,7 +5271,7 @@ class AppSettingEntity extends DataClass
 
   @override
   int get hashCode => Object.hash(id, themeMode, syncFrequency, autoSync,
-      cacheLimitMB, lastCleanup, createdAt, updatedAt);
+      cacheLimitMB, tombstoneRetentionDays, lastCleanup, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5249,6 +5281,7 @@ class AppSettingEntity extends DataClass
           other.syncFrequency == this.syncFrequency &&
           other.autoSync == this.autoSync &&
           other.cacheLimitMB == this.cacheLimitMB &&
+          other.tombstoneRetentionDays == this.tombstoneRetentionDays &&
           other.lastCleanup == this.lastCleanup &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -5260,6 +5293,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
   final Value<String> syncFrequency;
   final Value<bool> autoSync;
   final Value<int> cacheLimitMB;
+  final Value<int> tombstoneRetentionDays;
   final Value<DateTime?> lastCleanup;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -5270,6 +5304,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.syncFrequency = const Value.absent(),
     this.autoSync = const Value.absent(),
     this.cacheLimitMB = const Value.absent(),
+    this.tombstoneRetentionDays = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5281,6 +5316,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.syncFrequency = const Value.absent(),
     this.autoSync = const Value.absent(),
     this.cacheLimitMB = const Value.absent(),
+    this.tombstoneRetentionDays = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -5294,6 +5330,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     Expression<String>? syncFrequency,
     Expression<bool>? autoSync,
     Expression<int>? cacheLimitMB,
+    Expression<int>? tombstoneRetentionDays,
     Expression<DateTime>? lastCleanup,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5305,6 +5342,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       if (syncFrequency != null) 'sync_frequency': syncFrequency,
       if (autoSync != null) 'auto_sync': autoSync,
       if (cacheLimitMB != null) 'cache_limit_m_b': cacheLimitMB,
+      if (tombstoneRetentionDays != null)
+        'tombstone_retention_days': tombstoneRetentionDays,
       if (lastCleanup != null) 'last_cleanup': lastCleanup,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5318,6 +5357,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       Value<String>? syncFrequency,
       Value<bool>? autoSync,
       Value<int>? cacheLimitMB,
+      Value<int>? tombstoneRetentionDays,
       Value<DateTime?>? lastCleanup,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -5328,6 +5368,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       syncFrequency: syncFrequency ?? this.syncFrequency,
       autoSync: autoSync ?? this.autoSync,
       cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
+      tombstoneRetentionDays:
+          tombstoneRetentionDays ?? this.tombstoneRetentionDays,
       lastCleanup: lastCleanup ?? this.lastCleanup,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5353,6 +5395,10 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     if (cacheLimitMB.present) {
       map['cache_limit_m_b'] = Variable<int>(cacheLimitMB.value);
     }
+    if (tombstoneRetentionDays.present) {
+      map['tombstone_retention_days'] =
+          Variable<int>(tombstoneRetentionDays.value);
+    }
     if (lastCleanup.present) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup.value);
     }
@@ -5376,6 +5422,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
           ..write('syncFrequency: $syncFrequency, ')
           ..write('autoSync: $autoSync, ')
           ..write('cacheLimitMB: $cacheLimitMB, ')
+          ..write('tombstoneRetentionDays: $tombstoneRetentionDays, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -9438,6 +9485,7 @@ typedef $$AppSettingsTableTableCreateCompanionBuilder
   Value<String> syncFrequency,
   Value<bool> autoSync,
   Value<int> cacheLimitMB,
+  Value<int> tombstoneRetentionDays,
   Value<DateTime?> lastCleanup,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -9450,6 +9498,7 @@ typedef $$AppSettingsTableTableUpdateCompanionBuilder
   Value<String> syncFrequency,
   Value<bool> autoSync,
   Value<int> cacheLimitMB,
+  Value<int> tombstoneRetentionDays,
   Value<DateTime?> lastCleanup,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -9479,6 +9528,10 @@ class $$AppSettingsTableTableFilterComposer
 
   ColumnFilters<int> get cacheLimitMB => $composableBuilder(
       column: $table.cacheLimitMB, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get tombstoneRetentionDays => $composableBuilder(
+      column: $table.tombstoneRetentionDays,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnFilters(column));
@@ -9516,6 +9569,10 @@ class $$AppSettingsTableTableOrderingComposer
       column: $table.cacheLimitMB,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get tombstoneRetentionDays => $composableBuilder(
+      column: $table.tombstoneRetentionDays,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnOrderings(column));
 
@@ -9549,6 +9606,9 @@ class $$AppSettingsTableTableAnnotationComposer
 
   GeneratedColumn<int> get cacheLimitMB => $composableBuilder(
       column: $table.cacheLimitMB, builder: (column) => column);
+
+  GeneratedColumn<int> get tombstoneRetentionDays => $composableBuilder(
+      column: $table.tombstoneRetentionDays, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => column);
@@ -9592,6 +9652,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<String> syncFrequency = const Value.absent(),
             Value<bool> autoSync = const Value.absent(),
             Value<int> cacheLimitMB = const Value.absent(),
+            Value<int> tombstoneRetentionDays = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -9603,6 +9664,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             syncFrequency: syncFrequency,
             autoSync: autoSync,
             cacheLimitMB: cacheLimitMB,
+            tombstoneRetentionDays: tombstoneRetentionDays,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -9614,6 +9676,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<String> syncFrequency = const Value.absent(),
             Value<bool> autoSync = const Value.absent(),
             Value<int> cacheLimitMB = const Value.absent(),
+            Value<int> tombstoneRetentionDays = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -9625,6 +9688,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             syncFrequency: syncFrequency,
             autoSync: autoSync,
             cacheLimitMB: cacheLimitMB,
+            tombstoneRetentionDays: tombstoneRetentionDays,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,

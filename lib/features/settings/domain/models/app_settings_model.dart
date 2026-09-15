@@ -10,6 +10,7 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default('15 minutes') String syncFrequency,
     @Default(true) bool autoSync,
     @Default(100) int cacheLimitMB,
+    @Default(30) int tombstoneRetentionDays,
     DateTime? lastCleanup,
   }) = _AppSettingsModel;
 

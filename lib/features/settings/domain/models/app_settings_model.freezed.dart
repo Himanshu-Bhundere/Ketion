@@ -24,6 +24,7 @@ mixin _$AppSettingsModel {
   String get syncFrequency => throw _privateConstructorUsedError;
   bool get autoSync => throw _privateConstructorUsedError;
   int get cacheLimitMB => throw _privateConstructorUsedError;
+  int get tombstoneRetentionDays => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -43,6 +44,7 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
+      int tombstoneRetentionDays,
       DateTime? lastCleanup});
 }
 
@@ -63,6 +65,7 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
     Object? syncFrequency = null,
     Object? autoSync = null,
     Object? cacheLimitMB = null,
+    Object? tombstoneRetentionDays = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_value.copyWith(
@@ -81,6 +84,10 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
       cacheLimitMB: null == cacheLimitMB
           ? _value.cacheLimitMB
           : cacheLimitMB // ignore: cast_nullable_to_non_nullable
+              as int,
+      tombstoneRetentionDays: null == tombstoneRetentionDays
+          ? _value.tombstoneRetentionDays
+          : tombstoneRetentionDays // ignore: cast_nullable_to_non_nullable
               as int,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
@@ -103,6 +110,7 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
+      int tombstoneRetentionDays,
       DateTime? lastCleanup});
 }
 
@@ -121,6 +129,7 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
     Object? syncFrequency = null,
     Object? autoSync = null,
     Object? cacheLimitMB = null,
+    Object? tombstoneRetentionDays = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_$AppSettingsModelImpl(
@@ -140,6 +149,10 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
           ? _value.cacheLimitMB
           : cacheLimitMB // ignore: cast_nullable_to_non_nullable
               as int,
+      tombstoneRetentionDays: null == tombstoneRetentionDays
+          ? _value.tombstoneRetentionDays
+          : tombstoneRetentionDays // ignore: cast_nullable_to_non_nullable
+              as int,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -156,6 +169,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.syncFrequency = '15 minutes',
       this.autoSync = true,
       this.cacheLimitMB = 100,
+      this.tombstoneRetentionDays = 30,
       this.lastCleanup});
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -174,11 +188,14 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   @JsonKey()
   final int cacheLimitMB;
   @override
+  @JsonKey()
+  final int tombstoneRetentionDays;
+  @override
   final DateTime? lastCleanup;
 
   @override
   String toString() {
-    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, lastCleanup: $lastCleanup)';
+    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, tombstoneRetentionDays: $tombstoneRetentionDays, lastCleanup: $lastCleanup)';
   }
 
   @override
@@ -194,6 +211,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
                 other.autoSync == autoSync) &&
             (identical(other.cacheLimitMB, cacheLimitMB) ||
                 other.cacheLimitMB == cacheLimitMB) &&
+            (identical(other.tombstoneRetentionDays, tombstoneRetentionDays) ||
+                other.tombstoneRetentionDays == tombstoneRetentionDays) &&
             (identical(other.lastCleanup, lastCleanup) ||
                 other.lastCleanup == lastCleanup));
   }
@@ -201,7 +220,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, themeMode, syncFrequency,
-      autoSync, cacheLimitMB, lastCleanup);
+      autoSync, cacheLimitMB, tombstoneRetentionDays, lastCleanup);
 
   @JsonKey(ignore: true)
   @override
@@ -224,6 +243,7 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final String syncFrequency,
       final bool autoSync,
       final int cacheLimitMB,
+      final int tombstoneRetentionDays,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
 
   factory _AppSettingsModel.fromJson(Map<String, dynamic> json) =
@@ -237,6 +257,8 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   bool get autoSync;
   @override
   int get cacheLimitMB;
+  @override
+  int get tombstoneRetentionDays;
   @override
   DateTime? get lastCleanup;
   @override

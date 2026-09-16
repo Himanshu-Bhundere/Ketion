@@ -8,10 +8,13 @@ abstract class SyncQueueRepository {
   /// Get pending sync operations
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50});
 
+  /// Find an existing pending item for an entity
+  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId);
+
   /// Update the status of a sync item
   Future<Result<void>> updateStatus(
     String id,
-    String status, {
+    SyncQueueItemStatus status, {
     int? attemptCount,
     DateTime? lastAttemptAt,
     DateTime? nextRetryAt,

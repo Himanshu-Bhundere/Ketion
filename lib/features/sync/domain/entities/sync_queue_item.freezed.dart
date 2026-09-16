@@ -26,7 +26,7 @@ mixin _$SyncQueueItem {
   String get operation => throw _privateConstructorUsedError;
   String? get payload => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  String get status => throw _privateConstructorUsedError;
+  SyncQueueItemStatus get status => throw _privateConstructorUsedError;
   int get attemptCount => throw _privateConstructorUsedError;
   DateTime? get lastAttemptAt => throw _privateConstructorUsedError;
   DateTime? get nextRetryAt => throw _privateConstructorUsedError;
@@ -51,7 +51,7 @@ abstract class $SyncQueueItemCopyWith<$Res> {
       String operation,
       String? payload,
       DateTime createdAt,
-      String status,
+      SyncQueueItemStatus status,
       int attemptCount,
       DateTime? lastAttemptAt,
       DateTime? nextRetryAt,
@@ -111,7 +111,7 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as String,
+              as SyncQueueItemStatus,
       attemptCount: null == attemptCount
           ? _value.attemptCount
           : attemptCount // ignore: cast_nullable_to_non_nullable
@@ -147,7 +147,7 @@ abstract class _$$SyncQueueItemImplCopyWith<$Res>
       String operation,
       String? payload,
       DateTime createdAt,
-      String status,
+      SyncQueueItemStatus status,
       int attemptCount,
       DateTime? lastAttemptAt,
       DateTime? nextRetryAt,
@@ -205,7 +205,7 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
       status: null == status
           ? _value.status
           : status // ignore: cast_nullable_to_non_nullable
-              as String,
+              as SyncQueueItemStatus,
       attemptCount: null == attemptCount
           ? _value.attemptCount
           : attemptCount // ignore: cast_nullable_to_non_nullable
@@ -236,7 +236,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       required this.operation,
       this.payload,
       required this.createdAt,
-      this.status = 'pending',
+      this.status = SyncQueueItemStatus.pending,
       this.attemptCount = 0,
       this.lastAttemptAt,
       this.nextRetryAt,
@@ -259,7 +259,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
   final DateTime createdAt;
   @override
   @JsonKey()
-  final String status;
+  final SyncQueueItemStatus status;
   @override
   @JsonKey()
   final int attemptCount;
@@ -339,7 +339,7 @@ abstract class _SyncQueueItem implements SyncQueueItem {
       required final String operation,
       final String? payload,
       required final DateTime createdAt,
-      final String status,
+      final SyncQueueItemStatus status,
       final int attemptCount,
       final DateTime? lastAttemptAt,
       final DateTime? nextRetryAt,
@@ -361,7 +361,7 @@ abstract class _SyncQueueItem implements SyncQueueItem {
   @override
   DateTime get createdAt;
   @override
-  String get status;
+  SyncQueueItemStatus get status;
   @override
   int get attemptCount;
   @override

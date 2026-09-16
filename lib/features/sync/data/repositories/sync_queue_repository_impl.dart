@@ -27,7 +27,8 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50}) async {
     try {
       final query = _db.select(_db.syncQueue)
-        ..where((tbl) => tbl.status.equals('pending'))
+        ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.pending.name) |
+                         tbl.status.equals(SyncQueueItemStatus.waiting.name))
         ..orderBy([
           (tbl) =>
               OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
@@ -42,9 +43,28 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   }
 
   @override
+  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId) async {
+    try {
+      final query = _db.select(_db.syncQueue)
+        ..where((tbl) =>
+            tbl.status.equals(SyncQueueItemStatus.pending.name) &
+            tbl.entityTable.equals(table) &
+            tbl.entityId.equals(entityId))
+        ..limit(1);
+      final result = await query.getSingleOrNull();
+      if (result != null) {
+        return Success(SyncQueueItemMapper.fromData(result));
+      }
+      return const Success(null);
+    } catch (e) {
+      return Error(StorageFailure('Failed to find pending item: $e'));
+    }
+  }
+
+  @override
   Future<Result<void>> updateStatus(
     String id,
-    String status, {
+    SyncQueueItemStatus status, {
     int? attemptCount,
     DateTime? lastAttemptAt,
     DateTime? nextRetryAt,
@@ -55,7 +75,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         ..where((tbl) => tbl.id.equals(id));
       await statement.write(
         SyncQueueCompanion(
-          status: Value(status),
+          status: Value(status.name),
           attemptCount:
               attemptCount != null ? Value(attemptCount) : const Value.absent(),
           lastAttemptAt:
@@ -76,7 +96,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   Future<Result<void>> clearCompleted() async {
     try {
       final statement = _db.delete(_db.syncQueue)
-        ..where((tbl) => tbl.status.equals('completed'));
+        ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.completed.name));
       await statement.go();
       return const Success(null);
     } catch (e) {

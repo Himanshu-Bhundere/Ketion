@@ -14,7 +14,9 @@ _$SyncQueueItemImpl _$$SyncQueueItemImplFromJson(Map<String, dynamic> json) =>
       operation: json['operation'] as String,
       payload: json['payload'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      status: json['status'] as String? ?? 'pending',
+      status:
+          $enumDecodeNullable(_$SyncQueueItemStatusEnumMap, json['status']) ??
+              SyncQueueItemStatus.pending,
       attemptCount: (json['attemptCount'] as num?)?.toInt() ?? 0,
       lastAttemptAt: json['lastAttemptAt'] == null
           ? null
@@ -33,9 +35,17 @@ Map<String, dynamic> _$$SyncQueueItemImplToJson(_$SyncQueueItemImpl instance) =>
       'operation': instance.operation,
       'payload': instance.payload,
       'createdAt': instance.createdAt.toIso8601String(),
-      'status': instance.status,
+      'status': _$SyncQueueItemStatusEnumMap[instance.status]!,
       'attemptCount': instance.attemptCount,
       'lastAttemptAt': instance.lastAttemptAt?.toIso8601String(),
       'nextRetryAt': instance.nextRetryAt?.toIso8601String(),
       'lastError': instance.lastError,
     };
+
+const _$SyncQueueItemStatusEnumMap = {
+  SyncQueueItemStatus.pending: 'pending',
+  SyncQueueItemStatus.processing: 'processing',
+  SyncQueueItemStatus.waiting: 'waiting',
+  SyncQueueItemStatus.failed: 'failed',
+  SyncQueueItemStatus.completed: 'completed',
+};

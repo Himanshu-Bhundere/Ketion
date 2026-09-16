@@ -24,6 +24,9 @@ _$SyncQueueItemImpl _$$SyncQueueItemImplFromJson(Map<String, dynamic> json) =>
       nextRetryAt: json['nextRetryAt'] == null
           ? null
           : DateTime.parse(json['nextRetryAt'] as String),
+      leaseUntil: json['leaseUntil'] == null
+          ? null
+          : DateTime.parse(json['leaseUntil'] as String),
       lastError: json['lastError'] as String?,
     );
 
@@ -39,6 +42,7 @@ Map<String, dynamic> _$$SyncQueueItemImplToJson(_$SyncQueueItemImpl instance) =>
       'attemptCount': instance.attemptCount,
       'lastAttemptAt': instance.lastAttemptAt?.toIso8601String(),
       'nextRetryAt': instance.nextRetryAt?.toIso8601String(),
+      'leaseUntil': instance.leaseUntil?.toIso8601String(),
       'lastError': instance.lastError,
     };
 

@@ -24,6 +24,37 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   }
 
   @override
+  Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item) async {
+    try {
+      final existingResult = await findPendingItem(item.entityTable, item.entityId);
+      final existing = (existingResult is Success<SyncQueueItem?>) ? existingResult.value : null;
+
+      if (existing != null) {
+        // Coalesce
+        String op = existing.operation;
+        if (op == 'create' && item.operation == 'update') {
+          op = 'create';
+        } else {
+          op = item.operation;
+        }
+
+        final statement = _db.update(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id));
+        await statement.write(
+          SyncQueueCompanion(
+            operation: Value(op),
+            payload: Value(item.payload),
+          ),
+        );
+        return const Success(null);
+      } else {
+        return await enqueue(item);
+      }
+    } catch (e) {
+      return Error(StorageFailure('Failed to enqueueOrCoalesce: $e'));
+    }
+  }
+
+  @override
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50}) async {
     try {
       final query = _db.select(_db.syncQueue)

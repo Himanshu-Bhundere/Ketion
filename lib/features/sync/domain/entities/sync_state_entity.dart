@@ -9,6 +9,7 @@ class SyncStateEntity with _$SyncStateEntity {
     required String deviceId,
     required String provider,
     @Default(0) int lastAppliedGeneration,
+    String? pageCursor,
     DateTime? lastSyncTime,
   }) = _SyncStateEntity;
 

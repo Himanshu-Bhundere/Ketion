@@ -24,6 +24,7 @@ class SyncQueueItem with _$SyncQueueItem {
     @Default(0) int attemptCount,
     DateTime? lastAttemptAt,
     DateTime? nextRetryAt,
+    DateTime? leaseUntil,
     String? lastError,
   }) = _SyncQueueItem;
 

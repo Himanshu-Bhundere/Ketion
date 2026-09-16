@@ -151,25 +151,7 @@ class GoogleDriveSyncProvider implements SyncProvider {
     }
   }
 
-  Future<int> _incrementAndGetGeneration() async {
-    final folder = await _driveApi!.files.get(
-      _syncFolderId!,
-      $fields: 'appProperties',
-    ) as drive.File;
-    
-    int currentGen = 0;
-    if (folder.appProperties != null && folder.appProperties!['generation'] != null) {
-      currentGen = int.tryParse(folder.appProperties!['generation']!) ?? 0;
-    }
-    
-    int nextGen = currentGen + 1;
-    
-    final updateMetadata = drive.File()
-      ..appProperties = {'generation': nextGen.toString()};
-    await _driveApi!.files.update(updateMetadata, _syncFolderId!);
-    
-    return nextGen;
-  }
+  // Removed _incrementAndGetGeneration
 
   @override
   Future<Result<void>> uploadChanges(
@@ -188,16 +170,13 @@ class GoogleDriveSyncProvider implements SyncProvider {
         return const Success(null);
       }
 
-      final generation = await _incrementAndGetGeneration();
-      final genString = generation.toString().padLeft(10, '0');
-      
       final content = jsonEncode(payload);
       final bytes = utf8.encode(content);
       final stream = Stream.value(bytes);
       final media = drive.Media(stream, bytes.length);
 
       final driveFile = drive.File()
-        ..name = 'gen_$genString.json'
+        ..name = 'batch_$batchId.json'
         ..parents = [_syncFolderId!]
         ..appProperties = {'batchId': batchId};
 
@@ -209,61 +188,79 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<List<Map<String, dynamic>>>> downloadChanges(
+  Future<Result<SyncDownloadResult>> downloadChanges(
     String? cursor,
   ) async {
     if (_driveApi == null || _syncFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
-      int currentCursor = int.tryParse(cursor ?? '0') ?? 0;
-      final q =
-          "'$_syncFolderId' in parents and mimeType = 'application/json' and trashed = false";
-      // We sort by name client-side as Drive's orderBy='name' can be flaky, but we'll try to request it anyway
-      final fileList = await _driveApi!.files.list(q: q, orderBy: 'name');
+      String pageToken = cursor ?? await _driveApi!.changes.getStartPageToken().then((r) => r.startPageToken ?? '');
+      if (pageToken.isEmpty) {
+        return const Error(SyncFailure('Could not obtain start page token'));
+      }
 
       final results = <Map<String, dynamic>>[];
-      if (fileList.files != null) {
-        // Sort explicitly just in case
-        final files = fileList.files!.where((f) => f.name?.startsWith('gen_') ?? false).toList();
-        files.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+      String? nextCursor;
+      
+      while (true) {
+        final changeList = await _driveApi!.changes.list(
+          pageToken,
+          spaces: 'drive',
+          includeRemoved: false,
+          includeItemsFromAllDrives: false,
+          supportsAllDrives: false,
+          includeCorpusRemovals: false,
+          $fields: 'nextPageToken, newStartPageToken, changes(fileId, file(name, parents, trashed, appProperties))',
+        );
 
-        for (final file in files) {
-          if (file.id == null || file.name == null) continue;
-          
-          final match = RegExp(r'gen_(\d+)\.json').firstMatch(file.name!);
-          if (match == null) continue;
-          final fileGen = int.parse(match.group(1)!);
-          
-          if (fileGen > currentCursor) {
-            final drive.Media media = await _driveApi!.files.get(
-              file.id!,
-              downloadOptions: drive.DownloadOptions.fullMedia,
-            ) as drive.Media;
-
-            final contentBytes = await media.stream.fold<List<int>>(
-              [],
-              (previous, element) => previous..addAll(element),
-            );
-            final contentString = utf8.decode(contentBytes);
-            final data = jsonDecode(contentString) as Map<String, dynamic>;
-            final deviceId = data['deviceId'] as String?;
+        if (changeList.changes != null) {
+          for (final change in changeList.changes!) {
+            final file = change.file;
+            if (file == null || file.trashed == true) continue;
             
-            final changes = data['changes'] as List<dynamic>? ?? [];
-            for (final change in changes) {
-              if (change is Map<String, dynamic>) {
-                change['batchId'] = fileGen.toString();
-                if (deviceId != null) {
-                  change['deviceId'] = deviceId;
+            // We only care about files in the sync folder that look like batches
+            if (file.parents != null && file.parents!.contains(_syncFolderId) && (file.name?.startsWith('batch_') ?? false)) {
+              final batchId = file.appProperties?['batchId'] ?? file.name?.replaceAll('batch_', '').replaceAll('.json', '');
+              
+              if (change.fileId != null) {
+                final drive.Media media = await _driveApi!.files.get(
+                  change.fileId!,
+                  downloadOptions: drive.DownloadOptions.fullMedia,
+                ) as drive.Media;
+
+                final contentBytes = await media.stream.fold<List<int>>(
+                  [],
+                  (previous, element) => previous..addAll(element),
+                );
+                final contentString = utf8.decode(contentBytes);
+                final data = jsonDecode(contentString) as Map<String, dynamic>;
+                final deviceId = data['deviceId'] as String?;
+                
+                final changesData = data['changes'] as List<dynamic>? ?? [];
+                for (final changeItem in changesData) {
+                  if (changeItem is Map<String, dynamic>) {
+                    changeItem['batchId'] = batchId;
+                    if (deviceId != null) {
+                      changeItem['deviceId'] = deviceId;
+                    }
+                    results.add(changeItem);
+                  }
                 }
-                results.add(change);
               }
             }
           }
         }
+        
+        if (changeList.nextPageToken != null) {
+          pageToken = changeList.nextPageToken!;
+        } else {
+          nextCursor = changeList.newStartPageToken;
+          break;
+        }
       }
 
-      return Success(results);
+      return Success(SyncDownloadResult(changes: results, nextCursor: nextCursor));
     } catch (e) {
       return Error(SyncFailure('Failed to download changes: $e'));
     }

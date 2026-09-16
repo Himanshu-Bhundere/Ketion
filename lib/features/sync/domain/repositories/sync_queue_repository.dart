@@ -5,6 +5,9 @@ abstract class SyncQueueRepository {
   /// Enqueue a new sync operation
   Future<Result<void>> enqueue(SyncQueueItem item);
 
+  /// Enqueue a new sync operation or coalesce with an existing pending one
+  Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item);
+
   /// Get pending sync operations
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50});
 

@@ -13,6 +13,7 @@ _$SyncStateEntityImpl _$$SyncStateEntityImplFromJson(
       provider: json['provider'] as String,
       lastAppliedGeneration:
           (json['lastAppliedGeneration'] as num?)?.toInt() ?? 0,
+      pageCursor: json['pageCursor'] as String?,
       lastSyncTime: json['lastSyncTime'] == null
           ? null
           : DateTime.parse(json['lastSyncTime'] as String),
@@ -24,5 +25,6 @@ Map<String, dynamic> _$$SyncStateEntityImplToJson(
       'deviceId': instance.deviceId,
       'provider': instance.provider,
       'lastAppliedGeneration': instance.lastAppliedGeneration,
+      'pageCursor': instance.pageCursor,
       'lastSyncTime': instance.lastSyncTime?.toIso8601String(),
     };

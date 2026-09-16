@@ -30,6 +30,7 @@ mixin _$SyncQueueItem {
   int get attemptCount => throw _privateConstructorUsedError;
   DateTime? get lastAttemptAt => throw _privateConstructorUsedError;
   DateTime? get nextRetryAt => throw _privateConstructorUsedError;
+  DateTime? get leaseUntil => throw _privateConstructorUsedError;
   String? get lastError => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,6 +56,7 @@ abstract class $SyncQueueItemCopyWith<$Res> {
       int attemptCount,
       DateTime? lastAttemptAt,
       DateTime? nextRetryAt,
+      DateTime? leaseUntil,
       String? lastError});
 }
 
@@ -81,6 +83,7 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
     Object? attemptCount = null,
     Object? lastAttemptAt = freezed,
     Object? nextRetryAt = freezed,
+    Object? leaseUntil = freezed,
     Object? lastError = freezed,
   }) {
     return _then(_value.copyWith(
@@ -124,6 +127,10 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
           ? _value.nextRetryAt
           : nextRetryAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      leaseUntil: freezed == leaseUntil
+          ? _value.leaseUntil
+          : leaseUntil // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastError: freezed == lastError
           ? _value.lastError
           : lastError // ignore: cast_nullable_to_non_nullable
@@ -151,6 +158,7 @@ abstract class _$$SyncQueueItemImplCopyWith<$Res>
       int attemptCount,
       DateTime? lastAttemptAt,
       DateTime? nextRetryAt,
+      DateTime? leaseUntil,
       String? lastError});
 }
 
@@ -175,6 +183,7 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
     Object? attemptCount = null,
     Object? lastAttemptAt = freezed,
     Object? nextRetryAt = freezed,
+    Object? leaseUntil = freezed,
     Object? lastError = freezed,
   }) {
     return _then(_$SyncQueueItemImpl(
@@ -218,6 +227,10 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
           ? _value.nextRetryAt
           : nextRetryAt // ignore: cast_nullable_to_non_nullable
               as DateTime?,
+      leaseUntil: freezed == leaseUntil
+          ? _value.leaseUntil
+          : leaseUntil // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       lastError: freezed == lastError
           ? _value.lastError
           : lastError // ignore: cast_nullable_to_non_nullable
@@ -240,6 +253,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       this.attemptCount = 0,
       this.lastAttemptAt,
       this.nextRetryAt,
+      this.leaseUntil,
       this.lastError});
 
   factory _$SyncQueueItemImpl.fromJson(Map<String, dynamic> json) =>
@@ -268,11 +282,13 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
   @override
   final DateTime? nextRetryAt;
   @override
+  final DateTime? leaseUntil;
+  @override
   final String? lastError;
 
   @override
   String toString() {
-    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, createdAt: $createdAt, status: $status, attemptCount: $attemptCount, lastAttemptAt: $lastAttemptAt, nextRetryAt: $nextRetryAt, lastError: $lastError)';
+    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, createdAt: $createdAt, status: $status, attemptCount: $attemptCount, lastAttemptAt: $lastAttemptAt, nextRetryAt: $nextRetryAt, leaseUntil: $leaseUntil, lastError: $lastError)';
   }
 
   @override
@@ -297,6 +313,8 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
                 other.lastAttemptAt == lastAttemptAt) &&
             (identical(other.nextRetryAt, nextRetryAt) ||
                 other.nextRetryAt == nextRetryAt) &&
+            (identical(other.leaseUntil, leaseUntil) ||
+                other.leaseUntil == leaseUntil) &&
             (identical(other.lastError, lastError) ||
                 other.lastError == lastError));
   }
@@ -315,6 +333,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       attemptCount,
       lastAttemptAt,
       nextRetryAt,
+      leaseUntil,
       lastError);
 
   @JsonKey(ignore: true)
@@ -343,6 +362,7 @@ abstract class _SyncQueueItem implements SyncQueueItem {
       final int attemptCount,
       final DateTime? lastAttemptAt,
       final DateTime? nextRetryAt,
+      final DateTime? leaseUntil,
       final String? lastError}) = _$SyncQueueItemImpl;
 
   factory _SyncQueueItem.fromJson(Map<String, dynamic> json) =
@@ -368,6 +388,8 @@ abstract class _SyncQueueItem implements SyncQueueItem {
   DateTime? get lastAttemptAt;
   @override
   DateTime? get nextRetryAt;
+  @override
+  DateTime? get leaseUntil;
   @override
   String? get lastError;
   @override

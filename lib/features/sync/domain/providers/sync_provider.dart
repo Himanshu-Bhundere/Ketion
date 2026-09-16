@@ -1,5 +1,12 @@
 import 'package:ketion/core/utils/result.dart';
 
+class SyncDownloadResult {
+  final List<Map<String, dynamic>> changes;
+  final String? nextCursor;
+
+  SyncDownloadResult({required this.changes, this.nextCursor});
+}
+
 abstract class SyncProvider {
   /// The identifier of the provider, e.g. 'google_drive'
   String get providerId;
@@ -27,7 +34,7 @@ abstract class SyncProvider {
   );
 
   /// Download unseen changes
-  Future<Result<List<Map<String, dynamic>>>> downloadChanges(String? cursor);
+  Future<Result<SyncDownloadResult>> downloadChanges(String? cursor);
 
   /// Get available storage information if applicable
   Future<Result<Map<String, dynamic>>> getAvailableStorage();

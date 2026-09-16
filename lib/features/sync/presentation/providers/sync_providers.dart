@@ -15,8 +15,10 @@ import 'package:ketion/features/sync/domain/repositories/sync_state_repository.d
 import 'package:ketion/features/sync/domain/usecases/enqueue_sync_usecase.dart';
 import 'package:ketion/features/sync/domain/usecases/sync_now_usecase.dart';
 import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
+import 'package:ketion/features/sync/data/utils/sync_entity_applier.dart';
 import 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 import 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
+import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
 
 export 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
@@ -39,11 +41,14 @@ final syncStateRepositoryProvider = Provider<SyncStateRepository>((ref) {
 });
 
 final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
+  final db = ref.watch(appDatabaseProvider);
   final syncProvider = ref.watch(syncProviderInterfaceProvider);
   final authService = ref.watch(authServiceProvider);
   final queueRepo = ref.watch(syncQueueRepositoryProvider);
   final stateRepo = ref.watch(syncStateRepositoryProvider);
-  final conflictResolver = ConflictResolver(ref.watch(appDatabaseProvider));
+  final conflictResolver = ConflictResolver(db);
+  final entityApplier = SyncEntityApplier(db);
+  final settingsRepo = ref.watch(settingsRepositoryProvider);
 
   return SyncEngineRepositoryImpl(
     syncProvider: syncProvider,
@@ -51,7 +56,9 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
     queueRepository: queueRepo,
     stateRepository: stateRepo,
     conflictResolver: conflictResolver,
-    db: ref.watch(appDatabaseProvider),
+    entityApplier: entityApplier,
+    settingsRepository: settingsRepo,
+    db: db,
   );
 });
 

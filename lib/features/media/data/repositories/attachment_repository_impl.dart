@@ -2,19 +2,19 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
-import 'package:path/path.dart' as p;
 
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/attachment.dart';
+import '../../domain/entities/attachment_upload_status.dart';
 import '../../domain/repositories/attachment_repository.dart';
-import '../services/media_service.dart';
+import '../services/attachment_storage_service.dart';
 
 class AttachmentRepositoryImpl implements AttachmentRepository {
   final AppDatabase _db;
-  final MediaService _mediaService;
+  final AttachmentStorageService _storageService;
   final Uuid _uuid = const Uuid();
 
-  AttachmentRepositoryImpl(this._db, this._mediaService);
+  AttachmentRepositoryImpl(this._db, this._storageService);
 
   @override
   Future<Attachment> saveAttachment({
@@ -23,49 +23,52 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
     required File sourceFile,
     required String mimeType,
   }) async {
-    final size = await sourceFile.length();
-    final fileName = p.basename(sourceFile.path);
-    final sha256 = await _mediaService.calculateSha256(sourceFile);
+    final fileSize = await sourceFile.length();
 
-    // Save to media service (will deduplicate automatically if exists)
-    final mediaResult = await _mediaService.saveMedia(
+    // Save to storage service (will deduplicate automatically if exists)
+    final mediaResult = await _storageService.saveAttachment(
       sourceFile,
       generateThumbnail: mimeType.startsWith('image/'),
     );
-    final relativePath = mediaResult.$1;
+    final localPath = mediaResult.$1;
     final thumbnailPath = mediaResult.$2;
+    final sha256 = mediaResult.$3;
 
     final id = _uuid.v4();
     final now = DateTime.now();
 
     final attachment = Attachment(
       id: id,
-      pageId: pageId,
       blockId: blockId,
-      fileName: fileName,
+      localPath: localPath,
       mimeType: mimeType,
-      size: size,
-      sha256: sha256,
-      relativePath: relativePath,
+      checksumSha256: sha256,
+      fileSize: fileSize,
       thumbnailPath: thumbnailPath,
+      uploadStatus: AttachmentUploadStatus.pending,
       createdAt: now,
       updatedAt: now,
+      version: 1,
+      deleted: false,
+      isPinnedOffline: false,
     );
 
     // Save to database
     await _db.into(_db.attachments).insert(
           AttachmentsCompanion.insert(
             id: id,
-            pageId: pageId,
             blockId: blockId,
-            fileName: fileName,
+            localPath: Value(localPath),
             mimeType: mimeType,
-            size: size,
-            sha256: sha256,
-            relativePath: relativePath,
+            checksumSha256: Value(sha256),
+            fileSize: fileSize,
             thumbnailPath: Value(thumbnailPath),
+            uploadStatus: Value(AttachmentUploadStatus.pending.value),
             createdAt: Value(now),
             updatedAt: Value(now),
+            version: const Value(1),
+            deleted: const Value(false),
+            isPinnedOffline: const Value(false),
           ),
         );
 
@@ -83,12 +86,15 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
 
   @override
   Future<List<Attachment>> getAttachmentsForPage(String pageId) async {
-    final rows = await (_db.select(_db.attachments)
-          ..where((t) => t.pageId.equals(pageId))
-          ..where((t) => t.deleted.equals(false)))
-        .get();
+    // We need to join with blocks to get attachments for a page
+    final query = _db.select(_db.attachments).join([
+      innerJoin(_db.blocks, _db.blocks.id.equalsExp(_db.attachments.blockId)),
+    ])
+      ..where(_db.blocks.pageId.equals(pageId))
+      ..where(_db.attachments.deleted.equals(false));
 
-    return rows.map(_mapRowToEntity).toList();
+    final rows = await query.get();
+    return rows.map((row) => _mapRowToEntity(row.readTable(_db.attachments))).toList();
   }
 
   @override
@@ -103,34 +109,99 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
 
     // Note: We don't delete the physical file yet because other blocks might reference
     // the same file (deduplication via SHA-256). A separate garbage collection
-    // routine would handle orphaned files later.
+    // routine will handle orphaned files based on reference counting.
   }
 
   @override
-  Future<String> resolveAttachmentPath(Attachment attachment) {
-    return _mediaService.resolvePath(attachment.relativePath);
+  Future<String> resolveAttachmentPath(Attachment attachment) async {
+    if (attachment.localPath == null) return '';
+    return _storageService.resolvePath(attachment.localPath!);
+  }
+
+  @override
+  Future<void> garbageCollectOrphanedFiles() async {
+    final validPaths = <String>{};
+    
+    // Get all non-deleted attachments
+    final rows = await (_db.select(_db.attachments)
+          ..where((t) => t.deleted.equals(false)))
+        .get();
+
+    for (final row in rows) {
+      if (row.localPath != null) {
+        validPaths.add(row.localPath!.replaceAll('\\', '/'));
+      }
+      if (row.thumbnailPath != null) {
+        validPaths.add(row.thumbnailPath!.replaceAll('\\', '/'));
+      }
+    }
+
+    await _storageService.garbageCollect(validPaths);
+  }
+
+  @override
+  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus, {String? driveFileId, String? localPath}) async {
+    final companion = AttachmentsCompanion(
+      uploadStatus: Value(uploadStatus),
+      updatedAt: Value(DateTime.now()),
+      driveFileId: driveFileId != null ? Value(driveFileId) : const Value.absent(),
+      localPath: localPath != null ? Value(localPath) : const Value.absent(),
+    );
+
+    await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(companion);
+  }
+
+  @override
+  Future<List<Attachment>> getPendingUploads() async {
+    final rows = await (_db.select(_db.attachments)
+          ..where(
+            (t) =>
+                t.deleted.equals(false) &
+                (t.uploadStatus.equals(AttachmentUploadStatus.pending.value) |
+                    t.uploadStatus.equals(AttachmentUploadStatus.failed.value)),
+          ))
+        .get();
+    return rows.map(_mapRowToEntity).toList();
+  }
+
+  @override
+  Future<List<Attachment>> getPendingDownloads() async {
+    final rows = await (_db.select(_db.attachments)
+          ..where(
+            (t) =>
+                t.deleted.equals(false) &
+                t.driveFileId.isNotNull() &
+                t.localPath.isNull(),
+          ))
+        .get();
+    return rows.map(_mapRowToEntity).toList();
   }
 
   Attachment _mapRowToEntity(AttachmentData row) {
     return Attachment(
       id: row.id,
-      pageId: row.pageId,
       blockId: row.blockId,
-      fileName: row.fileName,
+      driveFileId: row.driveFileId,
+      localPath: row.localPath,
       mimeType: row.mimeType,
-      size: row.size,
-      sha256: row.sha256,
-      relativePath: row.relativePath,
+      checksumSha256: row.checksumSha256,
+      fileSize: row.fileSize,
+      width: row.width,
+      height: row.height,
+      duration: row.duration,
       thumbnailPath: row.thumbnailPath,
+      uploadStatus: AttachmentUploadStatus.fromString(row.uploadStatus),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      version: row.version,
       deleted: row.deleted,
+      isPinnedOffline: row.isPinnedOffline,
     );
   }
 }
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  final mediaService = ref.watch(mediaServiceProvider);
-  return AttachmentRepositoryImpl(db, mediaService);
+  final storageService = ref.watch(attachmentStorageServiceProvider);
+  return AttachmentRepositoryImpl(db, storageService);
 });

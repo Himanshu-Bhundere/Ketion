@@ -19,15 +19,15 @@ class ConflictResolver {
     required int remoteUpdatedAt,
     required String remoteDeviceId,
   }) {
-    if (remoteVersion > localVersion) {
-      return ConflictResolution.applyRemote;
-    } else if (remoteVersion < localVersion) {
-      return ConflictResolution.keepLocal;
-    }
-
     if (remoteUpdatedAt > localUpdatedAt) {
       return ConflictResolution.applyRemote;
     } else if (remoteUpdatedAt < localUpdatedAt) {
+      return ConflictResolution.keepLocal;
+    }
+
+    if (remoteVersion > localVersion) {
+      return ConflictResolution.applyRemote;
+    } else if (remoteVersion < localVersion) {
       return ConflictResolution.keepLocal;
     }
 
@@ -82,22 +82,21 @@ class ConflictResolver {
       }
     }
 
-    // 3. LWW logic using (version, updated_at, device_id)
+    // 3. LWW logic using (updated_at, generation, device_id)
     bool shouldApply = false;
     if (localUpdatedAt == null) {
       // Entity does not exist locally
       shouldApply = true;
-    } else if (remoteVersion > localVersion) {
-      // Remote has a higher version
-      shouldApply = true;
-    } else if (remoteVersion == localVersion) {
-      if (remoteUpdatedAt != null && remoteUpdatedAt.isAfter(localUpdatedAt)) {
-        // Remote is newer timestamp for the same version
+    } else if (remoteUpdatedAt != null) {
+      if (remoteUpdatedAt.isAfter(localUpdatedAt)) {
         shouldApply = true;
-      } else if (remoteUpdatedAt != null && remoteUpdatedAt.isAtSameMomentAs(localUpdatedAt)) {
-        // Same timestamp and version -> tiebreaker on deviceId (lexicographical)
-        if (remoteDeviceId != null && remoteDeviceId.compareTo(localDeviceId) > 0) {
+      } else if (remoteUpdatedAt.isAtSameMomentAs(localUpdatedAt)) {
+        if (remoteVersion > localVersion) {
           shouldApply = true;
+        } else if (remoteVersion == localVersion) {
+          if (remoteDeviceId != null && remoteDeviceId.compareTo(localDeviceId) > 0) {
+            shouldApply = true;
+          }
         }
       }
     } else if (remoteUpdatedAt == null && operation == 'delete') {

@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/blocks/data/repositories/block_repository_impl.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart' as domain;
+import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
 import 'package:ketion/core/utils/logger.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -12,7 +13,8 @@ void main() {
 
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
-    repository = BlockRepositoryImpl(database, AppLogger());
+    final syncQueue = SyncQueueRepositoryImpl(database);
+    repository = BlockRepositoryImpl(database, syncQueue, AppLogger());
   });
 
   tearDown(() async {
@@ -87,8 +89,8 @@ void main() {
       expect(blockInDb.version, 2);
 
       final queueItems = await (database.select(database.syncQueue)..where((t) => t.entityId.equals('block1'))).get();
-      expect(queueItems.length, 2); // 1 for create, 1 for update
-      expect(queueItems.last.operation, 'update');
+      expect(queueItems.length, 1); // coalesced update into create
+      expect(queueItems.last.operation, 'create');
     });
 
     test('deleteBlock creates sync_queue entry', () async {
@@ -115,10 +117,11 @@ void main() {
       await repository.deleteBlock('block1');
 
       final blocksInDb = await database.select(database.blocks).get();
-      expect(blocksInDb.isEmpty, true);
+      expect(blocksInDb.length, 1);
+      expect(blocksInDb.single.deleted, true);
 
       final queueItems = await (database.select(database.syncQueue)..where((t) => t.entityId.equals('block1'))).get();
-      expect(queueItems.length, 2); // 1 for create, 1 for delete
+      expect(queueItems.length, 1); // 1 create + 1 delete = coalesced to 1 delete
       expect(queueItems.last.operation, 'delete');
     });
   });

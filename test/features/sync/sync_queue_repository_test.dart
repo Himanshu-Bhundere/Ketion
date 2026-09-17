@@ -48,7 +48,7 @@ void main() {
     );
 
     await repository.enqueue(item);
-    await repository.updateStatus('item-1', 'completed');
+    await repository.updateStatus('item-1', SyncQueueItemStatus.completed);
 
     final pendingRes = await repository.getPendingItems();
     expect(pendingRes, isA<Success<List<SyncQueueItem>>>());

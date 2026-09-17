@@ -4,6 +4,7 @@ import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/media/data/repositories/attachment_repository_impl.dart';
 import 'package:ketion/features/media/data/services/attachment_storage_service.dart';
 import 'package:ketion/features/media/data/services/checksum_service.dart';
+import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:path/path.dart' as p;
@@ -41,7 +42,8 @@ void main() {
 
     checksumService = ChecksumService();
     storageService = AttachmentStorageService(checksumService);
-    repository = AttachmentRepositoryImpl(database, storageService);
+    final syncQueue = SyncQueueRepositoryImpl(database);
+    repository = AttachmentRepositoryImpl(database, storageService, syncQueue);
 
     testFile = File(p.join(tempDir.path, 'test_image.png'));
     await testFile.writeAsString('fake image content');

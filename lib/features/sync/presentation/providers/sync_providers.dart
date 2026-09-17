@@ -20,6 +20,7 @@ import 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
 
 export 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
+import 'package:ketion/features/media/data/services/attachment_sync_service_impl.dart';
 
 final syncProviderInterfaceProvider = Provider<SyncProvider>((ref) {
   return GoogleDriveSyncProvider();
@@ -55,7 +56,8 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
 final syncNowUseCaseProvider = Provider<SyncNowUseCase>((ref) {
   final engineRepo = ref.watch(syncEngineRepositoryProvider);
   final widgetService = ref.watch(widgetServiceProvider);
-  return SyncNowUseCase(engineRepo, widgetService);
+  final attachmentSyncService = ref.watch(attachmentSyncServiceProvider);
+  return SyncNowUseCase(engineRepo, widgetService, attachmentSyncService);
 });
 
 final enqueueSyncUseCaseProvider = Provider<EnqueueSyncUseCase>((ref) {

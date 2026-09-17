@@ -61,6 +61,24 @@ class ExportUseCase {
             caption: imgBlock.caption,
           ),);
         },
+        video: (VideoBlockData videoBlock) {
+          nodes.add(DocumentNode.file(
+            attachmentId: videoBlock.attachmentId,
+            caption: videoBlock.caption,
+          ),);
+        },
+        audio: (AudioBlockData audioBlock) {
+          nodes.add(DocumentNode.file(
+            attachmentId: audioBlock.attachmentId,
+            caption: audioBlock.caption,
+          ),);
+        },
+        pdf: (PdfBlockData pdfBlock) {
+          nodes.add(DocumentNode.file(
+            attachmentId: pdfBlock.attachmentId,
+            caption: pdfBlock.caption,
+          ),);
+        },
         file: (FileBlockData fileBlock) {
           nodes.add(DocumentNode.file(
             attachmentId: fileBlock.attachmentId,

@@ -80,8 +80,8 @@ class _FileBlockWidgetState extends ConsumerState<FileBlockWidget> {
               );
             }
 
-            final fileName = attachment.fileName;
-            final fileSize = (attachment.size) / 1024 / 1024;
+            final fileName = attachment.localPath?.split('/').last ?? 'Unknown file';
+            final fileSize = (attachment.fileSize) / 1024 / 1024;
 
             IconData iconData = Icons.insert_drive_file;
             if (attachment.mimeType.startsWith('video/')) {

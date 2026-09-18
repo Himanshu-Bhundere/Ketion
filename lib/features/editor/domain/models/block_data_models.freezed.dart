@@ -334,6 +334,12 @@ BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
       return UnknownBlockData.fromJson(json);
     case 'image':
       return ImageBlockData.fromJson(json);
+    case 'video':
+      return VideoBlockData.fromJson(json);
+    case 'audio':
+      return AudioBlockData.fromJson(json);
+    case 'pdf':
+      return PdfBlockData.fromJson(json);
     case 'file':
       return FileBlockData.fromJson(json);
 
@@ -353,6 +359,9 @@ mixin _$BlockDataModel {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) =>
       throw _privateConstructorUsedError;
@@ -363,6 +372,9 @@ mixin _$BlockDataModel {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) =>
       throw _privateConstructorUsedError;
@@ -373,6 +385,9 @@ mixin _$BlockDataModel {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) =>
@@ -383,6 +398,9 @@ mixin _$BlockDataModel {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) =>
       throw _privateConstructorUsedError;
@@ -392,6 +410,9 @@ mixin _$BlockDataModel {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) =>
       throw _privateConstructorUsedError;
@@ -401,6 +422,9 @@ mixin _$BlockDataModel {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) =>
@@ -526,6 +550,9 @@ class _$TextBlockDataImpl implements TextBlockData {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) {
     return text(spans, headingLevel);
@@ -539,6 +566,9 @@ class _$TextBlockDataImpl implements TextBlockData {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) {
     return text?.call(spans, headingLevel);
@@ -552,6 +582,9 @@ class _$TextBlockDataImpl implements TextBlockData {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) {
@@ -568,6 +601,9 @@ class _$TextBlockDataImpl implements TextBlockData {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) {
     return text(this);
@@ -580,6 +616,9 @@ class _$TextBlockDataImpl implements TextBlockData {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) {
     return text?.call(this);
@@ -592,6 +631,9 @@ class _$TextBlockDataImpl implements TextBlockData {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) {
@@ -734,6 +776,9 @@ class _$ListBlockDataImpl implements ListBlockData {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) {
     return list(spans, checked, listType);
@@ -747,6 +792,9 @@ class _$ListBlockDataImpl implements ListBlockData {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) {
     return list?.call(spans, checked, listType);
@@ -760,6 +808,9 @@ class _$ListBlockDataImpl implements ListBlockData {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) {
@@ -776,6 +827,9 @@ class _$ListBlockDataImpl implements ListBlockData {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) {
     return list(this);
@@ -788,6 +842,9 @@ class _$ListBlockDataImpl implements ListBlockData {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) {
     return list?.call(this);
@@ -800,6 +857,9 @@ class _$ListBlockDataImpl implements ListBlockData {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) {
@@ -922,6 +982,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) {
     return unknown(rawData);
@@ -935,6 +998,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) {
     return unknown?.call(rawData);
@@ -948,6 +1014,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) {
@@ -964,6 +1033,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) {
     return unknown(this);
@@ -976,6 +1048,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) {
     return unknown?.call(this);
@@ -988,6 +1063,9 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) {
@@ -1107,6 +1185,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) {
     return image(attachmentId, caption);
@@ -1120,6 +1201,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) {
     return image?.call(attachmentId, caption);
@@ -1133,6 +1217,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) {
@@ -1149,6 +1236,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) {
     return image(this);
@@ -1161,6 +1251,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) {
     return image?.call(this);
@@ -1173,6 +1266,9 @@ class _$ImageBlockDataImpl implements ImageBlockData {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) {
@@ -1202,6 +1298,620 @@ abstract class ImageBlockData implements BlockDataModel {
   String? get caption;
   @JsonKey(ignore: true)
   _$$ImageBlockDataImplCopyWith<_$ImageBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$VideoBlockDataImplCopyWith<$Res> {
+  factory _$$VideoBlockDataImplCopyWith(_$VideoBlockDataImpl value,
+          $Res Function(_$VideoBlockDataImpl) then) =
+      __$$VideoBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String attachmentId, String? caption});
+}
+
+/// @nodoc
+class __$$VideoBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$VideoBlockDataImpl>
+    implements _$$VideoBlockDataImplCopyWith<$Res> {
+  __$$VideoBlockDataImplCopyWithImpl(
+      _$VideoBlockDataImpl _value, $Res Function(_$VideoBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? attachmentId = null,
+    Object? caption = freezed,
+  }) {
+    return _then(_$VideoBlockDataImpl(
+      attachmentId: null == attachmentId
+          ? _value.attachmentId
+          : attachmentId // ignore: cast_nullable_to_non_nullable
+              as String,
+      caption: freezed == caption
+          ? _value.caption
+          : caption // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$VideoBlockDataImpl implements VideoBlockData {
+  const _$VideoBlockDataImpl(
+      {required this.attachmentId, this.caption, final String? $type})
+      : $type = $type ?? 'video';
+
+  factory _$VideoBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$VideoBlockDataImplFromJson(json);
+
+  @override
+  final String attachmentId;
+  @override
+  final String? caption;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.video(attachmentId: $attachmentId, caption: $caption)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$VideoBlockDataImpl &&
+            (identical(other.attachmentId, attachmentId) ||
+                other.attachmentId == attachmentId) &&
+            (identical(other.caption, caption) || other.caption == caption));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, attachmentId, caption);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$VideoBlockDataImplCopyWith<_$VideoBlockDataImpl> get copyWith =>
+      __$$VideoBlockDataImplCopyWithImpl<_$VideoBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
+    required TResult Function(
+            List<TextSpanData> spans, bool checked, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+  }) {
+    return video(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+  }) {
+    return video?.call(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    required TResult orElse(),
+  }) {
+    if (video != null) {
+      return video(attachmentId, caption);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+  }) {
+    return video(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+  }) {
+    return video?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    required TResult orElse(),
+  }) {
+    if (video != null) {
+      return video(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$VideoBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class VideoBlockData implements BlockDataModel {
+  const factory VideoBlockData(
+      {required final String attachmentId,
+      final String? caption}) = _$VideoBlockDataImpl;
+
+  factory VideoBlockData.fromJson(Map<String, dynamic> json) =
+      _$VideoBlockDataImpl.fromJson;
+
+  String get attachmentId;
+  String? get caption;
+  @JsonKey(ignore: true)
+  _$$VideoBlockDataImplCopyWith<_$VideoBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$AudioBlockDataImplCopyWith<$Res> {
+  factory _$$AudioBlockDataImplCopyWith(_$AudioBlockDataImpl value,
+          $Res Function(_$AudioBlockDataImpl) then) =
+      __$$AudioBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String attachmentId, String? caption});
+}
+
+/// @nodoc
+class __$$AudioBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$AudioBlockDataImpl>
+    implements _$$AudioBlockDataImplCopyWith<$Res> {
+  __$$AudioBlockDataImplCopyWithImpl(
+      _$AudioBlockDataImpl _value, $Res Function(_$AudioBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? attachmentId = null,
+    Object? caption = freezed,
+  }) {
+    return _then(_$AudioBlockDataImpl(
+      attachmentId: null == attachmentId
+          ? _value.attachmentId
+          : attachmentId // ignore: cast_nullable_to_non_nullable
+              as String,
+      caption: freezed == caption
+          ? _value.caption
+          : caption // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$AudioBlockDataImpl implements AudioBlockData {
+  const _$AudioBlockDataImpl(
+      {required this.attachmentId, this.caption, final String? $type})
+      : $type = $type ?? 'audio';
+
+  factory _$AudioBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$AudioBlockDataImplFromJson(json);
+
+  @override
+  final String attachmentId;
+  @override
+  final String? caption;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.audio(attachmentId: $attachmentId, caption: $caption)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$AudioBlockDataImpl &&
+            (identical(other.attachmentId, attachmentId) ||
+                other.attachmentId == attachmentId) &&
+            (identical(other.caption, caption) || other.caption == caption));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, attachmentId, caption);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$AudioBlockDataImplCopyWith<_$AudioBlockDataImpl> get copyWith =>
+      __$$AudioBlockDataImplCopyWithImpl<_$AudioBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
+    required TResult Function(
+            List<TextSpanData> spans, bool checked, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+  }) {
+    return audio(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+  }) {
+    return audio?.call(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    required TResult orElse(),
+  }) {
+    if (audio != null) {
+      return audio(attachmentId, caption);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+  }) {
+    return audio(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+  }) {
+    return audio?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    required TResult orElse(),
+  }) {
+    if (audio != null) {
+      return audio(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$AudioBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class AudioBlockData implements BlockDataModel {
+  const factory AudioBlockData(
+      {required final String attachmentId,
+      final String? caption}) = _$AudioBlockDataImpl;
+
+  factory AudioBlockData.fromJson(Map<String, dynamic> json) =
+      _$AudioBlockDataImpl.fromJson;
+
+  String get attachmentId;
+  String? get caption;
+  @JsonKey(ignore: true)
+  _$$AudioBlockDataImplCopyWith<_$AudioBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$PdfBlockDataImplCopyWith<$Res> {
+  factory _$$PdfBlockDataImplCopyWith(
+          _$PdfBlockDataImpl value, $Res Function(_$PdfBlockDataImpl) then) =
+      __$$PdfBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String attachmentId, String? caption});
+}
+
+/// @nodoc
+class __$$PdfBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$PdfBlockDataImpl>
+    implements _$$PdfBlockDataImplCopyWith<$Res> {
+  __$$PdfBlockDataImplCopyWithImpl(
+      _$PdfBlockDataImpl _value, $Res Function(_$PdfBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? attachmentId = null,
+    Object? caption = freezed,
+  }) {
+    return _then(_$PdfBlockDataImpl(
+      attachmentId: null == attachmentId
+          ? _value.attachmentId
+          : attachmentId // ignore: cast_nullable_to_non_nullable
+              as String,
+      caption: freezed == caption
+          ? _value.caption
+          : caption // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PdfBlockDataImpl implements PdfBlockData {
+  const _$PdfBlockDataImpl(
+      {required this.attachmentId, this.caption, final String? $type})
+      : $type = $type ?? 'pdf';
+
+  factory _$PdfBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PdfBlockDataImplFromJson(json);
+
+  @override
+  final String attachmentId;
+  @override
+  final String? caption;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.pdf(attachmentId: $attachmentId, caption: $caption)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PdfBlockDataImpl &&
+            (identical(other.attachmentId, attachmentId) ||
+                other.attachmentId == attachmentId) &&
+            (identical(other.caption, caption) || other.caption == caption));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, attachmentId, caption);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PdfBlockDataImplCopyWith<_$PdfBlockDataImpl> get copyWith =>
+      __$$PdfBlockDataImplCopyWithImpl<_$PdfBlockDataImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
+    required TResult Function(
+            List<TextSpanData> spans, bool checked, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+  }) {
+    return pdf(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+  }) {
+    return pdf?.call(attachmentId, caption);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    required TResult orElse(),
+  }) {
+    if (pdf != null) {
+      return pdf(attachmentId, caption);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+  }) {
+    return pdf(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+  }) {
+    return pdf?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    required TResult orElse(),
+  }) {
+    if (pdf != null) {
+      return pdf(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PdfBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class PdfBlockData implements BlockDataModel {
+  const factory PdfBlockData(
+      {required final String attachmentId,
+      final String? caption}) = _$PdfBlockDataImpl;
+
+  factory PdfBlockData.fromJson(Map<String, dynamic> json) =
+      _$PdfBlockDataImpl.fromJson;
+
+  String get attachmentId;
+  String? get caption;
+  @JsonKey(ignore: true)
+  _$$PdfBlockDataImplCopyWith<_$PdfBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -1293,6 +2003,9 @@ class _$FileBlockDataImpl implements FileBlockData {
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
     required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
   }) {
     return file(attachmentId, caption);
@@ -1306,6 +2019,9 @@ class _$FileBlockDataImpl implements FileBlockData {
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
     TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
   }) {
     return file?.call(attachmentId, caption);
@@ -1319,6 +2035,9 @@ class _$FileBlockDataImpl implements FileBlockData {
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
     TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
     required TResult orElse(),
   }) {
@@ -1335,6 +2054,9 @@ class _$FileBlockDataImpl implements FileBlockData {
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
     required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
   }) {
     return file(this);
@@ -1347,6 +2069,9 @@ class _$FileBlockDataImpl implements FileBlockData {
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
     TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
   }) {
     return file?.call(this);
@@ -1359,6 +2084,9 @@ class _$FileBlockDataImpl implements FileBlockData {
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
     TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
     required TResult orElse(),
   }) {

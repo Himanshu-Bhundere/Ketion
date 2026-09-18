@@ -97,6 +97,50 @@ Map<String, dynamic> _$$ImageBlockDataImplToJson(
       'runtimeType': instance.$type,
     };
 
+_$VideoBlockDataImpl _$$VideoBlockDataImplFromJson(Map<String, dynamic> json) =>
+    _$VideoBlockDataImpl(
+      attachmentId: json['attachmentId'] as String,
+      caption: json['caption'] as String?,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$$VideoBlockDataImplToJson(
+        _$VideoBlockDataImpl instance) =>
+    <String, dynamic>{
+      'attachmentId': instance.attachmentId,
+      'caption': instance.caption,
+      'runtimeType': instance.$type,
+    };
+
+_$AudioBlockDataImpl _$$AudioBlockDataImplFromJson(Map<String, dynamic> json) =>
+    _$AudioBlockDataImpl(
+      attachmentId: json['attachmentId'] as String,
+      caption: json['caption'] as String?,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$$AudioBlockDataImplToJson(
+        _$AudioBlockDataImpl instance) =>
+    <String, dynamic>{
+      'attachmentId': instance.attachmentId,
+      'caption': instance.caption,
+      'runtimeType': instance.$type,
+    };
+
+_$PdfBlockDataImpl _$$PdfBlockDataImplFromJson(Map<String, dynamic> json) =>
+    _$PdfBlockDataImpl(
+      attachmentId: json['attachmentId'] as String,
+      caption: json['caption'] as String?,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$$PdfBlockDataImplToJson(_$PdfBlockDataImpl instance) =>
+    <String, dynamic>{
+      'attachmentId': instance.attachmentId,
+      'caption': instance.caption,
+      'runtimeType': instance.$type,
+    };
+
 _$FileBlockDataImpl _$$FileBlockDataImplFromJson(Map<String, dynamic> json) =>
     _$FileBlockDataImpl(
       attachmentId: json['attachmentId'] as String,

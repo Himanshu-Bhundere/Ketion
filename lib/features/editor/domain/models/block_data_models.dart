@@ -44,6 +44,21 @@ sealed class BlockDataModel with _$BlockDataModel {
     String? caption,
   }) = ImageBlockData;
 
+  const factory BlockDataModel.video({
+    required String attachmentId,
+    String? caption,
+  }) = VideoBlockData;
+
+  const factory BlockDataModel.audio({
+    required String attachmentId,
+    String? caption,
+  }) = AudioBlockData;
+
+  const factory BlockDataModel.pdf({
+    required String attachmentId,
+    String? caption,
+  }) = PdfBlockData;
+
   const factory BlockDataModel.file({
     required String attachmentId,
     String? caption,

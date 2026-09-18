@@ -12,12 +12,15 @@ import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 
 import 'package:ketion/core/database/app_database.dart';
 
+import 'package:ketion/features/settings/domain/repositories/settings_repository.dart';
+
 class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncProvider _syncProvider;
   final AuthService _authService;
   final SyncQueueRepository _queueRepository;
   final SyncStateRepository _stateRepository;
   final ConflictResolver _conflictResolver;
+  final SettingsRepository _settingsRepository;
   final AppDatabase _db;
 
   static const List<String> _driveScopes = [
@@ -31,12 +34,14 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     required SyncQueueRepository queueRepository,
     required SyncStateRepository stateRepository,
     required ConflictResolver conflictResolver,
+    required SettingsRepository settingsRepository,
     required AppDatabase db,
   })  : _syncProvider = syncProvider,
         _authService = authService,
         _queueRepository = queueRepository,
         _stateRepository = stateRepository,
         _conflictResolver = conflictResolver,
+        _settingsRepository = settingsRepository,
         _db = db;
 
   bool _isSyncing = false;
@@ -48,6 +53,21 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     String operation, {
     String? payload,
   }) async {
+    final pendingResult = await _queueRepository.findPendingItem(table, entityId);
+    if (pendingResult is Success<SyncQueueItem?> && pendingResult.value != null) {
+      final existing = pendingResult.value!;
+      final newOp = (existing.operation == 'create' && operation == 'update') 
+          ? 'create' 
+          : operation;
+      
+      final updatedItem = existing.copyWith(
+        operation: newOp,
+        payload: payload,
+        createdAt: DateTime.now(),
+      );
+      return await _queueRepository.enqueue(updatedItem);
+    }
+
     final item = SyncQueueItem(
       id: const Uuid().v7(),
       entityTable: table,
@@ -95,6 +115,14 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       if (pendingResult is Success<List<SyncQueueItem>>) {
         final items = pendingResult.value;
         if (items.isNotEmpty) {
+        
+        // Lease items by marking them as processing
+        await _db.transaction(() async {
+          for (final item in items) {
+            await _queueRepository.updateStatus(item.id, SyncQueueItemStatus.processing);
+          }
+        });
+
         final batchId = const Uuid().v7();
         final payload = {
           'batchId': batchId,
@@ -117,7 +145,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         if (uploadRes is Success<void>) {
           await _db.transaction(() async {
             for (final item in items) {
-              await _queueRepository.updateStatus(item.id, 'completed');
+              await _queueRepository.updateStatus(item.id, SyncQueueItemStatus.completed);
             }
           });
         } else if (uploadRes is Error<void>) {
@@ -128,14 +156,14 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               if (nextRetry > 5) {
                 await _queueRepository.updateStatus(
                   item.id,
-                  'failed',
+                  SyncQueueItemStatus.failed,
                   attemptCount: nextRetry,
                   lastError: uploadRes.failure.message,
                 );
               } else {
                 await _queueRepository.updateStatus(
                   item.id,
-                  'pending',
+                  SyncQueueItemStatus.waiting,
                   attemptCount: nextRetry,
                   lastError: uploadRes.failure.message,
                 );
@@ -190,6 +218,10 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         await _stateRepository.saveSyncState(newState);
       }
     });
+
+    // 6. Cleanup old tombstones
+    final settings = await _settingsRepository.getSettings();
+    await _db.cleanupTombstones(retentionDays: settings.tombstoneRetentionDays);
 
     return const Success(null);
     } finally {

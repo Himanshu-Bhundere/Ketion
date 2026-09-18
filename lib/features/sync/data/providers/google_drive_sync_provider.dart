@@ -180,6 +180,14 @@ class GoogleDriveSyncProvider implements SyncProvider {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
+      // Idempotency check: see if batch already exists
+      final q = "'$_syncFolderId' in parents and appProperties has { key='batchId' and value='$batchId' } and trashed = false";
+      final fileList = await _driveApi!.files.list(q: q);
+      if (fileList.files != null && fileList.files!.isNotEmpty) {
+        // Batch already processed successfully
+        return const Success(null);
+      }
+
       final generation = await _incrementAndGetGeneration();
       final genString = generation.toString().padLeft(10, '0');
       
@@ -190,7 +198,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
 
       final driveFile = drive.File()
         ..name = 'gen_$genString.json'
-        ..parents = [_syncFolderId!];
+        ..parents = [_syncFolderId!]
+        ..appProperties = {'batchId': batchId};
 
       await _driveApi!.files.create(driveFile, uploadMedia: media);
       return const Success(null);

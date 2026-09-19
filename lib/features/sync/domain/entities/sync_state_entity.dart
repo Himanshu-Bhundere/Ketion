@@ -8,8 +8,7 @@ class SyncStateEntity with _$SyncStateEntity {
   const factory SyncStateEntity({
     required String deviceId,
     required String provider,
-    @Default(0) int lastAppliedGeneration,
-    String? pageCursor,
+    String? lastDriveCursor,
     DateTime? lastSyncTime,
   }) = _SyncStateEntity;
 

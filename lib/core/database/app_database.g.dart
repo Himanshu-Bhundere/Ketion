@@ -4727,19 +4727,11 @@ class $SyncStatesTable extends SyncStates
   late final GeneratedColumn<String> provider = GeneratedColumn<String>(
       'provider', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _lastAppliedGenerationMeta =
-      const VerificationMeta('lastAppliedGeneration');
+  static const VerificationMeta _lastDriveCursorMeta =
+      const VerificationMeta('lastDriveCursor');
   @override
-  late final GeneratedColumn<int> lastAppliedGeneration = GeneratedColumn<int>(
-      'last_applied_generation', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _pageCursorMeta =
-      const VerificationMeta('pageCursor');
-  @override
-  late final GeneratedColumn<String> pageCursor = GeneratedColumn<String>(
-      'page_cursor', aliasedName, true,
+  late final GeneratedColumn<String> lastDriveCursor = GeneratedColumn<String>(
+      'last_drive_cursor', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _lastSyncTimeMeta =
       const VerificationMeta('lastSyncTime');
@@ -4749,7 +4741,7 @@ class $SyncStatesTable extends SyncStates
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [deviceId, provider, lastAppliedGeneration, pageCursor, lastSyncTime];
+      [deviceId, provider, lastDriveCursor, lastSyncTime];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4772,17 +4764,11 @@ class $SyncStatesTable extends SyncStates
     } else if (isInserting) {
       context.missing(_providerMeta);
     }
-    if (data.containsKey('last_applied_generation')) {
+    if (data.containsKey('last_drive_cursor')) {
       context.handle(
-          _lastAppliedGenerationMeta,
-          lastAppliedGeneration.isAcceptableOrUnknown(
-              data['last_applied_generation']!, _lastAppliedGenerationMeta));
-    }
-    if (data.containsKey('page_cursor')) {
-      context.handle(
-          _pageCursorMeta,
-          pageCursor.isAcceptableOrUnknown(
-              data['page_cursor']!, _pageCursorMeta));
+          _lastDriveCursorMeta,
+          lastDriveCursor.isAcceptableOrUnknown(
+              data['last_drive_cursor']!, _lastDriveCursorMeta));
     }
     if (data.containsKey('last_sync_time')) {
       context.handle(
@@ -4803,10 +4789,8 @@ class $SyncStatesTable extends SyncStates
           .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
       provider: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}provider'])!,
-      lastAppliedGeneration: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_applied_generation'])!,
-      pageCursor: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}page_cursor']),
+      lastDriveCursor: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_drive_cursor']),
       lastSyncTime: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_sync_time']),
     );
@@ -4821,23 +4805,20 @@ class $SyncStatesTable extends SyncStates
 class SyncStateData extends DataClass implements Insertable<SyncStateData> {
   final String deviceId;
   final String provider;
-  final int lastAppliedGeneration;
-  final String? pageCursor;
+  final String? lastDriveCursor;
   final DateTime? lastSyncTime;
   const SyncStateData(
       {required this.deviceId,
       required this.provider,
-      required this.lastAppliedGeneration,
-      this.pageCursor,
+      this.lastDriveCursor,
       this.lastSyncTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['device_id'] = Variable<String>(deviceId);
     map['provider'] = Variable<String>(provider);
-    map['last_applied_generation'] = Variable<int>(lastAppliedGeneration);
-    if (!nullToAbsent || pageCursor != null) {
-      map['page_cursor'] = Variable<String>(pageCursor);
+    if (!nullToAbsent || lastDriveCursor != null) {
+      map['last_drive_cursor'] = Variable<String>(lastDriveCursor);
     }
     if (!nullToAbsent || lastSyncTime != null) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
@@ -4849,10 +4830,9 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return SyncStatesCompanion(
       deviceId: Value(deviceId),
       provider: Value(provider),
-      lastAppliedGeneration: Value(lastAppliedGeneration),
-      pageCursor: pageCursor == null && nullToAbsent
+      lastDriveCursor: lastDriveCursor == null && nullToAbsent
           ? const Value.absent()
-          : Value(pageCursor),
+          : Value(lastDriveCursor),
       lastSyncTime: lastSyncTime == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncTime),
@@ -4865,9 +4845,7 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return SyncStateData(
       deviceId: serializer.fromJson<String>(json['deviceId']),
       provider: serializer.fromJson<String>(json['provider']),
-      lastAppliedGeneration:
-          serializer.fromJson<int>(json['lastAppliedGeneration']),
-      pageCursor: serializer.fromJson<String?>(json['pageCursor']),
+      lastDriveCursor: serializer.fromJson<String?>(json['lastDriveCursor']),
       lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
     );
   }
@@ -4877,8 +4855,7 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return <String, dynamic>{
       'deviceId': serializer.toJson<String>(deviceId),
       'provider': serializer.toJson<String>(provider),
-      'lastAppliedGeneration': serializer.toJson<int>(lastAppliedGeneration),
-      'pageCursor': serializer.toJson<String?>(pageCursor),
+      'lastDriveCursor': serializer.toJson<String?>(lastDriveCursor),
       'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
     };
   }
@@ -4886,15 +4863,14 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
   SyncStateData copyWith(
           {String? deviceId,
           String? provider,
-          int? lastAppliedGeneration,
-          Value<String?> pageCursor = const Value.absent(),
+          Value<String?> lastDriveCursor = const Value.absent(),
           Value<DateTime?> lastSyncTime = const Value.absent()}) =>
       SyncStateData(
         deviceId: deviceId ?? this.deviceId,
         provider: provider ?? this.provider,
-        lastAppliedGeneration:
-            lastAppliedGeneration ?? this.lastAppliedGeneration,
-        pageCursor: pageCursor.present ? pageCursor.value : this.pageCursor,
+        lastDriveCursor: lastDriveCursor.present
+            ? lastDriveCursor.value
+            : this.lastDriveCursor,
         lastSyncTime:
             lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
       );
@@ -4902,11 +4878,9 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return SyncStateData(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       provider: data.provider.present ? data.provider.value : this.provider,
-      lastAppliedGeneration: data.lastAppliedGeneration.present
-          ? data.lastAppliedGeneration.value
-          : this.lastAppliedGeneration,
-      pageCursor:
-          data.pageCursor.present ? data.pageCursor.value : this.pageCursor,
+      lastDriveCursor: data.lastDriveCursor.present
+          ? data.lastDriveCursor.value
+          : this.lastDriveCursor,
       lastSyncTime: data.lastSyncTime.present
           ? data.lastSyncTime.value
           : this.lastSyncTime,
@@ -4918,47 +4892,42 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     return (StringBuffer('SyncStateData(')
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
-          ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
-          ..write('pageCursor: $pageCursor, ')
+          ..write('lastDriveCursor: $lastDriveCursor, ')
           ..write('lastSyncTime: $lastSyncTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      deviceId, provider, lastAppliedGeneration, pageCursor, lastSyncTime);
+  int get hashCode =>
+      Object.hash(deviceId, provider, lastDriveCursor, lastSyncTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncStateData &&
           other.deviceId == this.deviceId &&
           other.provider == this.provider &&
-          other.lastAppliedGeneration == this.lastAppliedGeneration &&
-          other.pageCursor == this.pageCursor &&
+          other.lastDriveCursor == this.lastDriveCursor &&
           other.lastSyncTime == this.lastSyncTime);
 }
 
 class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   final Value<String> deviceId;
   final Value<String> provider;
-  final Value<int> lastAppliedGeneration;
-  final Value<String?> pageCursor;
+  final Value<String?> lastDriveCursor;
   final Value<DateTime?> lastSyncTime;
   final Value<int> rowid;
   const SyncStatesCompanion({
     this.deviceId = const Value.absent(),
     this.provider = const Value.absent(),
-    this.lastAppliedGeneration = const Value.absent(),
-    this.pageCursor = const Value.absent(),
+    this.lastDriveCursor = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SyncStatesCompanion.insert({
     required String deviceId,
     required String provider,
-    this.lastAppliedGeneration = const Value.absent(),
-    this.pageCursor = const Value.absent(),
+    this.lastDriveCursor = const Value.absent(),
     this.lastSyncTime = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : deviceId = Value(deviceId),
@@ -4966,17 +4935,14 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   static Insertable<SyncStateData> custom({
     Expression<String>? deviceId,
     Expression<String>? provider,
-    Expression<int>? lastAppliedGeneration,
-    Expression<String>? pageCursor,
+    Expression<String>? lastDriveCursor,
     Expression<DateTime>? lastSyncTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (deviceId != null) 'device_id': deviceId,
       if (provider != null) 'provider': provider,
-      if (lastAppliedGeneration != null)
-        'last_applied_generation': lastAppliedGeneration,
-      if (pageCursor != null) 'page_cursor': pageCursor,
+      if (lastDriveCursor != null) 'last_drive_cursor': lastDriveCursor,
       if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4985,16 +4951,13 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
   SyncStatesCompanion copyWith(
       {Value<String>? deviceId,
       Value<String>? provider,
-      Value<int>? lastAppliedGeneration,
-      Value<String?>? pageCursor,
+      Value<String?>? lastDriveCursor,
       Value<DateTime?>? lastSyncTime,
       Value<int>? rowid}) {
     return SyncStatesCompanion(
       deviceId: deviceId ?? this.deviceId,
       provider: provider ?? this.provider,
-      lastAppliedGeneration:
-          lastAppliedGeneration ?? this.lastAppliedGeneration,
-      pageCursor: pageCursor ?? this.pageCursor,
+      lastDriveCursor: lastDriveCursor ?? this.lastDriveCursor,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       rowid: rowid ?? this.rowid,
     );
@@ -5009,12 +4972,8 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     if (provider.present) {
       map['provider'] = Variable<String>(provider.value);
     }
-    if (lastAppliedGeneration.present) {
-      map['last_applied_generation'] =
-          Variable<int>(lastAppliedGeneration.value);
-    }
-    if (pageCursor.present) {
-      map['page_cursor'] = Variable<String>(pageCursor.value);
+    if (lastDriveCursor.present) {
+      map['last_drive_cursor'] = Variable<String>(lastDriveCursor.value);
     }
     if (lastSyncTime.present) {
       map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
@@ -5030,8 +4989,7 @@ class SyncStatesCompanion extends UpdateCompanion<SyncStateData> {
     return (StringBuffer('SyncStatesCompanion(')
           ..write('deviceId: $deviceId, ')
           ..write('provider: $provider, ')
-          ..write('lastAppliedGeneration: $lastAppliedGeneration, ')
-          ..write('pageCursor: $pageCursor, ')
+          ..write('lastDriveCursor: $lastDriveCursor, ')
           ..write('lastSyncTime: $lastSyncTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -9671,16 +9629,14 @@ typedef $$SyncQueueTableProcessedTableManager = ProcessedTableManager<
 typedef $$SyncStatesTableCreateCompanionBuilder = SyncStatesCompanion Function({
   required String deviceId,
   required String provider,
-  Value<int> lastAppliedGeneration,
-  Value<String?> pageCursor,
+  Value<String?> lastDriveCursor,
   Value<DateTime?> lastSyncTime,
   Value<int> rowid,
 });
 typedef $$SyncStatesTableUpdateCompanionBuilder = SyncStatesCompanion Function({
   Value<String> deviceId,
   Value<String> provider,
-  Value<int> lastAppliedGeneration,
-  Value<String?> pageCursor,
+  Value<String?> lastDriveCursor,
   Value<DateTime?> lastSyncTime,
   Value<int> rowid,
 });
@@ -9700,12 +9656,9 @@ class $$SyncStatesTableFilterComposer
   ColumnFilters<String> get provider => $composableBuilder(
       column: $table.provider, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastAppliedGeneration => $composableBuilder(
-      column: $table.lastAppliedGeneration,
+  ColumnFilters<String> get lastDriveCursor => $composableBuilder(
+      column: $table.lastDriveCursor,
       builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get pageCursor => $composableBuilder(
-      column: $table.pageCursor, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => ColumnFilters(column));
@@ -9726,12 +9679,9 @@ class $$SyncStatesTableOrderingComposer
   ColumnOrderings<String> get provider => $composableBuilder(
       column: $table.provider, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastAppliedGeneration => $composableBuilder(
-      column: $table.lastAppliedGeneration,
+  ColumnOrderings<String> get lastDriveCursor => $composableBuilder(
+      column: $table.lastDriveCursor,
       builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get pageCursor => $composableBuilder(
-      column: $table.pageCursor, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime,
@@ -9753,11 +9703,8 @@ class $$SyncStatesTableAnnotationComposer
   GeneratedColumn<String> get provider =>
       $composableBuilder(column: $table.provider, builder: (column) => column);
 
-  GeneratedColumn<int> get lastAppliedGeneration => $composableBuilder(
-      column: $table.lastAppliedGeneration, builder: (column) => column);
-
-  GeneratedColumn<String> get pageCursor => $composableBuilder(
-      column: $table.pageCursor, builder: (column) => column);
+  GeneratedColumn<String> get lastDriveCursor => $composableBuilder(
+      column: $table.lastDriveCursor, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
       column: $table.lastSyncTime, builder: (column) => column);
@@ -9791,32 +9738,28 @@ class $$SyncStatesTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> deviceId = const Value.absent(),
             Value<String> provider = const Value.absent(),
-            Value<int> lastAppliedGeneration = const Value.absent(),
-            Value<String?> pageCursor = const Value.absent(),
+            Value<String?> lastDriveCursor = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncStatesCompanion(
             deviceId: deviceId,
             provider: provider,
-            lastAppliedGeneration: lastAppliedGeneration,
-            pageCursor: pageCursor,
+            lastDriveCursor: lastDriveCursor,
             lastSyncTime: lastSyncTime,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String deviceId,
             required String provider,
-            Value<int> lastAppliedGeneration = const Value.absent(),
-            Value<String?> pageCursor = const Value.absent(),
+            Value<String?> lastDriveCursor = const Value.absent(),
             Value<DateTime?> lastSyncTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncStatesCompanion.insert(
             deviceId: deviceId,
             provider: provider,
-            lastAppliedGeneration: lastAppliedGeneration,
-            pageCursor: pageCursor,
+            lastDriveCursor: lastDriveCursor,
             lastSyncTime: lastSyncTime,
             rowid: rowid,
           ),

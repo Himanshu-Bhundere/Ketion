@@ -74,7 +74,7 @@ class SyncController extends StateNotifier<SyncUiState> {
         errorMessage: null,
       );
     } else if (result is Error) {
-      final failure = (result as Error).failure;
+      final failure = result.failure;
       appLogger.e('Manual sync failed: ${failure.message}');
       
       // We could differentiate based on failure type, e.g. NetworkFailure -> offline

@@ -3,8 +3,9 @@ import 'package:ketion/core/utils/result.dart';
 class SyncDownloadResult {
   final List<Map<String, dynamic>> changes;
   final String? nextCursor;
+  final bool hasMore;
 
-  SyncDownloadResult({required this.changes, this.nextCursor});
+  SyncDownloadResult({required this.changes, this.nextCursor, this.hasMore = false});
 }
 
 abstract class SyncProvider {

@@ -42,7 +42,6 @@ class RichTextController extends TextEditingController {
     }
 
     final List<TextSpan> children = [];
-    int currentIndex = 0;
 
     // Create segments by breaking the text at every span start and end boundary
     final Set<int> boundaries = {0, text.length};

@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:super_clipboard/super_clipboard.dart';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 
 import '../../../blocks/domain/entities/block.dart';
 import '../providers/editor_state_provider.dart';
@@ -7,13 +12,15 @@ import 'block_wrapper.dart';
 import 'blocks/text_block_widget.dart';
 import 'blocks/list_block_widget.dart';
 import 'blocks/image_block_widget.dart';
+import 'blocks/video_block_widget.dart';
+import 'blocks/audio_block_widget.dart';
+import 'blocks/pdf_block_widget.dart';
 import 'blocks/file_block_widget.dart';
 import 'floating_toolbar.dart';
 import '../../../media/presentation/providers/media_picker_provider.dart';
 import '../../domain/models/block_data_models.dart';
 import '../../domain/models/visible_block.dart';
-import 'package:flutter/services.dart';
-import 'dart:convert';
+import '../../../media/data/repositories/attachment_repository_impl.dart';
 
 class BlockEditorWidget extends ConsumerStatefulWidget {
   final String pageId;
@@ -63,6 +70,24 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         break;
       case 'image':
         content = ImageBlockWidget(
+          block: block,
+          onUpdate: _handleBlockUpdate,
+        );
+        break;
+      case 'video':
+        content = VideoBlockWidget(
+          block: block,
+          onUpdate: _handleBlockUpdate,
+        );
+        break;
+      case 'audio':
+        content = AudioBlockWidget(
+          block: block,
+          onUpdate: _handleBlockUpdate,
+        );
+        break;
+      case 'pdf':
+        content = PdfBlockWidget(
           block: block,
           onUpdate: _handleBlockUpdate,
         );
@@ -137,16 +162,45 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
       return true;
     }
 
-    final attachment = type == 'image' 
+    final attachment = type == 'image'
         ? await mediaPicker.pickImage(pageId: block.pageId, blockId: block.id, onCheckSize: handleSizeCheck)
         : await mediaPicker.pickFile(pageId: block.pageId, blockId: block.id, onCheckSize: handleSizeCheck);
-        
+
     if (attachment != null) {
-      final data = type == 'image' 
-          ? jsonEncode(BlockDataModel.image(attachmentId: attachment.id).toJson()..remove('runtimeType'))
-          : jsonEncode(BlockDataModel.file(attachmentId: attachment.id).toJson()..remove('runtimeType'));
-          
-      _handleBlockUpdate(block.copyWith(type: type, data: data));
+      // Determine block type from media type
+      String resolvedType = type;
+      if (type != 'image') {
+        if (attachment.mimeType.startsWith('video/')) {
+          resolvedType = 'video';
+        } else if (attachment.mimeType.startsWith('audio/')) {
+          resolvedType = 'audio';
+        } else if (attachment.mimeType == 'application/pdf') {
+          resolvedType = 'pdf';
+        } else {
+          resolvedType = 'file';
+        }
+      }
+
+      final BlockDataModel model;
+      switch (resolvedType) {
+        case 'image':
+          model = BlockDataModel.image(attachmentId: attachment.id);
+          break;
+        case 'video':
+          model = BlockDataModel.video(attachmentId: attachment.id);
+          break;
+        case 'audio':
+          model = BlockDataModel.audio(attachmentId: attachment.id);
+          break;
+        case 'pdf':
+          model = BlockDataModel.pdf(attachmentId: attachment.id);
+          break;
+        default:
+          model = BlockDataModel.file(attachmentId: attachment.id);
+      }
+
+      final data = jsonEncode(model.toJson()..remove('runtimeType'));
+      _handleBlockUpdate(block.copyWith(type: resolvedType, data: data));
     }
   }
 
@@ -190,11 +244,132 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     }
   }
 
+  /// Handle paste from clipboard — intercept image data and insert as image block.
+  Future<void> _handlePaste() async {
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) return;
+
+    final reader = await clipboard.read();
+
+    // Check for image data on the clipboard
+    for (final format in [Formats.png, Formats.jpeg]) {
+      if (reader.canProvide(format)) {
+        reader.getFile(format, (clipFile) async {
+          final tempDir = Directory.systemTemp;
+          final ext = format == Formats.png ? '.png' : '.jpg';
+          final tempFile = File('${tempDir.path}/paste_${DateTime.now().millisecondsSinceEpoch}$ext');
+          final stream = clipFile.getStream();
+          final sink = tempFile.openWrite();
+          await stream.cast<List<int>>().pipe(sink);
+
+          await _importFileAsBlock(tempFile, 'image/${ext.substring(1)}');
+
+          // Clean up temp file
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+          }
+        });
+        return;
+      }
+    }
+  }
+
+  /// Handle drop of files — import them as media blocks.
+  Future<void> _handleDrop(List<String> paths) async {
+    for (final path in paths) {
+      final file = File(path);
+      if (!await file.exists()) continue;
+
+      final ext = path.split('.').last.toLowerCase();
+      String mimeType = 'application/octet-stream';
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].contains(ext)) {
+        mimeType = 'image/$ext';
+      } else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext)) {
+        mimeType = 'video/$ext';
+      } else if (['mp3', 'wav', 'm4a', 'ogg', 'flac', 'aac'].contains(ext)) {
+        mimeType = 'audio/$ext';
+      } else if (ext == 'pdf') {
+        mimeType = 'application/pdf';
+      }
+
+      await _importFileAsBlock(file, mimeType);
+    }
+  }
+
+  /// Core helper: import a [File] into the note as a new media block.
+  Future<void> _importFileAsBlock(File file, String mimeType) async {
+    final focusedId = ref.read(focusedBlockIdProvider);
+    final blocks = ref.read(visibleBlocksProvider(widget.pageId));
+    final visibleBlock = focusedId != null
+        ? blocks.firstWhere(
+            (b) => b.block.id == focusedId,
+            orElse: () => blocks.last,
+          )
+        : blocks.last;
+    final block = visibleBlock.block;
+
+    // We reuse the pickFile path but pass the file directly via the repository
+    final attachmentRepo = ref.read(
+      attachmentRepositoryProvider,
+    );
+    try {
+      final attachment = await attachmentRepo.saveAttachment(
+        pageId: block.pageId,
+        blockId: block.id,
+        sourceFile: file,
+        mimeType: mimeType,
+      );
+
+      String resolvedType = 'file';
+      if (mimeType.startsWith('image/')) {
+        resolvedType = 'image';
+      } else if (mimeType.startsWith('video/')) {
+        resolvedType = 'video';
+      } else if (mimeType.startsWith('audio/')) {
+        resolvedType = 'audio';
+      } else if (mimeType == 'application/pdf') {
+        resolvedType = 'pdf';
+      }
+
+      final BlockDataModel model;
+      switch (resolvedType) {
+        case 'image':
+          model = BlockDataModel.image(attachmentId: attachment.id);
+          break;
+        case 'video':
+          model = BlockDataModel.video(attachmentId: attachment.id);
+          break;
+        case 'audio':
+          model = BlockDataModel.audio(attachmentId: attachment.id);
+          break;
+        case 'pdf':
+          model = BlockDataModel.pdf(attachmentId: attachment.id);
+          break;
+        default:
+          model = BlockDataModel.file(attachmentId: attachment.id);
+      }
+
+      final data = jsonEncode(model.toJson()..remove('runtimeType'));
+
+      // Insert a new block after the focused one
+      await ref.read(editorStateProvider(widget.pageId).notifier).insertBlockAfter(block);
+      final updatedBlocks = ref.read(visibleBlocksProvider(widget.pageId));
+      final newBlock = updatedBlocks.firstWhere(
+        (b) => b.block.position > block.position,
+        orElse: () => updatedBlocks.last,
+      );
+      _handleBlockUpdate(newBlock.block.copyWith(type: resolvedType, data: data));
+    } catch (_) {
+      // Import failed silently
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     final visibleBlocks = ref.watch(visibleBlocksProvider(widget.pageId));
-    
+
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () {
@@ -209,37 +384,65 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true): () {
           ref.read(editorStateProvider(widget.pageId).notifier).redo();
         },
+        const SingleActivator(LogicalKeyboardKey.keyV, control: true): () {
+          _handlePaste();
+        },
+        const SingleActivator(LogicalKeyboardKey.keyV, meta: true): () {
+          _handlePaste();
+        },
       },
       child: Focus(
         autofocus: true,
-        child: Stack(
-          children: [
-            ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.only(
-                left: 16.0, 
-                right: 16.0, 
-                top: 24.0, 
-                bottom: isKeyboardVisible ? 80.0 : 24.0,
-              ),
-              itemCount: visibleBlocks.length,
-              itemBuilder: (context, index) {
-                return _buildBlockWidget(visibleBlocks[index], index);
-              },
-            ),
-            if (isKeyboardVisible)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: FloatingToolbar(
-                  onAddHeading: _convertFocusedToHeading,
-                  onAddList: _convertFocusedToList,
-                  onAddImage: () => _addMedia('image'),
-                  onAddFile: () => _addMedia('file'),
+        child: DropRegion(
+          formats: Formats.standardFormats,
+          onDropOver: (event) {
+            if (event.session.items.isNotEmpty) {
+              return DropOperation.copy;
+            }
+            return DropOperation.none;
+          },
+          onPerformDrop: (event) async {
+            for (final item in event.session.items) {
+              final reader = item.dataReader;
+              if (reader == null) continue;
+              if (reader.canProvide(Formats.fileUri)) {
+                reader.getValue<Uri>(Formats.fileUri, (uri) async {
+                  if (uri != null) {
+                    await _handleDrop([uri.toFilePath()]);
+                  }
+                });
+              }
+            }
+          },
+          child: Stack(
+            children: [
+              ListView.builder(
+                controller: _scrollController,
+                padding: EdgeInsets.only(
+                  left: 16.0,
+                  right: 16.0,
+                  top: 24.0,
+                  bottom: isKeyboardVisible ? 80.0 : 24.0,
                 ),
+                itemCount: visibleBlocks.length,
+                itemBuilder: (context, index) {
+                  return _buildBlockWidget(visibleBlocks[index], index);
+                },
               ),
-          ],
+              if (isKeyboardVisible)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FloatingToolbar(
+                    onAddHeading: _convertFocusedToHeading,
+                    onAddList: _convertFocusedToList,
+                    onAddImage: () => _addMedia('image'),
+                    onAddFile: () => _addMedia('file'),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

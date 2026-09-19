@@ -150,7 +150,6 @@ class BlockTreeService {
       },
       child: (targetId) {
         if (_isDescendant(sourceBlockId, targetId, allBlocks)) return [];
-        final targetBlock = allBlocks.firstWhere((b) => b.id == targetId);
         
         final targetChildren = allBlocks.where((b) => b.parentBlockId == targetId && !b.deleted && b.id != sourceBlockId).toList()
           ..sort((a, b) => a.position.compareTo(b.position));

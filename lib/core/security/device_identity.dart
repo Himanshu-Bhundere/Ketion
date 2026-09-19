@@ -8,6 +8,7 @@ class DeviceIdentity {
 
   /// Retrieves the unique device identity.
   /// If one does not exist, generates and securely stores a new one.
+  /// Throws [DeviceIdentityException] if secure storage operations fail.
   static Future<String> getDeviceId() async {
     if (_cachedDeviceId != null) {
       return _cachedDeviceId!;
@@ -19,17 +20,22 @@ class DeviceIdentity {
         _cachedDeviceId = storedId;
         return storedId;
       }
-    } catch (_) {
-      // Ignore read errors and generate a new one
-    }
 
-    final newId = const Uuid().v4();
-    try {
+      final newId = const Uuid().v4();
       await _storage.write(key: _keyDeviceId, value: newId);
-    } catch (_) {
-      // If we can't persist it securely, just use it for this session.
+      
+      _cachedDeviceId = newId;
+      return newId;
+    } catch (e) {
+      throw DeviceIdentityException('Failed to access secure storage: $e');
     }
-    _cachedDeviceId = newId;
-    return newId;
   }
+}
+
+class DeviceIdentityException implements Exception {
+  final String message;
+  DeviceIdentityException(this.message);
+
+  @override
+  String toString() => 'DeviceIdentityException: $message';
 }

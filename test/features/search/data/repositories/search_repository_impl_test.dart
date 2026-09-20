@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/search/data/repositories/search_repository_impl.dart';
 import 'package:ketion/core/utils/result.dart';
+import 'package:ketion/features/search/domain/models/search_result.dart';
 
 void main() {
   late AppDatabase database;
@@ -35,8 +36,8 @@ void main() {
     // Search with special characters
     final result = await searchRepository.searchNotes('World" *test');
     
-    expect(result, isA<Success>());
-    final searchResults = (result as Success).value;
+    expect(result, isA<Success<List<SearchResult>>>());
+    final searchResults = (result as Success<List<SearchResult>>).value;
     expect(searchResults.length, 1);
     expect(searchResults.first.entityId, 'page1');
     expect(searchResults.first.entityType, 'page');
@@ -55,7 +56,7 @@ void main() {
         
     // Verify it exists in search
     var result = await searchRepository.searchNotes('Secret');
-    expect((result as Success).value.length, 1);
+    expect((result as Success<List<SearchResult>>).value.length, 1);
     
     // Soft delete it
     await (database.update(database.pages)..where((tbl) => tbl.id.equals('page2')))
@@ -63,6 +64,6 @@ void main() {
         
     // Verify it no longer exists in search
     result = await searchRepository.searchNotes('Secret');
-    expect((result as Success).value.length, 0);
+    expect((result as Success<List<SearchResult>>).value.length, 0);
   });
 }

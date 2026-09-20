@@ -109,9 +109,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 children: [
                   Icon(Icons.search_off, size: 48, color: Theme.of(context).colorScheme.outline),
                   const SizedBox(height: AppSpacing.md),
-                  Text('No results found', style: AppTypography.title),
+                  const Text('No results found', style: AppTypography.title),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Try adjusting your search terms or filters.', style: AppTypography.body),
+                  const Text('Try adjusting your search terms or filters.', style: AppTypography.body),
                 ],
               ),
             );
@@ -157,7 +157,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: AppSpacing.md),
-              Text('Search Failed', style: AppTypography.title),
+              const Text('Search Failed', style: AppTypography.title),
               const SizedBox(height: AppSpacing.sm),
               Text(error.toString(), style: AppTypography.body),
               const SizedBox(height: AppSpacing.lg),

@@ -54,7 +54,7 @@ class HomePage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Today\'s Reminders', style: AppTypography.title),
+        const Text('Today\'s Reminders', style: AppTypography.title),
         const SizedBox(height: AppSpacing.lg),
         // Mock data for now
         Card(
@@ -76,7 +76,7 @@ class HomePage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Recently Viewed', style: AppTypography.title),
+        const Text('Recently Viewed', style: AppTypography.title),
         const SizedBox(height: AppSpacing.lg),
         SizedBox(
           height: 160,
@@ -89,7 +89,7 @@ class HomePage extends ConsumerWidget {
                     children: [
                       Icon(Icons.history, color: Theme.of(context).colorScheme.outline),
                       const SizedBox(height: AppSpacing.sm),
-                      Text('No recent pages.', style: AppTypography.body),
+                      const Text('No recent pages.', style: AppTypography.body),
                     ],
                   ),
                 );
@@ -119,7 +119,7 @@ class HomePage extends ConsumerWidget {
                 children: [
                   Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Failed to load', style: AppTypography.body),
+                  const Text('Failed to load', style: AppTypography.body),
                   TextButton(
                     onPressed: () => ref.invalidate(recentPagesProvider),
                     child: const Text('Retry'),
@@ -161,8 +161,10 @@ class HomePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(page.isFavorite ? Icons.star : Icons.description, 
-                     color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  page.isFavorite ? Icons.star : Icons.description, 
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   page.title.isEmpty ? 'Untitled' : page.title,

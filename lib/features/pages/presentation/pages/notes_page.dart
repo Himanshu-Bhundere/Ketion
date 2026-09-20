@@ -58,9 +58,9 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                 children: [
                   Icon(Icons.description_outlined, size: 48, color: Theme.of(context).colorScheme.outline),
                   const SizedBox(height: AppSpacing.md),
-                  Text('No notes yet', style: AppTypography.title),
+                  const Text('No notes yet', style: AppTypography.title),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Capture your thoughts and ideas here.', style: AppTypography.body, textAlign: TextAlign.center),
+                  const Text('Capture your thoughts and ideas here.', style: AppTypography.body, textAlign: TextAlign.center),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () {
@@ -143,7 +143,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: AppSpacing.md),
-              Text('Something went wrong', style: AppTypography.title),
+              const Text('Something went wrong', style: AppTypography.title),
               const SizedBox(height: AppSpacing.sm),
               FilledButton.icon(
                 onPressed: () => ref.invalidate(recentPagesProvider),
@@ -166,8 +166,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: ListTile(
-        leading: Icon(page.isFavorite ? Icons.star : Icons.description, 
-                     color: Theme.of(context).colorScheme.primary),
+        leading: Icon(
+          page.isFavorite ? Icons.star : Icons.description, 
+          color: Theme.of(context).colorScheme.primary,
+        ),
         title: Text(page.title.isEmpty ? 'Untitled' : page.title),
         subtitle: Text('Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}'),
         onTap: () => _openNote(context, page),
@@ -190,8 +192,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(page.isFavorite ? Icons.star : Icons.description, 
-                   color: Theme.of(context).colorScheme.primary),
+              Icon(
+                page.isFavorite ? Icons.star : Icons.description, 
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 page.title.isEmpty ? 'Untitled' : page.title,

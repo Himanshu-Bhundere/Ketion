@@ -12,8 +12,8 @@ class SyncEntityApplier {
 
   SyncEntityApplier(this._db);
 
-  /// Applies an upsert operation using the generated Data Classes / Companions.
-  Future<void> applyUpsert(String table, String entityId, Map<String, dynamic> payload) async {
+  /// Applies a resolved entity (create, update, or tombstone delete) using the generated Data Classes / Companions.
+  Future<void> applyResolvedEntity(String table, String entityId, Map<String, dynamic> payload) async {
     switch (table) {
       case 'pages':
         final page = domain_page.Page.fromJson(payload);
@@ -33,34 +33,5 @@ class SyncEntityApplier {
     }
   }
 
-  /// Applies a soft-delete operation.
-  Future<void> applyDelete(String table, String entityId) async {
-    final now = DateTime.now().toUtc();
-    switch (table) {
-      case 'pages':
-        await (_db.update(_db.pages)..where((t) => t.id.equals(entityId)))
-            .write(PagesCompanion(
-          deleted: const drift.Value(true),
-          updatedAt: drift.Value(now),
-        ));
-        break;
-      case 'blocks':
-        await (_db.update(_db.blocks)..where((t) => t.id.equals(entityId)))
-            .write(BlocksCompanion(
-          deleted: const drift.Value(true),
-          updatedAt: drift.Value(now),
-        ));
-        break;
-      case 'attachments':
-        await (_db.update(_db.attachments)..where((t) => t.id.equals(entityId)))
-            .write(AttachmentsCompanion(
-          deleted: const drift.Value(true),
-          updatedAt: drift.Value(now),
-        ));
-        break;
-      default:
-        // Do nothing for unknown tables
-        break;
-    }
-  }
+
 }

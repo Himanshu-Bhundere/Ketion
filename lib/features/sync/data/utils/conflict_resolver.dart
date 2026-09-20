@@ -25,12 +25,6 @@ class ConflictResolver {
       return ConflictResolution.keepLocal;
     }
 
-    if (remoteVersion > localVersion) {
-      return ConflictResolution.applyRemote;
-    } else if (remoteVersion < localVersion) {
-      return ConflictResolution.keepLocal;
-    }
-
     if (remoteDeviceId.compareTo(localDeviceId) > 0) {
       return ConflictResolution.applyRemote;
     }
@@ -49,41 +43,33 @@ class ConflictResolver {
     String? remoteDeviceId,
   }) async {
     DateTime? localUpdatedAt;
-    int localVersion = 0;
 
     switch (table) {
       case 'pages':
         final result = await (_db.select(_db.pages)..where((t) => t.id.equals(entityId))).getSingleOrNull();
         if (result != null) {
           localUpdatedAt = result.updatedAt;
-          localVersion = result.version;
         }
         break;
       case 'blocks':
         final result = await (_db.select(_db.blocks)..where((t) => t.id.equals(entityId))).getSingleOrNull();
         if (result != null) {
           localUpdatedAt = result.updatedAt;
-          localVersion = result.version;
         }
         break;
       case 'attachments':
         final result = await (_db.select(_db.attachments)..where((t) => t.id.equals(entityId))).getSingleOrNull();
         if (result != null) {
           localUpdatedAt = result.updatedAt;
-          localVersion = result.version;
         }
         break;
     }
 
-    // Parse remote updatedAt and version
+    // Parse remote updatedAt
     DateTime? remoteUpdatedAt;
-    int remoteVersion = 0;
     if (remotePayload != null) {
       if (remotePayload['updatedAt'] != null) {
         remoteUpdatedAt = DateTime.tryParse(remotePayload['updatedAt'] as String);
-      }
-      if (remotePayload['version'] != null) {
-        remoteVersion = remotePayload['version'] as int;
       }
     }
 

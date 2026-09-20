@@ -21,6 +21,7 @@ abstract class SyncQueueRepository {
     int? attemptCount,
     DateTime? lastAttemptAt,
     DateTime? nextRetryAt,
+    DateTime? leaseUntil,
     String? lastError,
   });
 

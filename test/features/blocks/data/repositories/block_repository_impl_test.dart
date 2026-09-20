@@ -121,8 +121,8 @@ void main() {
       expect(blocksInDb.single.deleted, true);
 
       final queueItems = await (database.select(database.syncQueue)..where((t) => t.entityId.equals('block1'))).get();
-      expect(queueItems.length, 1); // 1 create + 1 delete = coalesced to 1 delete
-      expect(queueItems.last.operation, 'delete');
+      expect(queueItems.length, 0); // 1 create + 1 delete = coalesced and removed
+
     });
   });
 }

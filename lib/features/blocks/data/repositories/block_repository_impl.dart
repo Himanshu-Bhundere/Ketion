@@ -108,7 +108,7 @@ class BlockRepositoryImpl implements BlockRepository {
             entityTable: 'blocks',
             entityId: id,
             operation: 'delete',
-            payload: null,
+            payload: jsonEncode(newBlock.toJson()),
             createdAt: DateTime.now().toUtc(),
           ));
         }

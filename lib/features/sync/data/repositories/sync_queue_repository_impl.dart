@@ -31,6 +31,13 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
 
       if (existing != null) {
         // Coalesce
+        if (existing.operation == 'create' && item.operation == 'delete') {
+          // Create -> Delete collapse: remove entirely
+          final statement = _db.delete(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id));
+          await statement.go();
+          return const Success(null);
+        }
+
         String op = existing.operation;
         if (op == 'create' && item.operation == 'update') {
           op = 'create';
@@ -57,17 +64,34 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   @override
   Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50}) async {
     try {
-      final query = _db.select(_db.syncQueue)
-        ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.pending.name) |
-                         tbl.status.equals(SyncQueueItemStatus.waiting.name))
-        ..orderBy([
-          (tbl) =>
-              OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
-        ])
-        ..limit(limit);
+      return await _db.transaction(() async {
+        final now = DateTime.now().toUtc();
+        
+        // Reclaim stale processing items atomically
+        final reclaimStatement = _db.update(_db.syncQueue)
+          ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.processing.name) &
+                           tbl.leaseUntil.isSmallerThanValue(now));
+        await reclaimStatement.write(
+          SyncQueueCompanion(
+            status: Value(SyncQueueItemStatus.pending.name),
+            leaseUntil: const Value.absent(),
+          ),
+        );
 
-      final rows = await query.get();
-      return Success(rows.map(SyncQueueItemMapper.fromData).toList());
+        final query = _db.select(_db.syncQueue)
+          ..where((tbl) =>
+            (tbl.status.equals(SyncQueueItemStatus.pending.name) |
+             tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
+            (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now))
+          )
+          ..orderBy([
+            (tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
+          ])
+          ..limit(limit);
+
+        final rows = await query.get();
+        return Success(rows.map(SyncQueueItemMapper.fromData).toList());
+      });
     } catch (e) {
       return Error(StorageFailure('Failed to fetch pending sync items: $e'));
     }
@@ -99,6 +123,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
     int? attemptCount,
     DateTime? lastAttemptAt,
     DateTime? nextRetryAt,
+    DateTime? leaseUntil,
     String? lastError,
   }) async {
     try {
@@ -113,6 +138,8 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
               lastAttemptAt != null ? Value(lastAttemptAt) : const Value.absent(),
           nextRetryAt:
               nextRetryAt != null ? Value(nextRetryAt) : const Value.absent(),
+          leaseUntil:
+              leaseUntil != null ? Value(leaseUntil) : const Value.absent(),
           lastError:
               lastError != null ? Value(lastError) : const Value.absent(),
         ),

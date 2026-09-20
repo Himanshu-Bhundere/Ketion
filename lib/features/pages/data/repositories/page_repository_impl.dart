@@ -112,7 +112,7 @@ class PageRepositoryImpl implements PageRepository {
             entityTable: 'pages',
             entityId: id,
             operation: 'delete',
-            payload: null,
+            payload: jsonEncode(newPage.toJson()),
             createdAt: DateTime.now().toUtc(),
           ));
         }

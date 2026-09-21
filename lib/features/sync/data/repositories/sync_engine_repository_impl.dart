@@ -160,9 +160,12 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               await _queueRepository.updateStatus(item.id, SyncQueueItemStatus.completed);
             }
           });
+          // Cleanup completed items
+          await _queueRepository.clearCompleted();
         } else if (uploadRes is Error<void>) {
           // Bounded exponential backoff update
           await _db.transaction(() async {
+            final now = DateTime.now().toUtc();
             for (final item in items) {
               final nextRetry = item.attemptCount + 1;
               if (nextRetry > 5) {
@@ -170,13 +173,18 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
                   item.id,
                   SyncQueueItemStatus.failed,
                   attemptCount: nextRetry,
+                  lastAttemptAt: now,
                   lastError: uploadRes.failure.message,
                 );
               } else {
+                // Exponential backoff: 30s, 60s, 120s, 240s...
+                final backoffSeconds = 30 * (1 << (nextRetry - 1));
                 await _queueRepository.updateStatus(
                   item.id,
                   SyncQueueItemStatus.waiting,
                   attemptCount: nextRetry,
+                  lastAttemptAt: now,
+                  nextRetryAt: now.add(Duration(seconds: backoffSeconds)),
                   lastError: uploadRes.failure.message,
                 );
               }
@@ -186,86 +194,81 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       }
     }
 
-    // 4. Download remote changes
-    String? lastCursor = syncState.lastAppliedGeneration > 0 ? syncState.lastAppliedGeneration.toString() : null;
+    // 4. Download remote changes (page by page)
+    String? currentCursor = syncState.lastDriveCursor;
+    bool hasMorePages = true;
 
-    final downloadRes = await _syncProvider.downloadChanges(lastCursor);
-    if (downloadRes is Error<SyncDownloadResult>) {
-      return Error(downloadRes.failure);
-    }
-    
-    final downloadResult = (downloadRes as Success<SyncDownloadResult>).value;
-    final changes = downloadResult.changes;
-    String? newCursor = downloadResult.nextCursor ?? lastCursor;
-
-    // Apply all changes and advance cursor atomically
-    await _db.transaction(() async {
-      final processedBatchIds = <String>{};
+    while (hasMorePages) {
+      final downloadRes = await _syncProvider.downloadChanges(currentCursor);
+      if (downloadRes is Error<SyncDownloadResult>) {
+        return Error(downloadRes.failure);
+      }
       
-      for (final change in changes) {
-         final batchId = change['batchId'] as String?;
-         final remoteDeviceId = change['deviceId'] as String?;
-         
-         if (batchId != null) {
-            if (processedBatchIds.contains(batchId)) {
-               // We've already verified this batch in this run, but we still need to process its changes.
-            } else {
-               // Check if the batch was already processed
-               final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
-               if (existingBatch != null) {
-                 processedBatchIds.add(batchId);
-               } else {
-                 // Insert it as processed so we don't process it again next time
-                 await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
-                   batchId: Value(batchId),
-                   deviceId: Value(remoteDeviceId ?? 'unknown'),
-                   processedAt: Value(DateTime.now()),
-                 ));
-                 // But wait, we shouldn't add to processedBatchIds until we finish the loop?
-                 // No, we are in a transaction. If it fails, everything rolls back.
-               }
-            }
-            if (processedBatchIds.contains(batchId)) {
-               continue; // Skip this change because its batch was already processed
-            }
-         }
+      final downloadResult = (downloadRes as Success<SyncDownloadResult>).value;
+      final changes = downloadResult.changes;
+      String? newCursor = downloadResult.nextCursor ?? currentCursor;
+      hasMorePages = downloadResult.hasMore;
 
-         final table = change['table'] as String?;
-         final entityId = change['entityId'] as String?;
-         final operation = change['operation'] as String?;
-         final payload = change['payload'] as Map<String, dynamic>?;
-
-         if (table != null && entityId != null && operation != null) {
-            final resolution = await _conflictResolver.resolveConflict(
-               table: table,
-               entityId: entityId,
-               operation: operation,
-               remotePayload: payload,
-               localDeviceId: syncState.deviceId,
-               remoteDeviceId: remoteDeviceId,
-            );
-            
-            if (resolution == ConflictResolution.applyRemote) {
-              if (operation == 'delete' || (payload != null && payload['deleted'] == true)) {
-                await _entityApplier.applyDelete(table, entityId);
-              } else if (payload != null) {
-                await _entityApplier.applyUpsert(table, entityId, payload);
+      // Apply all changes and advance cursor atomically for this page
+      await _db.transaction(() async {
+        final processedBatchIds = <String>{};
+        
+        for (final change in changes) {
+           final batchId = change['batchId'] as String?;
+           final remoteDeviceId = change['deviceId'] as String?;
+           
+           if (batchId != null) {
+              if (!processedBatchIds.contains(batchId)) {
+                 // Check if the batch was already processed
+                 final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
+                 if (existingBatch != null) {
+                   processedBatchIds.add(batchId);
+                 } else {
+                   // Insert it as processed so we don't process it again next time
+                   await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
+                     batchId: Value(batchId),
+                     deviceId: Value(remoteDeviceId ?? 'unknown'),
+                     processedAt: Value(DateTime.now()),
+                   ));
+                 }
               }
-            }
-         }
-         // batchId can still be used for debugging or other purposes, but the cursor is handled by nextCursor
-      }
+              if (processedBatchIds.contains(batchId)) {
+                 continue; // Skip this change because its batch was already processed
+              }
+           }
 
-      // 5. Update sync state within the same transaction
-      if (newCursor != lastCursor || changes.isNotEmpty) {
-        final newState = syncState.copyWith(
-          lastSyncTime: DateTime.now(),
-          lastAppliedGeneration: newCursor != null ? (int.tryParse(newCursor!) ?? syncState.lastAppliedGeneration) : syncState.lastAppliedGeneration,
-          pageCursor: newCursor,
-        );
-        await _stateRepository.saveSyncState(newState);
-      }
-    });
+           final table = change['table'] as String?;
+           final entityId = change['entityId'] as String?;
+           final operation = change['operation'] as String?;
+           final payload = change['payload'] as Map<String, dynamic>?;
+
+           if (table != null && entityId != null && operation != null && payload != null) {
+              final resolution = await _conflictResolver.resolveConflict(
+                 table: table,
+                 entityId: entityId,
+                 operation: operation,
+                 remotePayload: payload,
+                 localDeviceId: syncState.deviceId,
+                 remoteDeviceId: remoteDeviceId,
+              );
+              
+              if (resolution == ConflictResolution.applyRemote) {
+                 await _entityApplier.applyResolvedEntity(table, entityId, payload);
+              }
+           }
+        }
+
+        // 5. Update sync state within the same transaction (for this page)
+        if (newCursor != currentCursor || changes.isNotEmpty) {
+          syncState = syncState.copyWith(
+            lastSyncTime: DateTime.now(),
+            lastDriveCursor: newCursor,
+          );
+          await _stateRepository.saveSyncState(syncState);
+          currentCursor = newCursor;
+        }
+      });
+    }
 
     // 6. Cleanup old tombstones
     final settings = await _settingsRepository.getSettings();

@@ -56,8 +56,7 @@ class FakeSyncStateRepository implements SyncStateRepository {
       _state = SyncStateEntity(
         deviceId: deviceId,
         provider: provider,
-        lastAppliedGeneration: 0,
-        pageCursor: null,
+        lastDriveCursor: null,
       );
     }
     return Success(_state);
@@ -189,7 +188,7 @@ void main() {
       // Verify sync state updated
       final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
       final state = stateRes.fold((s) => s, (e) => throw Exception());
-      expect(state!.pageCursor, 'next_cursor');
+      expect(state!.lastDriveCursor, 'next_cursor');
     });
 
     test('Crash after remote application does not duplicate processing', () async {

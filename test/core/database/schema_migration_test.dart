@@ -3,7 +3,7 @@ import 'package:drift/native.dart';
 import 'package:ketion/core/database/app_database.dart';
 
 void main() {
-  test('Database upgrades from v1 to v10 successfully', () async {
+  test('Database upgrades from v1 to v12 successfully', () async {
     // 1. Create a memory database and run migrations starting from v1.
     // In drift, you can force the 'from' version in the Migrator if you're not using schema testing natively, 
     // but the easiest way to test the upgrade logic without the generated schema classes 
@@ -26,6 +26,16 @@ void main() {
     final search = await db.customSelect('SELECT * FROM search_fts').get();
     expect(search, isEmpty);
     
+    // Phase 4: Verify v12 additions
+    // 1. processed_batches table exists
+    final processedBatches = await db.select(db.processedBatches).get();
+    expect(processedBatches, isEmpty);
+    
+    // 2. leaseUntil column exists on sync_queue
+    // If leaseUntil doesn't exist, this will throw an exception.
+    final queueItems = await (db.select(db.syncQueue)..where((t) => t.leaseUntil.isNotNull())).get();
+    expect(queueItems, isEmpty);
+
     await db.close();
   });
 }

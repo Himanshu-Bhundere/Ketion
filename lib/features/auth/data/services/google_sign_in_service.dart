@@ -88,7 +88,7 @@ class GoogleSignInService implements AuthService {
   Future<bool> isSignedIn() async {
     final storedTokenResult = await _authRepository.getAccessToken();
     final hasStoredToken = storedTokenResult is Success<String?> && 
-                           (storedTokenResult as Success<String?>).value != null;
+                           (storedTokenResult).value != null;
                            
     return hasStoredToken || _googleSignIn.currentUser != null ||
         await _googleSignIn.signInSilently() != null;

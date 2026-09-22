@@ -50,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (Migrator m) async {
         await m.createAll();
         // Create unified FTS5 table for Pages, Blocks, and Tags
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE VIRTUAL TABLE search_fts USING fts5(
             entityId UNINDEXED,
             pageId UNINDEXED,
@@ -60,20 +60,20 @@ class AppDatabase extends _$AppDatabase {
         ''');
 
         // Pages Triggers
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER pages_ai AFTER INSERT ON pages WHEN new.deleted = 0 BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.id, 'page', new.title);
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -82,20 +82,20 @@ class AppDatabase extends _$AppDatabase {
         ''');
 
         // Blocks Triggers
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.page_id, 'block', new.data);
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -104,20 +104,20 @@ class AppDatabase extends _$AppDatabase {
         ''');
 
         // Tags Triggers
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, NULL, 'tag', new.name);
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'tag';
           END;
         ''');
 
-        await m.issueCustomQuery('''
+        await customStatement('''
           CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
             UPDATE search_fts 
             SET content = new.name 
@@ -160,13 +160,13 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 6) {
           // Drop old search structure
-          await m.issueCustomQuery('DROP TABLE IF EXISTS blocks_fts');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_ai');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_ad');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_au');
+          await customStatement('DROP TABLE IF EXISTS blocks_fts');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ai');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ad');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_au');
 
           // Create new search_fts table and triggers
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE VIRTUAL TABLE search_fts USING fts5(
               entityId UNINDEXED,
               pageId UNINDEXED,
@@ -176,20 +176,20 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           // Pages Triggers
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_ai AFTER INSERT ON pages WHEN new.deleted = 0 BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.id, 'page', new.title);
           END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -198,20 +198,20 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           // Blocks Triggers
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.page_id, 'block', new.data);
           END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -220,20 +220,20 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           // Tags Triggers
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, NULL, 'tag', new.name);
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'tag';
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
               UPDATE search_fts 
               SET content = new.name 
@@ -242,15 +242,15 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           // Rebuild index for existing data
-          await m.issueCustomQuery('''
+          await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, id, 'page', title FROM pages;
           ''');
-          await m.issueCustomQuery('''
+          await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, page_id, 'block', data FROM blocks;
           ''');
-          await m.issueCustomQuery('''
+          await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, NULL, 'tag', name FROM tags;
           ''');
@@ -264,31 +264,31 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 10) {
           // Drop old triggers that didn't handle soft deletion
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS pages_ai');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS pages_ad');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS pages_au');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_ai');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_ad');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS blocks_au');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS tags_ai');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS tags_ad');
-          await m.issueCustomQuery('DROP TRIGGER IF EXISTS tags_au');
+          await customStatement('DROP TRIGGER IF EXISTS pages_ai');
+          await customStatement('DROP TRIGGER IF EXISTS pages_ad');
+          await customStatement('DROP TRIGGER IF EXISTS pages_au');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ai');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ad');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_au');
+          await customStatement('DROP TRIGGER IF EXISTS tags_ai');
+          await customStatement('DROP TRIGGER IF EXISTS tags_ad');
+          await customStatement('DROP TRIGGER IF EXISTS tags_au');
 
           // Recreate Pages Triggers with soft delete handling
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_ai AFTER INSERT ON pages WHEN new.deleted = 0 BEGIN
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.id, 'page', new.title);
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -297,20 +297,20 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           // Recreate Blocks Triggers with soft delete handling
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
               VALUES (new.id, new.page_id, 'block', new.data);
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
             END;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
@@ -321,14 +321,14 @@ class AppDatabase extends _$AppDatabase {
           // Note: Tag triggers are explicitly NOT recreated based on FTS policies
 
           // Clear out the search_fts index and rebuild it fully clean
-          await m.issueCustomQuery('DELETE FROM search_fts');
+          await customStatement('DELETE FROM search_fts');
           
-          await m.issueCustomQuery('''
+          await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, id, 'page', title FROM pages WHERE deleted = 0;
           ''');
 
-          await m.issueCustomQuery('''
+          await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, page_id, 'block', data FROM blocks WHERE deleted = 0;
           ''');
@@ -348,13 +348,13 @@ class AppDatabase extends _$AppDatabase {
         if (from < 11) {
           // Phase 2: Schema changed significantly for attachments.
           // Create new table, copy data, drop old table to be safe
-          await m.issueCustomQuery('ALTER TABLE attachments RENAME TO attachments_old');
+          await customStatement('ALTER TABLE attachments RENAME TO attachments_old');
           await m.createTable(attachments);
           // Assuming attachments wasn't heavily used or columns matched for id
           // If we want to be purely safe for future drops:
-          // await m.issueCustomQuery('INSERT INTO attachments (id, ...) SELECT id, ... FROM attachments_old');
+          // await customStatement('INSERT INTO attachments (id, ...) SELECT id, ... FROM attachments_old');
           // For now, since attachments weren't populated in phase 1, we can just drop it
-          await m.issueCustomQuery('DROP TABLE IF EXISTS attachments_old');
+          await customStatement('DROP TABLE IF EXISTS attachments_old');
         }
         if (from < 12) {
           // Add processed_batches table

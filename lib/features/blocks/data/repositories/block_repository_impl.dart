@@ -32,7 +32,7 @@ class BlockRepositoryImpl implements BlockRepository {
           operation: 'create',
           payload: jsonEncode(newBlock.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -73,7 +73,7 @@ class BlockRepositoryImpl implements BlockRepository {
           operation: 'update',
           payload: jsonEncode(newBlock.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -110,7 +110,7 @@ class BlockRepositoryImpl implements BlockRepository {
             operation: 'delete',
             payload: jsonEncode(newBlock.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);

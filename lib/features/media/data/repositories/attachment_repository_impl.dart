@@ -85,7 +85,7 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
         operation: 'create',
         payload: jsonEncode(attachment.toJson()),
         createdAt: DateTime.now().toUtc(),
-      ));
+      ),);
     });
 
     return attachment;
@@ -140,9 +140,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             deleted: true,
             version: newVersion,
             updatedAt: DateTime.now(),
-          ).toJson()),
+          ).toJson(),),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       }
     });
 
@@ -196,7 +196,7 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
         if (attachment != null) {
           final newVersion = attachment.version + 1;
           await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
-            AttachmentsCompanion(version: Value(newVersion))
+            AttachmentsCompanion(version: Value(newVersion)),
           );
           
           await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
@@ -206,7 +206,7 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             operation: 'update',
             payload: jsonEncode(attachment.copyWith(version: newVersion).toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       }
     });

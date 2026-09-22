@@ -32,7 +32,7 @@ class PageRepositoryImpl implements PageRepository {
           operation: 'create',
           payload: jsonEncode(newPage.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -76,7 +76,7 @@ class PageRepositoryImpl implements PageRepository {
             operation: 'update',
             payload: jsonEncode(newPage.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);
@@ -114,7 +114,7 @@ class PageRepositoryImpl implements PageRepository {
             operation: 'delete',
             payload: jsonEncode(newPage.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);

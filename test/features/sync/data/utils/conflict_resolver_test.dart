@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  FlutterSecureStorage.setMockInitialValues({'ketion_device_id': 'device-1'});
+
   group('ConflictResolver - Tuple Logic (updated_at, device_id)', () {
     test('Remote wins if remote updatedAt is higher, even with lower version', () async {
       // remote: version 1, updatedAt: 2000
@@ -10,10 +14,8 @@ void main() {
       final localData = {'version': 100, 'updatedAt': 1000, 'deviceId': 'local-1'};
 
       final resolution = ConflictResolver.resolveConflictSync(
-        localVersion: localData['version'] as int,
         localUpdatedAt: localData['updatedAt'] as int,
         localDeviceId: localData['deviceId'] as String,
-        remoteVersion: remoteData['version'] as int,
         remoteUpdatedAt: remoteData['updatedAt'] as int,
         remoteDeviceId: remoteData['deviceId'] as String,
       );
@@ -28,10 +30,8 @@ void main() {
       final localData = {'version': 1, 'updatedAt': 2000, 'deviceId': 'local-1'};
 
       final resolution = ConflictResolver.resolveConflictSync(
-        localVersion: localData['version'] as int,
         localUpdatedAt: localData['updatedAt'] as int,
         localDeviceId: localData['deviceId'] as String,
-        remoteVersion: remoteData['version'] as int,
         remoteUpdatedAt: remoteData['updatedAt'] as int,
         remoteDeviceId: remoteData['deviceId'] as String,
       );
@@ -47,10 +47,8 @@ void main() {
       final localData = {'version': 2, 'updatedAt': 1000, 'deviceId': 'a'};
 
       final resolution = ConflictResolver.resolveConflictSync(
-        localVersion: localData['version'] as int,
         localUpdatedAt: localData['updatedAt'] as int,
         localDeviceId: localData['deviceId'] as String,
-        remoteVersion: remoteData['version'] as int,
         remoteUpdatedAt: remoteData['updatedAt'] as int,
         remoteDeviceId: remoteData['deviceId'] as String,
       );
@@ -66,10 +64,8 @@ void main() {
       final localData = {'version': 2, 'updatedAt': 1000, 'deviceId': 'b'};
 
       final resolution = ConflictResolver.resolveConflictSync(
-        localVersion: localData['version'] as int,
         localUpdatedAt: localData['updatedAt'] as int,
         localDeviceId: localData['deviceId'] as String,
-        remoteVersion: remoteData['version'] as int,
         remoteUpdatedAt: remoteData['updatedAt'] as int,
         remoteDeviceId: remoteData['deviceId'] as String,
       );

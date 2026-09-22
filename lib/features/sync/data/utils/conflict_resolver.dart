@@ -11,10 +11,8 @@ class ConflictResolver {
   ConflictResolver(this._db);
 
   static ConflictResolution resolveConflictSync({
-    required int localVersion,
     required int localUpdatedAt, // Using milliseconds since epoch
     required String localDeviceId,
-    required int remoteVersion,
     required int remoteUpdatedAt,
     required String remoteDeviceId,
   }) {

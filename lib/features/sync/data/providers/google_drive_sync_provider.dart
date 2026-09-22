@@ -188,6 +188,77 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
+  Future<Result<String>> getStartPageToken() async {
+    if (_driveApi == null) {
+      return const Error(SyncFailure('Drive API not initialized'));
+    }
+    try {
+      final res = await _driveApi!.changes.getStartPageToken();
+      if (res.startPageToken == null) {
+        return const Error(SyncFailure('Start page token was null'));
+      }
+      return Success(res.startPageToken!);
+    } catch (e) {
+      return Error(SyncFailure('Failed to get start page token: $e'));
+    }
+  }
+
+  @override
+  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(String? cursor) async {
+    if (_driveApi == null || _syncFolderId == null) {
+      return const Error(SyncFailure('Drive API not initialized'));
+    }
+    try {
+      final q = "'$_syncFolderId' in parents and name contains 'batch_' and trashed = false";
+      final fileList = await _driveApi!.files.list(
+        q: q,
+        pageToken: cursor,
+        orderBy: 'createdTime',
+        $fields: 'nextPageToken, files(id, name, appProperties)',
+      );
+      
+      final results = <Map<String, dynamic>>[];
+      if (fileList.files != null) {
+         for (final file in fileList.files!) {
+             final batchId = file.appProperties?['batchId'] ?? file.name?.replaceAll('batch_', '').replaceAll('.json', '');
+             if (file.id != null) {
+                 final drive.Media media = await _driveApi!.files.get(
+                   file.id!,
+                   downloadOptions: drive.DownloadOptions.fullMedia,
+                 ) as drive.Media;
+                 
+                 final contentBytes = await media.stream.fold<List<int>>(
+                   [],
+                   (previous, element) => previous..addAll(element),
+                 );
+                 final contentString = utf8.decode(contentBytes);
+                 final data = jsonDecode(contentString) as Map<String, dynamic>;
+                 final deviceId = data['deviceId'] as String?;
+                 
+                 final changesData = data['changes'] as List<dynamic>? ?? [];
+                 for (final changeItem in changesData) {
+                   if (changeItem is Map<String, dynamic>) {
+                     changeItem['batchId'] = batchId;
+                     if (deviceId != null) {
+                       changeItem['deviceId'] = deviceId;
+                     }
+                     results.add(changeItem);
+                   }
+                 }
+             }
+         }
+      }
+      
+      String? nextCursor = fileList.nextPageToken;
+      bool hasMore = fileList.nextPageToken != null;
+
+      return Success(SyncDownloadResult(changes: results, nextCursor: nextCursor, hasMore: hasMore));
+    } catch (e) {
+      return Error(SyncFailure('Failed to download historical batches: $e'));
+    }
+  }
+
+  @override
   Future<Result<SyncDownloadResult>> downloadChanges(
     String? cursor,
   ) async {

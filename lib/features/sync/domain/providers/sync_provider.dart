@@ -37,6 +37,12 @@ abstract class SyncProvider {
   /// Download unseen changes
   Future<Result<SyncDownloadResult>> downloadChanges(String? cursor);
 
+  /// Get start page token for bootstrap
+  Future<Result<String>> getStartPageToken();
+
+  /// Download historical batches during bootstrap
+  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(String? cursor);
+
   /// Get available storage information if applicable
   Future<Result<Map<String, dynamic>>> getAvailableStorage();
 }

@@ -350,10 +350,14 @@ class AppDatabase extends _$AppDatabase {
           // Create new table, copy data, drop old table to be safe
           await customStatement('ALTER TABLE attachments RENAME TO attachments_old');
           await m.createTable(attachments);
-          // Assuming attachments wasn't heavily used or columns matched for id
-          // If we want to be purely safe for future drops:
-          // await customStatement('INSERT INTO attachments (id, ...) SELECT id, ... FROM attachments_old');
-          // For now, since attachments weren't populated in phase 1, we can just drop it
+          
+          // Copy existing data. We explicitly list columns that existed in v10 and map them to v11.
+          await customStatement('''
+            INSERT INTO attachments (id, file_name, file_size, mime_type, remote_url, local_path, created_at, updated_at, deleted)
+            SELECT id, file_name, file_size, mime_type, remote_url, local_path, created_at, updated_at, deleted
+            FROM attachments_old
+          ''');
+          
           await customStatement('DROP TABLE IF EXISTS attachments_old');
         }
         if (from < 12) {

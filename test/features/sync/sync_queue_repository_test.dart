@@ -1,11 +1,15 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
 import 'package:ketion/features/sync/domain/entities/sync_queue_item.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  FlutterSecureStorage.setMockInitialValues({'ketion_device_id': 'device-1'});
+
   late AppDatabase db;
   late SyncQueueRepositoryImpl repository;
 

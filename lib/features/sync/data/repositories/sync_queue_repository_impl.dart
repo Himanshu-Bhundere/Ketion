@@ -30,19 +30,11 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
       final existing = (existingResult is Success<SyncQueueItem?>) ? existingResult.value : null;
 
       if (existing != null) {
-        // Coalesce
-        if (existing.operation == 'create' && item.operation == 'delete') {
-          // Create -> Delete collapse: remove entirely
-          final statement = _db.delete(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id));
-          await statement.go();
-          return const Success(null);
-        }
-
         String op = existing.operation;
         if (op == 'create' && item.operation == 'update') {
           op = 'create';
         } else {
-          op = item.operation;
+          op = item.operation; // If item is delete, it becomes delete. 
         }
 
         final statement = _db.update(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id));
@@ -50,6 +42,9 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
           SyncQueueCompanion(
             operation: Value(op),
             payload: Value(item.payload),
+            status: Value(SyncQueueItemStatus.pending.name),
+            attemptCount: const Value(0),
+            nextRetryAt: const Value(null),
           ),
         );
         return const Success(null);
@@ -102,7 +97,8 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
     try {
       final query = _db.select(_db.syncQueue)
         ..where((tbl) =>
-            tbl.status.equals(SyncQueueItemStatus.pending.name) &
+            (tbl.status.equals(SyncQueueItemStatus.pending.name) |
+             tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
             tbl.entityTable.equals(table) &
             tbl.entityId.equals(entityId),)
         ..limit(1);
@@ -147,6 +143,41 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
       return const Success(null);
     } catch (e) {
       return Error(StorageFailure('Failed to update sync item status: $e'));
+    }
+  }
+
+  @override
+  Future<Result<bool>> claimItem(String id, DateTime leaseUntil) async {
+    try {
+      final now = DateTime.now().toUtc();
+      final query = '''
+      UPDATE sync_queue
+      SET status = 'processing',
+          attempt_count = attempt_count + 1,
+          lease_until = ?
+      WHERE id = ? AND (
+          status = 'pending'
+          OR (
+              status = 'waiting'
+              AND (next_retry_at IS NULL OR next_retry_at <= ?)
+          )
+          OR (
+              status = 'processing'
+              AND lease_until < ?
+          )
+      )
+      ''';
+      
+      final affected = await _db.customUpdate(query, variables: [
+        Variable.withDateTime(leaseUntil),
+        Variable.withString(id),
+        Variable.withDateTime(now),
+        Variable.withDateTime(now),
+      ], updates: {_db.syncQueue});
+      
+      return Success(affected > 0);
+    } catch (e) {
+      return Error(StorageFailure('Failed to claim item: $e'));
     }
   }
 

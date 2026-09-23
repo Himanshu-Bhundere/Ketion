@@ -25,6 +25,9 @@ abstract class SyncQueueRepository {
     String? lastError,
   });
 
+  /// Atomically claim a queue item for processing
+  Future<Result<bool>> claimItem(String id, DateTime leaseUntil);
+
   /// Clear completed items
   Future<Result<void>> clearCompleted();
 }

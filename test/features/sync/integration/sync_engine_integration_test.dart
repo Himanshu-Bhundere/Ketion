@@ -93,6 +93,16 @@ class FakeSyncProvider implements SyncProvider {
   }
 
   @override
+  Future<Result<String>> getStartPageToken() async {
+    return const Success('start_page_token');
+  }
+
+  @override
+  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(String? cursor) async {
+    return downloadChanges(cursor);
+  }
+
+  @override
   Future<Result<void>> uploadChanges(String batchId, Map<String, dynamic> payload) async {
     pushBatchCallCount++;
     if (crashOnPushBatch) {
@@ -367,6 +377,118 @@ void main() {
       // Ensure the sync queue is still empty (it wasn't queued to push back to remote)
       final queue = await database.select(database.syncQueue).get();
       expect(queue.where((q) => q.entityId == 'page-norequeue'), isEmpty);
+    });
+    test('Cursor safety: Cursor is not advanced if batch application fails', () async {
+      syncProvider.returnChanges = [
+        {
+           'batchId': 'batch-cursor-fail',
+           'deviceId': 'device-cursor-fail',
+           'table': 'pages',
+           'entityId': 'page-cursor-fail',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'page-cursor-fail',
+           }, // Invalid payload will cause failure
+        }
+      ];
+      
+      // Should handle exception
+      await syncEngine.syncNow();
+
+      final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
+      final state = stateRes.fold((s) => s, (e) => throw Exception());
+      // Cursor should not be set because batch failed
+      expect(state!.lastDriveCursor, isNull);
+    });
+
+    test('Bootstrap scenario: Initial sync fetches all remote data and sets cursor', () async {
+      syncProvider.returnChanges = [
+        {
+           'batchId': 'batch-boot-1',
+           'deviceId': 'device-boot',
+           'table': 'pages',
+           'entityId': 'page-boot-1',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'page-boot-1',
+              'title': 'Boot Page',
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        }
+      ];
+
+      final result = await syncEngine.syncNow();
+      expect(result.isSuccess, isTrue);
+
+      final pages = await database.select(database.pages).get();
+      expect(pages.where((p) => p.id == 'page-boot-1'), isNotEmpty);
+
+      final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
+      final state = stateRes.fold((s) => s, (e) => throw Exception());
+      expect(state!.lastDriveCursor, 'next_cursor');
+    });
+
+    test('Syncs secondary entities (collections, tags, reminders)', () async {
+      syncProvider.returnChanges = [
+        {
+           'batchId': 'batch-sec-1',
+           'deviceId': 'device-sec',
+           'table': 'collections',
+           'entityId': 'col-1',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'col-1',
+              'name': 'Test Collection',
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        },
+        {
+           'batchId': 'batch-sec-1',
+           'deviceId': 'device-sec',
+           'table': 'tags',
+           'entityId': 'tag-1',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'tag-1',
+              'name': 'Test Tag',
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        },
+        {
+           'batchId': 'batch-sec-1',
+           'deviceId': 'device-sec',
+           'table': 'reminders',
+           'entityId': 'rem-1',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'rem-1',
+              'pageId': 'page-1',
+              'title': 'Test Reminder',
+              'reminderTime': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        }
+      ];
+
+      final result = await syncEngine.syncNow();
+      expect(result.isSuccess, isTrue);
+
+      final cols = await database.select(database.collections).get();
+      expect(cols.where((c) => c.id == 'col-1'), isNotEmpty);
+
+      final tags = await database.select(database.tags).get();
+      expect(tags.where((t) => t.id == 'tag-1'), isNotEmpty);
+
+      final rems = await database.select(database.reminders).get();
+      expect(rems.where((r) => r.id == 'rem-1'), isNotEmpty);
     });
   });
 }

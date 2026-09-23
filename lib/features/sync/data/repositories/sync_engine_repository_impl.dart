@@ -126,10 +126,19 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
           final payload = {
             'batchId': batchId,
             'deviceId': syncState.deviceId,
+            'schemaVersion': 1,
             'timestamp': DateTime.now().toUtc().toIso8601String(),
             'changes': claimedItems
                 .map((e) {
                   var p = e.payload != null ? jsonDecode(e.payload!) : null;
+                  
+                  int? version;
+                  String? updatedAt;
+                  if (p is Map<String, dynamic>) {
+                      version = p['version'] as int?;
+                      updatedAt = p['updatedAt'] as String?;
+                  }
+                  
                   if (e.entityTable == 'attachments' && p is Map<String, dynamic>) {
                     p.remove('localPath');
                     p.remove('thumbnailPath');
@@ -137,10 +146,11 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
                     p.remove('isPinnedOffline');
                   }
                   return {
-                    'id': e.id,
+                    'id': e.entityId,
                     'table': e.entityTable,
-                    'entityId': e.entityId,
                     'operation': e.operation,
+                    if (version != null) 'version': version,
+                    if (updatedAt != null) 'updatedAt': updatedAt,
                     'payload': p,
                   };
               }).toList(),
@@ -192,6 +202,29 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     String? currentCursor = syncState.lastDriveCursor;
     bool hasMorePages = true;
 
+    if (currentCursor == null) {
+      // A1: Bootstrap correctness
+      final startTokenRes = await _syncProvider.getStartPageToken();
+      if (startTokenRes is Error<String>) return Error(startTokenRes.failure);
+      final bootstrapCursor = (startTokenRes as Success<String>).value;
+
+      String? historyCursor;
+      do {
+        final historyRes = await _syncProvider.downloadHistoricalBatches(historyCursor);
+        if (historyRes is Error<SyncDownloadResult>) return Error(historyRes.failure);
+        
+        final historyResult = (historyRes as Success<SyncDownloadResult>).value;
+        final changes = historyResult.changes;
+        
+        final processResult = await _processDownloadedChanges(changes, syncState);
+        if (processResult is Error<void>) return Error((processResult as Error<void>).failure);
+        
+        historyCursor = historyResult.nextCursor;
+      } while (historyCursor != null);
+
+      currentCursor = bootstrapCursor;
+    }
+
     while (hasMorePages) {
       final downloadRes = await _syncProvider.downloadChanges(currentCursor);
       if (downloadRes is Error<SyncDownloadResult>) {
@@ -200,96 +233,12 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       
       final downloadResult = (downloadRes as Success<SyncDownloadResult>).value;
       final changes = downloadResult.changes;
+      
+      final processResult = await _processDownloadedChanges(changes, syncState);
+      if (processResult is Error<void>) return Error((processResult as Error<void>).failure);
+
       String? newCursor = downloadResult.nextCursor ?? currentCursor;
       hasMorePages = downloadResult.hasMore;
-
-      // Group changes by batchId
-      final batches = <String, List<Map<String, dynamic>>>{};
-      final unbatchedChanges = <Map<String, dynamic>>[];
-      for (final change in changes) {
-        final batchId = change['batchId'] as String?;
-        if (batchId != null) {
-          batches.putIfAbsent(batchId, () => []).add(change);
-        } else {
-          unbatchedChanges.add(change);
-        }
-      }
-
-      // Process each batch in its own transaction
-      for (final entry in batches.entries) {
-        final batchId = entry.key;
-        final batchChanges = entry.value;
-
-        try {
-          await _db.transaction(() async {
-            // Check idempotency
-            final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
-            if (existingBatch != null) return; // Skip if already processed
-
-            // Process all changes in the batch
-            for (final change in batchChanges) {
-               final remoteDeviceId = change['deviceId'] as String?;
-               final table = change['table'] as String?;
-               final entityId = change['entityId'] as String?;
-               final operation = change['operation'] as String?;
-               final payload = change['payload'] as Map<String, dynamic>?;
-
-               if (table != null && entityId != null && operation != null && payload != null) {
-                  final resolution = await _conflictResolver.resolveConflict(
-                     table: table,
-                     entityId: entityId,
-                     operation: operation,
-                     remotePayload: payload,
-                     localDeviceId: syncState.deviceId,
-                     remoteDeviceId: remoteDeviceId,
-                  );
-                  
-                  if (resolution == ConflictResolution.applyRemote) {
-                     await _entityApplier.applyResolvedEntity(table, entityId, payload);
-                  }
-               }
-            }
-
-            final remoteDeviceId = batchChanges.first['deviceId'] as String?;
-            // Insert it as processed
-            await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
-              batchId: Value(batchId),
-              deviceId: Value(remoteDeviceId ?? 'unknown'),
-              processedAt: Value(DateTime.now().toUtc()),
-            ),);
-          });
-        } catch (e) {
-          // Log the error and skip this batch. 
-          // The database transaction is automatically rolled back by Drift.
-          // By skipping and continuing, we prevent a single malformed remote batch from blocking all syncs.
-        }
-      }
-
-      // Process unbatched changes
-      for (final change in unbatchedChanges) {
-        await _db.transaction(() async {
-             final remoteDeviceId = change['deviceId'] as String?;
-             final table = change['table'] as String?;
-             final entityId = change['entityId'] as String?;
-             final operation = change['operation'] as String?;
-             final payload = change['payload'] as Map<String, dynamic>?;
-
-             if (table != null && entityId != null && operation != null && payload != null) {
-                final resolution = await _conflictResolver.resolveConflict(
-                   table: table,
-                   entityId: entityId,
-                   operation: operation,
-                   remotePayload: payload,
-                   localDeviceId: syncState.deviceId,
-                   remoteDeviceId: remoteDeviceId,
-                );
-                
-                if (resolution == ConflictResolution.applyRemote) {
-                   await _entityApplier.applyResolvedEntity(table, entityId, payload);
-                }
-             }
-        });
-      }
 
       // 5. Update sync state (advance cursor) after all batches are processed successfully
       if (newCursor != currentCursor || changes.isNotEmpty) {
@@ -310,5 +259,103 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     } finally {
       _isSyncing = false;
     }
+  }
+
+  Future<Result<void>> _processDownloadedChanges(
+    List<Map<String, dynamic>> changes,
+    SyncStateEntity syncState,
+  ) async {
+    // Group changes by batchId
+    final batches = <String, List<Map<String, dynamic>>>{};
+    final unbatchedChanges = <Map<String, dynamic>>[];
+    for (final change in changes) {
+      final batchId = change['batchId'] as String?;
+      if (batchId != null) {
+        batches.putIfAbsent(batchId, () => []).add(change);
+      } else {
+        unbatchedChanges.add(change);
+      }
+    }
+
+    // Process each batch in its own transaction
+    for (final entry in batches.entries) {
+      final batchId = entry.key;
+      final batchChanges = entry.value;
+
+      try {
+        await _db.transaction(() async {
+          // Check idempotency
+          final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
+          if (existingBatch != null) return; // Skip if already processed
+
+          // Process all changes in the batch
+          for (final change in batchChanges) {
+             final remoteDeviceId = change['deviceId'] as String?;
+             final table = change['table'] as String?;
+             final entityId = change['id'] as String? ?? change['entityId'] as String?; // Fallback for old records
+             final operation = change['operation'] as String?;
+             final payload = change['payload'] as Map<String, dynamic>?;
+
+             if (table != null && entityId != null && operation != null && payload != null) {
+                final resolution = await _conflictResolver.resolveConflict(
+                   table: table,
+                   entityId: entityId,
+                   operation: operation,
+                   remotePayload: payload,
+                   localDeviceId: syncState.deviceId,
+                   remoteDeviceId: remoteDeviceId,
+                );
+                
+                if (resolution == ConflictResolution.applyRemote) {
+                   await _entityApplier.applyResolvedEntity(table, entityId, payload);
+                }
+             }
+          }
+
+          final remoteDeviceId = batchChanges.first['deviceId'] as String?;
+          // Insert it as processed
+          await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
+            batchId: Value(batchId),
+            deviceId: Value(remoteDeviceId ?? 'unknown'),
+            processedAt: Value(DateTime.now().toUtc()),
+          ),);
+        });
+      } catch (e) {
+        // Cursor Safety A2: Stop processing at first failed batch.
+        // Do not advance cursor.
+        return Error(SyncFailure('Failed processing batch $batchId: $e'));
+      }
+    }
+
+    // Process unbatched changes
+    for (final change in unbatchedChanges) {
+      try {
+          await _db.transaction(() async {
+               final remoteDeviceId = change['deviceId'] as String?;
+               final table = change['table'] as String?;
+               final entityId = change['id'] as String? ?? change['entityId'] as String?;
+               final operation = change['operation'] as String?;
+               final payload = change['payload'] as Map<String, dynamic>?;
+  
+               if (table != null && entityId != null && operation != null && payload != null) {
+                  final resolution = await _conflictResolver.resolveConflict(
+                     table: table,
+                     entityId: entityId,
+                     operation: operation,
+                     remotePayload: payload,
+                     localDeviceId: syncState.deviceId,
+                     remoteDeviceId: remoteDeviceId,
+                  );
+                  
+                  if (resolution == ConflictResolution.applyRemote) {
+                     await _entityApplier.applyResolvedEntity(table, entityId, payload);
+                  }
+               }
+          });
+      } catch (e) {
+          return Error(SyncFailure('Failed processing unbatched change: $e'));
+      }
+    }
+    return const Success(null);
   }
 }

@@ -105,7 +105,7 @@ class SyncSettingsSection extends ConsumerWidget {
     final authService = ref.read(authServiceProvider);
     final result = await authService.signIn(['https://www.googleapis.com/auth/drive.file']);
     if (result is Success) {
-      ref.read(syncControllerProvider.notifier).syncNow(); // Also re-initializes
+      await ref.read(syncControllerProvider.notifier).syncNow(); // Also re-initializes
     }
   }
 }

@@ -88,7 +88,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
   @override
   Future<Result<void>> syncNow() async {
     if (_isSyncing) {
-      return Error(SyncFailure('Sync already in progress'));
+      return const Error(SyncFailure('Sync already in progress'));
     }
     
     _isSyncing = true;
@@ -229,7 +229,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
                      batchId: Value(batchId),
                      deviceId: Value(remoteDeviceId ?? 'unknown'),
                      processedAt: Value(DateTime.now()),
-                   ));
+                   ),);
                  }
               }
               if (processedBatchIds.contains(batchId)) {

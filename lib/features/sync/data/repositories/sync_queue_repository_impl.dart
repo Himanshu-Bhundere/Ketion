@@ -70,7 +70,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         // Reclaim stale processing items atomically
         final reclaimStatement = _db.update(_db.syncQueue)
           ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.processing.name) &
-                           tbl.leaseUntil.isSmallerThanValue(now));
+                           tbl.leaseUntil.isSmallerThanValue(now),);
         await reclaimStatement.write(
           SyncQueueCompanion(
             status: Value(SyncQueueItemStatus.pending.name),
@@ -82,7 +82,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
           ..where((tbl) =>
             (tbl.status.equals(SyncQueueItemStatus.pending.name) |
              tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
-            (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now))
+            (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)),
           )
           ..orderBy([
             (tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
@@ -104,7 +104,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         ..where((tbl) =>
             tbl.status.equals(SyncQueueItemStatus.pending.name) &
             tbl.entityTable.equals(table) &
-            tbl.entityId.equals(entityId))
+            tbl.entityId.equals(entityId),)
         ..limit(1);
       final result = await query.getSingleOrNull();
       if (result != null) {

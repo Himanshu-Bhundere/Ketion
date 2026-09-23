@@ -70,7 +70,7 @@ class SyncController extends StateNotifier<SyncUiState> {
     if (result is Success) {
       state = state.copyWith(
         status: SyncUiStatus.synced,
-        lastSyncedAt: DateTime.now(),
+        lastSyncedAt: DateTime.now().toUtc(),
         errorMessage: null,
       );
     } else if (result is Error) {

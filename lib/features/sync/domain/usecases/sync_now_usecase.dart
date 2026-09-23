@@ -18,7 +18,7 @@ class SyncNowUseCase {
 
       await widgetService.updateSimpleWidgetData(
         'last_sync_time',
-        DateTime.now().toIso8601String(),
+        DateTime.now().toUtc().toIso8601String(),
       );
       await widgetService.updateSimpleWidgetData('sync_status', 'Success');
       await widgetService.triggerWidgetUpdate();

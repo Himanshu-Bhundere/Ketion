@@ -55,7 +55,7 @@ class SyncScheduler with WidgetsBindingObserver {
   /// If [force] is true, it bypasses the cooldown period.
   Future<Result<void>> performImmediateSync({bool force = false}) async {
     if (!force && _lastSyncTime != null) {
-      final now = DateTime.now();
+      final now = DateTime.now().toUtc();
       if (now.difference(_lastSyncTime!) < _syncCooldown) {
         appLogger.d('Sync skipped: Cooldown period active.');
         return const Success(null);
@@ -70,7 +70,7 @@ class SyncScheduler with WidgetsBindingObserver {
     try {
       final result = await _syncNowUseCase();
       if (result is Success) {
-        _lastSyncTime = DateTime.now();
+        _lastSyncTime = DateTime.now().toUtc();
       }
       return result;
     } finally {

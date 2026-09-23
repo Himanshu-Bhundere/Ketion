@@ -12,12 +12,15 @@ void main() {
   ''');
   
   db.execute("INSERT INTO search_fts(entityId, entityType, content) VALUES ('abc', 'page', 'hello world')");
-  print('Inserted');
+  // ignore: avoid_print
+    print('Inserted');
   
   try {
     db.execute("DELETE FROM search_fts WHERE entityId = 'abc' AND entityType = 'page'");
+    // ignore: avoid_print
     print('Deleted successfully by entityId');
   } catch (e) {
+    // ignore: avoid_print
     print('Failed to delete: \$e');
   }
 }

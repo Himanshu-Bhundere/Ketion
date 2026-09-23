@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/core/utils/result.dart';
@@ -52,13 +51,11 @@ class FakeSyncStateRepository implements SyncStateRepository {
   @override
   Future<Result<SyncStateEntity?>> getSyncState(String deviceId, String provider) async {
     if (returnError) return const Error(StorageFailure('error'));
-    if (_state == null) {
-      _state = SyncStateEntity(
+    _state ??= SyncStateEntity(
         deviceId: deviceId,
         provider: provider,
         lastDriveCursor: null,
       );
-    }
     return Success(_state);
   }
 
@@ -91,7 +88,7 @@ class FakeSyncProvider implements SyncProvider {
     return Success(SyncDownloadResult(
       changes: returnChanges,
       nextCursor: returnChanges.isEmpty ? null : 'next_cursor',
-    ));
+    ),);
   }
 
   @override
@@ -163,7 +160,7 @@ void main() {
               'version': 1,
               'createdAt': DateTime.now().toIso8601String(),
               'updatedAt': DateTime.now().toIso8601String(),
-           }
+           },
         }
       ];
       
@@ -205,7 +202,7 @@ void main() {
               'version': 1,
               'createdAt': DateTime.now().toIso8601String(),
               'updatedAt': DateTime.now().toIso8601String(),
-           }
+           },
         }
       ];
 
@@ -227,7 +224,7 @@ void main() {
           batchId: 'batch-late',
           deviceId: 'device-3',
           processedAt: Value(DateTime.now()),
-        )
+        ),
       );
 
       syncProvider.returnChanges = [
@@ -243,7 +240,7 @@ void main() {
               'version': 1,
               'createdAt': DateTime.now().toIso8601String(),
               'updatedAt': DateTime.now().toIso8601String(),
-           }
+           },
         }
       ];
 
@@ -265,7 +262,7 @@ void main() {
           version: const Value(2),
           createdAt: now,
           updatedAt: now,
-        )
+        ),
       );
 
       syncProvider.returnChanges = [
@@ -281,7 +278,7 @@ void main() {
               'version': 3,
               'createdAt': now.subtract(const Duration(minutes: 5)).toIso8601String(),
               'updatedAt': now.subtract(const Duration(minutes: 5)).toIso8601String(),
-           }
+           },
         }
       ];
 

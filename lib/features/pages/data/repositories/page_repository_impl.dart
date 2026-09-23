@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
@@ -17,7 +19,18 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> createPage(domain.Page page) async {
     try {
-      await _db.into(_db.pages).insert(page.toCompanion());
+      final newPage = page.copyWith(version: 1, updatedAt: DateTime.now());
+      await _db.transaction(() async {
+        await _db.into(_db.pages).insert(newPage.toCompanion());
+        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          id: const Uuid().v7(),
+          entityTable: 'pages',
+          entityId: newPage.id,
+          operation: 'create',
+          payload: Value(jsonEncode(newPage.toJson())),
+          createdAt: DateTime.now(),
+        ));
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to create page', e, stackTrace);
@@ -44,12 +57,25 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> updatePage(domain.Page page) async {
     try {
-      final updatedRows = await (_db.update(_db.pages)
-            ..where((t) => t.id.equals(page.id)))
-          .write(page.toCompanion());
-      if (updatedRows == 0) {
-        return const Error(StorageFailure('Page not found for update'));
-      }
+      final newPage = page.copyWith(
+        version: page.version + 1,
+        updatedAt: DateTime.now(),
+      );
+      await _db.transaction(() async {
+        final updatedRows = await (_db.update(_db.pages)
+              ..where((t) => t.id.equals(newPage.id)))
+            .write(newPage.toCompanion());
+        if (updatedRows > 0) {
+          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+            id: const Uuid().v7(),
+            entityTable: 'pages',
+            entityId: newPage.id,
+            operation: 'update',
+            payload: Value(jsonEncode(newPage.toJson())),
+            createdAt: DateTime.now(),
+          ));
+        }
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to update page', e, stackTrace);
@@ -60,11 +86,20 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> deletePage(String id) async {
     try {
-      final deletedRows =
-          await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
-      if (deletedRows == 0) {
-        return const Error(StorageFailure('Page not found for deletion'));
-      }
+      await _db.transaction(() async {
+        final deletedRows =
+            await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
+        if (deletedRows > 0) {
+          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+            id: const Uuid().v7(),
+            entityTable: 'pages',
+            entityId: id,
+            operation: 'delete',
+            payload: const Value(null),
+            createdAt: DateTime.now(),
+          ));
+        }
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to delete page', e, stackTrace);

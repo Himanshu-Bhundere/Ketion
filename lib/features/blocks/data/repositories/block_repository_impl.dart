@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/errors/failures.dart';
@@ -17,7 +19,18 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> createBlock(domain.Block block) async {
     try {
-      await _db.into(_db.blocks).insert(block.toCompanion());
+      final newBlock = block.copyWith(version: 1, updatedAt: DateTime.now());
+      await _db.transaction(() async {
+        await _db.into(_db.blocks).insert(newBlock.toCompanion());
+        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          id: const Uuid().v7(),
+          entityTable: 'blocks',
+          entityId: newBlock.id,
+          operation: 'create',
+          payload: Value(jsonEncode(newBlock.toJson())),
+          createdAt: Value(DateTime.now()),
+        ));
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to create block', e, stackTrace);
@@ -44,7 +57,21 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> updateBlock(domain.Block block) async {
     try {
-      await _db.into(_db.blocks).insertOnConflictUpdate(block.toCompanion());
+      final newBlock = block.copyWith(
+        version: block.version + 1, 
+        updatedAt: DateTime.now(),
+      );
+      await _db.transaction(() async {
+        await _db.into(_db.blocks).insertOnConflictUpdate(newBlock.toCompanion());
+        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          id: const Uuid().v7(),
+          entityTable: 'blocks',
+          entityId: newBlock.id,
+          operation: 'update',
+          payload: Value(jsonEncode(newBlock.toJson())),
+          createdAt: Value(DateTime.now()),
+        ));
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to update block', e, stackTrace);
@@ -55,11 +82,20 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> deleteBlock(String id) async {
     try {
-      final deletedRows =
-          await (_db.delete(_db.blocks)..where((t) => t.id.equals(id))).go();
-      if (deletedRows == 0) {
-        return const Error(StorageFailure('Block not found for deletion'));
-      }
+      await _db.transaction(() async {
+        final deletedRows =
+            await (_db.delete(_db.blocks)..where((t) => t.id.equals(id))).go();
+        if (deletedRows > 0) {
+          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+            id: const Uuid().v7(),
+            entityTable: 'blocks',
+            entityId: id,
+            operation: 'delete',
+            payload: const Value(null),
+            createdAt: Value(DateTime.now()),
+          ));
+        }
+      });
       return const Success(null);
     } catch (e, stackTrace) {
       _logger.e('Failed to delete block', e, stackTrace);

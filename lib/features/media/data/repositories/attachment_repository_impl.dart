@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
@@ -54,23 +55,34 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
     );
 
     // Save to database
-    await _db.into(_db.attachments).insert(
-          AttachmentsCompanion.insert(
-            id: id,
-            blockId: blockId,
-            localPath: Value(localPath),
-            mimeType: mimeType,
-            checksumSha256: Value(sha256),
-            fileSize: fileSize,
-            thumbnailPath: Value(thumbnailPath),
-            uploadStatus: Value(AttachmentUploadStatus.pending.value),
-            createdAt: Value(now),
-            updatedAt: Value(now),
-            version: const Value(1),
-            deleted: const Value(false),
-            isPinnedOffline: const Value(false),
-          ),
-        );
+    await _db.transaction(() async {
+      await _db.into(_db.attachments).insert(
+            AttachmentsCompanion.insert(
+              id: id,
+              blockId: blockId,
+              localPath: Value(localPath),
+              mimeType: mimeType,
+              checksumSha256: Value(sha256),
+              fileSize: fileSize,
+              thumbnailPath: Value(thumbnailPath),
+              uploadStatus: Value(AttachmentUploadStatus.pending.value),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              version: const Value(1),
+              deleted: const Value(false),
+              isPinnedOffline: const Value(false),
+            ),
+          );
+
+      await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+        id: const Uuid().v7(),
+        entityTable: 'attachments',
+        entityId: id,
+        operation: 'create',
+        payload: Value(jsonEncode(attachment.toJson())),
+        createdAt: DateTime.now(),
+      ));
+    });
 
     return attachment;
   }
@@ -99,13 +111,27 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
 
   @override
   Future<void> deleteAttachment(String id) async {
-    // Soft delete in database
-    await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
-      AttachmentsCompanion(
-        deleted: const Value(true),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    await _db.transaction(() async {
+      // Soft delete in database
+      final updatedRows = await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
+        AttachmentsCompanion(
+          deleted: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      if (updatedRows > 0) {
+        // Also fetch to increment version? The companion above doesn't bump version. Let's just enqueue delete
+        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+          id: const Uuid().v7(),
+          entityTable: 'attachments',
+          entityId: id,
+          operation: 'delete',
+          payload: const Value(null),
+          createdAt: DateTime.now(),
+        ));
+      }
+    });
 
     // Note: We don't delete the physical file yet because other blocks might reference
     // the same file (deduplication via SHA-256). A separate garbage collection
@@ -141,14 +167,36 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
 
   @override
   Future<void> updateAttachmentSyncStatus(String id, String uploadStatus, {String? driveFileId, String? localPath}) async {
-    final companion = AttachmentsCompanion(
-      uploadStatus: Value(uploadStatus),
-      updatedAt: Value(DateTime.now()),
-      driveFileId: driveFileId != null ? Value(driveFileId) : const Value.absent(),
-      localPath: localPath != null ? Value(localPath) : const Value.absent(),
-    );
+    await _db.transaction(() async {
+      final companion = AttachmentsCompanion(
+        uploadStatus: Value(uploadStatus),
+        updatedAt: Value(DateTime.now()),
+        driveFileId: driveFileId != null ? Value(driveFileId) : const Value.absent(),
+        localPath: localPath != null ? Value(localPath) : const Value.absent(),
+      );
 
-    await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(companion);
+      final updatedRows = await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(companion);
+      
+      // If we assigned a driveFileId, we need to sync this metadata to other devices
+      if (updatedRows > 0 && driveFileId != null) {
+        final attachment = await getAttachment(id);
+        if (attachment != null) {
+          final newVersion = attachment.version + 1;
+          await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
+            AttachmentsCompanion(version: Value(newVersion))
+          );
+          
+          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
+            id: const Uuid().v7(),
+            entityTable: 'attachments',
+            entityId: id,
+            operation: 'update',
+            payload: Value(jsonEncode(attachment.copyWith(version: newVersion).toJson())),
+            createdAt: DateTime.now(),
+          ));
+        }
+      }
+    });
   }
 
   @override

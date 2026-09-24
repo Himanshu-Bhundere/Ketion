@@ -44,22 +44,35 @@ class ConflictResolver {
     switch (table) {
       case 'pages':
         final result = await (_db.select(_db.pages)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) {
-          localUpdatedAt = result.updatedAt;
-        }
+        if (result != null) localUpdatedAt = result.updatedAt;
         break;
       case 'blocks':
         final result = await (_db.select(_db.blocks)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) {
-          localUpdatedAt = result.updatedAt;
-        }
+        if (result != null) localUpdatedAt = result.updatedAt;
         break;
       case 'attachments':
         final result = await (_db.select(_db.attachments)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) {
-          localUpdatedAt = result.updatedAt;
-        }
+        if (result != null) localUpdatedAt = result.updatedAt;
         break;
+      case 'collections':
+        final result = await (_db.select(_db.collections)..where((t) => t.id.equals(entityId))).getSingleOrNull();
+        if (result != null) localUpdatedAt = result.updatedAt;
+        break;
+      case 'tags':
+        final result = await (_db.select(_db.tags)..where((t) => t.id.equals(entityId))).getSingleOrNull();
+        if (result != null) localUpdatedAt = result.updatedAt;
+        break;
+      case 'reminders':
+        final result = await (_db.select(_db.reminders)..where((t) => t.id.equals(entityId))).getSingleOrNull();
+        if (result != null) localUpdatedAt = result.updatedAt;
+        break;
+      default:
+        throw Exception('SyncProtocolFailure: Unknown table $table');
+    }
+
+    // Protocol validation A3
+    if (operation == 'delete' && remotePayload == null) {
+      throw Exception('SyncProtocolFailure: Delete operations must include a tombstone payload');
     }
 
     // Parse remote updatedAt
@@ -70,11 +83,15 @@ class ConflictResolver {
       }
     }
 
+    if (remoteUpdatedAt == null) {
+      throw Exception('SyncProtocolFailure: Entities must include an updatedAt timestamp');
+    }
+
     // LWW logic using (updated_at, device_id)
     if (localUpdatedAt == null) {
       // Entity does not exist locally
       return ConflictResolution.applyRemote;
-    } else if (remoteUpdatedAt != null) {
+    } else {
       if (remoteUpdatedAt.isAfter(localUpdatedAt)) {
         return ConflictResolution.applyRemote;
       } else if (remoteUpdatedAt.isAtSameMomentAs(localUpdatedAt)) {
@@ -82,9 +99,6 @@ class ConflictResolver {
           return ConflictResolution.applyRemote;
         }
       }
-    } else if (remoteUpdatedAt == null && operation == 'delete') {
-       // A delete might not have a payload, just an entityId
-       return ConflictResolution.applyRemote;
     }
 
     return ConflictResolution.keepLocal;

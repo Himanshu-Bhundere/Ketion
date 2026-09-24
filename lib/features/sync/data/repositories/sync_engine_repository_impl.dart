@@ -39,6 +39,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         _conflictResolver = conflictResolver,
         _db = db;
 
+  bool _isSyncing = false;
+
   @override
   Future<Result<void>> enqueueOperation(
     String table,
@@ -59,27 +61,44 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
   @override
   Future<Result<void>> syncNow() async {
-    // 1. Authenticate
-    final tokenResult = await _authService.getAccessToken(_driveScopes);
-    if (tokenResult is Error<String>) {
-      return Error(tokenResult.failure);
+    if (_isSyncing) {
+      return const Error(SyncFailure('Sync already in progress'));
     }
-    final token = (tokenResult as Success<String>).value;
+    
+    _isSyncing = true;
+    try {
+      // 1. Authenticate
+      final tokenResult = await _authService.getAccessToken(_driveScopes);
+      if (tokenResult is Error<String>) {
+        return Error(tokenResult.failure);
+      }
+      final token = (tokenResult as Success<String>).value;
 
-    // 2. Initialize provider
-    final initResult = await _syncProvider.initialize(token);
-    if (initResult is Error<void>) {
-      return Error(initResult.failure);
-    }
+      // 2. Initialize provider
+      final initResult = await _syncProvider.initialize(token);
+      if (initResult is Error<void>) {
+        return Error(initResult.failure);
+      }
 
-    // 3. Process local queue items (Upload)
-    final pendingResult = await _queueRepository.getPendingItems();
-    if (pendingResult is Success<List<SyncQueueItem>>) {
-      final items = pendingResult.value;
-      if (items.isNotEmpty) {
+      // Fetch sync state early to get deviceId
+      final stateRes = await _stateRepository.getSyncState('local_device', 'google_drive');
+      SyncStateEntity syncState = const SyncStateEntity(
+        deviceId: 'local_device',
+        provider: 'google_drive',
+      );
+      if (stateRes is Success<SyncStateEntity?> && stateRes.value != null) {
+        syncState = stateRes.value!;
+      }
+
+      // 3. Process local queue items (Upload)
+      final pendingResult = await _queueRepository.getPendingItems();
+      if (pendingResult is Success<List<SyncQueueItem>>) {
+        final items = pendingResult.value;
+        if (items.isNotEmpty) {
         final batchId = const Uuid().v7();
         final payload = {
           'batchId': batchId,
+          'deviceId': syncState.deviceId,
           'timestamp': DateTime.now().toIso8601String(),
           'changes': items
               .map(
@@ -96,44 +115,39 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
         final uploadRes = await _syncProvider.uploadChanges(batchId, payload);
         if (uploadRes is Success<void>) {
-          for (final item in items) {
-            await _queueRepository.updateStatus(item.id, 'completed');
-          }
+          await _db.transaction(() async {
+            for (final item in items) {
+              await _queueRepository.updateStatus(item.id, 'completed');
+            }
+          });
         } else if (uploadRes is Error<void>) {
           // Bounded exponential backoff update
-          for (final item in items) {
-            final nextRetry = item.attemptCount + 1;
-            if (nextRetry > 5) {
-              await _queueRepository.updateStatus(
-                item.id,
-                'failed',
-                attemptCount: nextRetry,
-                lastError: uploadRes.failure.message,
-              );
-            } else {
-              await _queueRepository.updateStatus(
-                item.id,
-                'pending',
-                attemptCount: nextRetry,
-                lastError: uploadRes.failure.message,
-              );
+          await _db.transaction(() async {
+            for (final item in items) {
+              final nextRetry = item.attemptCount + 1;
+              if (nextRetry > 5) {
+                await _queueRepository.updateStatus(
+                  item.id,
+                  'failed',
+                  attemptCount: nextRetry,
+                  lastError: uploadRes.failure.message,
+                );
+              } else {
+                await _queueRepository.updateStatus(
+                  item.id,
+                  'pending',
+                  attemptCount: nextRetry,
+                  lastError: uploadRes.failure.message,
+                );
+              }
             }
-          }
+          });
         }
       }
     }
 
     // 4. Download remote changes
-    final stateRes = await _stateRepository.getSyncState('local_device', 'google_drive');
-    String? lastCursor;
-    SyncStateEntity syncState = const SyncStateEntity(
-      deviceId: 'local_device',
-      provider: 'google_drive',
-    );
-    if (stateRes is Success<SyncStateEntity?> && stateRes.value != null) {
-      syncState = stateRes.value!;
-      lastCursor = syncState.lastAppliedGeneration.toString();
-    }
+    String? lastCursor = syncState.lastAppliedGeneration > 0 ? syncState.lastAppliedGeneration.toString() : null;
 
     final downloadRes = await _syncProvider.downloadChanges(lastCursor);
     if (downloadRes is Error<List<Map<String, dynamic>>>) {
@@ -150,6 +164,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
          final entityId = change['entityId'] as String?;
          final operation = change['operation'] as String?;
          final payload = change['payload'] as Map<String, dynamic>?;
+         final remoteDeviceId = change['deviceId'] as String?;
 
          if (table != null && entityId != null && operation != null) {
             await _conflictResolver.resolveAndApply(
@@ -157,6 +172,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
                entityId: entityId,
                operation: operation,
                remotePayload: payload,
+               localDeviceId: syncState.deviceId,
+               remoteDeviceId: remoteDeviceId,
             );
          }
          if (change['batchId'] != null) {
@@ -175,5 +192,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     });
 
     return const Success(null);
+    } finally {
+      _isSyncing = false;
+    }
   }
 }

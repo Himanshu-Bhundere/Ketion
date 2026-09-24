@@ -1,10 +1,42 @@
 import 'package:drift/drift.dart';
 import 'package:ketion/core/database/app_database.dart';
 
+enum ConflictResolution {
+  keepLocal,
+  applyRemote,
+}
+
 class ConflictResolver {
   final AppDatabase _db;
 
   ConflictResolver(this._db);
+
+  static ConflictResolution resolveConflictSync({
+    required int localVersion,
+    required int localUpdatedAt, // Using milliseconds since epoch
+    required String localDeviceId,
+    required int remoteVersion,
+    required int remoteUpdatedAt,
+    required String remoteDeviceId,
+  }) {
+    if (remoteVersion > localVersion) {
+      return ConflictResolution.applyRemote;
+    } else if (remoteVersion < localVersion) {
+      return ConflictResolution.keepLocal;
+    }
+
+    if (remoteUpdatedAt > localUpdatedAt) {
+      return ConflictResolution.applyRemote;
+    } else if (remoteUpdatedAt < localUpdatedAt) {
+      return ConflictResolution.keepLocal;
+    }
+
+    if (remoteDeviceId.compareTo(localDeviceId) > 0) {
+      return ConflictResolution.applyRemote;
+    }
+
+    return ConflictResolution.keepLocal;
+  }
 
   /// Resolves conflicts using Last-Writer-Wins (LWW) strategy.
   /// Applies the remote operation to the local database if it's newer.
@@ -13,37 +45,61 @@ class ConflictResolver {
     required String entityId,
     required String operation,
     required Map<String, dynamic>? remotePayload,
+    required String localDeviceId,
+    String? remoteDeviceId,
   }) async {
-    // 1. Fetch local entity's updatedAt
+    // 1. Fetch local entity's updatedAt and version
     final localResult = await _db.customSelect(
-      'SELECT updatedAt FROM $table WHERE id = ?',
+      'SELECT updatedAt, version FROM $table WHERE id = ?',
       variables: [Variable.withString(entityId)],
     ).getSingleOrNull();
 
     DateTime? localUpdatedAt;
-    if (localResult != null && localResult.data['updatedAt'] != null) {
-      final val = localResult.data['updatedAt'];
-      if (val is int) {
-         localUpdatedAt = DateTime.fromMillisecondsSinceEpoch(val * 1000, isUtc: true);
-      } else if (val is String) {
-         localUpdatedAt = DateTime.tryParse(val);
+    int localVersion = 0;
+    if (localResult != null) {
+      if (localResult.data['updatedAt'] != null) {
+        final val = localResult.data['updatedAt'];
+        if (val is int) {
+          localUpdatedAt = DateTime.fromMillisecondsSinceEpoch(val * 1000, isUtc: true);
+        } else if (val is String) {
+          localUpdatedAt = DateTime.tryParse(val);
+        }
+      }
+      if (localResult.data['version'] != null) {
+        localVersion = localResult.data['version'] as int;
       }
     }
 
-    // 2. Parse remote updatedAt
+    // 2. Parse remote updatedAt and version
     DateTime? remoteUpdatedAt;
-    if (remotePayload != null && remotePayload['updatedAt'] != null) {
-      remoteUpdatedAt = DateTime.tryParse(remotePayload['updatedAt'] as String);
+    int remoteVersion = 0;
+    if (remotePayload != null) {
+      if (remotePayload['updatedAt'] != null) {
+        remoteUpdatedAt = DateTime.tryParse(remotePayload['updatedAt'] as String);
+      }
+      if (remotePayload['version'] != null) {
+        remoteVersion = remotePayload['version'] as int;
+      }
     }
 
-    // 3. LWW logic
+    // 3. LWW logic using (version, updated_at, device_id)
     bool shouldApply = false;
     if (localUpdatedAt == null) {
       // Entity does not exist locally
       shouldApply = true;
-    } else if (remoteUpdatedAt != null && remoteUpdatedAt.isAfter(localUpdatedAt)) {
-      // Remote is newer
+    } else if (remoteVersion > localVersion) {
+      // Remote has a higher version
       shouldApply = true;
+    } else if (remoteVersion == localVersion) {
+      if (remoteUpdatedAt != null && remoteUpdatedAt.isAfter(localUpdatedAt)) {
+        // Remote is newer timestamp for the same version
+        shouldApply = true;
+      } else if (remoteUpdatedAt != null && remoteUpdatedAt.isAtSameMomentAs(localUpdatedAt)) {
+        // Same timestamp and version -> tiebreaker on deviceId (lexicographical)
+        if (remoteDeviceId != null && remoteDeviceId.compareTo(localDeviceId) > 0) {
+          shouldApply = true;
+        }
+      }
     } else if (remoteUpdatedAt == null && operation == 'delete') {
        // A delete might not have a payload, just an entityId
        shouldApply = true;

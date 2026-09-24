@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/core/errors/failures.dart';
@@ -117,6 +118,9 @@ class FakeSyncProvider implements SyncProvider {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  FlutterSecureStorage.setMockInitialValues({'ketion_device_id': 'device-1'});
+
   late AppDatabase database;
   late SyncEngineRepositoryImpl syncEngine;
   late SyncQueueRepository syncQueue;
@@ -288,6 +292,81 @@ void main() {
       final pages = await database.select(database.pages).get();
       expect(pages.length, 1);
       expect(pages.first.title, 'Local Title'); // Kept local due to newer timestamp
+    });
+    test('Multi-entity batch is atomic on error', () async {
+      // If a batch contains 2 changes, and the 2nd change crashes (e.g., malformed), 
+      // the entire batch should be rolled back and NOT marked as processed.
+      
+      syncProvider.returnChanges = [
+        {
+           'batchId': 'batch-atomic',
+           'deviceId': 'device-x',
+           'table': 'pages',
+           'entityId': 'page-a',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'page-a',
+              'title': 'Valid Page',
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        },
+        {
+           'batchId': 'batch-atomic',
+           'deviceId': 'device-x',
+           'table': 'pages',
+           'entityId': 'page-b',
+           'operation': 'upsert',
+           // Missing required fields will cause a DB constraint exception or parser exception
+           'payload': {
+              'id': 'page-b',
+           },
+        }
+      ];
+
+      // It should catch the error and not crash the whole process, 
+      // but the result might be Failure or it skips and logs.
+      // Wait, our SyncEngineRepositoryImpl might catch exceptions inside the transaction and rollback.
+      final result = await syncEngine.syncNow();
+      
+      // Since it's a batch failure, either it's swallowed (skipping batch) or bubbled up.
+      // Let's just assert the first entity wasn't saved because of atomicity.
+      final pages = await database.select(database.pages).get();
+      expect(pages.where((p) => p.id == 'page-a'), isEmpty);
+      
+      final processedBatches = await (database.select(database.processedBatches)..where((t) => t.batchId.equals('batch-atomic'))).get();
+      expect(processedBatches, isEmpty);
+    });
+
+    test('Remote application does not requeue locally', () async {
+      // When a remote change is applied, it should NOT trigger local SyncQueue insertion.
+      
+      syncProvider.returnChanges = [
+        {
+           'batchId': 'batch-norequeue',
+           'deviceId': 'device-y',
+           'table': 'pages',
+           'entityId': 'page-norequeue',
+           'operation': 'upsert',
+           'payload': {
+              'id': 'page-norequeue',
+              'title': 'Remote Page',
+              'version': 1,
+              'createdAt': DateTime.now().toIso8601String(),
+              'updatedAt': DateTime.now().toIso8601String(),
+           },
+        }
+      ];
+
+      await syncEngine.syncNow();
+
+      final pages = await database.select(database.pages).get();
+      expect(pages.where((p) => p.id == 'page-norequeue').length, 1);
+      
+      // Ensure the sync queue is still empty (it wasn't queued to push back to remote)
+      final queue = await database.select(database.syncQueue).get();
+      expect(queue.where((q) => q.entityId == 'page-norequeue'), isEmpty);
     });
   });
 }

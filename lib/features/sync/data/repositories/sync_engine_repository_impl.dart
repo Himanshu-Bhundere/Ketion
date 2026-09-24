@@ -9,6 +9,7 @@ import 'package:ketion/features/sync/domain/repositories/sync_engine_repository.
 import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.dart';
 import 'package:ketion/features/sync/domain/repositories/sync_state_repository.dart';
 import 'package:ketion/features/sync/domain/entities/sync_state_entity.dart';
+import 'package:ketion/core/security/device_identity.dart';
 import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 import 'package:ketion/features/sync/data/utils/sync_entity_applier.dart';
 
@@ -59,30 +60,15 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     String operation, {
     String? payload,
   }) async {
-    final pendingResult = await _queueRepository.findPendingItem(table, entityId);
-    if (pendingResult is Success<SyncQueueItem?> && pendingResult.value != null) {
-      final existing = pendingResult.value!;
-      final newOp = (existing.operation == 'create' && operation == 'update') 
-          ? 'create' 
-          : operation;
-      
-      final updatedItem = existing.copyWith(
-        operation: newOp,
-        payload: payload,
-        createdAt: DateTime.now(),
-      );
-      return await _queueRepository.enqueue(updatedItem);
-    }
-
     final item = SyncQueueItem(
       id: const Uuid().v7(),
       entityTable: table,
       entityId: entityId,
       operation: operation,
       payload: payload,
-      createdAt: DateTime.now(),
+      createdAt: DateTime.now().toUtc(),
     );
-    return await _queueRepository.enqueue(item);
+    return await _queueRepository.enqueueOrCoalesce(item);
   }
 
   @override
@@ -107,9 +93,10 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       }
 
       // Fetch sync state early to get deviceId
-      final stateRes = await _stateRepository.getSyncState('local_device', 'google_drive');
-      SyncStateEntity syncState = const SyncStateEntity(
-        deviceId: 'local_device',
+      final deviceId = await DeviceIdentity.getDeviceId();
+      final stateRes = await _stateRepository.getSyncState(deviceId, 'google_drive');
+      SyncStateEntity syncState = SyncStateEntity(
+        deviceId: deviceId,
         provider: 'google_drive',
       );
       if (stateRes is Success<SyncStateEntity?> && stateRes.value != null) {
@@ -122,20 +109,26 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         final items = pendingResult.value;
         if (items.isNotEmpty) {
         
-        // Lease items by marking them as processing
-        await _db.transaction(() async {
-          for (final item in items) {
-            await _queueRepository.updateStatus(item.id, SyncQueueItemStatus.processing);
-          }
-        });
+        final leaseUntil = DateTime.now().toUtc().add(const Duration(minutes: 5));
+        final claimedItems = <SyncQueueItem>[];
 
-        final batchId = const Uuid().v7();
-        final payload = {
-          'batchId': batchId,
-          'deviceId': syncState.deviceId,
-          'timestamp': DateTime.now().toIso8601String(),
-          'changes': items
-              .map((e) {
+        for (final item in items) {
+          final claimRes = await _queueRepository.claimItem(item.id, leaseUntil);
+          if (claimRes is Success<bool> && claimRes.value) {
+            // Need to process it with its attemptCount conceptually incremented.
+            // Since the DB row is incremented, we'll increment the local object for the upload loop logic
+            claimedItems.add(item.copyWith(attemptCount: item.attemptCount + 1));
+          }
+        }
+
+        if (claimedItems.isNotEmpty) {
+          final batchId = const Uuid().v7();
+          final payload = {
+            'batchId': batchId,
+            'deviceId': syncState.deviceId,
+            'timestamp': DateTime.now().toUtc().toIso8601String(),
+            'changes': claimedItems
+                .map((e) {
                   var p = e.payload != null ? jsonDecode(e.payload!) : null;
                   if (e.entityTable == 'attachments' && p is Map<String, dynamic>) {
                     p.remove('localPath');
@@ -156,7 +149,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         final uploadRes = await _syncProvider.uploadChanges(batchId, payload);
         if (uploadRes is Success<void>) {
           await _db.transaction(() async {
-            for (final item in items) {
+            for (final item in claimedItems) {
               await _queueRepository.updateStatus(item.id, SyncQueueItemStatus.completed);
             }
           });
@@ -166,7 +159,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
           // Bounded exponential backoff update
           await _db.transaction(() async {
             final now = DateTime.now().toUtc();
-            for (final item in items) {
+            for (final item in claimedItems) {
               final nextRetry = item.attemptCount + 1;
               if (nextRetry > 5) {
                 await _queueRepository.updateStatus(
@@ -191,6 +184,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
             }
           });
         }
+        }
       }
     }
 
@@ -209,65 +203,103 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       String? newCursor = downloadResult.nextCursor ?? currentCursor;
       hasMorePages = downloadResult.hasMore;
 
-      // Apply all changes and advance cursor atomically for this page
-      await _db.transaction(() async {
-        final processedBatchIds = <String>{};
-        
-        for (final change in changes) {
-           final batchId = change['batchId'] as String?;
-           final remoteDeviceId = change['deviceId'] as String?;
-           
-           if (batchId != null) {
-              if (!processedBatchIds.contains(batchId)) {
-                 // Check if the batch was already processed
-                 final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
-                 if (existingBatch != null) {
-                   processedBatchIds.add(batchId);
-                 } else {
-                   // Insert it as processed so we don't process it again next time
-                   await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
-                     batchId: Value(batchId),
-                     deviceId: Value(remoteDeviceId ?? 'unknown'),
-                     processedAt: Value(DateTime.now()),
-                   ),);
-                 }
-              }
-              if (processedBatchIds.contains(batchId)) {
-                 continue; // Skip this change because its batch was already processed
-              }
-           }
-
-           final table = change['table'] as String?;
-           final entityId = change['entityId'] as String?;
-           final operation = change['operation'] as String?;
-           final payload = change['payload'] as Map<String, dynamic>?;
-
-           if (table != null && entityId != null && operation != null && payload != null) {
-              final resolution = await _conflictResolver.resolveConflict(
-                 table: table,
-                 entityId: entityId,
-                 operation: operation,
-                 remotePayload: payload,
-                 localDeviceId: syncState.deviceId,
-                 remoteDeviceId: remoteDeviceId,
-              );
-              
-              if (resolution == ConflictResolution.applyRemote) {
-                 await _entityApplier.applyResolvedEntity(table, entityId, payload);
-              }
-           }
+      // Group changes by batchId
+      final batches = <String, List<Map<String, dynamic>>>{};
+      final unbatchedChanges = <Map<String, dynamic>>[];
+      for (final change in changes) {
+        final batchId = change['batchId'] as String?;
+        if (batchId != null) {
+          batches.putIfAbsent(batchId, () => []).add(change);
+        } else {
+          unbatchedChanges.add(change);
         }
+      }
 
-        // 5. Update sync state within the same transaction (for this page)
-        if (newCursor != currentCursor || changes.isNotEmpty) {
-          syncState = syncState.copyWith(
-            lastSyncTime: DateTime.now(),
-            lastDriveCursor: newCursor,
-          );
-          await _stateRepository.saveSyncState(syncState);
-          currentCursor = newCursor;
+      // Process each batch in its own transaction
+      for (final entry in batches.entries) {
+        final batchId = entry.key;
+        final batchChanges = entry.value;
+
+        try {
+          await _db.transaction(() async {
+            // Check idempotency
+            final existingBatch = await (_db.select(_db.processedBatches)..where((tbl) => tbl.batchId.equals(batchId))).getSingleOrNull();
+            if (existingBatch != null) return; // Skip if already processed
+
+            // Process all changes in the batch
+            for (final change in batchChanges) {
+               final remoteDeviceId = change['deviceId'] as String?;
+               final table = change['table'] as String?;
+               final entityId = change['entityId'] as String?;
+               final operation = change['operation'] as String?;
+               final payload = change['payload'] as Map<String, dynamic>?;
+
+               if (table != null && entityId != null && operation != null && payload != null) {
+                  final resolution = await _conflictResolver.resolveConflict(
+                     table: table,
+                     entityId: entityId,
+                     operation: operation,
+                     remotePayload: payload,
+                     localDeviceId: syncState.deviceId,
+                     remoteDeviceId: remoteDeviceId,
+                  );
+                  
+                  if (resolution == ConflictResolution.applyRemote) {
+                     await _entityApplier.applyResolvedEntity(table, entityId, payload);
+                  }
+               }
+            }
+
+            final remoteDeviceId = batchChanges.first['deviceId'] as String?;
+            // Insert it as processed
+            await _db.into(_db.processedBatches).insert(ProcessedBatchesCompanion(
+              batchId: Value(batchId),
+              deviceId: Value(remoteDeviceId ?? 'unknown'),
+              processedAt: Value(DateTime.now().toUtc()),
+            ));
+          });
+        } catch (e) {
+          // Log the error and skip this batch. 
+          // The database transaction is automatically rolled back by Drift.
+          // By skipping and continuing, we prevent a single malformed remote batch from blocking all syncs.
         }
-      });
+      }
+
+      // Process unbatched changes
+      for (final change in unbatchedChanges) {
+        await _db.transaction(() async {
+             final remoteDeviceId = change['deviceId'] as String?;
+             final table = change['table'] as String?;
+             final entityId = change['entityId'] as String?;
+             final operation = change['operation'] as String?;
+             final payload = change['payload'] as Map<String, dynamic>?;
+
+             if (table != null && entityId != null && operation != null && payload != null) {
+                final resolution = await _conflictResolver.resolveConflict(
+                   table: table,
+                   entityId: entityId,
+                   operation: operation,
+                   remotePayload: payload,
+                   localDeviceId: syncState.deviceId,
+                   remoteDeviceId: remoteDeviceId,
+                );
+                
+                if (resolution == ConflictResolution.applyRemote) {
+                   await _entityApplier.applyResolvedEntity(table, entityId, payload);
+                }
+             }
+        });
+      }
+
+      // 5. Update sync state (advance cursor) after all batches are processed successfully
+      if (newCursor != currentCursor || changes.isNotEmpty) {
+        syncState = syncState.copyWith(
+          lastSyncTime: DateTime.now().toUtc(),
+          lastDriveCursor: newCursor,
+        );
+        await _stateRepository.saveSyncState(syncState);
+        currentCursor = newCursor;
+      }
     }
 
     // 6. Cleanup old tombstones

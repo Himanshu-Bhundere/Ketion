@@ -328,7 +328,7 @@ void main() {
       // It should catch the error and not crash the whole process, 
       // but the result might be Failure or it skips and logs.
       // Wait, our SyncEngineRepositoryImpl might catch exceptions inside the transaction and rollback.
-      final result = await syncEngine.syncNow();
+      await syncEngine.syncNow();
       
       // Since it's a batch failure, either it's swallowed (skipping batch) or bubbled up.
       // Let's just assert the first entity wasn't saved because of atomicity.

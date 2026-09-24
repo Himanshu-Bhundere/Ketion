@@ -256,7 +256,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               batchId: Value(batchId),
               deviceId: Value(remoteDeviceId ?? 'unknown'),
               processedAt: Value(DateTime.now().toUtc()),
-            ));
+            ),);
           });
         } catch (e) {
           // Log the error and skip this batch. 

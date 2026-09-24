@@ -150,7 +150,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   Future<Result<bool>> claimItem(String id, DateTime leaseUntil) async {
     try {
       final now = DateTime.now().toUtc();
-      final query = '''
+      const query = '''
       UPDATE sync_queue
       SET status = 'processing',
           attempt_count = attempt_count + 1,
@@ -173,7 +173,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         Variable.withString(id),
         Variable.withDateTime(now),
         Variable.withDateTime(now),
-      ], updates: {_db.syncQueue});
+      ], updates: {_db.syncQueue},);
       
       return Success(affected > 0);
     } catch (e) {

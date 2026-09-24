@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -22,7 +21,8 @@ class TagRepositoryImpl implements TagRepository {
   @override
   Future<Result<void>> createTag(domain.Tag tag) async {
     try {
-      final newTag = tag.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
+      final newTag =
+          tag.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
       await _db.transaction(() async {
         await _db.into(_db.tags).insert(newTag.toCompanion());
         await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
@@ -32,7 +32,7 @@ class TagRepositoryImpl implements TagRepository {
           operation: 'create',
           payload: jsonEncode(newTag.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -76,7 +76,7 @@ class TagRepositoryImpl implements TagRepository {
             operation: 'update',
             payload: jsonEncode(newTag.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);
@@ -105,7 +105,7 @@ class TagRepositoryImpl implements TagRepository {
         final updatedRows = await (_db.update(_db.tags)
               ..where((t) => t.id.equals(id)))
             .write(newTag.toCompanion());
-            
+
         if (updatedRows > 0) {
           await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
             id: const Uuid().v7(),
@@ -114,7 +114,7 @@ class TagRepositoryImpl implements TagRepository {
             operation: 'delete',
             payload: jsonEncode(newTag.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);

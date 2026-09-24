@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -22,7 +21,8 @@ class CollectionRepositoryImpl implements CollectionRepository {
   @override
   Future<Result<void>> createCollection(domain.Collection collection) async {
     try {
-      final newCollection = collection.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
+      final newCollection =
+          collection.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
       await _db.transaction(() async {
         await _db.into(_db.collections).insert(newCollection.toCompanion());
         await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
@@ -32,7 +32,7 @@ class CollectionRepositoryImpl implements CollectionRepository {
           operation: 'create',
           payload: jsonEncode(newCollection.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -76,7 +76,7 @@ class CollectionRepositoryImpl implements CollectionRepository {
             operation: 'update',
             payload: jsonEncode(newCollection.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);
@@ -105,7 +105,7 @@ class CollectionRepositoryImpl implements CollectionRepository {
         final updatedRows = await (_db.update(_db.collections)
               ..where((t) => t.id.equals(id)))
             .write(newCollection.toCompanion());
-            
+
         if (updatedRows > 0) {
           await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
             id: const Uuid().v7(),
@@ -114,7 +114,7 @@ class CollectionRepositoryImpl implements CollectionRepository {
             operation: 'delete',
             payload: jsonEncode(newCollection.toJson()),
             createdAt: DateTime.now().toUtc(),
-          ));
+          ),);
         }
       });
       return const Success(null);

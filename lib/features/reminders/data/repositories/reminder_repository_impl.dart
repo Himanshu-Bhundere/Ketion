@@ -43,7 +43,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Future<void> addReminder(ReminderEntity reminder) async {
-    final newReminder = reminder.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
+    final newReminder =
+        reminder.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
     await _db.transaction(() async {
       await _db.into(_db.reminders).insert(
             ReminderMapper.toDbCompanion(newReminder),
@@ -56,7 +57,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
         operation: 'create',
         payload: jsonEncode(newReminder.toJson()),
         createdAt: DateTime.now().toUtc(),
-      ));
+      ),);
     });
   }
 
@@ -77,7 +78,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
         operation: 'update',
         payload: jsonEncode(updated.toJson()),
         createdAt: DateTime.now().toUtc(),
-      ));
+      ),);
     });
   }
 
@@ -90,7 +91,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
         updatedAt: DateTime.now().toUtc(),
         version: reminder.version + 1,
       );
-      
+
       await _db.transaction(() async {
         await _db
             .update(_db.reminders)
@@ -102,7 +103,7 @@ class ReminderRepositoryImpl implements ReminderRepository {
           operation: 'delete',
           payload: jsonEncode(deleted.toJson()),
           createdAt: DateTime.now().toUtc(),
-        ));
+        ),);
       });
     }
   }

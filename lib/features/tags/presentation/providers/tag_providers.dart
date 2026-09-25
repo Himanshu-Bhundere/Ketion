@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart' hide Tag;
 import '../../../../core/utils/logger.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 import '../../data/repositories/tag_repository_impl.dart';
 import '../../domain/repositories/tag_repository.dart';
 import '../../domain/entities/tag.dart';
@@ -12,7 +13,8 @@ import '../../domain/usecases/update_tag_usecase.dart';
 
 final tagRepositoryProvider = Provider<TagRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return TagRepositoryImpl(db, appLogger);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return TagRepositoryImpl(db, syncQueue, appLogger);
 });
 
 final createTagUseCaseProvider = Provider<CreateTagUseCase>((ref) {

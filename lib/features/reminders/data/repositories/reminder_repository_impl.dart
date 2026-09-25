@@ -1,13 +1,19 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
+
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/reminders/data/models/reminder_mapper.dart';
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
 import 'package:ketion/features/reminders/domain/repositories/reminder_repository.dart';
+import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.dart';
+import 'package:ketion/features/sync/domain/entities/sync_queue_item.dart';
 
 class ReminderRepositoryImpl implements ReminderRepository {
   final AppDatabase _db;
+  final SyncQueueRepository _syncQueue;
 
-  ReminderRepositoryImpl(this._db);
+  ReminderRepositoryImpl(this._db, this._syncQueue);
 
   @override
   Stream<List<ReminderEntity>> watchRemindersForPage(String pageId) {
@@ -37,10 +43,21 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Future<void> addReminder(ReminderEntity reminder) async {
-    await _db.into(_db.reminders).insert(
-          ReminderMapper.toDbCompanion(reminder),
-          mode: InsertMode.replace,
-        );
+    final newReminder = reminder.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
+    await _db.transaction(() async {
+      await _db.into(_db.reminders).insert(
+            ReminderMapper.toDbCompanion(newReminder),
+            mode: InsertMode.replace,
+          );
+      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
+        id: const Uuid().v7(),
+        entityTable: 'reminders',
+        entityId: newReminder.id,
+        operation: 'create',
+        payload: jsonEncode(newReminder.toJson()),
+        createdAt: DateTime.now().toUtc(),
+      ));
+    });
   }
 
   @override
@@ -49,9 +66,19 @@ class ReminderRepositoryImpl implements ReminderRepository {
       updatedAt: DateTime.now().toUtc(),
       version: reminder.version + 1,
     );
-    await _db
-        .update(_db.reminders)
-        .replace(ReminderMapper.toDbCompanion(updated));
+    await _db.transaction(() async {
+      await _db
+          .update(_db.reminders)
+          .replace(ReminderMapper.toDbCompanion(updated));
+      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
+        id: const Uuid().v7(),
+        entityTable: 'reminders',
+        entityId: updated.id,
+        operation: 'update',
+        payload: jsonEncode(updated.toJson()),
+        createdAt: DateTime.now().toUtc(),
+      ));
+    });
   }
 
   @override
@@ -63,7 +90,20 @@ class ReminderRepositoryImpl implements ReminderRepository {
         updatedAt: DateTime.now().toUtc(),
         version: reminder.version + 1,
       );
-      await updateReminder(deleted);
+      
+      await _db.transaction(() async {
+        await _db
+            .update(_db.reminders)
+            .replace(ReminderMapper.toDbCompanion(deleted));
+        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
+          id: const Uuid().v7(),
+          entityTable: 'reminders',
+          entityId: id,
+          operation: 'delete',
+          payload: jsonEncode(deleted.toJson()),
+          createdAt: DateTime.now().toUtc(),
+        ));
+      });
     }
   }
 

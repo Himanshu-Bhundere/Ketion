@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/app_database.dart' hide Collection;
 import '../../../../core/utils/logger.dart';
+import '../../../sync/presentation/providers/sync_providers.dart';
 import '../../data/repositories/collection_repository_impl.dart';
 import '../../domain/repositories/collection_repository.dart';
 import '../../domain/entities/collection.dart';
@@ -12,7 +13,8 @@ import '../../domain/usecases/update_collection_usecase.dart';
 
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return CollectionRepositoryImpl(db, appLogger);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return CollectionRepositoryImpl(db, syncQueue, appLogger);
 });
 
 final createCollectionUseCaseProvider =

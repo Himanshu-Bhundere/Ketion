@@ -9,6 +9,7 @@ import 'package:ketion/features/reminders/domain/usecases/get_reminders_usecase.
 import 'package:ketion/features/reminders/domain/usecases/update_reminder_usecase.dart';
 import 'package:ketion/features/reminders/presentation/services/local_notification_scheduler.dart';
 import 'package:ketion/features/reminders/presentation/services/reminder_scheduler.dart';
+import 'package:ketion/features/sync/presentation/providers/sync_providers.dart';
 import 'package:uuid/uuid.dart';
 
 // Provides the FlutterLocalNotificationsPlugin instance
@@ -27,7 +28,8 @@ final reminderSchedulerProvider = Provider<ReminderScheduler>((ref) {
 // Provides the ReminderRepository
 final reminderRepositoryProvider = Provider<ReminderRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return ReminderRepositoryImpl(db);
+  final syncQueue = ref.watch(syncQueueRepositoryProvider);
+  return ReminderRepositoryImpl(db, syncQueue);
 });
 
 // Provides the CreateReminderUseCase

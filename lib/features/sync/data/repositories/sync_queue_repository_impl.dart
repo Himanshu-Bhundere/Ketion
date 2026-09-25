@@ -31,7 +31,10 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
 
       if (existing != null) {
         String op = existing.operation;
-        if (op == 'create' && item.operation == 'update') {
+        if (op == 'create' && item.operation == 'delete') {
+          await (_db.delete(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id))).go();
+          return const Success(null);
+        } else if (op == 'create' && item.operation == 'update') {
           op = 'create';
         } else {
           op = item.operation; // If item is delete, it becomes delete. 

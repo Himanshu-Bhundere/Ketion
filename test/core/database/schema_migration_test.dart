@@ -55,7 +55,7 @@ void main() {
     
     final row = attachmentsData.first;
     expect(row.read<String>('id'), 'uuid-1');
-    expect(row.read<String>('file_name'), 'test.png');
+    expect(row.read<String>('block_id'), 'migrated_from_v10');
     expect(row.read<int>('file_size'), 1024);
     expect(row.read<String>('mime_type'), 'image/png');
     

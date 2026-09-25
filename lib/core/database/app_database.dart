@@ -353,8 +353,8 @@ class AppDatabase extends _$AppDatabase {
           
           // Copy existing data. We explicitly list columns that existed in v10 and map them to v11.
           await customStatement('''
-            INSERT INTO attachments (id, file_name, file_size, mime_type, remote_url, local_path, created_at, updated_at, deleted)
-            SELECT id, file_name, file_size, mime_type, remote_url, local_path, created_at, updated_at, deleted
+            INSERT INTO attachments (id, block_id, file_size, mime_type, local_path, created_at, updated_at, deleted)
+            SELECT id, 'migrated_from_v10', file_size, mime_type, local_path, created_at, updated_at, deleted
             FROM attachments_old
           ''');
           

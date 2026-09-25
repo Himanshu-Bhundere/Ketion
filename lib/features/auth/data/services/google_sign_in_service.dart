@@ -2,11 +2,13 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ketion/core/errors/failures.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/auth/domain/services/auth_service.dart';
-import 'package:ketion/core/security/secure_token_storage.dart';
+import 'package:ketion/features/auth/domain/repositories/auth_repository.dart';
 
 class GoogleSignInService implements AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final SecureTokenStorage _tokenStorage = SecureTokenStorage();
+  final AuthRepository _authRepository;
+
+  GoogleSignInService(this._authRepository);
 
   @override
   Future<Result<String>> signIn(List<String> scopes) async {
@@ -25,7 +27,7 @@ class GoogleSignInService implements AuthService {
       }
 
       // Store the token securely
-      await _tokenStorage.saveTokens(accessToken: accessToken);
+      await _authRepository.saveAccessToken(accessToken);
 
       return Success(accessToken);
     } catch (e) {
@@ -36,7 +38,7 @@ class GoogleSignInService implements AuthService {
   @override
   Future<Result<String>> getAccessToken(List<String> scopes) async {
     try {
-      final storedTokenResult = await _tokenStorage.getAccessToken();
+      final storedTokenResult = await _authRepository.getAccessToken();
       final storedToken = storedTokenResult.valueOrNull;
       if (storedToken != null) {
         // We have a stored token. In a real app we might validate expiry here.
@@ -63,7 +65,7 @@ class GoogleSignInService implements AuthService {
       }
 
       // Store the token securely
-      await _tokenStorage.saveTokens(accessToken: accessToken);
+      await _authRepository.saveAccessToken(accessToken);
 
       return Success(accessToken);
     } catch (e) {
@@ -75,7 +77,7 @@ class GoogleSignInService implements AuthService {
   Future<Result<void>> signOut() async {
     try {
       await _googleSignIn.signOut();
-      await _tokenStorage.clearTokens();
+      await _authRepository.clearTokens();
       return const Success(null);
     } catch (e) {
       return Error(UnknownFailure('Sign out failed: $e'));
@@ -84,8 +86,9 @@ class GoogleSignInService implements AuthService {
 
   @override
   Future<bool> isSignedIn() async {
-    final hasStoredToken = (await _tokenStorage.getAccessToken()) is Success && 
-                           (await _tokenStorage.getAccessToken() as Success).value != null;
+    final storedTokenResult = await _authRepository.getAccessToken();
+    final hasStoredToken = storedTokenResult is Success && 
+                           storedTokenResult.value != null;
                            
     return hasStoredToken || _googleSignIn.currentUser != null ||
         await _googleSignIn.signInSilently() != null;

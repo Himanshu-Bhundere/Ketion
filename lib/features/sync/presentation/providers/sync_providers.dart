@@ -20,7 +20,9 @@ import 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
 
 export 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
+export 'package:ketion/features/sync/presentation/controllers/sync_controller.dart';
 import 'package:ketion/features/media/data/services/attachment_sync_service_impl.dart';
+
 
 final syncProviderInterfaceProvider = Provider<SyncProvider>((ref) {
   return GoogleDriveSyncProvider();

@@ -165,7 +165,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               await _db.transaction(() async {
                 for (final item in claimedItems) {
                   await _queueRepository.updateStatus(
-                      item.id, SyncQueueItemStatus.completed);
+                      item.id, SyncQueueItemStatus.completed,);
                 }
               });
               // Cleanup completed items
@@ -217,8 +217,9 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         do {
           final historyRes =
               await _syncProvider.downloadHistoricalBatches(historyCursor);
-          if (historyRes is Error<SyncDownloadResult>)
+          if (historyRes is Error<SyncDownloadResult>) {
             return Error(historyRes.failure);
+          }
 
           final historyResult =
               (historyRes as Success<SyncDownloadResult>).value;
@@ -226,8 +227,9 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
           final processResult =
               await _processDownloadedChanges(changes, syncState);
-          if (processResult is Error<void>)
+          if (processResult is Error<void>) {
             return Error(processResult.failure);
+          }
 
           historyCursor = historyResult.nextCursor;
         } while (historyCursor != null);
@@ -247,8 +249,9 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
         final processResult =
             await _processDownloadedChanges(changes, syncState);
-        if (processResult is Error<void>)
+        if (processResult is Error<void>) {
           return Error(processResult.failure);
+        }
 
         String? newCursor = downloadResult.nextCursor ?? currentCursor;
         hasMorePages = downloadResult.hasMore;
@@ -267,7 +270,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       // 6. Cleanup old tombstones
       final settings = await _settingsRepository.getSettings();
       await _db.cleanupTombstones(
-          retentionDays: settings.tombstoneRetentionDays);
+          retentionDays: settings.tombstoneRetentionDays,);
 
       return const Success(null);
     } finally {
@@ -328,7 +331,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
               if (resolution == ConflictResolution.applyRemote) {
                 await _entityApplier.applyResolvedEntity(
-                    table, entityId, payload);
+                    table, entityId, payload,);
               }
             }
           }
@@ -376,7 +379,7 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
             if (resolution == ConflictResolution.applyRemote) {
               await _entityApplier.applyResolvedEntity(
-                  table, entityId, payload);
+                  table, entityId, payload,);
             }
           }
         });

@@ -61,6 +61,7 @@ dependencies:
   emoji_picker_flutter: ^4.5.3
   url_launcher: ^6.3.0
   flutter_timezone: ^5.1.0
+  platform: ^3.1.6
 
 dev_dependencies:
   flutter_test:

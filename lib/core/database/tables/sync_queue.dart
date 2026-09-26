@@ -10,6 +10,9 @@ class SyncQueue extends Table {
       text()(); // 'create', 'update', 'delete', 'restore'
   TextColumn get payload =>
       text().nullable()(); // Optional JSON payload for the change
+  TextColumn get batchId => text().nullable()();
+  IntColumn get version => integer().nullable()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get status => text().withDefault(
         const Constant(

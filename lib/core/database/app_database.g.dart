@@ -4133,6 +4133,24 @@ class $SyncQueueTable extends SyncQueue
   late final GeneratedColumn<String> payload = GeneratedColumn<String>(
       'payload', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _batchIdMeta =
+      const VerificationMeta('batchId');
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+      'batch_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+      'version', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -4187,6 +4205,9 @@ class $SyncQueueTable extends SyncQueue
         entityId,
         operation,
         payload,
+        batchId,
+        version,
+        updatedAt,
         createdAt,
         status,
         attemptCount,
@@ -4233,6 +4254,18 @@ class $SyncQueueTable extends SyncQueue
     if (data.containsKey('payload')) {
       context.handle(_payloadMeta,
           payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
+    }
+    if (data.containsKey('batch_id')) {
+      context.handle(_batchIdMeta,
+          batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta));
+    }
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -4289,6 +4322,12 @@ class $SyncQueueTable extends SyncQueue
           .read(DriftSqlType.string, data['${effectivePrefix}operation'])!,
       payload: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}payload']),
+      batchId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_id']),
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       status: attachedDatabase.typeMapping
@@ -4318,6 +4357,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final String entityId;
   final String operation;
   final String? payload;
+  final String? batchId;
+  final int? version;
+  final DateTime? updatedAt;
   final DateTime createdAt;
   final String status;
   final int attemptCount;
@@ -4331,6 +4373,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       required this.entityId,
       required this.operation,
       this.payload,
+      this.batchId,
+      this.version,
+      this.updatedAt,
       required this.createdAt,
       required this.status,
       required this.attemptCount,
@@ -4347,6 +4392,15 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     map['operation'] = Variable<String>(operation);
     if (!nullToAbsent || payload != null) {
       map['payload'] = Variable<String>(payload);
+    }
+    if (!nullToAbsent || batchId != null) {
+      map['batch_id'] = Variable<String>(batchId);
+    }
+    if (!nullToAbsent || version != null) {
+      map['version'] = Variable<int>(version);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['status'] = Variable<String>(status);
@@ -4375,6 +4429,15 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       payload: payload == null && nullToAbsent
           ? const Value.absent()
           : Value(payload),
+      batchId: batchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchId),
+      version: version == null && nullToAbsent
+          ? const Value.absent()
+          : Value(version),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
       createdAt: Value(createdAt),
       status: Value(status),
       attemptCount: Value(attemptCount),
@@ -4402,6 +4465,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       entityId: serializer.fromJson<String>(json['entityId']),
       operation: serializer.fromJson<String>(json['operation']),
       payload: serializer.fromJson<String?>(json['payload']),
+      batchId: serializer.fromJson<String?>(json['batchId']),
+      version: serializer.fromJson<int?>(json['version']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       status: serializer.fromJson<String>(json['status']),
       attemptCount: serializer.fromJson<int>(json['attemptCount']),
@@ -4420,6 +4486,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       'entityId': serializer.toJson<String>(entityId),
       'operation': serializer.toJson<String>(operation),
       'payload': serializer.toJson<String?>(payload),
+      'batchId': serializer.toJson<String?>(batchId),
+      'version': serializer.toJson<int?>(version),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'status': serializer.toJson<String>(status),
       'attemptCount': serializer.toJson<int>(attemptCount),
@@ -4436,6 +4505,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           String? entityId,
           String? operation,
           Value<String?> payload = const Value.absent(),
+          Value<String?> batchId = const Value.absent(),
+          Value<int?> version = const Value.absent(),
+          Value<DateTime?> updatedAt = const Value.absent(),
           DateTime? createdAt,
           String? status,
           int? attemptCount,
@@ -4449,6 +4521,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
         entityId: entityId ?? this.entityId,
         operation: operation ?? this.operation,
         payload: payload.present ? payload.value : this.payload,
+        batchId: batchId.present ? batchId.value : this.batchId,
+        version: version.present ? version.value : this.version,
+        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
         createdAt: createdAt ?? this.createdAt,
         status: status ?? this.status,
         attemptCount: attemptCount ?? this.attemptCount,
@@ -4466,6 +4541,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       operation: data.operation.present ? data.operation.value : this.operation,
       payload: data.payload.present ? data.payload.value : this.payload,
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       status: data.status.present ? data.status.value : this.status,
       attemptCount: data.attemptCount.present
@@ -4490,6 +4568,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
+          ..write('batchId: $batchId, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('status: $status, ')
           ..write('attemptCount: $attemptCount, ')
@@ -4508,6 +4589,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       entityId,
       operation,
       payload,
+      batchId,
+      version,
+      updatedAt,
       createdAt,
       status,
       attemptCount,
@@ -4524,6 +4608,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
           other.entityId == this.entityId &&
           other.operation == this.operation &&
           other.payload == this.payload &&
+          other.batchId == this.batchId &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt &&
           other.createdAt == this.createdAt &&
           other.status == this.status &&
           other.attemptCount == this.attemptCount &&
@@ -4539,6 +4626,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<String> entityId;
   final Value<String> operation;
   final Value<String?> payload;
+  final Value<String?> batchId;
+  final Value<int?> version;
+  final Value<DateTime?> updatedAt;
   final Value<DateTime> createdAt;
   final Value<String> status;
   final Value<int> attemptCount;
@@ -4553,6 +4643,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     this.entityId = const Value.absent(),
     this.operation = const Value.absent(),
     this.payload = const Value.absent(),
+    this.batchId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.status = const Value.absent(),
     this.attemptCount = const Value.absent(),
@@ -4568,6 +4661,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     required String entityId,
     required String operation,
     this.payload = const Value.absent(),
+    this.batchId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.status = const Value.absent(),
     this.attemptCount = const Value.absent(),
@@ -4586,6 +4682,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     Expression<String>? entityId,
     Expression<String>? operation,
     Expression<String>? payload,
+    Expression<String>? batchId,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
     Expression<DateTime>? createdAt,
     Expression<String>? status,
     Expression<int>? attemptCount,
@@ -4601,6 +4700,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       if (entityId != null) 'entity_id': entityId,
       if (operation != null) 'operation': operation,
       if (payload != null) 'payload': payload,
+      if (batchId != null) 'batch_id': batchId,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (status != null) 'status': status,
       if (attemptCount != null) 'attempt_count': attemptCount,
@@ -4618,6 +4720,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       Value<String>? entityId,
       Value<String>? operation,
       Value<String?>? payload,
+      Value<String?>? batchId,
+      Value<int?>? version,
+      Value<DateTime?>? updatedAt,
       Value<DateTime>? createdAt,
       Value<String>? status,
       Value<int>? attemptCount,
@@ -4632,6 +4737,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
       entityId: entityId ?? this.entityId,
       operation: operation ?? this.operation,
       payload: payload ?? this.payload,
+      batchId: batchId ?? this.batchId,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
       attemptCount: attemptCount ?? this.attemptCount,
@@ -4660,6 +4768,15 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     }
     if (payload.present) {
       map['payload'] = Variable<String>(payload.value);
+    }
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -4696,6 +4813,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
+          ..write('batchId: $batchId, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('status: $status, ')
           ..write('attemptCount: $attemptCount, ')
@@ -9354,6 +9474,9 @@ typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   required String entityId,
   required String operation,
   Value<String?> payload,
+  Value<String?> batchId,
+  Value<int?> version,
+  Value<DateTime?> updatedAt,
   Value<DateTime> createdAt,
   Value<String> status,
   Value<int> attemptCount,
@@ -9369,6 +9492,9 @@ typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<String> entityId,
   Value<String> operation,
   Value<String?> payload,
+  Value<String?> batchId,
+  Value<int?> version,
+  Value<DateTime?> updatedAt,
   Value<DateTime> createdAt,
   Value<String> status,
   Value<int> attemptCount,
@@ -9402,6 +9528,15 @@ class $$SyncQueueTableFilterComposer
 
   ColumnFilters<String> get payload => $composableBuilder(
       column: $table.payload, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchId => $composableBuilder(
+      column: $table.batchId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -9448,6 +9583,15 @@ class $$SyncQueueTableOrderingComposer
 
   ColumnOrderings<String> get payload => $composableBuilder(
       column: $table.payload, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchId => $composableBuilder(
+      column: $table.batchId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -9496,6 +9640,15 @@ class $$SyncQueueTableAnnotationComposer
 
   GeneratedColumn<String> get payload =>
       $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<String> get batchId =>
+      $composableBuilder(column: $table.batchId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -9550,6 +9703,9 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             Value<String> entityId = const Value.absent(),
             Value<String> operation = const Value.absent(),
             Value<String?> payload = const Value.absent(),
+            Value<String?> batchId = const Value.absent(),
+            Value<int?> version = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<int> attemptCount = const Value.absent(),
@@ -9565,6 +9721,9 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             entityId: entityId,
             operation: operation,
             payload: payload,
+            batchId: batchId,
+            version: version,
+            updatedAt: updatedAt,
             createdAt: createdAt,
             status: status,
             attemptCount: attemptCount,
@@ -9580,6 +9739,9 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             required String entityId,
             required String operation,
             Value<String?> payload = const Value.absent(),
+            Value<String?> batchId = const Value.absent(),
+            Value<int?> version = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<int> attemptCount = const Value.absent(),
@@ -9595,6 +9757,9 @@ class $$SyncQueueTableTableManager extends RootTableManager<
             entityId: entityId,
             operation: operation,
             payload: payload,
+            batchId: batchId,
+            version: version,
+            updatedAt: updatedAt,
             createdAt: createdAt,
             status: status,
             attemptCount: attemptCount,

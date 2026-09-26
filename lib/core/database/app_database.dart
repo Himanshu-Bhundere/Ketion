@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration {
@@ -127,10 +127,14 @@ class AppDatabase extends _$AppDatabase {
       },
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
-          // In a real app we'd alter table. For early dev we can just drop and recreate it
-          // (or use m.alterTable if possible). To be safe, we'll recreate attachments since it wasn't populated yet.
-          await m.deleteTable(attachments.actualTableName);
+          await customStatement(
+              'ALTER TABLE attachments RENAME TO attachments_v1');
           await m.createTable(attachments);
+          await customStatement('''
+            INSERT INTO attachments (id, mime_type, file_size)
+            SELECT id, '', 0 FROM attachments_v1
+          ''');
+          await customStatement('DROP TABLE IF EXISTS attachments_v1');
         }
         if (from < 3) {
           await m.createTable(syncQueue);
@@ -153,10 +157,14 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(reminders, reminders.deleted);
         }
         if (from < 5) {
-          // Schema changed drastically for attachments in Phase 2A.
-          // Drop and recreate since previous attachments weren't populated or used.
-          await m.deleteTable(attachments.actualTableName);
+          await customStatement(
+              'ALTER TABLE attachments RENAME TO attachments_v4');
           await m.createTable(attachments);
+          await customStatement('''
+            INSERT INTO attachments (id, mime_type, file_size)
+            SELECT id, mime_type, file_size FROM attachments_v4
+          ''');
+          await customStatement('DROP TABLE IF EXISTS attachments_v4');
         }
         if (from < 6) {
           // Drop old search structure
@@ -322,7 +330,7 @@ class AppDatabase extends _$AppDatabase {
 
           // Clear out the search_fts index and rebuild it fully clean
           await customStatement('DELETE FROM search_fts');
-          
+
           await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
             SELECT id, id, 'page', title FROM pages WHERE deleted = 0;
@@ -334,13 +342,17 @@ class AppDatabase extends _$AppDatabase {
           ''');
         }
         if (from < 9) {
-          // In previous versions, sync_queue and sync_states were added in v3 but 
+          // In previous versions, sync_queue and sync_states were added in v3 but
           // might have been missed in some environments. Deterministically verify existence:
-          final queueExists = await customSelect("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_queue';").get();
+          final queueExists = await customSelect(
+                  "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_queue';")
+              .get();
           if (queueExists.isEmpty) {
             await m.createTable(syncQueue);
           }
-          final statesExists = await customSelect("SELECT name FROM sqlite_master WHERE type='table' AND name='sync_states';").get();
+          final statesExists = await customSelect(
+                  "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_states';")
+              .get();
           if (statesExists.isEmpty) {
             await m.createTable(syncStates);
           }
@@ -348,24 +360,31 @@ class AppDatabase extends _$AppDatabase {
         if (from < 11) {
           // Phase 2: Schema changed significantly for attachments.
           // Create new table, copy data, drop old table to be safe
-          await customStatement('ALTER TABLE attachments RENAME TO attachments_old');
+          await customStatement(
+              'ALTER TABLE attachments RENAME TO attachments_old');
           await m.createTable(attachments);
-          
+
           // Copy existing data. We explicitly list columns that existed in v10 and map them to v11.
           await customStatement('''
             INSERT INTO attachments (id, block_id, file_size, mime_type, local_path, created_at, updated_at, deleted)
-            SELECT id, 'migrated_from_v10', file_size, mime_type, local_path, created_at, updated_at, deleted
+            SELECT id, '', file_size, mime_type, local_path, created_at, updated_at, deleted
             FROM attachments_old
           ''');
-          
+
           await customStatement('DROP TABLE IF EXISTS attachments_old');
         }
         if (from < 12) {
           // Add processed_batches table
           await m.createTable(processedBatches);
-          
+
           // Add leaseUntil column to syncQueue
           await m.addColumn(syncQueue, syncQueue.leaseUntil);
+        }
+        if (from < 13) {
+          // Add batchId, version, updatedAt to syncQueue for Phase A
+          await m.addColumn(syncQueue, syncQueue.batchId);
+          await m.addColumn(syncQueue, syncQueue.version);
+          await m.addColumn(syncQueue, syncQueue.updatedAt);
         }
       },
       beforeOpen: (details) async {
@@ -393,17 +412,10 @@ class AppDatabase extends _$AppDatabase {
 
   /// Purge tombstones (deleted records) older than the specified retention period.
   Future<void> cleanupTombstones({int retentionDays = 30}) async {
-    // Note: cleanup only when updated_at + retention_window < now
-    final threshold = DateTime.now().toUtc().subtract(Duration(days: retentionDays));
-
-    await transaction(() async {
-      await (delete(pages)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-      await (delete(blocks)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-      await (delete(tags)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-      await (delete(collections)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-      await (delete(reminders)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-      await (delete(attachments)..where((t) => t.deleted.equals(true) & t.updatedAt.isSmallerThanValue(threshold))).go();
-    });
+    // Disabled (Phase A.5: Tombstone Safety)
+    // Synchronizable entity tombstones are retained indefinitely unless a future
+    // synchronization protocol introduces a safe global acknowledgement/watermark mechanism.
+    return;
   }
 }
 

@@ -24,7 +24,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     // 2. Insert blocks
     await database.into(database.blocks).insert(
           BlocksCompanion.insert(
@@ -37,7 +37,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     await database.into(database.blocks).insert(
           BlocksCompanion.insert(
             id: 'block2',
@@ -54,16 +54,20 @@ void main() {
     // Verify blocks exist
     var blocks = await database.select(database.blocks).get();
     expect(blocks.length, 2);
-    
+
     // 3. Delete page
-    await (database.delete(database.pages)..where((tbl) => tbl.id.equals('page1'))).go();
-    
+    await (database.delete(database.pages)
+          ..where((tbl) => tbl.id.equals('page1')))
+        .go();
+
     // Verify blocks deleted via CASCADE
     blocks = await database.select(database.blocks).get();
     expect(blocks.length, 0);
   });
-  
-  test('Hierarchical Block Integrity: Verify deleting a parent Block cascades to child Blocks', () async {
+
+  test(
+      'Hierarchical Block Integrity: Verify deleting a parent Block cascades to child Blocks',
+      () async {
     await database.into(database.pages).insert(
           PagesCompanion.insert(
             id: 'page1',
@@ -72,7 +76,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     await database.into(database.blocks).insert(
           BlocksCompanion.insert(
             id: 'block1',
@@ -84,7 +88,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     await database.into(database.blocks).insert(
           BlocksCompanion.insert(
             id: 'block2',
@@ -99,8 +103,10 @@ void main() {
         );
 
     // 3. Delete parent block
-    await (database.delete(database.blocks)..where((tbl) => tbl.id.equals('block1'))).go();
-    
+    await (database.delete(database.blocks)
+          ..where((tbl) => tbl.id.equals('block1')))
+        .go();
+
     // Verify child block deleted via CASCADE
     var blocks = await database.select(database.blocks).get();
     expect(blocks.length, 0);

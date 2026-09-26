@@ -7,10 +7,11 @@ import 'package:ketion/core/bootstrap/background_bootstrap.dart';
 class AppBootstrap {
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
-    
+
     EnvConfig.init(environment: 'dev', isProduction: false);
-    appLogger.i('Starting Ketion App in ${EnvConfig.instance.environment} environment.');
-    
+    appLogger.i(
+        'Starting Ketion App in ${EnvConfig.instance.environment} environment.');
+
     await WidgetBootstrap.initialize();
     await BackgroundBootstrap.initialize();
   }

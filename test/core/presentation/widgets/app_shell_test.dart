@@ -21,37 +21,40 @@ void main() {
     );
   }
 
-  testWidgets('AppShell renders MobileNavigation on compact screens', (tester) async {
+  testWidgets('AppShell renders MobileNavigation on compact screens',
+      (tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestApp(400));
     await tester.pump(const Duration(milliseconds: 100));
-    
+
     expect(find.byType(MobileNavigation), findsOneWidget);
     expect(find.byType(TabletWorkspace), findsNothing);
     expect(find.byType(DesktopWorkspace), findsNothing);
   });
 
-  testWidgets('AppShell renders TabletWorkspace on medium screens', (tester) async {
+  testWidgets('AppShell renders TabletWorkspace on medium screens',
+      (tester) async {
     tester.view.physicalSize = const Size(900, 800);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestApp(900));
     await tester.pump(const Duration(milliseconds: 100));
-    
+
     expect(find.byType(MobileNavigation), findsNothing);
     expect(find.byType(TabletWorkspace), findsOneWidget);
     expect(find.byType(DesktopWorkspace), findsNothing);
   });
 
-  testWidgets('AppShell renders DesktopWorkspace on expanded screens', (tester) async {
+  testWidgets('AppShell renders DesktopWorkspace on expanded screens',
+      (tester) async {
     tester.view.physicalSize = const Size(1200, 800);
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(buildTestApp(1200));
     await tester.pump(const Duration(milliseconds: 100));
-    
+
     expect(find.byType(MobileNavigation), findsNothing);
     expect(find.byType(TabletWorkspace), findsNothing);
     expect(find.byType(DesktopWorkspace), findsOneWidget);

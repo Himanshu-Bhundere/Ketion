@@ -24,7 +24,7 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     // 2. Insert a block for the page
     await database.into(database.blocks).insert(
           BlocksCompanion.insert(
@@ -45,31 +45,35 @@ void main() {
       variables: [drift.Variable.withString('important')],
     ).get();
     expect(results.length, 1);
-    
+
     // 4. Soft delete the block
-    await (database.update(database.blocks)..where((tbl) => tbl.id.equals('block1')))
+    await (database.update(database.blocks)
+          ..where((tbl) => tbl.id.equals('block1')))
         .write(const BlocksCompanion(deleted: drift.Value(true)));
-        
+
     // 5. Verify it is removed from FTS
     results = await database.customSelect(
       'SELECT * FROM search_fts WHERE content MATCH ?',
       variables: [drift.Variable.withString('important')],
     ).get();
     expect(results.length, 0);
-    
+
     // 6. Restore the block
-    await (database.update(database.blocks)..where((tbl) => tbl.id.equals('block1')))
+    await (database.update(database.blocks)
+          ..where((tbl) => tbl.id.equals('block1')))
         .write(const BlocksCompanion(deleted: drift.Value(false)));
-        
+
     // 7. Verify it is back in FTS
     results = await database.customSelect(
       'SELECT * FROM search_fts WHERE content MATCH ?',
       variables: [drift.Variable.withString('important')],
     ).get();
     expect(results.length, 1);
-    
+
     // 8. Test physical deletion
-    await (database.delete(database.blocks)..where((tbl) => tbl.id.equals('block1'))).go();
+    await (database.delete(database.blocks)
+          ..where((tbl) => tbl.id.equals('block1')))
+        .go();
     results = await database.customSelect(
       'SELECT * FROM search_fts WHERE content MATCH ?',
       variables: [drift.Variable.withString('important')],

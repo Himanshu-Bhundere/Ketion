@@ -23,7 +23,7 @@ class DeviceIdentity {
 
       final newId = const Uuid().v4();
       await _storage.write(key: _keyDeviceId, value: newId);
-      
+
       _cachedDeviceId = newId;
       return newId;
     } catch (e) {

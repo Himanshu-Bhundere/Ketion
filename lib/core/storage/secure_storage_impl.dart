@@ -4,8 +4,8 @@ import 'secure_storage.dart';
 class SecureStorageImpl implements SecureStorage {
   final FlutterSecureStorage _storage;
 
-  SecureStorageImpl({FlutterSecureStorage? storage}) 
-    : _storage = storage ?? const FlutterSecureStorage();
+  SecureStorageImpl({FlutterSecureStorage? storage})
+      : _storage = storage ?? const FlutterSecureStorage();
 
   @override
   Future<void> write({required String key, required String value}) async {

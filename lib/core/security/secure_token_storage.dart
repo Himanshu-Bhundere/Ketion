@@ -4,7 +4,7 @@ import 'package:ketion/core/errors/failures.dart';
 
 class SecureTokenStorage {
   static const _storage = FlutterSecureStorage();
-  
+
   static const _keyAccessToken = 'google_access_token';
   static const _keyRefreshToken = 'google_refresh_token';
   static const _keyExpiry = 'google_token_expiry';
@@ -16,15 +16,15 @@ class SecureTokenStorage {
   }) async {
     try {
       await _storage.write(key: _keyAccessToken, value: accessToken);
-      
+
       if (refreshToken != null) {
         await _storage.write(key: _keyRefreshToken, value: refreshToken);
       }
-      
+
       if (expiry != null) {
         await _storage.write(key: _keyExpiry, value: expiry.toIso8601String());
       }
-      
+
       return const Success(null);
     } catch (e) {
       return Error(UnknownFailure('Failed to securely store tokens: $e'));
@@ -66,7 +66,8 @@ class SecureTokenStorage {
       await _storage.delete(key: _keyExpiry);
       return const Success(null);
     } catch (e) {
-      return Error(UnknownFailure('Failed to clear securely stored tokens: $e'));
+      return Error(
+          UnknownFailure('Failed to clear securely stored tokens: $e'));
     }
   }
 }

@@ -9,14 +9,17 @@ class NotificationServiceImpl implements NotificationService {
 
   @override
   Future<void> initialize() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings();
-    const settings = InitializationSettings(android: androidSettings, iOS: iosSettings);
+    const settings =
+        InitializationSettings(android: androidSettings, iOS: iosSettings);
     await _notificationsPlugin.initialize(settings: settings);
   }
 
   @override
-  Future<void> showNotification({required int id, required String title, required String body}) async {
+  Future<void> showNotification(
+      {required int id, required String title, required String body}) async {
     const androidDetails = AndroidNotificationDetails(
       'ketion_sync',
       'Synchronization',
@@ -25,7 +28,8 @@ class NotificationServiceImpl implements NotificationService {
       priority: Priority.low,
     );
     const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    const details =
+        NotificationDetails(android: androidDetails, iOS: iosDetails);
 
     await _notificationsPlugin.show(
       id: id,

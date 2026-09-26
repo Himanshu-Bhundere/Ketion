@@ -10,7 +10,7 @@ void main() {
   test('generates and persists a new UUID on first call', () async {
     final id1 = await DeviceIdentity.getDeviceId();
     expect(id1, isNotEmpty);
-    
+
     final id2 = await DeviceIdentity.getDeviceId();
     expect(id1, equals(id2));
   });

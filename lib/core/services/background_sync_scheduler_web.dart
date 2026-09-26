@@ -3,7 +3,7 @@ import 'background_sync_scheduler.dart';
 class WebBackgroundSyncScheduler implements BackgroundSyncScheduler {
   @override
   Future<void> schedulePeriodicSync() async {
-    // Workmanager is not supported on web. 
+    // Workmanager is not supported on web.
     // In Web, background sync is handled by Service Workers or visibility events.
   }
 
@@ -13,4 +13,5 @@ class WebBackgroundSyncScheduler implements BackgroundSyncScheduler {
   }
 }
 
-BackgroundSyncScheduler getBackgroundSyncScheduler() => WebBackgroundSyncScheduler();
+BackgroundSyncScheduler getBackgroundSyncScheduler() =>
+    WebBackgroundSyncScheduler();

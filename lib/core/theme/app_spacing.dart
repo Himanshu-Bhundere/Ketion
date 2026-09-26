@@ -1,5 +1,3 @@
-
-
 /// Canonical spacing tokens as defined in the UI architecture.
 class AppSpacing {
   const AppSpacing._();

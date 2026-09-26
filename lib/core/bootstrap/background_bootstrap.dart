@@ -10,9 +10,9 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     EnvConfig.init(environment: 'dev', isProduction: false);
     final container = ProviderContainer();
-    
+
     final syncScheduler = container.read(syncSchedulerProvider);
-    
+
     try {
       final res = await syncScheduler.performImmediateSync();
       return res is Success;

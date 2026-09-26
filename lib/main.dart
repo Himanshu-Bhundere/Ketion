@@ -33,7 +33,7 @@ class _KetionAppState extends ConsumerState<KetionApp> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(appSettingsProvider);
-    
+
     ThemeMode themeMode = ThemeMode.system;
     settingsAsync.whenData((settings) {
       if (settings.themeMode == 'Light') {
@@ -52,4 +52,3 @@ class _KetionAppState extends ConsumerState<KetionApp> {
     );
   }
 }
-

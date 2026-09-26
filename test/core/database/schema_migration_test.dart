@@ -7,7 +7,7 @@ void main() {
   test('Database upgrades from v10 to v12 and preserves attachments', () async {
     // 1. Create a raw sqlite3 memory database and manually setup v10 schema
     final sqliteDb = sqlite3.openInMemory();
-    
+
     sqliteDb.execute('''
       CREATE TABLE pages (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, is_template INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 1);
       CREATE TABLE blocks (id TEXT NOT NULL PRIMARY KEY, page_id TEXT NOT NULL, data TEXT NOT NULL, block_type TEXT NOT NULL, sort_order INTEGER NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 1);
@@ -45,25 +45,29 @@ void main() {
 
     // 3. Wrap in Drift database to trigger migration
     final driftDb = AppDatabase.forTesting(NativeDatabase.opened(sqliteDb));
-    
+
     // Trigger migration
     await driftDb.customSelect('SELECT 1').get();
-    
+
     // 4. Verify data survived
-    final attachmentsData = await driftDb.customSelect('SELECT * FROM attachments').get();
+    final attachmentsData =
+        await driftDb.customSelect('SELECT * FROM attachments').get();
     expect(attachmentsData.length, 1);
-    
+
     final row = attachmentsData.first;
     expect(row.read<String>('id'), 'uuid-1');
     expect(row.read<String>('block_id'), 'migrated_from_v10');
     expect(row.read<int>('file_size'), 1024);
     expect(row.read<String>('mime_type'), 'image/png');
-    
+
     // 5. Verify v12 schema additions exist
-    final processedBatches = await driftDb.customSelect('SELECT * FROM processed_batches').get();
+    final processedBatches =
+        await driftDb.customSelect('SELECT * FROM processed_batches').get();
     expect(processedBatches, isEmpty);
-    
-    final queueItems = await driftDb.customSelect('SELECT * FROM sync_queue WHERE lease_until IS NOT NULL').get();
+
+    final queueItems = await driftDb
+        .customSelect('SELECT * FROM sync_queue WHERE lease_until IS NOT NULL')
+        .get();
     expect(queueItems, isEmpty);
 
     await driftDb.close();

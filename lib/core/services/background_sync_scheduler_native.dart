@@ -23,4 +23,5 @@ class NativeBackgroundSyncScheduler implements BackgroundSyncScheduler {
   }
 }
 
-BackgroundSyncScheduler getBackgroundSyncScheduler() => NativeBackgroundSyncScheduler();
+BackgroundSyncScheduler getBackgroundSyncScheduler() =>
+    NativeBackgroundSyncScheduler();

@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
 import 'package:ketion/core/errors/failures.dart';
@@ -97,13 +98,18 @@ class GoogleDriveSyncProvider implements SyncProvider {
     }
     try {
       // 1. Check if an attachment with this checksum already exists
-      final q = "'$_attachmentsFolderId' in parents and appProperties has { key='checksum' and value='$checksum' } and trashed = false";
+      final q =
+          "'$_attachmentsFolderId' in parents and appProperties has { key='checksum' and value='$checksum' } and trashed = false";
       final fileList = await _driveApi!.files.list(q: q);
       if (fileList.files != null && fileList.files!.isNotEmpty) {
         return Success(fileList.files!.first.id ?? '');
       }
 
-      final file = File(localPath);
+      if (kIsWeb) {
+        throw UnsupportedError('Local file upload is not supported on the web');
+      }
+
+      final file = io.File(localPath);
       if (!await file.exists()) {
         return const Error(SyncFailure('Local file does not exist'));
       }
@@ -140,7 +146,12 @@ class GoogleDriveSyncProvider implements SyncProvider {
         downloadOptions: drive.DownloadOptions.fullMedia,
       ) as drive.Media;
 
-      final file = File(destinationPath);
+      if (kIsWeb) {
+        throw UnsupportedError(
+            'Local file download is not supported on the web');
+      }
+
+      final file = io.File(destinationPath);
       final sink = file.openWrite();
       await media.stream.pipe(sink);
       await sink.close();
@@ -163,7 +174,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
     }
     try {
       // Idempotency check: see if batch already exists
-      final q = "'$_syncFolderId' in parents and appProperties has { key='batchId' and value='$batchId' } and trashed = false";
+      final q =
+          "'$_syncFolderId' in parents and appProperties has { key='batchId' and value='$batchId' } and trashed = false";
       final fileList = await _driveApi!.files.list(q: q);
       if (fileList.files != null && fileList.files!.isNotEmpty) {
         // Batch already processed successfully
@@ -204,55 +216,59 @@ class GoogleDriveSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(String? cursor) async {
+  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(
+      String? cursor) async {
     if (_driveApi == null || _syncFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
-      final q = "'$_syncFolderId' in parents and name contains 'batch_' and trashed = false";
+      final q =
+          "'$_syncFolderId' in parents and name contains 'batch_' and trashed = false";
       final fileList = await _driveApi!.files.list(
         q: q,
         pageToken: cursor,
         orderBy: 'createdTime',
         $fields: 'nextPageToken, files(id, name, appProperties)',
       );
-      
+
       final results = <Map<String, dynamic>>[];
       if (fileList.files != null) {
-         for (final file in fileList.files!) {
-             final batchId = file.appProperties?['batchId'] ?? file.name?.replaceAll('batch_', '').replaceAll('.json', '');
-             if (file.id != null) {
-                 final drive.Media media = await _driveApi!.files.get(
-                   file.id!,
-                   downloadOptions: drive.DownloadOptions.fullMedia,
-                 ) as drive.Media;
-                 
-                 final contentBytes = await media.stream.fold<List<int>>(
-                   [],
-                   (previous, element) => previous..addAll(element),
-                 );
-                 final contentString = utf8.decode(contentBytes);
-                 final data = jsonDecode(contentString) as Map<String, dynamic>;
-                 final deviceId = data['deviceId'] as String?;
-                 
-                 final changesData = data['changes'] as List<dynamic>? ?? [];
-                 for (final changeItem in changesData) {
-                   if (changeItem is Map<String, dynamic>) {
-                     changeItem['batchId'] = batchId;
-                     if (deviceId != null) {
-                       changeItem['deviceId'] = deviceId;
-                     }
-                     results.add(changeItem);
-                   }
-                 }
-             }
-         }
+        for (final file in fileList.files!) {
+          final batchId = file.appProperties?['batchId'] ??
+              file.name?.replaceAll('batch_', '').replaceAll('.json', '');
+          if (file.id != null) {
+            final drive.Media media = await _driveApi!.files.get(
+              file.id!,
+              downloadOptions: drive.DownloadOptions.fullMedia,
+            ) as drive.Media;
+
+            final contentBytes = await media.stream.fold<List<int>>(
+              [],
+              (previous, element) => previous..addAll(element),
+            );
+            final contentString = utf8.decode(contentBytes);
+            final data = jsonDecode(contentString) as Map<String, dynamic>;
+            final deviceId = data['deviceId'] as String?;
+
+            final changesData = data['changes'] as List<dynamic>? ?? [];
+            for (final changeItem in changesData) {
+              if (changeItem is Map<String, dynamic>) {
+                changeItem['batchId'] = batchId;
+                if (deviceId != null) {
+                  changeItem['deviceId'] = deviceId;
+                }
+                results.add(changeItem);
+              }
+            }
+          }
+        }
       }
-      
+
       String? nextCursor = fileList.nextPageToken;
       bool hasMore = fileList.nextPageToken != null;
 
-      return Success(SyncDownloadResult(changes: results, nextCursor: nextCursor, hasMore: hasMore));
+      return Success(SyncDownloadResult(
+          changes: results, nextCursor: nextCursor, hasMore: hasMore));
     } catch (e) {
       return Error(SyncFailure('Failed to download historical batches: $e'));
     }
@@ -266,7 +282,10 @@ class GoogleDriveSyncProvider implements SyncProvider {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
-      String pageToken = cursor ?? await _driveApi!.changes.getStartPageToken().then((r) => r.startPageToken ?? '');
+      String pageToken = cursor ??
+          await _driveApi!.changes
+              .getStartPageToken()
+              .then((r) => r.startPageToken ?? '');
       if (pageToken.isEmpty) {
         return const Error(SyncFailure('Could not obtain start page token'));
       }
@@ -279,17 +298,21 @@ class GoogleDriveSyncProvider implements SyncProvider {
         includeItemsFromAllDrives: false,
         supportsAllDrives: false,
         includeCorpusRemovals: false,
-        $fields: 'nextPageToken, newStartPageToken, changes(fileId, file(name, parents, trashed, appProperties))',
+        $fields:
+            'nextPageToken, newStartPageToken, changes(fileId, file(name, parents, trashed, appProperties))',
       );
 
       if (changeList.changes != null) {
         for (final change in changeList.changes!) {
           final file = change.file;
           if (file == null || file.trashed == true) continue;
-          
-          if (file.parents != null && file.parents!.contains(_syncFolderId) && (file.name?.startsWith('batch_') ?? false)) {
-            final batchId = file.appProperties?['batchId'] ?? file.name?.replaceAll('batch_', '').replaceAll('.json', '');
-            
+
+          if (file.parents != null &&
+              file.parents!.contains(_syncFolderId) &&
+              (file.name?.startsWith('batch_') ?? false)) {
+            final batchId = file.appProperties?['batchId'] ??
+                file.name?.replaceAll('batch_', '').replaceAll('.json', '');
+
             if (change.fileId != null) {
               final drive.Media media = await _driveApi!.files.get(
                 change.fileId!,
@@ -303,7 +326,7 @@ class GoogleDriveSyncProvider implements SyncProvider {
               final contentString = utf8.decode(contentBytes);
               final data = jsonDecode(contentString) as Map<String, dynamic>;
               final deviceId = data['deviceId'] as String?;
-              
+
               final changesData = data['changes'] as List<dynamic>? ?? [];
               for (final changeItem in changesData) {
                 if (changeItem is Map<String, dynamic>) {
@@ -318,11 +341,13 @@ class GoogleDriveSyncProvider implements SyncProvider {
           }
         }
       }
-      
-      String? nextCursor = changeList.nextPageToken ?? changeList.newStartPageToken;
+
+      String? nextCursor =
+          changeList.nextPageToken ?? changeList.newStartPageToken;
       bool hasMore = changeList.nextPageToken != null;
 
-      return Success(SyncDownloadResult(changes: results, nextCursor: nextCursor, hasMore: hasMore));
+      return Success(SyncDownloadResult(
+          changes: results, nextCursor: nextCursor, hasMore: hasMore));
     } catch (e) {
       return Error(SyncFailure('Failed to download changes: $e'));
     }

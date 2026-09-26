@@ -105,100 +105,86 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       }
 
       // 3. Process local queue items (Upload)
-      final pendingResult = await _queueRepository.getPendingItems();
-      if (pendingResult is Success<List<SyncQueueItem>>) {
-        final items = pendingResult.value;
-        if (items.isNotEmpty) {
-          final leaseUntil =
-              DateTime.now().toUtc().add(const Duration(minutes: 5));
-          final claimedItems = <SyncQueueItem>[];
+      final leaseDuration = const Duration(minutes: 5);
+      final batchResult = await _queueRepository.claimNextBatch(
+          limit: 50, leaseDuration: leaseDuration);
+      if (batchResult is Success<List<SyncQueueItem>>) {
+        final claimedItems = batchResult.value;
+        if (claimedItems.isNotEmpty) {
+          final batchId = claimedItems.first.batchId!;
 
-          for (final item in items) {
-            final claimRes =
-                await _queueRepository.claimItem(item.id, leaseUntil);
-            if (claimRes is Success<bool> && claimRes.value) {
-              // Need to process it with its attemptCount conceptually incremented.
-              // Since the DB row is incremented, we'll increment the local object for the upload loop logic
-              claimedItems
-                  .add(item.copyWith(attemptCount: item.attemptCount + 1));
-            }
-          }
+          final payload = {
+            'batchId': batchId,
+            'deviceId': syncState.deviceId,
+            'schemaVersion': 1,
+            'timestamp': DateTime.now().toUtc().toIso8601String(),
+            'changes': claimedItems.map((e) {
+              var p = e.payload != null ? jsonDecode(e.payload!) : null;
 
-          if (claimedItems.isNotEmpty) {
-            final batchId = const Uuid().v7();
-            final payload = {
-              'batchId': batchId,
-              'deviceId': syncState.deviceId,
-              'schemaVersion': 1,
-              'timestamp': DateTime.now().toUtc().toIso8601String(),
-              'changes': claimedItems.map((e) {
-                var p = e.payload != null ? jsonDecode(e.payload!) : null;
+              int? version;
+              String? updatedAt;
+              if (p is Map<String, dynamic>) {
+                version = p['version'] as int?;
+                updatedAt = p['updatedAt'] as String?;
+              }
 
-                int? version;
-                String? updatedAt;
-                if (p is Map<String, dynamic>) {
-                  version = p['version'] as int?;
-                  updatedAt = p['updatedAt'] as String?;
-                }
+              if (e.entityTable == 'attachments' && p is Map<String, dynamic>) {
+                p.remove('localPath');
+                p.remove('thumbnailPath');
+                p.remove('uploadStatus');
+                p.remove('isPinnedOffline');
+              }
+              return {
+                'id': e.entityId,
+                'table': e.entityTable,
+                'operation': e.operation,
+                if (version != null) 'version': version,
+                if (updatedAt != null) 'updatedAt': updatedAt,
+                'payload': p,
+              };
+            }).toList(),
+          };
 
-                if (e.entityTable == 'attachments' &&
-                    p is Map<String, dynamic>) {
-                  p.remove('localPath');
-                  p.remove('thumbnailPath');
-                  p.remove('uploadStatus');
-                  p.remove('isPinnedOffline');
-                }
-                return {
-                  'id': e.entityId,
-                  'table': e.entityTable,
-                  'operation': e.operation,
-                  if (version != null) 'version': version,
-                  if (updatedAt != null) 'updatedAt': updatedAt,
-                  'payload': p,
-                };
-              }).toList(),
-            };
-
-            final uploadRes =
-                await _syncProvider.uploadChanges(batchId, payload);
-            if (uploadRes is Success<void>) {
-              await _db.transaction(() async {
-                for (final item in claimedItems) {
+          final uploadRes = await _syncProvider.uploadChanges(batchId, payload);
+          if (uploadRes is Success<void>) {
+            await _db.transaction(() async {
+              for (final item in claimedItems) {
+                await _queueRepository.updateStatus(
+                  item.id,
+                  SyncQueueItemStatus.completed,
+                );
+              }
+            });
+            // Cleanup completed items
+            await _queueRepository.clearCompleted();
+          } else if (uploadRes is Error<void>) {
+            // Bounded exponential backoff update
+            await _db.transaction(() async {
+              final now = DateTime.now().toUtc();
+              for (final item in claimedItems) {
+                final nextRetry = item.attemptCount + 1;
+                if (nextRetry > 5) {
                   await _queueRepository.updateStatus(
-                      item.id, SyncQueueItemStatus.completed,);
+                    item.id,
+                    SyncQueueItemStatus.failed,
+                    attemptCount: nextRetry,
+                    lastAttemptAt: now,
+                    lastError: uploadRes.failure.message,
+                  );
+                } else {
+                  // Exponential backoff: 30s, 60s, 120s, 240s...
+                  final backoffSeconds = 30 * (1 << (nextRetry - 1));
+                  await _queueRepository.updateStatus(
+                    item.id,
+                    SyncQueueItemStatus.waiting,
+                    attemptCount: nextRetry,
+                    lastAttemptAt: now,
+                    nextRetryAt: now.add(Duration(seconds: backoffSeconds)),
+                    lastError: uploadRes.failure.message,
+                  );
                 }
-              });
-              // Cleanup completed items
-              await _queueRepository.clearCompleted();
-            } else if (uploadRes is Error<void>) {
-              // Bounded exponential backoff update
-              await _db.transaction(() async {
-                final now = DateTime.now().toUtc();
-                for (final item in claimedItems) {
-                  final nextRetry = item.attemptCount + 1;
-                  if (nextRetry > 5) {
-                    await _queueRepository.updateStatus(
-                      item.id,
-                      SyncQueueItemStatus.failed,
-                      attemptCount: nextRetry,
-                      lastAttemptAt: now,
-                      lastError: uploadRes.failure.message,
-                    );
-                  } else {
-                    // Exponential backoff: 30s, 60s, 120s, 240s...
-                    final backoffSeconds = 30 * (1 << (nextRetry - 1));
-                    await _queueRepository.updateStatus(
-                      item.id,
-                      SyncQueueItemStatus.waiting,
-                      attemptCount: nextRetry,
-                      lastAttemptAt: now,
-                      nextRetryAt: now.add(Duration(seconds: backoffSeconds)),
-                      lastError: uploadRes.failure.message,
-                    );
-                  }
-                }
-              });
-            }
+              }
+            });
           }
         }
       }
@@ -270,7 +256,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       // 6. Cleanup old tombstones
       final settings = await _settingsRepository.getSettings();
       await _db.cleanupTombstones(
-          retentionDays: settings.tombstoneRetentionDays,);
+        retentionDays: settings.tombstoneRetentionDays,
+      );
 
       return const Success(null);
     } finally {
@@ -307,32 +294,64 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               .getSingleOrNull();
           if (existingBatch != null) return; // Skip if already processed
 
+          // Strict batch validation
+          for (final change in batchChanges) {
+            final operation = change['operation'];
+            final table = change['table'];
+            final payload = change['payload'];
+            final version = change['version'];
+            final updatedAt = change['updatedAt'];
+            final entityId = change['id'] ?? change['entityId'];
+
+            if (operation == null ||
+                table == null ||
+                payload == null ||
+                version == null ||
+                updatedAt == null ||
+                entityId == null) {
+              throw const FormatException('Invalid protocol schema in batch');
+            }
+            if (operation != 'create' &&
+                operation != 'update' &&
+                operation != 'delete' &&
+                operation != 'restore' &&
+                operation != 'upsert') {
+              throw const FormatException('Invalid operation in batch');
+            }
+
+            if (payload is Map<String, dynamic>) {
+              if (payload['id'] != null && payload['id'] != entityId) {
+                throw const FormatException('Payload id does not match change id');
+              }
+            }
+          }
+
           // Process all changes in the batch
           for (final change in batchChanges) {
             final remoteDeviceId = change['deviceId'] as String?;
-            final table = change['table'] as String?;
-            final entityId = change['id'] as String? ??
-                change['entityId'] as String?; // Fallback for old records
-            final operation = change['operation'] as String?;
-            final payload = change['payload'] as Map<String, dynamic>?;
+            final table = change['table'] as String;
+            final entityId = (change['id'] ?? change['entityId']) as String;
+            final operation = change['operation'] as String;
+            final payload = change['payload'] as Map<String, dynamic>;
+            final version = change['version'] as int;
+            final updatedAt = change['updatedAt'] as String;
 
-            if (table != null &&
-                entityId != null &&
-                operation != null &&
-                payload != null) {
-              final resolution = await _conflictResolver.resolveConflict(
-                table: table,
-                entityId: entityId,
-                operation: operation,
-                remotePayload: payload,
-                localDeviceId: syncState.deviceId,
-                remoteDeviceId: remoteDeviceId,
+            final resolution = await _conflictResolver.resolveConflict(
+              table: table,
+              entityId: entityId,
+              operation: operation,
+              remoteVersion: version as int,
+              remoteUpdatedAtUtc: DateTime.parse(updatedAt as String),
+              localDeviceId: syncState.deviceId,
+              remoteDeviceId: remoteDeviceId ?? 'unknown',
+            );
+
+            if (resolution == ConflictResolution.applyRemote) {
+              await _entityApplier.applyResolvedEntity(
+                table,
+                entityId,
+                payload,
               );
-
-              if (resolution == ConflictResolution.applyRemote) {
-                await _entityApplier.applyResolvedEntity(
-                    table, entityId, payload,);
-              }
             }
           }
 
@@ -368,18 +387,32 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               entityId != null &&
               operation != null &&
               payload != null) {
+            final version =
+                change['version'] as int? ?? payload['version'] as int?;
+            final updatedAtStr = change['updatedAt'] as String? ??
+                payload['updatedAt'] as String?;
+
+            if (version == null || updatedAtStr == null) {
+              throw const FormatException(
+                  'Missing version or updatedAt in unbatched change');
+            }
+
             final resolution = await _conflictResolver.resolveConflict(
               table: table,
               entityId: entityId,
               operation: operation,
-              remotePayload: payload,
+              remoteVersion: version,
+              remoteUpdatedAtUtc: DateTime.parse(updatedAtStr),
               localDeviceId: syncState.deviceId,
-              remoteDeviceId: remoteDeviceId,
+              remoteDeviceId: remoteDeviceId ?? 'unknown',
             );
 
             if (resolution == ConflictResolution.applyRemote) {
               await _entityApplier.applyResolvedEntity(
-                  table, entityId, payload,);
+                table,
+                entityId,
+                payload,
+              );
             }
           }
         });

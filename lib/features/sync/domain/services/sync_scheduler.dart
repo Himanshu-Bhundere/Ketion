@@ -15,7 +15,8 @@ class SyncScheduler with WidgetsBindingObserver {
   static const Duration _syncCooldown = Duration(minutes: 1);
   static const Duration _foregroundInterval = Duration(minutes: 2);
 
-  SyncScheduler(this._syncMutex, this._syncNowUseCase, this._backgroundScheduler) {
+  SyncScheduler(
+      this._syncMutex, this._syncNowUseCase, this._backgroundScheduler) {
     WidgetsBinding.instance.addObserver(this);
     _startForegroundTimer();
   }

@@ -8,7 +8,8 @@ class SyncNowUseCase {
   final WidgetService widgetService;
   final AttachmentSyncService attachmentSyncService;
 
-  SyncNowUseCase(this.repository, this.widgetService, this.attachmentSyncService);
+  SyncNowUseCase(
+      this.repository, this.widgetService, this.attachmentSyncService);
 
   Future<Result<void>> call() async {
     final result = await repository.syncNow();

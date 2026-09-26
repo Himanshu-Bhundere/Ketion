@@ -8,8 +8,9 @@ abstract class SyncQueueRepository {
   /// Enqueue a new sync operation or coalesce with an existing pending one
   Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item);
 
-  /// Get pending sync operations
-  Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50});
+  /// Atomically claim a batch of items for processing and assign them a batchId
+  Future<Result<List<SyncQueueItem>>> claimNextBatch(
+      {int limit = 50, required Duration leaseDuration});
 
   /// Find an existing pending item for an entity
   Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId);
@@ -24,9 +25,6 @@ abstract class SyncQueueRepository {
     DateTime? leaseUntil,
     String? lastError,
   });
-
-  /// Atomically claim a queue item for processing
-  Future<Result<bool>> claimItem(String id, DateTime leaseUntil);
 
   /// Clear completed items
   Future<Result<void>> clearCompleted();

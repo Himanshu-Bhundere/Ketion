@@ -54,14 +54,14 @@ class SyncController extends StateNotifier<SyncUiState> {
       state = state.copyWith(status: SyncUiStatus.authenticationRequired);
       return;
     }
-    
+
     // Default starting state if authenticated
     state = state.copyWith(status: SyncUiStatus.savedLocally);
   }
 
   Future<void> syncNow() async {
     if (state.status == SyncUiStatus.syncing) return;
-    
+
     state = state.copyWith(status: SyncUiStatus.syncing);
 
     final syncNowUseCase = _ref.read(syncNowUseCaseProvider);
@@ -76,7 +76,7 @@ class SyncController extends StateNotifier<SyncUiState> {
     } else if (result is Error) {
       final failure = result.failure;
       appLogger.e('Manual sync failed: ${failure.message}');
-      
+
       // We could differentiate based on failure type, e.g. NetworkFailure -> offline
       state = state.copyWith(
         status: SyncUiStatus.syncFailed,
@@ -86,13 +86,14 @@ class SyncController extends StateNotifier<SyncUiState> {
   }
 
   void markSyncPending() {
-    if (state.status != SyncUiStatus.authenticationRequired && 
+    if (state.status != SyncUiStatus.authenticationRequired &&
         state.status != SyncUiStatus.syncing) {
       state = state.copyWith(status: SyncUiStatus.syncPending);
     }
   }
 }
 
-final syncControllerProvider = StateNotifierProvider<SyncController, SyncUiState>((ref) {
+final syncControllerProvider =
+    StateNotifierProvider<SyncController, SyncUiState>((ref) {
   return SyncController(ref);
 });

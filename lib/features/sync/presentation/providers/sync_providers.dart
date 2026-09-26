@@ -25,7 +25,6 @@ export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
 export 'package:ketion/features/sync/presentation/controllers/sync_controller.dart';
 import 'package:ketion/features/media/data/services/attachment_sync_service_impl.dart';
 
-
 final syncProviderInterfaceProvider = Provider<SyncProvider>((ref) {
   return GoogleDriveSyncProvider();
 });
@@ -74,7 +73,8 @@ final enqueueSyncUseCaseProvider = Provider<EnqueueSyncUseCase>((ref) {
   return EnqueueSyncUseCase(engineRepo);
 });
 
-final backgroundSyncSchedulerProvider = Provider<BackgroundSyncScheduler>((ref) {
+final backgroundSyncSchedulerProvider =
+    Provider<BackgroundSyncScheduler>((ref) {
   return getBackgroundSyncScheduler();
 });
 
@@ -84,4 +84,3 @@ final syncSchedulerProvider = Provider<SyncScheduler>((ref) {
   final scheduler = ref.watch(backgroundSyncSchedulerProvider);
   return SyncScheduler(mutex, useCase, scheduler);
 });
-

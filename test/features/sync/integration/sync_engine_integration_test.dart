@@ -19,9 +19,11 @@ import 'package:drift/native.dart';
 
 class FakeAuthService implements AuthService {
   @override
-  Future<Result<String>> signIn(List<String> scopes) async => const Success('mock_token');
+  Future<Result<String>> signIn(List<String> scopes) async =>
+      const Success('mock_token');
   @override
-  Future<Result<String>> getAccessToken(List<String> scopes) async => const Success('mock_token');
+  Future<Result<String>> getAccessToken(List<String> scopes) async =>
+      const Success('mock_token');
   @override
   Future<Result<void>> signOut() async => const Success(null);
   @override
@@ -38,7 +40,7 @@ class FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<AppSettingsModel> getSettings() async => _settings;
-  
+
   @override
   Future<void> updateSettings(AppSettingsModel settings) async {
     _settings = settings;
@@ -50,13 +52,14 @@ class FakeSyncStateRepository implements SyncStateRepository {
   bool returnError = false;
 
   @override
-  Future<Result<SyncStateEntity?>> getSyncState(String deviceId, String provider) async {
+  Future<Result<SyncStateEntity?>> getSyncState(
+      String deviceId, String provider) async {
     if (returnError) return const Error(StorageFailure('error'));
     _state ??= SyncStateEntity(
-        deviceId: deviceId,
-        provider: provider,
-        lastDriveCursor: null,
-      );
+      deviceId: deviceId,
+      provider: provider,
+      lastDriveCursor: null,
+    );
     return Success(_state);
   }
 
@@ -74,22 +77,25 @@ class FakeSyncProvider implements SyncProvider {
   bool crashOnListChanges = false;
   bool crashOnPushBatch = false;
   int pushBatchCallCount = 0;
-  
+
   @override
   String get providerId => 'fake_provider';
 
   @override
-  Future<Result<void>> initialize(String accessToken) async => const Success(null);
-  
+  Future<Result<void>> initialize(String accessToken) async =>
+      const Success(null);
+
   @override
   Future<Result<SyncDownloadResult>> downloadChanges(String? cursor) async {
     if (crashOnListChanges) {
       throw Exception('Simulated crash during listChanges');
     }
-    return Success(SyncDownloadResult(
-      changes: returnChanges,
-      nextCursor: returnChanges.isEmpty ? null : 'next_cursor',
-    ),);
+    return Success(
+      SyncDownloadResult(
+        changes: returnChanges,
+        nextCursor: returnChanges.isEmpty ? null : 'next_cursor',
+      ),
+    );
   }
 
   @override
@@ -98,12 +104,14 @@ class FakeSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(String? cursor) async {
+  Future<Result<SyncDownloadResult>> downloadHistoricalBatches(
+      String? cursor) async {
     return downloadChanges(cursor);
   }
 
   @override
-  Future<Result<void>> uploadChanges(String batchId, Map<String, dynamic> payload) async {
+  Future<Result<void>> uploadChanges(
+      String batchId, Map<String, dynamic> payload) async {
     pushBatchCallCount++;
     if (crashOnPushBatch) {
       throw Exception('Simulated crash during uploadChanges');
@@ -112,15 +120,17 @@ class FakeSyncProvider implements SyncProvider {
   }
 
   @override
-  Future<Result<String>> uploadAttachment(String localPath, String mimeType, String checksum) async {
+  Future<Result<String>> uploadAttachment(
+      String localPath, String mimeType, String checksum) async {
     return const Success('uploaded_id');
   }
-  
+
   @override
-  Future<Result<void>> downloadAttachment(String remoteFileId, String destinationPath) async {
+  Future<Result<void>> downloadAttachment(
+      String remoteFileId, String destinationPath) async {
     return const Success(null);
   }
-  
+
   @override
   Future<Result<Map<String, dynamic>>> getAvailableStorage() async {
     return const Success({'limit': 1000, 'usage': 500});
@@ -163,26 +173,26 @@ void main() {
     test('Pagination crash recovery', () async {
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-1',
-           'deviceId': 'device-2',
-           'table': 'pages',
-           'entityId': 'page-1',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-1',
-              'title': 'Remote Page',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-1',
+          'deviceId': 'device-2',
+          'table': 'pages',
+          'entityId': 'page-1',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-1',
+            'title': 'Remote Page',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
-      
+
       syncProvider.crashOnListChanges = true;
 
       // First run should crash
       await expectLater(syncEngine.syncNow(), throwsException);
-      
+
       // Let's verify the db is still intact
       final pages = await database.select(database.pages).get();
       expect(pages.isEmpty, isTrue);
@@ -190,42 +200,44 @@ void main() {
       // Now recover
       syncProvider.crashOnListChanges = false;
       final result = await syncEngine.syncNow();
-      
+
       expect(result.isSuccess, isTrue);
       final recoveredPages = await database.select(database.pages).get();
       expect(recoveredPages.length, 1);
       expect(recoveredPages.first.title, 'Remote Page');
-      
+
       // Verify sync state updated
-      final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
+      final stateRes =
+          await syncStateRepo.getSyncState('device-1', 'fake_provider');
       final state = stateRes.fold((s) => s, (e) => throw Exception());
       expect(state!.lastDriveCursor, 'next_cursor');
     });
 
-    test('Crash after remote application does not duplicate processing', () async {
+    test('Crash after remote application does not duplicate processing',
+        () async {
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-2',
-           'deviceId': 'device-2',
-           'table': 'pages',
-           'entityId': 'page-2',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-2',
-              'title': 'Batch 2',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-2',
+          'deviceId': 'device-2',
+          'table': 'pages',
+          'entityId': 'page-2',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-2',
+            'title': 'Batch 2',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
 
       await syncEngine.syncNow();
-      
+
       // Try syncing the exact same batch again (late arriving / duplicate)
       final result = await syncEngine.syncNow();
       expect(result.isSuccess, isTrue);
-      
+
       // Database should still only have 1 page with this ID, and not error out
       final pages = await database.select(database.pages).get();
       expect(pages.length, 1);
@@ -234,27 +246,27 @@ void main() {
     test('Late-arriving batch is ignored if already processed', () async {
       // Simulate processed batch in DB
       await database.into(database.processedBatches).insert(
-        ProcessedBatchesCompanion.insert(
-          batchId: 'batch-late',
-          deviceId: 'device-3',
-          processedAt: Value(DateTime.now()),
-        ),
-      );
+            ProcessedBatchesCompanion.insert(
+              batchId: 'batch-late',
+              deviceId: 'device-3',
+              processedAt: Value(DateTime.now()),
+            ),
+          );
 
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-late',
-           'deviceId': 'device-3',
-           'table': 'pages',
-           'entityId': 'page-late',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-late',
-              'title': 'Late Page',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-late',
+          'deviceId': 'device-3',
+          'table': 'pages',
+          'entityId': 'page-late',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-late',
+            'title': 'Late Page',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
 
@@ -267,32 +279,34 @@ void main() {
 
     test('Clock skew LWW (Last Writer Wins)', () async {
       final now = DateTime.now();
-      
+
       // Insert local page
       await database.into(database.pages).insert(
-        PagesCompanion.insert(
-          id: 'page-skew',
-          title: const Value('Local Title'),
-          version: const Value(2),
-          createdAt: now,
-          updatedAt: now,
-        ),
-      );
+            PagesCompanion.insert(
+              id: 'page-skew',
+              title: const Value('Local Title'),
+              version: const Value(2),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
 
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-skew',
-           'deviceId': 'device-skew',
-           'table': 'pages',
-           'entityId': 'page-skew',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-skew',
-              'title': 'Remote Skew Title',
-              'version': 3,
-              'createdAt': now.subtract(const Duration(minutes: 5)).toIso8601String(),
-              'updatedAt': now.subtract(const Duration(minutes: 5)).toIso8601String(),
-           },
+          'batchId': 'batch-skew',
+          'deviceId': 'device-skew',
+          'table': 'pages',
+          'entityId': 'page-skew',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-skew',
+            'title': 'Remote Skew Title',
+            'version': 3,
+            'createdAt':
+                now.subtract(const Duration(minutes: 5)).toIso8601String(),
+            'updatedAt':
+                now.subtract(const Duration(minutes: 5)).toIso8601String(),
+          },
         }
       ];
 
@@ -301,71 +315,74 @@ void main() {
       // Local should win because local updatedAt is newer, despite remote version being higher.
       final pages = await database.select(database.pages).get();
       expect(pages.length, 1);
-      expect(pages.first.title, 'Local Title'); // Kept local due to newer timestamp
+      expect(pages.first.title,
+          'Local Title'); // Kept local due to newer timestamp
     });
     test('Multi-entity batch is atomic on error', () async {
-      // If a batch contains 2 changes, and the 2nd change crashes (e.g., malformed), 
+      // If a batch contains 2 changes, and the 2nd change crashes (e.g., malformed),
       // the entire batch should be rolled back and NOT marked as processed.
-      
+
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-atomic',
-           'deviceId': 'device-x',
-           'table': 'pages',
-           'entityId': 'page-a',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-a',
-              'title': 'Valid Page',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-atomic',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'entityId': 'page-a',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-a',
+            'title': 'Valid Page',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         },
         {
-           'batchId': 'batch-atomic',
-           'deviceId': 'device-x',
-           'table': 'pages',
-           'entityId': 'page-b',
-           'operation': 'upsert',
-           // Missing required fields will cause a DB constraint exception or parser exception
-           'payload': {
-              'id': 'page-b',
-           },
+          'batchId': 'batch-atomic',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'entityId': 'page-b',
+          'operation': 'upsert',
+          // Missing required fields will cause a DB constraint exception or parser exception
+          'payload': {
+            'id': 'page-b',
+          },
         }
       ];
 
-      // It should catch the error and not crash the whole process, 
+      // It should catch the error and not crash the whole process,
       // but the result might be Failure or it skips and logs.
       // Wait, our SyncEngineRepositoryImpl might catch exceptions inside the transaction and rollback.
       await syncEngine.syncNow();
-      
+
       // Since it's a batch failure, either it's swallowed (skipping batch) or bubbled up.
       // Let's just assert the first entity wasn't saved because of atomicity.
       final pages = await database.select(database.pages).get();
       expect(pages.where((p) => p.id == 'page-a'), isEmpty);
-      
-      final processedBatches = await (database.select(database.processedBatches)..where((t) => t.batchId.equals('batch-atomic'))).get();
+
+      final processedBatches = await (database.select(database.processedBatches)
+            ..where((t) => t.batchId.equals('batch-atomic')))
+          .get();
       expect(processedBatches, isEmpty);
     });
 
     test('Remote application does not requeue locally', () async {
       // When a remote change is applied, it should NOT trigger local SyncQueue insertion.
-      
+
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-norequeue',
-           'deviceId': 'device-y',
-           'table': 'pages',
-           'entityId': 'page-norequeue',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-norequeue',
-              'title': 'Remote Page',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-norequeue',
+          'deviceId': 'device-y',
+          'table': 'pages',
+          'entityId': 'page-norequeue',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-norequeue',
+            'title': 'Remote Page',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
 
@@ -373,49 +390,53 @@ void main() {
 
       final pages = await database.select(database.pages).get();
       expect(pages.where((p) => p.id == 'page-norequeue').length, 1);
-      
+
       // Ensure the sync queue is still empty (it wasn't queued to push back to remote)
       final queue = await database.select(database.syncQueue).get();
       expect(queue.where((q) => q.entityId == 'page-norequeue'), isEmpty);
     });
-    test('Cursor safety: Cursor is not advanced if batch application fails', () async {
+    test('Cursor safety: Cursor is not advanced if batch application fails',
+        () async {
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-cursor-fail',
-           'deviceId': 'device-cursor-fail',
-           'table': 'pages',
-           'entityId': 'page-cursor-fail',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-cursor-fail',
-           }, // Invalid payload will cause failure
+          'batchId': 'batch-cursor-fail',
+          'deviceId': 'device-cursor-fail',
+          'table': 'pages',
+          'entityId': 'page-cursor-fail',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-cursor-fail',
+          }, // Invalid payload will cause failure
         }
       ];
-      
+
       // Should handle exception
       await syncEngine.syncNow();
 
-      final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
+      final stateRes =
+          await syncStateRepo.getSyncState('device-1', 'fake_provider');
       final state = stateRes.fold((s) => s, (e) => throw Exception());
       // Cursor should not be set because batch failed
       expect(state!.lastDriveCursor, isNull);
     });
 
-    test('Bootstrap scenario: Initial sync fetches all remote data and sets cursor', () async {
+    test(
+        'Bootstrap scenario: Initial sync fetches all remote data and sets cursor',
+        () async {
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-boot-1',
-           'deviceId': 'device-boot',
-           'table': 'pages',
-           'entityId': 'page-boot-1',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'page-boot-1',
-              'title': 'Boot Page',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-boot-1',
+          'deviceId': 'device-boot',
+          'table': 'pages',
+          'entityId': 'page-boot-1',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'page-boot-1',
+            'title': 'Boot Page',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
 
@@ -425,7 +446,8 @@ void main() {
       final pages = await database.select(database.pages).get();
       expect(pages.where((p) => p.id == 'page-boot-1'), isNotEmpty);
 
-      final stateRes = await syncStateRepo.getSyncState('device-1', 'fake_provider');
+      final stateRes =
+          await syncStateRepo.getSyncState('device-1', 'fake_provider');
       final state = stateRes.fold((s) => s, (e) => throw Exception());
       expect(state!.lastDriveCursor, 'next_cursor');
     });
@@ -433,48 +455,49 @@ void main() {
     test('Syncs secondary entities (collections, tags, reminders)', () async {
       syncProvider.returnChanges = [
         {
-           'batchId': 'batch-sec-1',
-           'deviceId': 'device-sec',
-           'table': 'collections',
-           'entityId': 'col-1',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'col-1',
-              'name': 'Test Collection',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-sec-1',
+          'deviceId': 'device-sec',
+          'table': 'collections',
+          'entityId': 'col-1',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'col-1',
+            'name': 'Test Collection',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         },
         {
-           'batchId': 'batch-sec-1',
-           'deviceId': 'device-sec',
-           'table': 'tags',
-           'entityId': 'tag-1',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'tag-1',
-              'name': 'Test Tag',
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-sec-1',
+          'deviceId': 'device-sec',
+          'table': 'tags',
+          'entityId': 'tag-1',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'tag-1',
+            'name': 'Test Tag',
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         },
         {
-           'batchId': 'batch-sec-1',
-           'deviceId': 'device-sec',
-           'table': 'reminders',
-           'entityId': 'rem-1',
-           'operation': 'upsert',
-           'payload': {
-              'id': 'rem-1',
-              'pageId': 'page-1',
-              'title': 'Test Reminder',
-              'reminderTime': DateTime.now().add(const Duration(days: 1)).toIso8601String(),
-              'version': 1,
-              'createdAt': DateTime.now().toIso8601String(),
-              'updatedAt': DateTime.now().toIso8601String(),
-           },
+          'batchId': 'batch-sec-1',
+          'deviceId': 'device-sec',
+          'table': 'reminders',
+          'entityId': 'rem-1',
+          'operation': 'upsert',
+          'payload': {
+            'id': 'rem-1',
+            'pageId': 'page-1',
+            'title': 'Test Reminder',
+            'reminderTime':
+                DateTime.now().add(const Duration(days: 1)).toIso8601String(),
+            'version': 1,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          },
         }
       ];
 
@@ -490,5 +513,99 @@ void main() {
       final rems = await database.select(database.reminders).get();
       expect(rems.where((r) => r.id == 'rem-1'), isNotEmpty);
     });
+
+    // Validation Tests (7-21)
+    test('Validation: Missing required protocol fields in change throws exception', () async {
+      final invalidChanges = [
+        // missing operation
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'id': 'page-invalid',
+          'payload': {'id': 'page-invalid'},
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        // missing table
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'operation': 'upsert',
+          'id': 'page-invalid',
+          'payload': {'id': 'page-invalid'},
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        // missing payload
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'operation': 'upsert',
+          'id': 'page-invalid',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        // missing version
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'operation': 'upsert',
+          'id': 'page-invalid',
+          'payload': {'id': 'page-invalid'},
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+        // missing updatedAt
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'operation': 'upsert',
+          'id': 'page-invalid',
+          'payload': {'id': 'page-invalid'},
+          'version': 1,
+        },
+        // invalid operation type
+        {
+          'batchId': 'batch-invalid',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'operation': 'unknown_op',
+          'id': 'page-invalid',
+          'payload': {'id': 'page-invalid'},
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
+        },
+      ];
+
+      for (var invalidChange in invalidChanges) {
+        syncProvider.returnChanges = [invalidChange];
+        final result = await syncEngine.syncNow();
+        // Since error inside batch processing returns an Error wrapped in Result,
+        // we assert it failed.
+        expect(result.isError, isTrue);
+      }
+    });
+
+    test('Validation: payload.id must match change.id', () async {
+      syncProvider.returnChanges = [
+        {
+          'batchId': 'batch-id-mismatch',
+          'deviceId': 'device-x',
+          'table': 'pages',
+          'operation': 'update',
+          'id': 'page-1',
+          'payload': {'id': 'page-something-else'}, // Mismatch!
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
+        }
+      ];
+
+      final result = await syncEngine.syncNow();
+      expect(result.isError, isTrue);
+    });
+
   });
 }

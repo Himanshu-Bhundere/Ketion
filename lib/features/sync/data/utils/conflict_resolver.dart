@@ -5,20 +5,30 @@ enum ConflictResolution {
   applyRemote,
 }
 
+/// The synchronization system uses a deterministic Revision-Wins policy.
+/// `version` is the primary ordering key. `updatedAtUtc` and `deviceId` are deterministic tie-breakers.
 class ConflictResolver {
   final AppDatabase _db;
 
   ConflictResolver(this._db);
 
   static ConflictResolution resolveConflictSync({
-    required int localUpdatedAt, // Using milliseconds since epoch
+    required int localVersion,
+    required int remoteVersion,
+    required DateTime localUpdatedAtUtc,
     required String localDeviceId,
-    required int remoteUpdatedAt,
+    required DateTime remoteUpdatedAtUtc,
     required String remoteDeviceId,
   }) {
-    if (remoteUpdatedAt > localUpdatedAt) {
+    if (remoteVersion > localVersion) {
       return ConflictResolution.applyRemote;
-    } else if (remoteUpdatedAt < localUpdatedAt) {
+    } else if (remoteVersion < localVersion) {
+      return ConflictResolution.keepLocal;
+    }
+
+    if (remoteUpdatedAtUtc.isAfter(localUpdatedAtUtc)) {
+      return ConflictResolution.applyRemote;
+    } else if (remoteUpdatedAtUtc.isBefore(localUpdatedAtUtc)) {
       return ConflictResolution.keepLocal;
     }
 
@@ -29,78 +39,92 @@ class ConflictResolver {
     return ConflictResolution.keepLocal;
   }
 
-  /// Resolves conflicts using Last-Writer-Wins (LWW) strategy.
+  /// Resolves conflicts using Deterministic Revision-Wins strategy.
   /// Returns ConflictResolution.applyRemote if the remote operation should be applied to the local database.
   Future<ConflictResolution> resolveConflict({
     required String table,
     required String entityId,
     required String operation,
-    required Map<String, dynamic>? remotePayload,
+    required int remoteVersion,
+    required DateTime remoteUpdatedAtUtc,
     required String localDeviceId,
-    String? remoteDeviceId,
+    required String remoteDeviceId,
   }) async {
-    DateTime? localUpdatedAt;
+    DateTime? localUpdatedAtUtc;
+    int? localVersion;
 
     switch (table) {
       case 'pages':
-        final result = await (_db.select(_db.pages)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.pages)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       case 'blocks':
-        final result = await (_db.select(_db.blocks)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.blocks)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       case 'attachments':
-        final result = await (_db.select(_db.attachments)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.attachments)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       case 'collections':
-        final result = await (_db.select(_db.collections)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.collections)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       case 'tags':
-        final result = await (_db.select(_db.tags)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.tags)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       case 'reminders':
-        final result = await (_db.select(_db.reminders)..where((t) => t.id.equals(entityId))).getSingleOrNull();
-        if (result != null) localUpdatedAt = result.updatedAt;
+        final result = await (_db.select(_db.reminders)
+              ..where((t) => t.id.equals(entityId)))
+            .getSingleOrNull();
+        if (result != null) {
+          localUpdatedAtUtc = result.updatedAt;
+          localVersion = result.version;
+        }
         break;
       default:
         throw Exception('SyncProtocolFailure: Unknown table $table');
     }
 
-    // Protocol validation A3
-    if (operation == 'delete' && remotePayload == null) {
-      throw Exception('SyncProtocolFailure: Delete operations must include a tombstone payload');
-    }
-
-    // Parse remote updatedAt
-    DateTime? remoteUpdatedAt;
-    if (remotePayload != null) {
-      if (remotePayload['updatedAt'] != null) {
-        remoteUpdatedAt = DateTime.tryParse(remotePayload['updatedAt'] as String);
-      }
-    }
-
-    if (remoteUpdatedAt == null) {
-      throw Exception('SyncProtocolFailure: Entities must include an updatedAt timestamp');
-    }
-
-    // LWW logic using (updated_at, device_id)
-    if (localUpdatedAt == null) {
+    // Deterministic Revision-Wins logic using (version, updatedAtUtc, deviceId)
+    if (localVersion == null || localUpdatedAtUtc == null) {
       // Entity does not exist locally
       return ConflictResolution.applyRemote;
-    } else {
-      if (remoteUpdatedAt.isAfter(localUpdatedAt)) {
-        return ConflictResolution.applyRemote;
-      } else if (remoteUpdatedAt.isAtSameMomentAs(localUpdatedAt)) {
-        if (remoteDeviceId != null && remoteDeviceId.compareTo(localDeviceId) > 0) {
-          return ConflictResolution.applyRemote;
-        }
-      }
     }
 
-    return ConflictResolution.keepLocal;
+    return resolveConflictSync(
+      localVersion: localVersion,
+      remoteVersion: remoteVersion,
+      localUpdatedAtUtc: localUpdatedAtUtc,
+      localDeviceId: localDeviceId,
+      remoteUpdatedAtUtc: remoteUpdatedAtUtc,
+      remoteDeviceId: remoteDeviceId,
+    );
   }
 }

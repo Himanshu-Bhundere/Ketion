@@ -13,6 +13,11 @@ _$SyncQueueItemImpl _$$SyncQueueItemImplFromJson(Map<String, dynamic> json) =>
       entityId: json['entityId'] as String,
       operation: json['operation'] as String,
       payload: json['payload'] as String?,
+      batchId: json['batchId'] as String?,
+      version: (json['version'] as num?)?.toInt(),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       status:
           $enumDecodeNullable(_$SyncQueueItemStatusEnumMap, json['status']) ??
@@ -37,6 +42,9 @@ Map<String, dynamic> _$$SyncQueueItemImplToJson(_$SyncQueueItemImpl instance) =>
       'entityId': instance.entityId,
       'operation': instance.operation,
       'payload': instance.payload,
+      'batchId': instance.batchId,
+      'version': instance.version,
+      'updatedAt': instance.updatedAt?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'status': _$SyncQueueItemStatusEnumMap[instance.status]!,
       'attemptCount': instance.attemptCount,

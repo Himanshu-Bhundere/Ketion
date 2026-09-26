@@ -25,6 +25,9 @@ mixin _$SyncQueueItem {
   String get entityId => throw _privateConstructorUsedError;
   String get operation => throw _privateConstructorUsedError;
   String? get payload => throw _privateConstructorUsedError;
+  String? get batchId => throw _privateConstructorUsedError;
+  int? get version => throw _privateConstructorUsedError;
+  DateTime? get updatedAt => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   SyncQueueItemStatus get status => throw _privateConstructorUsedError;
   int get attemptCount => throw _privateConstructorUsedError;
@@ -51,6 +54,9 @@ abstract class $SyncQueueItemCopyWith<$Res> {
       String entityId,
       String operation,
       String? payload,
+      String? batchId,
+      int? version,
+      DateTime? updatedAt,
       DateTime createdAt,
       SyncQueueItemStatus status,
       int attemptCount,
@@ -78,6 +84,9 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
     Object? entityId = null,
     Object? operation = null,
     Object? payload = freezed,
+    Object? batchId = freezed,
+    Object? version = freezed,
+    Object? updatedAt = freezed,
     Object? createdAt = null,
     Object? status = null,
     Object? attemptCount = null,
@@ -107,6 +116,18 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
           ? _value.payload
           : payload // ignore: cast_nullable_to_non_nullable
               as String?,
+      batchId: freezed == batchId
+          ? _value.batchId
+          : batchId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      version: freezed == version
+          ? _value.version
+          : version // ignore: cast_nullable_to_non_nullable
+              as int?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -153,6 +174,9 @@ abstract class _$$SyncQueueItemImplCopyWith<$Res>
       String entityId,
       String operation,
       String? payload,
+      String? batchId,
+      int? version,
+      DateTime? updatedAt,
       DateTime createdAt,
       SyncQueueItemStatus status,
       int attemptCount,
@@ -178,6 +202,9 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
     Object? entityId = null,
     Object? operation = null,
     Object? payload = freezed,
+    Object? batchId = freezed,
+    Object? version = freezed,
+    Object? updatedAt = freezed,
     Object? createdAt = null,
     Object? status = null,
     Object? attemptCount = null,
@@ -207,6 +234,18 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
           ? _value.payload
           : payload // ignore: cast_nullable_to_non_nullable
               as String?,
+      batchId: freezed == batchId
+          ? _value.batchId
+          : batchId // ignore: cast_nullable_to_non_nullable
+              as String?,
+      version: freezed == version
+          ? _value.version
+          : version // ignore: cast_nullable_to_non_nullable
+              as int?,
+      updatedAt: freezed == updatedAt
+          ? _value.updatedAt
+          : updatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -248,6 +287,9 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       required this.entityId,
       required this.operation,
       this.payload,
+      this.batchId,
+      this.version,
+      this.updatedAt,
       required this.createdAt,
       this.status = SyncQueueItemStatus.pending,
       this.attemptCount = 0,
@@ -270,6 +312,12 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
   @override
   final String? payload;
   @override
+  final String? batchId;
+  @override
+  final int? version;
+  @override
+  final DateTime? updatedAt;
+  @override
   final DateTime createdAt;
   @override
   @JsonKey()
@@ -288,7 +336,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
 
   @override
   String toString() {
-    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, createdAt: $createdAt, status: $status, attemptCount: $attemptCount, lastAttemptAt: $lastAttemptAt, nextRetryAt: $nextRetryAt, leaseUntil: $leaseUntil, lastError: $lastError)';
+    return 'SyncQueueItem(id: $id, entityTable: $entityTable, entityId: $entityId, operation: $operation, payload: $payload, batchId: $batchId, version: $version, updatedAt: $updatedAt, createdAt: $createdAt, status: $status, attemptCount: $attemptCount, lastAttemptAt: $lastAttemptAt, nextRetryAt: $nextRetryAt, leaseUntil: $leaseUntil, lastError: $lastError)';
   }
 
   @override
@@ -304,6 +352,10 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
             (identical(other.operation, operation) ||
                 other.operation == operation) &&
             (identical(other.payload, payload) || other.payload == payload) &&
+            (identical(other.batchId, batchId) || other.batchId == batchId) &&
+            (identical(other.version, version) || other.version == version) &&
+            (identical(other.updatedAt, updatedAt) ||
+                other.updatedAt == updatedAt) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.status, status) || other.status == status) &&
@@ -328,6 +380,9 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       entityId,
       operation,
       payload,
+      batchId,
+      version,
+      updatedAt,
       createdAt,
       status,
       attemptCount,
@@ -357,6 +412,9 @@ abstract class _SyncQueueItem implements SyncQueueItem {
       required final String entityId,
       required final String operation,
       final String? payload,
+      final String? batchId,
+      final int? version,
+      final DateTime? updatedAt,
       required final DateTime createdAt,
       final SyncQueueItemStatus status,
       final int attemptCount,
@@ -378,6 +436,12 @@ abstract class _SyncQueueItem implements SyncQueueItem {
   String get operation;
   @override
   String? get payload;
+  @override
+  String? get batchId;
+  @override
+  int? get version;
+  @override
+  DateTime? get updatedAt;
   @override
   DateTime get createdAt;
   @override

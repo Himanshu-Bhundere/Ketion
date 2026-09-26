@@ -5,6 +5,7 @@ import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/sync/data/models/sync_queue_item_mapper.dart';
 import 'package:ketion/features/sync/domain/entities/sync_queue_item.dart';
 import 'package:ketion/features/sync/domain/repositories/sync_queue_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class SyncQueueRepositoryImpl implements SyncQueueRepository {
   final AppDatabase _db;
@@ -26,21 +27,27 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   @override
   Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item) async {
     try {
-      final existingResult = await findPendingItem(item.entityTable, item.entityId);
-      final existing = (existingResult is Success<SyncQueueItem?>) ? existingResult.value : null;
+      final existingResult =
+          await findPendingItem(item.entityTable, item.entityId);
+      final existing = (existingResult is Success<SyncQueueItem?>)
+          ? existingResult.value
+          : null;
 
       if (existing != null) {
         String op = existing.operation;
         if (op == 'create' && item.operation == 'delete') {
-          await (_db.delete(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id))).go();
+          await (_db.delete(_db.syncQueue)
+                ..where((tbl) => tbl.id.equals(existing.id)))
+              .go();
           return const Success(null);
         } else if (op == 'create' && item.operation == 'update') {
           op = 'create';
         } else {
-          op = item.operation; // If item is delete, it becomes delete. 
+          op = item.operation; // If item is delete, it becomes delete.
         }
 
-        final statement = _db.update(_db.syncQueue)..where((tbl) => tbl.id.equals(existing.id));
+        final statement = _db.update(_db.syncQueue)
+          ..where((tbl) => tbl.id.equals(existing.id));
         await statement.write(
           SyncQueueCompanion(
             operation: Value(op),
@@ -48,6 +55,8 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
             status: Value(SyncQueueItemStatus.pending.name),
             attemptCount: const Value(0),
             nextRetryAt: const Value(null),
+            version: Value(item.version),
+            updatedAt: Value(item.updatedAt),
           ),
         );
         return const Success(null);
@@ -60,15 +69,20 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   }
 
   @override
-  Future<Result<List<SyncQueueItem>>> getPendingItems({int limit = 50}) async {
+  Future<Result<List<SyncQueueItem>>> claimNextBatch(
+      {int limit = 50, required Duration leaseDuration}) async {
     try {
       return await _db.transaction(() async {
         final now = DateTime.now().toUtc();
-        
+        final leaseUntil = now.add(leaseDuration);
+
         // Reclaim stale processing items atomically
         final reclaimStatement = _db.update(_db.syncQueue)
-          ..where((tbl) => tbl.status.equals(SyncQueueItemStatus.processing.name) &
-                           tbl.leaseUntil.isSmallerThanValue(now),);
+          ..where(
+            (tbl) =>
+                tbl.status.equals(SyncQueueItemStatus.processing.name) &
+                tbl.leaseUntil.isSmallerThanValue(now),
+          );
         await reclaimStatement.write(
           SyncQueueCompanion(
             status: Value(SyncQueueItemStatus.pending.name),
@@ -76,34 +90,79 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
           ),
         );
 
-        final query = _db.select(_db.syncQueue)
+        // Try to find an existing batch that is waiting to be retried
+        final waitingQuery = _db.select(_db.syncQueue)
           ..where((tbl) =>
-            (tbl.status.equals(SyncQueueItemStatus.pending.name) |
-             tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
-            (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)),
-          )
-          ..orderBy([
-            (tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
-          ])
-          ..limit(limit);
+              tbl.status.equals(SyncQueueItemStatus.waiting.name) &
+              tbl.batchId.isNotNull() &
+              (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)))
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)])
+          ..limit(1);
 
-        final rows = await query.get();
-        return Success(rows.map(SyncQueueItemMapper.fromData).toList());
+        final firstWaiting = await waitingQuery.getSingleOrNull();
+
+        List<SyncQueueData> items = [];
+        String targetBatchId;
+
+        if (firstWaiting != null) {
+          targetBatchId = firstWaiting.batchId!;
+          // Select all items belonging to this existing batch
+          final batchQuery = _db.select(_db.syncQueue)
+            ..where((tbl) => tbl.batchId.equals(targetBatchId));
+          items = await batchQuery.get();
+        } else {
+          // No existing waiting batch, form a new one from pending items
+          final pendingQuery = _db.select(_db.syncQueue)
+            ..where((tbl) =>
+                tbl.status.equals(SyncQueueItemStatus.pending.name) &
+                tbl.batchId.isNull() &
+                (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)))
+            ..orderBy([(tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)])
+            ..limit(limit);
+          
+          items = await pendingQuery.get();
+          targetBatchId = const Uuid().v7();
+        }
+
+        if (items.isEmpty) {
+          return const Success([]);
+        }
+
+        final ids = items.map((e) => e.id).toList();
+
+        final statement = _db.update(_db.syncQueue)..where((tbl) => tbl.id.isIn(ids));
+        await statement.write(
+          SyncQueueCompanion.custom(
+            status: const Variable('processing'),
+            batchId: Variable(targetBatchId),
+            attemptCount: _db.syncQueue.attemptCount + const Constant(1),
+            leaseUntil: Variable.withDateTime(leaseUntil),
+          ),
+        );
+
+        final updatedQuery = _db.select(_db.syncQueue)
+          ..where((tbl) => tbl.id.isIn(ids));
+        final updatedRows = await updatedQuery.get();
+
+        return Success(updatedRows.map(SyncQueueItemMapper.fromData).toList());
       });
     } catch (e) {
-      return Error(StorageFailure('Failed to fetch pending sync items: $e'));
+      return Error(StorageFailure('Failed to claim next batch: $e'));
     }
   }
 
   @override
-  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId) async {
+  Future<Result<SyncQueueItem?>> findPendingItem(
+      String table, String entityId) async {
     try {
       final query = _db.select(_db.syncQueue)
-        ..where((tbl) =>
-            (tbl.status.equals(SyncQueueItemStatus.pending.name) |
-             tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
-            tbl.entityTable.equals(table) &
-            tbl.entityId.equals(entityId),)
+        ..where(
+          (tbl) =>
+              (tbl.status.equals(SyncQueueItemStatus.pending.name) |
+                  tbl.status.equals(SyncQueueItemStatus.waiting.name)) &
+              tbl.entityTable.equals(table) &
+              tbl.entityId.equals(entityId),
+        )
         ..limit(1);
       final result = await query.getSingleOrNull();
       if (result != null) {
@@ -133,8 +192,9 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
           status: Value(status.name),
           attemptCount:
               attemptCount != null ? Value(attemptCount) : const Value.absent(),
-          lastAttemptAt:
-              lastAttemptAt != null ? Value(lastAttemptAt) : const Value.absent(),
+          lastAttemptAt: lastAttemptAt != null
+              ? Value(lastAttemptAt)
+              : const Value.absent(),
           nextRetryAt:
               nextRetryAt != null ? Value(nextRetryAt) : const Value.absent(),
           leaseUntil:
@@ -146,41 +206,6 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
       return const Success(null);
     } catch (e) {
       return Error(StorageFailure('Failed to update sync item status: $e'));
-    }
-  }
-
-  @override
-  Future<Result<bool>> claimItem(String id, DateTime leaseUntil) async {
-    try {
-      final now = DateTime.now().toUtc();
-      const query = '''
-      UPDATE sync_queue
-      SET status = 'processing',
-          attempt_count = attempt_count + 1,
-          lease_until = ?
-      WHERE id = ? AND (
-          status = 'pending'
-          OR (
-              status = 'waiting'
-              AND (next_retry_at IS NULL OR next_retry_at <= ?)
-          )
-          OR (
-              status = 'processing'
-              AND lease_until < ?
-          )
-      )
-      ''';
-      
-      final affected = await _db.customUpdate(query, variables: [
-        Variable.withDateTime(leaseUntil),
-        Variable.withString(id),
-        Variable.withDateTime(now),
-        Variable.withDateTime(now),
-      ], updates: {_db.syncQueue},);
-      
-      return Success(affected > 0);
-    } catch (e) {
-      return Error(StorageFailure('Failed to claim item: $e'));
     }
   }
 

@@ -1,17 +1,45 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:ketion/core/services/background_sync_scheduler.dart';
 import 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 import 'package:ketion/features/sync/domain/usecases/sync_now_usecase.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/core/utils/logger.dart';
 
-class SyncScheduler {
+class SyncScheduler with WidgetsBindingObserver {
   final SyncMutex _syncMutex;
   final SyncNowUseCase _syncNowUseCase;
   final BackgroundSyncScheduler _backgroundScheduler;
   DateTime? _lastSyncTime;
-  static const Duration _syncCooldown = Duration(minutes: 5);
+  Timer? _foregroundTimer;
+  static const Duration _syncCooldown = Duration(minutes: 1);
+  static const Duration _foregroundInterval = Duration(minutes: 2);
 
-  SyncScheduler(this._syncMutex, this._syncNowUseCase, this._backgroundScheduler);
+  SyncScheduler(this._syncMutex, this._syncNowUseCase, this._backgroundScheduler) {
+    WidgetsBinding.instance.addObserver(this);
+    _startForegroundTimer();
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _foregroundTimer?.cancel();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      appLogger.i('App resumed, triggering sync...');
+      performImmediateSync();
+    }
+  }
+
+  void _startForegroundTimer() {
+    _foregroundTimer?.cancel();
+    _foregroundTimer = Timer.periodic(_foregroundInterval, (_) {
+      appLogger.d('Foreground timer triggered sync');
+      performImmediateSync();
+    });
+  }
 
   /// Schedules the background periodic sync using the platform abstraction.
   Future<void> scheduleBackgroundSync() async {

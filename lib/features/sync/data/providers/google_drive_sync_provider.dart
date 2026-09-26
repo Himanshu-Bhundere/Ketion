@@ -238,11 +238,15 @@ class GoogleDriveSyncProvider implements SyncProvider {
             );
             final contentString = utf8.decode(contentBytes);
             final data = jsonDecode(contentString) as Map<String, dynamic>;
+            final deviceId = data['deviceId'] as String?;
             
             final changes = data['changes'] as List<dynamic>? ?? [];
             for (final change in changes) {
               if (change is Map<String, dynamic>) {
                 change['batchId'] = fileGen.toString();
+                if (deviceId != null) {
+                  change['deviceId'] = deviceId;
+                }
                 results.add(change);
               }
             }

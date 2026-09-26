@@ -320,13 +320,13 @@ class DeleteTableColumnCommand extends EditCommand {
 
 class ReorderTableRowCommand extends EditCommand {
   final String nodeId;
-  final int oldIndex;
-  final int targetIndex;
+  final String draggedRowId;
+  final String targetRowId;
 
   const ReorderTableRowCommand({
     required this.nodeId,
-    required this.oldIndex,
-    required this.targetIndex,
+    required this.draggedRowId,
+    required this.targetRowId,
   });
 
   @override
@@ -339,7 +339,7 @@ class ReorderTableRowCommand extends EditCommand {
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.reorderRow(node.rows, columnCount, oldIndex, targetIndex);
+    final newRows = TableStateTransformer.reorderRowById(node.rows, columnCount, draggedRowId, targetRowId);
 
     document.replaceNodeById(
       node.id,
@@ -358,13 +358,13 @@ class ReorderTableRowCommand extends EditCommand {
 
 class ReorderTableColumnCommand extends EditCommand {
   final String nodeId;
-  final int oldIndex;
-  final int targetIndex;
+  final int draggedColumnIndex;
+  final int targetColumnIndex;
 
   const ReorderTableColumnCommand({
     required this.nodeId,
-    required this.oldIndex,
-    required this.targetIndex,
+    required this.draggedColumnIndex,
+    required this.targetColumnIndex,
   });
 
   @override
@@ -378,7 +378,7 @@ class ReorderTableColumnCommand extends EditCommand {
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
     
-    final newRows = TableStateTransformer.reorderColumn(node.rows, columnCount, oldIndex, targetIndex);
+    final newRows = TableStateTransformer.reorderColumnByIndex(node.rows, columnCount, draggedColumnIndex, targetColumnIndex);
 
     document.replaceNodeById(
       node.id,

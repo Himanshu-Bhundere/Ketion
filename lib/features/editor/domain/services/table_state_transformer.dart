@@ -80,24 +80,36 @@ class TableStateTransformer {
     return updatedRows;
   }
 
-  static List<TableRowData> reorderRow(List<TableRowData> rows, int columnCount, int oldIndex, int targetIndex) {
+  static List<TableRowData> reorderRowById(List<TableRowData> rows, int columnCount, String draggedRowId, String targetRowId) {
     TableStateValidator.validate(rows, columnCount);
-    if (oldIndex < 0 || oldIndex >= rows.length || oldIndex == targetIndex) return rows;
+    
+    int oldIndex = rows.indexWhere((r) => r.id == draggedRowId);
+    if (oldIndex == -1) return rows;
+    
+    if (draggedRowId == targetRowId) return rows;
+
+    int targetIndex = rows.indexWhere((r) => r.id == targetRowId);
+    if (targetIndex == -1) return rows;
+
+    int insertIndex = targetIndex;
 
     final updatedRows = List<TableRowData>.from(rows);
     final row = updatedRows.removeAt(oldIndex);
-    updatedRows.insert(targetIndex, row);
+    updatedRows.insert(insertIndex, row);
+    
     return updatedRows;
   }
 
-  static List<TableRowData> reorderColumn(List<TableRowData> rows, int columnCount, int oldIndex, int targetIndex) {
+  static List<TableRowData> reorderColumnByIndex(List<TableRowData> rows, int columnCount, int draggedColumnIndex, int targetColumnIndex) {
     TableStateValidator.validate(rows, columnCount);
-    if (oldIndex < 0 || oldIndex >= columnCount || oldIndex == targetIndex) return rows;
+    if (draggedColumnIndex < 0 || draggedColumnIndex >= columnCount || draggedColumnIndex == targetColumnIndex) return rows;
+
+    int insertIndex = targetColumnIndex;
 
     final updatedRows = rows.map((row) {
       final updatedCells = List<TableCellData>.from(row.cells);
-      final cell = updatedCells.removeAt(oldIndex);
-      updatedCells.insert(targetIndex, cell);
+      final cell = updatedCells.removeAt(draggedColumnIndex);
+      updatedCells.insert(insertIndex, cell);
       return row.copyWith(cells: updatedCells);
     }).toList();
     

@@ -29,7 +29,7 @@ class PageRepositoryImpl implements PageRepository {
   }
 
   @override
-  Future<Result<void>> createPage(domain.Page page) async {
+  Future<Result<void>> createPage(domain.Page page, {String initialBlockType = 'text'}) async {
     try {
       final now = DateTime.now().toUtc();
       final newPage = page.copyWith(
@@ -37,16 +37,41 @@ class PageRepositoryImpl implements PageRepository {
         createdAt: now,
         updatedAt: now,
       );
-      final initialBlock = block_domain.Block(
-        id: const Uuid().v7(),
-        pageId: newPage.id,
-        type: 'text',
-        position: 0,
-        data: jsonEncode({'runtimeType': 'text', 'spans': <dynamic>[], 'headingLevel': 0}),
-        createdAt: DateTime.now().toUtc(),
-        updatedAt: DateTime.now().toUtc(),
-        version: 1,
-      );
+      
+      late final block_domain.Block initialBlock;
+      if (initialBlockType == 'checklist') {
+        initialBlock = block_domain.Block(
+          id: const Uuid().v7(),
+          pageId: newPage.id,
+          type: 'list',
+          position: 0,
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'spans': <dynamic>[],
+            'listType': 'checklist',
+            'checked': false,
+            'isExpanded': false,
+          }),
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          version: 1,
+        );
+      } else {
+        initialBlock = block_domain.Block(
+          id: const Uuid().v7(),
+          pageId: newPage.id,
+          type: 'text',
+          position: 0,
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': <dynamic>[],
+            'headingLevel': 0,
+          }),
+          createdAt: DateTime.now().toUtc(),
+          updatedAt: DateTime.now().toUtc(),
+          version: 1,
+        );
+      }
 
       await _db.transaction(() async {
         await _db.into(_db.pages).insert(newPage.toCompanion());

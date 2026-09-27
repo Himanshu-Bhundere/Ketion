@@ -96,7 +96,8 @@ class SplitBlockCommand implements EditorCommand {
 
   @override
   Future<void> execute(EditorStateNotifier controller) async {
-    await controller.splitBlockDirectly(updatedOriginalBlock, newBlock, index + 1);
+    await controller.splitBlockDirectly(
+        updatedOriginalBlock, newBlock, index + 1,);
   }
 
   @override
@@ -125,7 +126,8 @@ class MergeBlocksCommand implements EditorCommand {
 
   @override
   Future<void> undo(EditorStateNotifier controller) async {
-    await controller.splitBlockDirectly(previousBlock, currentBlock, currentBlockIndex);
+    await controller.splitBlockDirectly(
+        previousBlock, currentBlock, currentBlockIndex,);
   }
 }
 
@@ -176,8 +178,8 @@ class MoveBlockCommand implements EditorCommand {
   Future<void> execute(EditorStateNotifier controller) async {
     if (!_isExecuted) {
       final result = await controller.moveBlockToIntent(
-        sourceBlockId: blockId, 
-        targetBlockId: targetBlockId, 
+        sourceBlockId: blockId,
+        targetBlockId: targetBlockId,
         intent: intent,
       );
       appliedParentBlockId = result.parentBlockId;
@@ -197,8 +199,8 @@ class MoveBlockCommand implements EditorCommand {
   @override
   Future<void> undo(EditorStateNotifier controller) async {
     await controller.moveBlockToPosition(
-      blockId: blockId, 
-      parentBlockId: originalParentBlockId, 
+      blockId: blockId,
+      parentBlockId: originalParentBlockId,
       position: originalPosition,
     );
   }

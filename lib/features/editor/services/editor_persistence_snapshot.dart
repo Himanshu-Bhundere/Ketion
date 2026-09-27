@@ -51,12 +51,14 @@ class EditorPersistenceSnapshot {
   final String pageId;
   final Map<String, BlockSnapshot> _blocks;
 
-  EditorPersistenceSnapshot(this.pageId, Map<String, BlockSnapshot> initialBlocks) 
-    : _blocks = Map.of(initialBlocks);
+  EditorPersistenceSnapshot(
+      this.pageId, Map<String, BlockSnapshot> initialBlocks,)
+      : _blocks = Map.of(initialBlocks);
 
   BlockSnapshot? getBlock(String blockId) => _blocks[blockId];
-  
-  Iterable<BlockSnapshot> get activeBlocks => _blocks.values.where((b) => !b.deleted);
+
+  Iterable<BlockSnapshot> get activeBlocks =>
+      _blocks.values.where((b) => !b.deleted);
   Iterable<BlockSnapshot> get allBlocks => _blocks.values;
 
   void updateBlock(BlockSnapshot block) {
@@ -70,50 +72,60 @@ class EditorPersistenceSnapshot {
   void applyMutation(EditorPersistenceMutation mutation) {
     // 1. Apply structural changes
     if (mutation is SplitBlockMutation) {
-      updateBlock(BlockSnapshot(
-        blockId: mutation.newBlockId,
-        pageId: mutation.pageId,
-        version: 0, // will be updated by transition
-        parentBlockId: mutation.newParentBlockId,
-        position: mutation.newPosition,
-        type: mutation.newType,
-        createdAt: mutation.createdAt,
-        contentHash: null,
-        deleted: false,
-      ),);
+      updateBlock(
+        BlockSnapshot(
+          blockId: mutation.newBlockId,
+          pageId: mutation.pageId,
+          version: 0, // will be updated by transition
+          parentBlockId: mutation.newParentBlockId,
+          position: mutation.newPosition,
+          type: mutation.newType,
+          createdAt: mutation.createdAt,
+          contentHash: null,
+          deleted: false,
+        ),
+      );
     } else if (mutation is InsertBlockMutation) {
-      updateBlock(BlockSnapshot(
-        blockId: mutation.blockId,
-        pageId: mutation.pageId,
-        version: 0, // will be updated by transition
-        parentBlockId: mutation.parentBlockId,
-        position: mutation.position,
-        type: mutation.type,
-        createdAt: mutation.createdAt,
-        contentHash: null,
-        deleted: false,
-      ),);
+      updateBlock(
+        BlockSnapshot(
+          blockId: mutation.blockId,
+          pageId: mutation.pageId,
+          version: 0, // will be updated by transition
+          parentBlockId: mutation.parentBlockId,
+          position: mutation.position,
+          type: mutation.type,
+          createdAt: mutation.createdAt,
+          contentHash: null,
+          deleted: false,
+        ),
+      );
     } else if (mutation is MoveBlockMutation) {
       final block = getBlock(mutation.blockId);
       if (block != null) {
-        updateBlock(block.copyWith(
-          parentBlockId: mutation.parentBlockId,
-          position: mutation.position,
-        ),);
+        updateBlock(
+          block.copyWith(
+            parentBlockId: mutation.parentBlockId,
+            position: mutation.position,
+          ),
+        );
       }
     } else if (mutation is ChangeBlockTypeMutation) {
       final block = getBlock(mutation.blockId);
       if (block != null) {
-        updateBlock(block.copyWith(
-          type: mutation.newType,
-        ),);
+        updateBlock(
+          block.copyWith(
+            type: mutation.newType,
+          ),
+        );
       }
     } else if (mutation is UpdateBlockMutation) {
       final block = getBlock(mutation.blockId);
       if (block != null) {
-        updateBlock(block.copyWith(
-          contentHash: mutation.contentHash,
-        ),);
+        updateBlock(
+          block.copyWith(
+            contentHash: mutation.contentHash,
+          ),
+        );
       }
     }
 

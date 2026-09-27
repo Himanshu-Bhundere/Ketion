@@ -46,7 +46,8 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
     final pageChanged = widget.page.id != oldWidget.page.id;
     final receivedExternalTitle = widget.page.title != oldWidget.page.title;
     final hasLocalEdit = _controller.text != _lastPersistedTitle || _isSaving;
-    if (pageChanged || (receivedExternalTitle && !_focusNode.hasFocus && !hasLocalEdit)) {
+    if (pageChanged ||
+        (receivedExternalTitle && !_focusNode.hasFocus && !hasLocalEdit)) {
       _lastPersistedTitle = widget.page.title;
       _controller.value = TextEditingValue(
         text: _lastPersistedTitle,
@@ -66,7 +67,8 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
 
   void _onChanged(String _) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () => unawaited(_flushTitle()));
+    _debounce = Timer(
+        const Duration(milliseconds: 500), () => unawaited(_flushTitle()),);
   }
 
   Future<void> _flushTitle() async {
@@ -80,7 +82,9 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
         if (result is Error<void>) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Could not save title. Your edit will be retried.')),
+              const SnackBar(
+                  content:
+                      Text('Could not save title. Your edit will be retried.'),),
             );
             _debounce = Timer(
               const Duration(seconds: 2),

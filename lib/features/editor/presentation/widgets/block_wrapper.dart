@@ -39,7 +39,7 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
     ref
         .read(editorStateProvider(widget.pageId).notifier)
         .handleDropIntent(draggedBlockId, intent);
-    
+
     setState(() {
       _currentDropIntent = null;
     });
@@ -49,9 +49,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
     // Top 25% = before
     // Bottom 25% = after
     // Middle 50% = child, UNLESS x-offset is very negative (unnest)
-    
+
     final relativeY = localPosition.dy / size.height;
-    
+
     // Check for unnest intention (dragged to the far left)
     if (localPosition.dx < -20.0 && widget.depth > 0) {
       return DropIntent.unnest(widget.blockId);
@@ -99,7 +99,7 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
             final renderBox = context.findRenderObject() as RenderBox;
             final localPosition = renderBox.globalToLocal(details.offset);
             final intent = _calculateDropIntent(localPosition, renderBox.size);
-            
+
             if (_currentDropIntent != intent) {
               setState(() {
                 _currentDropIntent = intent;
@@ -119,10 +119,14 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
             }
           },
           builder: (context, candidateData, rejectedData) {
-            final isBefore = _currentDropIntent == DropIntent.before(widget.blockId);
-            final isAfter = _currentDropIntent == DropIntent.after(widget.blockId);
-            final isChild = _currentDropIntent == DropIntent.child(widget.blockId);
-            final isUnnest = _currentDropIntent == DropIntent.unnest(widget.blockId);
+            final isBefore =
+                _currentDropIntent == DropIntent.before(widget.blockId);
+            final isAfter =
+                _currentDropIntent == DropIntent.after(widget.blockId);
+            final isChild =
+                _currentDropIntent == DropIntent.child(widget.blockId);
+            final isUnnest =
+                _currentDropIntent == DropIntent.unnest(widget.blockId);
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,16 +155,19 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                     icon: dragHandle,
                                     onPressed: () {},
                                     padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                    constraints: const BoxConstraints(
+                                        minWidth: 24, minHeight: 24,),
                                   ),
                                 ),
                                 child: IconButton(
                                   icon: dragHandle,
                                   onPressed: () {},
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                  constraints: const BoxConstraints(
+                                      minWidth: 24, minHeight: 24,),
                                 ),
-                                onDragUpdate: (details) => widget.onDragUpdate?.call(details.globalPosition),
+                                onDragUpdate: (details) => widget.onDragUpdate
+                                    ?.call(details.globalPosition),
                                 onDragEnd: (_) => widget.onDragEnd?.call(),
                               )
                             : LongPressDraggable<String>(
@@ -172,16 +179,19 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                     icon: dragHandle,
                                     onPressed: () {},
                                     padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                    constraints: const BoxConstraints(
+                                        minWidth: 24, minHeight: 24,),
                                   ),
                                 ),
                                 child: IconButton(
                                   icon: dragHandle,
                                   onPressed: () {},
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                  constraints: const BoxConstraints(
+                                      minWidth: 24, minHeight: 24,),
                                 ),
-                                onDragUpdate: (details) => widget.onDragUpdate?.call(details.globalPosition),
+                                onDragUpdate: (details) => widget.onDragUpdate
+                                    ?.call(details.globalPosition),
                                 onDragEnd: (_) => widget.onDragEnd?.call(),
                               ),
                       ),
@@ -197,13 +207,15 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                   width: 2.0,
                                 )
                               : isUnnest
-                                ? Border(
-                                    left: BorderSide(
-                                      color: Theme.of(context).colorScheme.secondary,
-                                      width: 4.0,
-                                    ),
-                                  )
-                                : null,
+                                  ? Border(
+                                      left: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
+                                        width: 4.0,
+                                      ),
+                                    )
+                                  : null,
                         ),
                         child: widget.child,
                       ),

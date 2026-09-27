@@ -14,6 +14,9 @@ _$ReminderEntityImpl _$$ReminderEntityImplFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String? ?? '',
       reminderTime: DateTime.parse(json['reminderTime'] as String),
       timezone: json['timezone'] as String? ?? 'UTC',
+      kind: $enumDecodeNullable(_$ReminderKindEnumMap, json['kind'],
+              unknownValue: ReminderKind.reminder) ??
+          ReminderKind.reminder,
       recurrenceRule: json['recurrenceRule'] as String?,
       snoozeUntil: json['snoozeUntil'] == null
           ? null
@@ -34,6 +37,7 @@ Map<String, dynamic> _$$ReminderEntityImplToJson(
       'title': instance.title,
       'reminderTime': instance.reminderTime.toIso8601String(),
       'timezone': instance.timezone,
+      'kind': _$ReminderKindEnumMap[instance.kind]!,
       'recurrenceRule': instance.recurrenceRule,
       'snoozeUntil': instance.snoozeUntil?.toIso8601String(),
       'completed': instance.completed,
@@ -42,3 +46,8 @@ Map<String, dynamic> _$$ReminderEntityImplToJson(
       'updatedAt': instance.updatedAt.toIso8601String(),
       'deleted': instance.deleted,
     };
+
+const _$ReminderKindEnumMap = {
+  ReminderKind.reminder: 'reminder',
+  ReminderKind.alarm: 'alarm',
+};

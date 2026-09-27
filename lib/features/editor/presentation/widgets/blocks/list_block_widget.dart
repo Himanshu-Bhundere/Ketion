@@ -94,7 +94,8 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
       }
     }
     if (event.logicalKey == LogicalKeyboardKey.tab) {
-      final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+      final editor =
+          ref.read(editorStateProvider(widget.block.pageId).notifier);
       if (HardwareKeyboard.instance.isShiftPressed) {
         editor.outdentBlock(widget.block.id);
       } else {
@@ -109,7 +110,8 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
       final selection = _controller.selection;
       if (selection.isValid && selection.start == 0 && selection.end == 0) {
-        final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+        final editor =
+            ref.read(editorStateProvider(widget.block.pageId).notifier);
         editor.focusPreviousBlock(widget.block.id);
         return KeyEventResult.handled;
       }
@@ -118,7 +120,8 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
       final selection = _controller.selection;
       final len = _controller.text.length;
       if (selection.isValid && selection.start == len && selection.end == len) {
-        final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+        final editor =
+            ref.read(editorStateProvider(widget.block.pageId).notifier);
         editor.focusNextBlock(widget.block.id);
         return KeyEventResult.handled;
       }
@@ -203,26 +206,38 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
         onSelected: (_) => _convertToList('numbered'),
       ),
       SlashCommandOption(
-        title: 'Image', subtitle: 'Upload an image', icon: Icons.image,
+        title: 'Image',
+        subtitle: 'Upload an image',
+        icon: Icons.image,
         category: SlashCommandCategory.media,
         onSelected: (_) => _pickImage(),
       ),
       SlashCommandOption(
-        title: 'File', subtitle: 'Upload a file', icon: Icons.insert_drive_file,
+        title: 'File',
+        subtitle: 'Upload a file',
+        icon: Icons.insert_drive_file,
         category: SlashCommandCategory.media,
         onSelected: (_) => _pickFile(),
       ),
     ];
     final normalized = query.toLowerCase();
-    return options.where((option) => normalized.isEmpty || option.title.toLowerCase().contains(normalized) || option.subtitle.toLowerCase().contains(normalized)).toList();
+    return options
+        .where((option) =>
+            normalized.isEmpty ||
+            option.title.toLowerCase().contains(normalized) ||
+            option.subtitle.toLowerCase().contains(normalized),)
+        .toList();
   }
 
   void _handleEnter() {
     final selection = _controller.selection;
-    final cursor = selection.isValid ? selection.start : _controller.text.length;
+    final cursor =
+        selection.isValid ? selection.start : _controller.text.length;
     final before = _controller.text.substring(0, cursor);
     final after = _controller.text.substring(selection.end);
-    _controller.value = TextEditingValue(text: before, selection: TextSelection.collapsed(offset: before.length));
+    _controller.value = TextEditingValue(
+        text: before,
+        selection: TextSelection.collapsed(offset: before.length),);
     unawaited(widget.onSplit(before, after));
   }
 
@@ -235,7 +250,9 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     }
     final before = value.substring(0, newline);
     final after = value.substring(newline + 1);
-    _controller.value = TextEditingValue(text: before, selection: TextSelection.collapsed(offset: before.length));
+    _controller.value = TextEditingValue(
+        text: before,
+        selection: TextSelection.collapsed(offset: before.length),);
     unawaited(widget.onSplit(before, after));
     return true;
   }
@@ -244,31 +261,34 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     final data = BlockDataModel.text(
       spans: [TextSpanData(text: _controller.text)],
       headingLevel: level,
-    ).toJson()..remove('runtimeType');
-    widget.onUpdate(widget.block.copyWith(type: 'text', data: jsonEncode(data)));
+    ).toJson()
+      ..remove('runtimeType');
+    widget
+        .onUpdate(widget.block.copyWith(type: 'text', data: jsonEncode(data)));
   }
 
   void _convertToList(String listType) {
     final data = _blockData.copyWith(
       spans: [TextSpanData(text: _controller.text)],
       listType: listType,
-    ).toJson()..remove('runtimeType');
+    ).toJson()
+      ..remove('runtimeType');
     widget.onUpdate(widget.block.copyWith(data: jsonEncode(data)));
   }
 
   Future<void> _pickImage() async {
     final attachment = await ref.read(mediaPickerProvider).pickImage(
-      pageId: widget.block.pageId,
-      blockId: widget.block.id,
-    );
+          pageId: widget.block.pageId,
+          blockId: widget.block.id,
+        );
     if (attachment != null) _insertMediaBlock(attachment.id, 'image');
   }
 
   Future<void> _pickFile() async {
     final attachment = await ref.read(mediaPickerProvider).pickFile(
-      pageId: widget.block.pageId,
-      blockId: widget.block.id,
-    );
+          pageId: widget.block.pageId,
+          blockId: widget.block.id,
+        );
     if (attachment != null) _insertMediaBlock(attachment.id, 'file');
   }
 
@@ -343,28 +363,28 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
             child: Focus(
               onKeyEvent: _handleKeyEvent,
               child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              maxLines: null,
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-                isDense: true,
+                controller: _controller,
+                focusNode: _focusNode,
+                maxLines: null,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                style: TextStyle(
+                  fontSize: 16.0,
+                  decoration:
+                      _blockData.checked ? TextDecoration.lineThrough : null,
+                  color: _blockData.checked ? Colors.grey : null,
+                ),
+                textInputAction: TextInputAction.newline,
+                keyboardType: TextInputType.multiline,
+                onChanged: (value) {
+                  if (_handleImeNewline(value)) return;
+                  _slashController.check(value);
+                  _saveChanges();
+                },
               ),
-              style: TextStyle(
-                fontSize: 16.0,
-                decoration:
-                    _blockData.checked ? TextDecoration.lineThrough : null,
-                color: _blockData.checked ? Colors.grey : null,
-              ),
-              textInputAction: TextInputAction.newline,
-              keyboardType: TextInputType.multiline,
-              onChanged: (value) {
-                if (_handleImeNewline(value)) return;
-                _slashController.check(value);
-                _saveChanges();
-              },
-            ),
             ),
           ),
         ),

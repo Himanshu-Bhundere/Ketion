@@ -13,23 +13,37 @@ class StructuralMutationBuilder {
     required String newData,
     required String newType,
     required EditorPersistenceSnapshot snapshot,
+    String? providedParentBlockId,
   }) {
     final originalBlock = snapshot.getBlock(originalBlockId);
     if (originalBlock == null || originalBlock.deleted) return null;
 
+    final parentBlockId = providedParentBlockId ?? originalBlock.parentBlockId;
+
     final targetSiblings = snapshot.activeBlocks
-        .where((b) => b.parentBlockId == originalBlock.parentBlockId)
+        .where((b) => b.parentBlockId == parentBlockId)
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
 
-    final targetIndex = targetSiblings.indexWhere((b) => b.blockId == originalBlockId);
     BlockSnapshot? blockAfterTarget;
-    if (targetIndex >= 0 && targetIndex < targetSiblings.length - 1) {
-      blockAfterTarget = targetSiblings[targetIndex + 1];
+    double? positionAfter;
+
+    if (providedParentBlockId == originalBlockId) {
+      if (targetSiblings.isNotEmpty) {
+        blockAfterTarget = targetSiblings.first;
+      }
+      positionAfter = null;
+    } else {
+      final targetIndex =
+          targetSiblings.indexWhere((b) => b.blockId == originalBlockId);
+      if (targetIndex >= 0 && targetIndex < targetSiblings.length - 1) {
+        blockAfterTarget = targetSiblings[targetIndex + 1];
+      }
+      positionAfter = originalBlock.position;
     }
 
     final newPosition = SiblingPositionManager.calculatePositionBetween(
-      originalBlock.position,
+      positionAfter,
       blockAfterTarget?.position,
     );
 
@@ -43,7 +57,7 @@ class StructuralMutationBuilder {
       newBlockId: newBlockId,
       newData: newData,
       newType: newType,
-      newParentBlockId: originalBlock.parentBlockId,
+      newParentBlockId: parentBlockId,
       newPosition: newPosition,
       originalBlockCreatedAt: originalBlock.createdAt,
       createdAt: DateTime.now().toUtc(),
@@ -60,7 +74,12 @@ class StructuralMutationBuilder {
     final survivorBlock = snapshot.getBlock(survivorBlockId);
     final victimBlock = snapshot.getBlock(victimBlockId);
 
-    if (survivorBlock == null || victimBlock == null || survivorBlock.deleted || victimBlock.deleted) return null;
+    if (survivorBlock == null ||
+        victimBlock == null ||
+        survivorBlock.deleted ||
+        victimBlock.deleted) {
+      return null;
+    }
 
     return MergeBlocksMutation(
       pageId: pageId,
@@ -98,15 +117,16 @@ class StructuralMutationBuilder {
     required String? previousBlockId,
     required String? nextBlockId,
     required EditorPersistenceSnapshot snapshot,
+    String? providedParentBlockId,
   }) {
     BlockSnapshot? previousBlock;
     BlockSnapshot? nextBlock;
-    String? parentBlockId;
+    String? parentBlockId = providedParentBlockId;
 
     if (previousBlockId != null) {
       previousBlock = snapshot.getBlock(previousBlockId);
       if (previousBlock != null && !previousBlock.deleted) {
-        parentBlockId = previousBlock.parentBlockId;
+        parentBlockId ??= previousBlock.parentBlockId;
       } else {
         previousBlock = null;
       }
@@ -118,7 +138,7 @@ class StructuralMutationBuilder {
         if (parentBlockId == null) {
           parentBlockId = nextBlock.parentBlockId;
         } else if (parentBlockId != nextBlock.parentBlockId) {
-          nextBlock = null; 
+          nextBlock = null;
         }
       } else {
         nextBlock = null;
@@ -161,7 +181,11 @@ class StructuralMutationBuilder {
     if (previousBlockId != null) {
       previousBlock = snapshot.getBlock(previousBlockId);
       if (previousBlock != null && !previousBlock.deleted) {
-        parentBlockId = previousBlock.parentBlockId;
+        if (previousBlock.type == 'toggle') {
+          parentBlockId = previousBlock.blockId;
+        } else {
+          parentBlockId = previousBlock.parentBlockId;
+        }
       } else {
         previousBlock = null;
       }
@@ -173,7 +197,7 @@ class StructuralMutationBuilder {
         if (parentBlockId == null) {
           parentBlockId = nextBlock.parentBlockId;
         } else if (parentBlockId != nextBlock.parentBlockId) {
-          nextBlock = null; 
+          nextBlock = null;
         }
       } else {
         nextBlock = null;
@@ -241,8 +265,9 @@ class StructuralMutationBuilder {
         .where((b) => b.parentBlockId == newParent.blockId)
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
-    
-    final previousBlockPosition = newSiblings.isNotEmpty ? newSiblings.last.position : null;
+
+    final previousBlockPosition =
+        newSiblings.isNotEmpty ? newSiblings.last.position : null;
 
     final newPosition = SiblingPositionManager.calculatePositionBetween(
       previousBlockPosition,
@@ -284,7 +309,7 @@ class StructuralMutationBuilder {
       ..sort((a, b) => a.position.compareTo(b.position));
 
     final parentIndex = targetSiblings.indexWhere((b) => b.blockId == parentId);
-    
+
     BlockSnapshot? blockAfterParent;
     if (parentIndex >= 0 && parentIndex < targetSiblings.length - 1) {
       blockAfterParent = targetSiblings[parentIndex + 1];

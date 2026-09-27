@@ -8,6 +8,7 @@ import 'package:ketion/features/search/presentation/pages/search_page.dart';
 import 'package:ketion/features/settings/presentation/pages/settings_page.dart';
 import 'package:ketion/features/pages/presentation/pages/notes_page.dart';
 import 'package:ketion/features/reminders/presentation/pages/reminders_page.dart';
+import 'package:ketion/features/reminders/presentation/pages/alarm_ringing_page.dart';
 import 'package:ketion/features/editor/domain/models/editor_open_target.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -82,6 +83,20 @@ final appRouter = GoRouter(
           pageId: pageId,
           focusTitle: focusTitle,
           openTarget: openTarget,
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.alarmRingingName,
+      parentNavigatorKey: _rootNavigatorKey,
+      path: Routes.alarmRinging,
+      builder: (context, state) {
+        final reminderId = state.pathParameters['reminderId']!;
+        final extra = state.extra as Map<String, dynamic>?;
+        final occurrenceTime = extra?['occurrenceTime'] as DateTime?;
+        return AlarmRingingPage(
+          reminderId: reminderId,
+          occurrenceTime: occurrenceTime,
         );
       },
     ),

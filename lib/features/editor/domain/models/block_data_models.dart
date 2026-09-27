@@ -148,7 +148,11 @@ sealed class BlockDataModel with _$BlockDataModel {
       pdf: (p) => p.caption ?? '',
       file: (f) => f.caption ?? '',
       bookmark: (b) => '${b.title ?? ''} ${b.description ?? ''} ${b.url}',
-      table: (t) => t.rows.expand((r) => r.cells).expand((c) => c.spans).map((s) => s.text).join(' '),
+      table: (t) => t.rows
+          .expand((r) => r.cells)
+          .expand((c) => c.spans)
+          .map((s) => s.text)
+          .join(' '),
       pageLink: (PageLinkBlockData p) => p.pageId,
       webLink: (WebLinkBlockData w) => w.url,
       reminder: (ReminderBlockData r) => r.title,

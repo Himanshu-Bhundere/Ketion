@@ -31,24 +31,31 @@ class MockGetPageBlocksUseCase implements GetPageBlocksUseCase {
 class _MockPageRepo implements PageRepository {
   final page_entity.Page page;
   _MockPageRepo(this.page);
-  
+
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage) async => Success(page);
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+      Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
-  Future<Result<page_entity.Page>> updatePage(page_entity.Page updatedPage) async => Success(updatedPage);
+  Future<Result<page_entity.Page>> updatePage(
+          page_entity.Page updatedPage,) async =>
+      Success(updatedPage);
   @override
-  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getFavoritePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getFavoritePages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getRecentPages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getRecentPages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getTemplatePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getTemplatePages() async =>
+      const Success([]);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -57,41 +64,56 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.add(block);
     return Success(block);
   }
+
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
+
   @override
   Future<Result<Block>> getBlock(String id) async {
     final block = testBlocks.firstWhere((b) => b.id == id);
     return Success(block);
   }
+
   Future<Result<List<Block>>> getPageBlocks(String pageId) async {
-    final sorted = List<Block>.from(testBlocks)..sort((a, b) => a.position.compareTo(b.position));
+    final sorted = List<Block>.from(testBlocks)
+      ..sort((a, b) => a.position.compareTo(b.position));
     return Success(sorted);
   }
+
   @override
   Future<Result<List<Block>>> getBlocksForPage(String pageId) async {
-    final sorted = List<Block>.from(testBlocks)..sort((a, b) => a.position.compareTo(b.position));
+    final sorted = List<Block>.from(testBlocks)
+      ..sort((a, b) => a.position.compareTo(b.position));
     return Success(sorted);
   }
+
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+    return Success(testBlocks
+        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+        .toList(),);
   }
+
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
     }
     return const Success(null);
   }
+
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async {
+  Future<Result<List<Block>>> moveBlock(
+      String sourceBlockId, DropIntent intent,) async {
     return const Success([]);
   }
+
   @override
   Future<Result<void>> splitBlock({
     required Block updatedOriginalBlock,
@@ -101,6 +123,7 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.add(newBlock);
     return const Success(null);
   }
+
   @override
   Future<Result<void>> mergeBlocks({
     required Block mergedBlock,
@@ -111,6 +134,7 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.removeWhere((b) => b.id == deletedBlockId);
     return const Success(null);
   }
+
   Future<Result<void>> updateBlocks(List<Block> blocks) async {
     for (final block in blocks) {
       final index = testBlocks.indexWhere((b) => b.id == block.id);
@@ -120,17 +144,21 @@ class DummyBlockRepository implements BlockRepository {
     }
     return const Success(null);
   }
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async {
+  Future<Result<void>> restoreBlock(
+      String id, String data, String? parentBlockId, double position,) async {
     return const Success(null);
   }
 }
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
-  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty && attempts < 50) {
+  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+      attempts < 50) {
     await tester.pump(const Duration(milliseconds: 50));
     attempts++;
   }
@@ -143,10 +171,15 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp({required List<Block> blocks, required page_entity.Page testPage, double width = 800, double height = 600}) {
+  Widget buildTestApp(
+      {required List<Block> blocks,
+      required page_entity.Page testPage,
+      double width = 800,
+      double height = 600,}) {
     return ProviderScope(
       overrides: [
-        getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+        getPageBlocksUseCaseProvider
+            .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
         blockRepositoryProvider.overrideWithValue(DummyBlockRepository()),
         pageRepositoryProvider.overrideWithValue(_MockPageRepo(testPage)),
       ],
@@ -189,8 +222,20 @@ void main() {
         data: jsonEncode({
           'columnCount': 2,
           'rows': <Map<String, dynamic>>[
-            {'id': 'row_1', 'cells': <Map<String, dynamic>>[{'id': 'cell_1_1', 'spans': <dynamic>[]}, {'id': 'cell_1_2', 'spans': <dynamic>[]}]},
-            {'id': 'row_2', 'cells': <Map<String, dynamic>>[{'id': 'cell_2_1', 'spans': <dynamic>[]}, {'id': 'cell_2_2', 'spans': <dynamic>[]}]},
+            {
+              'id': 'row_1',
+              'cells': <Map<String, dynamic>>[
+                {'id': 'cell_1_1', 'spans': <dynamic>[]},
+                {'id': 'cell_1_2', 'spans': <dynamic>[]},
+              ],
+            },
+            {
+              'id': 'row_2',
+              'cells': <Map<String, dynamic>>[
+                {'id': 'cell_2_1', 'spans': <dynamic>[]},
+                {'id': 'cell_2_2', 'spans': <dynamic>[]},
+              ],
+            },
           ],
         }),
         position: 1000,
@@ -200,8 +245,11 @@ void main() {
     ];
   }
 
-  testWidgets('Matrix Test: FocusNode and Controller Identity Checks during structural mutation', (tester) async {
-    await tester.pumpWidget(buildTestApp(blocks: createInitialTableBlock(), testPage: testPage));
+  testWidgets(
+      'Matrix Test: FocusNode and Controller Identity Checks during structural mutation',
+      (tester) async {
+    await tester.pumpWidget(
+        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
 
@@ -210,65 +258,69 @@ void main() {
       matching: find.byType(TextField),
     );
     expect(textFieldsFinder, findsNWidgets(4));
-    
+
     // Retrieve original controllers and focus nodes for the first cell
     final originalTextField = tester.widget<TextField>(textFieldsFinder.at(0));
     final originalFocusNode = originalTextField.focusNode;
     final originalController = originalTextField.controller;
-    
+
     expect(originalFocusNode, isNotNull);
     expect(originalController, isNotNull);
 
     // Give it focus
     originalFocusNode!.requestFocus();
     await tester.pumpAndSettle();
-    
+
     // Add row below the first row
-    final rowMenuButton = find.byIcon(Icons.drag_indicator).first;
+    final rowMenuButton = find.byIcon(Icons.more_horiz).first;
     await tester.tap(rowMenuButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Insert row below'));
     await tester.pumpAndSettle(const Duration(milliseconds: 1000));
-    
+
     // Now there should be 6 text fields
     final newTextFieldsFinder = find.descendant(
       of: find.byType(KetionTableComponent),
       matching: find.byType(TextField),
     );
     expect(newTextFieldsFinder, findsNWidgets(6));
-    
+
     // The first cell should still be the exact same FocusNode and Controller
-    final preservedTextField = tester.widget<TextField>(newTextFieldsFinder.at(0));
+    final preservedTextField =
+        tester.widget<TextField>(newTextFieldsFinder.at(0));
     expect(preservedTextField.focusNode, same(originalFocusNode));
     expect(preservedTextField.controller, same(originalController));
-    
+
     // The newly created row should now have focus
     final newTextField = tester.widget<TextField>(newTextFieldsFinder.at(2));
     expect(newTextField.focusNode!.hasFocus, true);
   });
-  
-  testWidgets('Matrix Test: Geometry recalculation on structural changes', (tester) async {
-    await tester.pumpWidget(buildTestApp(blocks: createInitialTableBlock(), testPage: testPage));
+
+  testWidgets('Matrix Test: Geometry recalculation on structural changes',
+      (tester) async {
+    await tester.pumpWidget(
+        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
-    
+
     final tableComponentFinder = find.byType(KetionTableComponent);
-    final ketionTableComponentState = tester.state(tableComponentFinder) as dynamic;
-    
+    final ketionTableComponentState =
+        tester.state(tableComponentFinder) as dynamic;
+
     // Should have valid geometry initially
     expect(ketionTableComponentState.geometry, isNotNull);
     final initialTableHeight = ketionTableComponentState.geometry.tableHeight;
     final initialRowRects = ketionTableComponentState.geometry.rowRects.length;
-    
+
     expect(initialRowRects, 2);
-    
+
     // Add row
-    final rowMenuButton = find.byIcon(Icons.drag_indicator).first;
+    final rowMenuButton = find.byIcon(Icons.more_horiz).first;
     await tester.tap(rowMenuButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Insert row below'));
     await tester.pumpAndSettle(const Duration(milliseconds: 1000));
-    
+
     // Geometry should be updated
     final updatedGeometry = ketionTableComponentState.geometry;
     expect(updatedGeometry.rowRects.length, 3);
@@ -276,7 +328,8 @@ void main() {
   });
 
   testWidgets('Matrix Test: Undo identity tests', (tester) async {
-    await tester.pumpWidget(buildTestApp(blocks: createInitialTableBlock(), testPage: testPage));
+    await tester.pumpWidget(
+        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
 
@@ -284,36 +337,42 @@ void main() {
       of: find.byType(KetionTableComponent),
       matching: find.byType(TextField),
     );
-    
+
     final originalTextField = tester.widget<TextField>(textFieldsFinder.at(0));
     final originalController = originalTextField.controller;
     final originalFocusNode = originalTextField.focusNode;
-    
+
     // Add row
-    final rowMenuButton = find.byIcon(Icons.drag_indicator).first;
+    final rowMenuButton = find.byIcon(Icons.more_horiz).first;
     await tester.tap(rowMenuButton);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Insert row below'));
     await tester.pumpAndSettle(const Duration(milliseconds: 1000));
-    
-    expect(find.descendant(of: find.byType(KetionTableComponent), matching: find.byType(TextField)), findsNWidgets(6));
-    
+
+    expect(
+        find.descendant(
+            of: find.byType(KetionTableComponent),
+            matching: find.byType(TextField),),
+        findsNWidgets(6),);
+
     // Simulate Cmd/Ctrl+Z for Undo.
     // Instead of raw keys that might get intercepted by focus, invoke undo directly
-    final superEditorHostState = tester.state(find.byType(SuperEditorHost)) as dynamic;
+    final superEditorHostState =
+        tester.state(find.byType(SuperEditorHost)) as dynamic;
     superEditorHostState.historyController.undo();
     superEditorHostState.historyController.undo();
     await tester.pumpAndSettle(const Duration(milliseconds: 1000));
-    
+
     // Should be back to 4 text fields
     final revertedTextFieldsFinder = find.descendant(
       of: find.byType(KetionTableComponent),
       matching: find.byType(TextField),
     );
     expect(revertedTextFieldsFinder, findsNWidgets(4));
-    
+
     // The first cell should still be the exact same Controller and FocusNode
-    final revertedTextField = tester.widget<TextField>(revertedTextFieldsFinder.at(0));
+    final revertedTextField =
+        tester.widget<TextField>(revertedTextFieldsFinder.at(0));
     expect(revertedTextField.controller, same(originalController));
     expect(revertedTextField.focusNode, same(originalFocusNode));
   });

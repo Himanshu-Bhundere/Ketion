@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   flutter_timezone
   irondash_engine_context
+  pdfx
   printing
   share_plus
   sqlite3_flutter_libs

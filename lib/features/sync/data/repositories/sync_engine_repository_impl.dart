@@ -16,7 +16,6 @@ import 'package:ketion/features/sync/data/utils/sync_entity_applier.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:drift/drift.dart';
 
-
 class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncProvider _syncProvider;
   final AuthService _authService;
@@ -253,7 +252,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
       // 6. Cleanup old tombstones
       await _db.cleanupTombstones(
-        retentionDays: 30, // Using default of 30 days since it was removed from settings
+        retentionDays:
+            30, // Using default of 30 days since it was removed from settings
       );
 
       return const Success(null);

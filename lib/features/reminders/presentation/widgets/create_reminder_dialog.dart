@@ -7,7 +7,8 @@ class CreateReminderDialog extends ConsumerStatefulWidget {
   const CreateReminderDialog({super.key});
 
   @override
-  ConsumerState<CreateReminderDialog> createState() => _CreateReminderDialogState();
+  ConsumerState<CreateReminderDialog> createState() =>
+      _CreateReminderDialogState();
 }
 
 class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
@@ -51,7 +52,9 @@ class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
     final title = _titleController.text.trim();
     if (title.isEmpty || _selectedTime == null || _selectedPageId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title, select a page, and choose a time')),
+        const SnackBar(
+            content:
+                Text('Please enter a title, select a page, and choose a time'),),
       );
       return;
     }

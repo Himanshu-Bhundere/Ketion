@@ -35,7 +35,6 @@ void main() {
     const numBlocks = 100000;
     final List<domain.Block> blocks = [];
 
-
     final stopwatch = Stopwatch()..start();
 
     // Generate blocks linearly for simplicity
@@ -53,47 +52,48 @@ void main() {
       );
     }
 
-
     await database.batch((batch) {
       batch.insertAll(
         database.blocks,
-        blocks.map((b) => BlocksCompanion.insert(
-              id: b.id,
-              pageId: b.pageId,
-              type: b.type,
-              position: b.position,
-              data: b.data,
-              version: const drift.Value(1),
-              deleted: const drift.Value(false),
-              createdAt: b.createdAt,
-              updatedAt: b.updatedAt,
-            ),),
+        blocks.map(
+          (b) => BlocksCompanion.insert(
+            id: b.id,
+            pageId: b.pageId,
+            type: b.type,
+            position: b.position,
+            data: b.data,
+            version: const drift.Value(1),
+            deleted: const drift.Value(false),
+            createdAt: b.createdAt,
+            updatedAt: b.updatedAt,
+          ),
+        ),
       );
     });
 
-
     // Simulate move block
     stopwatch.reset();
-    
+
     // 1. Move block via repository
     const sourceId = 'block_50000';
 
     final moveValidationTime = Stopwatch()..start();
-    
+
     // In the new architecture, moving a block is handled via updateBlock with the new position.
     final blockToMoveResult = await repository.getBlock(sourceId);
     final blockToMove = blockToMoveResult.valueOrNull!;
     final updatedBlock = blockToMove.copyWith(position: 250.0);
-    final result = await repository.updateBlock(updatedBlock, expectedVersion: blockToMove.version);
-    
+    final result = await repository.updateBlock(updatedBlock,
+        expectedVersion: blockToMove.version,);
+
     moveValidationTime.stop();
     final saveTime = moveValidationTime.elapsedMilliseconds;
-
 
     // The architectural requirement was <50ms, but test environment overhead
     // (especially in debug mode / flutter test) pushes this higher.
     // We expect it to be well under 400ms in production, but test overhead can cause spikes.
-    expect(saveTime, lessThan(1000), reason: 'Block save should be <1000ms in test environment');
+    expect(saveTime, lessThan(1000),
+        reason: 'Block save should be <1000ms in test environment',);
     expect(result.isSuccess, isTrue, reason: 'Move block should succeed');
   });
 }

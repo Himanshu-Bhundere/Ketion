@@ -26,6 +26,10 @@ mixin _$ReminderEntity {
   String get title => throw _privateConstructorUsedError;
   DateTime get reminderTime => throw _privateConstructorUsedError;
   String get timezone => throw _privateConstructorUsedError;
+  @JsonKey(
+      defaultValue: ReminderKind.reminder,
+      unknownEnumValue: ReminderKind.reminder)
+  ReminderKind get kind => throw _privateConstructorUsedError;
   String? get recurrenceRule => throw _privateConstructorUsedError;
   DateTime? get snoozeUntil => throw _privateConstructorUsedError;
   bool get completed => throw _privateConstructorUsedError;
@@ -53,6 +57,10 @@ abstract class $ReminderEntityCopyWith<$Res> {
       String title,
       DateTime reminderTime,
       String timezone,
+      @JsonKey(
+          defaultValue: ReminderKind.reminder,
+          unknownEnumValue: ReminderKind.reminder)
+      ReminderKind kind,
       String? recurrenceRule,
       DateTime? snoozeUntil,
       bool completed,
@@ -81,6 +89,7 @@ class _$ReminderEntityCopyWithImpl<$Res, $Val extends ReminderEntity>
     Object? title = null,
     Object? reminderTime = null,
     Object? timezone = null,
+    Object? kind = null,
     Object? recurrenceRule = freezed,
     Object? snoozeUntil = freezed,
     Object? completed = null,
@@ -114,6 +123,10 @@ class _$ReminderEntityCopyWithImpl<$Res, $Val extends ReminderEntity>
           ? _value.timezone
           : timezone // ignore: cast_nullable_to_non_nullable
               as String,
+      kind: null == kind
+          ? _value.kind
+          : kind // ignore: cast_nullable_to_non_nullable
+              as ReminderKind,
       recurrenceRule: freezed == recurrenceRule
           ? _value.recurrenceRule
           : recurrenceRule // ignore: cast_nullable_to_non_nullable
@@ -161,6 +174,10 @@ abstract class _$$ReminderEntityImplCopyWith<$Res>
       String title,
       DateTime reminderTime,
       String timezone,
+      @JsonKey(
+          defaultValue: ReminderKind.reminder,
+          unknownEnumValue: ReminderKind.reminder)
+      ReminderKind kind,
       String? recurrenceRule,
       DateTime? snoozeUntil,
       bool completed,
@@ -187,6 +204,7 @@ class __$$ReminderEntityImplCopyWithImpl<$Res>
     Object? title = null,
     Object? reminderTime = null,
     Object? timezone = null,
+    Object? kind = null,
     Object? recurrenceRule = freezed,
     Object? snoozeUntil = freezed,
     Object? completed = null,
@@ -220,6 +238,10 @@ class __$$ReminderEntityImplCopyWithImpl<$Res>
           ? _value.timezone
           : timezone // ignore: cast_nullable_to_non_nullable
               as String,
+      kind: null == kind
+          ? _value.kind
+          : kind // ignore: cast_nullable_to_non_nullable
+              as ReminderKind,
       recurrenceRule: freezed == recurrenceRule
           ? _value.recurrenceRule
           : recurrenceRule // ignore: cast_nullable_to_non_nullable
@@ -262,6 +284,10 @@ class _$ReminderEntityImpl implements _ReminderEntity {
       this.title = '',
       required this.reminderTime,
       this.timezone = 'UTC',
+      @JsonKey(
+          defaultValue: ReminderKind.reminder,
+          unknownEnumValue: ReminderKind.reminder)
+      this.kind = ReminderKind.reminder,
       this.recurrenceRule,
       this.snoozeUntil,
       this.completed = false,
@@ -288,6 +314,11 @@ class _$ReminderEntityImpl implements _ReminderEntity {
   @JsonKey()
   final String timezone;
   @override
+  @JsonKey(
+      defaultValue: ReminderKind.reminder,
+      unknownEnumValue: ReminderKind.reminder)
+  final ReminderKind kind;
+  @override
   final String? recurrenceRule;
   @override
   final DateTime? snoozeUntil;
@@ -307,7 +338,7 @@ class _$ReminderEntityImpl implements _ReminderEntity {
 
   @override
   String toString() {
-    return 'ReminderEntity(id: $id, pageId: $pageId, blockId: $blockId, title: $title, reminderTime: $reminderTime, timezone: $timezone, recurrenceRule: $recurrenceRule, snoozeUntil: $snoozeUntil, completed: $completed, version: $version, createdAt: $createdAt, updatedAt: $updatedAt, deleted: $deleted)';
+    return 'ReminderEntity(id: $id, pageId: $pageId, blockId: $blockId, title: $title, reminderTime: $reminderTime, timezone: $timezone, kind: $kind, recurrenceRule: $recurrenceRule, snoozeUntil: $snoozeUntil, completed: $completed, version: $version, createdAt: $createdAt, updatedAt: $updatedAt, deleted: $deleted)';
   }
 
   @override
@@ -323,6 +354,7 @@ class _$ReminderEntityImpl implements _ReminderEntity {
                 other.reminderTime == reminderTime) &&
             (identical(other.timezone, timezone) ||
                 other.timezone == timezone) &&
+            (identical(other.kind, kind) || other.kind == kind) &&
             (identical(other.recurrenceRule, recurrenceRule) ||
                 other.recurrenceRule == recurrenceRule) &&
             (identical(other.snoozeUntil, snoozeUntil) ||
@@ -347,6 +379,7 @@ class _$ReminderEntityImpl implements _ReminderEntity {
       title,
       reminderTime,
       timezone,
+      kind,
       recurrenceRule,
       snoozeUntil,
       completed,
@@ -378,6 +411,10 @@ abstract class _ReminderEntity implements ReminderEntity {
       final String title,
       required final DateTime reminderTime,
       final String timezone,
+      @JsonKey(
+          defaultValue: ReminderKind.reminder,
+          unknownEnumValue: ReminderKind.reminder)
+      final ReminderKind kind,
       final String? recurrenceRule,
       final DateTime? snoozeUntil,
       final bool completed,
@@ -401,6 +438,11 @@ abstract class _ReminderEntity implements ReminderEntity {
   DateTime get reminderTime;
   @override
   String get timezone;
+  @override
+  @JsonKey(
+      defaultValue: ReminderKind.reminder,
+      unknownEnumValue: ReminderKind.reminder)
+  ReminderKind get kind;
   @override
   String? get recurrenceRule;
   @override

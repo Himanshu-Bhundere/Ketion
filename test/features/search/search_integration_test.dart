@@ -21,7 +21,8 @@ void main() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     searchRepository = SearchRepositoryImpl(database, appLogger);
     syncQueueRepository = SyncQueueRepositoryImpl(database);
-    blockRepository = BlockRepositoryImpl(database, syncQueueRepository, appLogger);
+    blockRepository =
+        BlockRepositoryImpl(database, syncQueueRepository, appLogger);
   });
 
   tearDown(() async {
@@ -31,13 +32,13 @@ void main() {
   test('FTS Lifecycle Test: Block update triggers search index', () async {
     // 1. Create a page
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page1',
-        title: const drift.Value('Initial Page'),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+          PagesCompanion.insert(
+            id: 'page1',
+            title: const drift.Value('Initial Page'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
     // 2. Create a block
     final block = Block(
@@ -45,7 +46,11 @@ void main() {
       pageId: 'page1',
       type: 'paragraph',
       position: 0.0,
-      data: jsonEncode({'spans': [{'text': 'Initial body content for testing search lifecycle'}]}),
+      data: jsonEncode({
+        'spans': [
+          {'text': 'Initial body content for testing search lifecycle'},
+        ],
+      }),
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       version: 1,
@@ -61,10 +66,15 @@ void main() {
 
     // 4. Update the block
     final updatedBlock = block.copyWith(
-      data: jsonEncode({'spans': [{'text': 'Updated body content with something entirely new'}]}),
+      data: jsonEncode({
+        'spans': [
+          {'text': 'Updated body content with something entirely new'},
+        ],
+      }),
       version: 2,
     );
-    await blockRepository.updateBlock(updatedBlock, expectedVersion: updatedBlock.version - 1);
+    await blockRepository.updateBlock(updatedBlock,
+        expectedVersion: updatedBlock.version - 1,);
 
     // 5. Search for old text (should be gone)
     final result2 = await searchRepository.searchNotes('lifecycle');
@@ -84,78 +94,90 @@ void main() {
   test('Ranking Tests: Title > Heading > Body > Tag weighting', () async {
     // We will create multiple matches for the same keyword 'ranktest'
     // in different elements and see their order.
-    
+
     // Page 1: Tag match
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page_tag',
-        title: const drift.Value('Some page without keyword'),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+          PagesCompanion.insert(
+            id: 'page_tag',
+            title: const drift.Value('Some page without keyword'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
     await database.into(database.tags).insert(
-      TagsCompanion.insert(
-        id: 'tag1',
-        name: 'ranktest',
-      ),
-    );
+          TagsCompanion.insert(
+            id: 'tag1',
+            name: 'ranktest',
+          ),
+        );
     await database.into(database.pageTags).insert(
-      PageTagsCompanion.insert(
-        pageId: 'page_tag',
-        tagId: 'tag1',
-      ),
-    );
+          PageTagsCompanion.insert(
+            pageId: 'page_tag',
+            tagId: 'tag1',
+          ),
+        );
 
     // Page 2: Body match
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page_body',
-        title: const drift.Value('Another page without keyword'),
+          PagesCompanion.insert(
+            id: 'page_body',
+            title: const drift.Value('Another page without keyword'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+    await blockRepository.createBlock(
+      Block(
+        id: 'block_body',
+        pageId: 'page_body',
+        type: 'paragraph',
+        position: 0.0,
+        data: jsonEncode({
+          'spans': [
+            {'text': 'This is a ranktest body'},
+          ],
+        }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        version: 1,
       ),
     );
-    await blockRepository.createBlock(Block(
-      id: 'block_body',
-      pageId: 'page_body',
-      type: 'paragraph',
-      position: 0.0,
-      data: jsonEncode({'spans': [{'text': 'This is a ranktest body'}]}),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      version: 1,
-    ),);
 
     // Page 3: Heading match
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page_heading',
-        title: const drift.Value('Yet another page'),
+          PagesCompanion.insert(
+            id: 'page_heading',
+            title: const drift.Value('Yet another page'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+    await blockRepository.createBlock(
+      Block(
+        id: 'block_heading',
+        pageId: 'page_heading',
+        type: 'header',
+        position: 0.0,
+        data: jsonEncode({
+          'spans': [
+            {'text': 'This is a ranktest header'},
+          ],
+        }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        version: 1,
       ),
     );
-    await blockRepository.createBlock(Block(
-      id: 'block_heading',
-      pageId: 'page_heading',
-      type: 'header',
-      position: 0.0,
-      data: jsonEncode({'spans': [{'text': 'This is a ranktest header'}]}),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      version: 1,
-    ),);
 
     // Page 4: Title match
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page_title',
-        title: const drift.Value('This ranktest is in title'),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
+          PagesCompanion.insert(
+            id: 'page_title',
+            title: const drift.Value('This ranktest is in title'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
 
     // Wait a tiny bit just in case timestamps are identical and it orders by date
     await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -163,13 +185,16 @@ void main() {
     final result = await searchRepository.searchNotes('ranktest');
     expect(result, isA<Success<List<SearchResult>>>());
     final searchResults = (result as Success<List<SearchResult>>).value;
-    
+
     // We expect 4 results. The order should be: Title, Heading, Body, Tag.
     expect(searchResults.length, 4);
-    
-    expect(searchResults[0].entityId, 'page_title', reason: 'Title should rank first');
-    expect(searchResults[1].entityId, 'block_heading', reason: 'Heading should rank second');
-    expect(searchResults[2].entityId, 'block_body', reason: 'Body should rank third');
+
+    expect(searchResults[0].entityId, 'page_title',
+        reason: 'Title should rank first',);
+    expect(searchResults[1].entityId, 'block_heading',
+        reason: 'Heading should rank second',);
+    expect(searchResults[2].entityId, 'block_body',
+        reason: 'Body should rank third',);
     expect(searchResults[3].entityId, 'tag1', reason: 'Tag should rank fourth');
   });
 }

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
+import 'package:ketion/features/reminders/domain/models/reminder_kind.dart';
 
 class ReminderMapper {
   static ReminderEntity fromDb(Reminder reminder) {
@@ -11,6 +12,10 @@ class ReminderMapper {
       title: reminder.title,
       reminderTime: reminder.reminderTime,
       timezone: reminder.timezone,
+      kind: ReminderKind.values.firstWhere(
+        (k) => k.name == reminder.kind,
+        orElse: () => ReminderKind.reminder,
+      ),
       recurrenceRule: reminder.recurrenceRule,
       snoozeUntil: reminder.snoozeUntil,
       completed: reminder.completed,
@@ -29,6 +34,7 @@ class ReminderMapper {
       title: drift.Value(entity.title),
       reminderTime: drift.Value(entity.reminderTime),
       timezone: drift.Value(entity.timezone),
+      kind: drift.Value(entity.kind.name),
       recurrenceRule: drift.Value(entity.recurrenceRule),
       snoozeUntil: drift.Value(entity.snoozeUntil),
       completed: drift.Value(entity.completed),

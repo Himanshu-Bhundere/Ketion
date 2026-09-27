@@ -225,7 +225,6 @@ class KetionBookmarkNode extends BlockNode {
   }
 }
 
-
 class KetionPageLinkNode extends BlockNode {
   KetionPageLinkNode({
     required this.id,
@@ -329,24 +328,24 @@ class KetionReminderNode extends BlockNode {
 
   @override
   final String id;
-  
+
   final String title;
   final String dueAt;
   final String timezone;
   final String? recurrenceRule;
   final bool completed;
-  
+
   @override
   final Map<String, dynamic> metadata;
 
   @override
   bool hasEquivalentContent(DocumentNode other) {
-    return other is KetionReminderNode && 
-           other.title == title &&
-           other.dueAt == dueAt && 
-           other.timezone == timezone && 
-           other.recurrenceRule == recurrenceRule &&
-           other.completed == completed;
+    return other is KetionReminderNode &&
+        other.title == title &&
+        other.dueAt == dueAt &&
+        other.timezone == timezone &&
+        other.recurrenceRule == recurrenceRule &&
+        other.completed == completed;
   }
 
   @override

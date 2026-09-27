@@ -14,7 +14,8 @@ class TableStateValidator {
       throw const InvalidTableStateException('Table must have at least 1 row');
     }
     if (columnCount < 1) {
-      throw const InvalidTableStateException('Table must have at least 1 column');
+      throw const InvalidTableStateException(
+          'Table must have at least 1 column',);
     }
 
     final rowIds = <String>{};
@@ -38,7 +39,8 @@ class TableStateValidator {
     }
   }
 
-  static void validateDeletion(List<TableRowData> rows, int columnCount, {bool isRow = true}) {
+  static void validateDeletion(List<TableRowData> rows, int columnCount,
+      {bool isRow = true,}) {
     validate(rows, columnCount);
     if (isRow && rows.length <= 1) {
       throw const InvalidTableStateException('Cannot delete the last row');

@@ -28,7 +28,9 @@ class FaultySyncQueueRepository implements SyncQueueRepository {
 
   @override
   Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item) async {
-    if (shouldFail) return const Error(StorageFailure('Simulated coalescing failure'));
+    if (shouldFail) {
+      return const Error(StorageFailure('Simulated coalescing failure'));
+    }
     return _inner.enqueueOrCoalesce(item);
   }
 
@@ -36,10 +38,13 @@ class FaultySyncQueueRepository implements SyncQueueRepository {
   Future<Result<List<SyncQueueItem>>> claimNextBatch({
     int limit = 50,
     required Duration leaseDuration,
-  }) => _inner.claimNextBatch(limit: limit, leaseDuration: leaseDuration);
+  }) =>
+      _inner.claimNextBatch(limit: limit, leaseDuration: leaseDuration);
 
   @override
-  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId) => _inner.findPendingItem(table, entityId);
+  Future<Result<SyncQueueItem?>> findPendingItem(
+          String table, String entityId,) =>
+      _inner.findPendingItem(table, entityId);
 
   @override
   Future<Result<void>> updateStatus(
@@ -50,7 +55,13 @@ class FaultySyncQueueRepository implements SyncQueueRepository {
     DateTime? nextRetryAt,
     DateTime? leaseUntil,
     String? lastError,
-  }) => _inner.updateStatus(id, status, attemptCount: attemptCount, lastAttemptAt: lastAttemptAt, nextRetryAt: nextRetryAt, leaseUntil: leaseUntil, lastError: lastError);
+  }) =>
+      _inner.updateStatus(id, status,
+          attemptCount: attemptCount,
+          lastAttemptAt: lastAttemptAt,
+          nextRetryAt: nextRetryAt,
+          leaseUntil: leaseUntil,
+          lastError: lastError,);
 
   @override
   Future<Result<void>> clearCompleted() => _inner.clearCompleted();
@@ -95,27 +106,30 @@ void main() {
   }
 
   group('2.9.4 Queue Coalescing and Atomic Mutations', () {
-    test('moveBlock creates multiple sync entries atomically', () async {
-      final block1 = createTestBlock('b1', 1000);
-      final block2 = createTestBlock('b2', 2000);
-      final block3 = createTestBlock('b3', 3000);
+    test(
+      'moveBlock creates multiple sync entries atomically',
+      () async {
+        final block1 = createTestBlock('b1', 1000);
+        final block2 = createTestBlock('b2', 2000);
+        final block3 = createTestBlock('b3', 3000);
 
-      await repository.createBlock(block1);
-      await repository.createBlock(block2);
-      await repository.createBlock(block3);
+        await repository.createBlock(block1);
+        await repository.createBlock(block2);
+        await repository.createBlock(block3);
 
-      // Move block 3 before block 1
-      final result = await repository.moveBlock('b3', const DropIntent.before('b1'));
-      expect(result.isSuccess, true);
+        // Move block 3 before block 1
+        final result =
+            await repository.moveBlock('b3', const DropIntent.before('b1'));
+        expect(result.isSuccess, true);
 
-      // Verify sync queue has updates for block 3
-      final queueItems = await database.select(database.syncQueue).get();
-      // Initially 3 creates. Move might create 1 update (if no normalisation needed).
-      // Because it coalesces with create, the operation might remain 'create', let's check
-      final allB3 = queueItems.where((q) => q.entityId == 'b3').toList();
-      expect(allB3.length, 1);
-      expect(allB3.first.operation, 'create'); // create + update -> create
-    },
+        // Verify sync queue has updates for block 3
+        final queueItems = await database.select(database.syncQueue).get();
+        // Initially 3 creates. Move might create 1 update (if no normalisation needed).
+        // Because it coalesces with create, the operation might remain 'create', let's check
+        final allB3 = queueItems.where((q) => q.entityId == 'b3').toList();
+        expect(allB3.length, 1);
+        expect(allB3.first.operation, 'create'); // create + update -> create
+      },
       skip: 'Not implemented',
     );
 
@@ -126,7 +140,10 @@ void main() {
       final updatedB1 = block1.copyWith(data: 'Split 1');
       final newB2 = createTestBlock('b2', 2000);
 
-      final result = await repository.splitBlock(updatedOriginalBlock: updatedB1, originalExpectedVersion: updatedB1.version, newBlock: newB2);
+      final result = await repository.splitBlock(
+          updatedOriginalBlock: updatedB1,
+          originalExpectedVersion: updatedB1.version,
+          newBlock: newB2,);
       expect(result.isSuccess, true);
 
       final queueItems = await database.select(database.syncQueue).get();
@@ -147,7 +164,11 @@ void main() {
       await repository.createBlock(block2);
 
       final merged = block1.copyWith(data: 'Merged');
-      final result = await repository.mergeBlocks(mergedBlock: merged, survivorExpectedVersion: merged.version, deletedBlockId: 'b2', victimExpectedVersion: 1);
+      final result = await repository.mergeBlocks(
+          mergedBlock: merged,
+          survivorExpectedVersion: merged.version,
+          deletedBlockId: 'b2',
+          victimExpectedVersion: 1,);
       expect(result.isSuccess, true);
 
       final queueItems = await database.select(database.syncQueue).get();
@@ -171,15 +192,22 @@ void main() {
       final updatedB1 = block1.copyWith(data: 'Split 1');
       final newB2 = createTestBlock('b2', 2000);
 
-      final result = await repository.splitBlock(updatedOriginalBlock: updatedB1, originalExpectedVersion: updatedB1.version, newBlock: newB2);
+      final result = await repository.splitBlock(
+          updatedOriginalBlock: updatedB1,
+          originalExpectedVersion: updatedB1.version,
+          newBlock: newB2,);
 
       expect(result.isError, true);
 
       // Verify db is unmodified
-      final dbBlock1 = await (database.select(database.blocks)..where((t) => t.id.equals('b1'))).getSingle();
+      final dbBlock1 = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('b1')))
+          .getSingle();
       expect(dbBlock1.data, 'Block b1'); // Unchanged
 
-      final dbBlock2 = await (database.select(database.blocks)..where((t) => t.id.equals('b2'))).getSingleOrNull();
+      final dbBlock2 = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('b2')))
+          .getSingleOrNull();
       expect(dbBlock2, isNull);
     });
 
@@ -192,62 +220,80 @@ void main() {
       syncQueue.shouldFail = true;
 
       final merged = block1.copyWith(data: 'Merged');
-      final result = await repository.mergeBlocks(mergedBlock: merged, survivorExpectedVersion: merged.version, deletedBlockId: 'b2', victimExpectedVersion: 1);
+      final result = await repository.mergeBlocks(
+          mergedBlock: merged,
+          survivorExpectedVersion: merged.version,
+          deletedBlockId: 'b2',
+          victimExpectedVersion: 1,);
 
       expect(result.isError, true);
 
       // Verify db is unmodified
-      final dbBlock1 = await (database.select(database.blocks)..where((t) => t.id.equals('b1'))).getSingle();
+      final dbBlock1 = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('b1')))
+          .getSingle();
       expect(dbBlock1.data, 'Block b1');
 
-      final dbBlock2 = await (database.select(database.blocks)..where((t) => t.id.equals('b2'))).getSingle();
+      final dbBlock2 = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('b2')))
+          .getSingle();
       expect(dbBlock2.deleted, false);
     });
 
-    test('moveBlock rolls back if sync enqueue fails', () async {
-      final block1 = createTestBlock('b1', 1000);
-      final block2 = createTestBlock('b2', 2000);
-      await repository.createBlock(block1);
-      await repository.createBlock(block2);
+    test(
+      'moveBlock rolls back if sync enqueue fails',
+      () async {
+        final block1 = createTestBlock('b1', 1000);
+        final block2 = createTestBlock('b2', 2000);
+        await repository.createBlock(block1);
+        await repository.createBlock(block2);
 
-      syncQueue.shouldFail = true;
+        syncQueue.shouldFail = true;
 
-      final result = await repository.moveBlock('b2', const DropIntent.before('b1'));
+        final result =
+            await repository.moveBlock('b2', const DropIntent.before('b1'));
 
-      expect(result.isError, true);
+        expect(result.isError, true);
 
-      // Verify db is unmodified
-      final dbBlock2 = await (database.select(database.blocks)..where((t) => t.id.equals('b2'))).getSingle();
-      expect(dbBlock2.position, 2000);
-    },
+        // Verify db is unmodified
+        final dbBlock2 = await (database.select(database.blocks)
+              ..where((t) => t.id.equals('b2')))
+            .getSingle();
+        expect(dbBlock2.position, 2000);
+      },
       skip: 'Not implemented',
     );
   });
 
   group('2.9.6 Performance tests', () {
-    test('Fetching and moving blocks in a 1000-block document is performant', () async {
-      // Create 1000 blocks in batch for setup
-      await database.batch((batch) {
-        for (int i = 0; i < 1000; i++) {
-          final block = createTestBlock('block_$i', i * 1000.0);
-          batch.insert(database.blocks, block.toCompanion());
-        }
-      });
+    test(
+      'Fetching and moving blocks in a 1000-block document is performant',
+      () async {
+        // Create 1000 blocks in batch for setup
+        await database.batch((batch) {
+          for (int i = 0; i < 1000; i++) {
+            final block = createTestBlock('block_$i', i * 1000.0);
+            batch.insert(database.blocks, block.toCompanion());
+          }
+        });
 
-      final stopwatch = Stopwatch()..start();
+        final stopwatch = Stopwatch()..start();
 
-      // Move block 999 to before block 0
-      final result = await repository.moveBlock('block_999', const DropIntent.before('block_0'));
-      expect(result.isSuccess, true);
+        // Move block 999 to before block 0
+        final result = await repository.moveBlock(
+            'block_999', const DropIntent.before('block_0'),);
+        expect(result.isSuccess, true);
 
-      stopwatch.stop();
+        stopwatch.stop();
 
-      // In-memory sqlite should do this in < 50ms, but we'll assert < 500ms to be safe for CI environments
-      expect(stopwatch.elapsedMilliseconds, lessThan(500));
-      
-      final movedBlock = await (database.select(database.blocks)..where((t) => t.id.equals('block_999'))).getSingle();
-      expect(movedBlock.position, lessThan(0.0));
-    },
+        // In-memory sqlite should do this in < 50ms, but we'll assert < 500ms to be safe for CI environments
+        expect(stopwatch.elapsedMilliseconds, lessThan(500));
+
+        final movedBlock = await (database.select(database.blocks)
+              ..where((t) => t.id.equals('block_999')))
+            .getSingle();
+        expect(movedBlock.position, lessThan(0.0));
+      },
       skip: 'Not implemented',
     );
   });

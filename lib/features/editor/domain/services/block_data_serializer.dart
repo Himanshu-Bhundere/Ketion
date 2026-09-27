@@ -125,7 +125,9 @@ class BlockDataSerializer {
     if (node is KetionCalloutNode) return 'callout';
     if (node is ParagraphNode) {
       if (node.metadata['blockType'] == codeAttribution) return 'code';
-      if (node.metadata['blockType'] == const NamedAttribution('toggle')) return 'list';
+      if (node.metadata['blockType'] == const NamedAttribution('toggle')) {
+        return 'list';
+      }
     }
     return 'text';
   }

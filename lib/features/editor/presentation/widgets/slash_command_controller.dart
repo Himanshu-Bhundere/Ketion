@@ -64,7 +64,8 @@ class SlashCommandController {
       return true;
     }
     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      _selectedIndex = math.min(math.max(0, _options.length - 1), _selectedIndex + 1);
+      _selectedIndex =
+          math.min(math.max(0, _options.length - 1), _selectedIndex + 1);
       _overlay?.markNeedsBuild();
       return true;
     }
@@ -119,7 +120,8 @@ class SlashCommandController {
       _overlay = OverlayEntry(
         builder: (overlayContext) {
           final media = MediaQuery.of(overlayContext);
-          final anchorBox = anchorKey.currentContext?.findRenderObject() as RenderBox?;
+          final anchorBox =
+              anchorKey.currentContext?.findRenderObject() as RenderBox?;
           final anchorPosition = anchorBox?.localToGlobal(Offset.zero);
           final anchorHeight = anchorBox?.size.height ?? 24.0;
           final anchorTop = anchorPosition?.dy ?? 0.0;

@@ -9,17 +9,29 @@ void main() {
         'Hello World',
         AttributedSpans(
           attributions: [
-            const SpanMarker(attribution: boldAttribution, offset: 0, markerType: SpanMarkerType.start),
-            const SpanMarker(attribution: boldAttribution, offset: 4, markerType: SpanMarkerType.end),
-            const SpanMarker(attribution: italicsAttribution, offset: 6, markerType: SpanMarkerType.start),
-            const SpanMarker(attribution: italicsAttribution, offset: 10, markerType: SpanMarkerType.end),
+            const SpanMarker(
+                attribution: boldAttribution,
+                offset: 0,
+                markerType: SpanMarkerType.start,),
+            const SpanMarker(
+                attribution: boldAttribution,
+                offset: 4,
+                markerType: SpanMarkerType.end,),
+            const SpanMarker(
+                attribution: italicsAttribution,
+                offset: 6,
+                markerType: SpanMarkerType.start,),
+            const SpanMarker(
+                attribution: italicsAttribution,
+                offset: 10,
+                markerType: SpanMarkerType.end,),
           ],
         ),
       );
 
       final spans = AttributionConverter.toKetionSpans(text);
       expect(spans.length, 3);
-      
+
       expect(spans[0]['text'], 'Hello');
       expect(spans[0]['bold'], true);
       expect(spans[0]['italic'], false);
@@ -35,14 +47,35 @@ void main() {
 
     test('converts Ketion spans to Super Editor AttributedText', () {
       final spans = [
-        {'text': 'Hello', 'bold': true, 'italic': false, 'underline': false, 'strikethrough': false, 'code': false},
-        {'text': ' ', 'bold': false, 'italic': false, 'underline': false, 'strikethrough': false, 'code': false},
-        {'text': 'World', 'bold': false, 'italic': true, 'underline': false, 'strikethrough': false, 'code': false},
+        {
+          'text': 'Hello',
+          'bold': true,
+          'italic': false,
+          'underline': false,
+          'strikethrough': false,
+          'code': false,
+        },
+        {
+          'text': ' ',
+          'bold': false,
+          'italic': false,
+          'underline': false,
+          'strikethrough': false,
+          'code': false,
+        },
+        {
+          'text': 'World',
+          'bold': false,
+          'italic': true,
+          'underline': false,
+          'strikethrough': false,
+          'code': false,
+        },
       ];
 
       final text = AttributionConverter.fromKetionSpans(spans);
       expect(text.toPlainText(), 'Hello World');
-      
+
       expect(text.getAllAttributionsAt(0).contains(boldAttribution), true);
       expect(text.getAllAttributionsAt(4).contains(boldAttribution), true);
       expect(text.getAllAttributionsAt(5).contains(boldAttribution), false);

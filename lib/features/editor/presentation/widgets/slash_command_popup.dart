@@ -5,7 +5,7 @@ class SlashCommandPopup extends StatefulWidget {
   final List<SlashCommandOption> options;
   final int selectedIndex;
   final void Function(int index) onOptionTapped;
-  
+
   const SlashCommandPopup({
     super.key,
     required this.options,
@@ -47,17 +47,21 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
   void _scrollToSelected() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (widget.selectedIndex >= 0 && widget.selectedIndex < _itemKeys.length) {
+      if (widget.selectedIndex >= 0 &&
+          widget.selectedIndex < _itemKeys.length) {
         final key = _itemKeys[widget.selectedIndex];
         final context = key.currentContext;
         if (context != null) {
           final RenderBox box = context.findRenderObject() as RenderBox;
-          final RenderBox list = _scrollController.position.context.storageContext.findRenderObject() as RenderBox;
+          final RenderBox list = _scrollController
+              .position.context.storageContext
+              .findRenderObject() as RenderBox;
           final position = box.localToGlobal(Offset.zero, ancestor: list);
-          
+
           final double offset = _scrollController.offset + position.dy;
-          final double viewportHeight = _scrollController.position.viewportDimension;
-          
+          final double viewportHeight =
+              _scrollController.position.viewportDimension;
+
           if (position.dy < 0) {
             _scrollController.animateTo(
               offset - 8,
@@ -88,7 +92,8 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
         constraints: const BoxConstraints(maxHeight: 340),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
+          border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.2),),
         ),
         child: widget.options.isEmpty
             ? const Padding(
@@ -104,7 +109,8 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                   children: List.generate(widget.options.length, (index) {
                     final option = widget.options[index];
                     final isSelected = index == widget.selectedIndex;
-                    final bool showHeader = index == 0 || widget.options[index - 1].category != option.category;
+                    final bool showHeader = index == 0 ||
+                        widget.options[index - 1].category != option.category;
 
                     return Column(
                       key: _itemKeys[index],
@@ -129,14 +135,23 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                           child: Padding(
                             padding: const EdgeInsets.only(bottom: 2),
                             child: ListTile(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              tileColor: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),),
+                              tileColor: isSelected
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.1)
+                                  : Colors.transparent,
                               dense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 0,),
                               leading: Icon(
                                 option.icon,
                                 size: 20,
-                                color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).iconTheme.color,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).iconTheme.color,
                               ),
                               title: Row(
                                 children: [
@@ -145,8 +160,14 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                                       option.title,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                            : null,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -154,9 +175,12 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                                   if (!option.isSupported) ...[
                                     const SizedBox(width: 8),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2,),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).disabledColor.withValues(alpha: 0.2),
+                                        color: Theme.of(context)
+                                            .disabledColor
+                                            .withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -175,10 +199,17 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                                 option.subtitle,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.7) : Theme.of(context).hintColor,
+                                  color: isSelected
+                                      ? Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.7)
+                                      : Theme.of(context).hintColor,
                                 ),
                               ),
-                              onTap: option.isSupported ? () => widget.onOptionTapped(index) : null,
+                              onTap: option.isSupported
+                                  ? () => widget.onOptionTapped(index)
+                                  : null,
                             ),
                           ),
                         ),

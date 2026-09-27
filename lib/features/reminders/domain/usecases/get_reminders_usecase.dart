@@ -13,4 +13,8 @@ class GetRemindersUseCase {
   Stream<List<ReminderEntity>> watchAllActive() {
     return repository.watchAllActiveReminders();
   }
+
+  Future<ReminderEntity?> getReminder(String id) {
+    return repository.getReminder(id);
+  }
 }

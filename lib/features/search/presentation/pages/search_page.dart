@@ -142,13 +142,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     return;
                   }
 
-                  final targetPageId = result.strongestMatch.pageId ?? result.strongestMatch.entityId;
-                  context.push('/editor/$targetPageId', extra: {
-                    'openTarget': EditorOpenTarget(
-                      pageId: targetPageId,
-                      targetBlockId: result.strongestMatch.entityType == 'block' ? result.strongestMatch.entityId : null,
-                    ),
-                  },);
+                  final targetPageId = result.strongestMatch.pageId ??
+                      result.strongestMatch.entityId;
+                  context.push(
+                    '/editor/$targetPageId',
+                    extra: {
+                      'openTarget': EditorOpenTarget(
+                        pageId: targetPageId,
+                        targetBlockId:
+                            result.strongestMatch.entityType == 'block'
+                                ? result.strongestMatch.entityId
+                                : null,
+                      ),
+                    },
+                  );
                 },
               );
             },

@@ -52,8 +52,6 @@ void main() {
       expect(tree[4].depth, 0);
     });
 
-
-
     test('moveBlock handles DropIntent.after correctly', () {
       final blocks = [
         createBlock(id: 'a', position: 0),
@@ -111,7 +109,8 @@ void main() {
       ];
 
       // Move 'a' after 'b'
-      final updated = BlockTreeService.moveBlock('a', const DropIntent.after('b'), blocks);
+      final updated =
+          BlockTreeService.moveBlock('a', const DropIntent.after('b'), blocks);
       expect(updated.length, 1);
       expect(updated[0].id, 'a');
       // 'a_child' is not in the updated list because its parentId doesn't change,
@@ -124,7 +123,8 @@ void main() {
       ];
 
       // Try to move a block that is not in the current page
-      final updated = BlockTreeService.moveBlock('unknown_block', const DropIntent.after('a'), blocks);
+      final updated = BlockTreeService.moveBlock(
+          'unknown_block', const DropIntent.after('a'), blocks,);
       expect(updated, isEmpty);
     });
   });

@@ -40,14 +40,17 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
 
   @override
   Future<Result<Block>> getBlock(String id) async {
-    final block = testBlocks.firstWhere((b) => b.id == id, orElse: () => Block(
+    final block = testBlocks.firstWhere(
+      (b) => b.id == id,
+      orElse: () => Block(
         id: id,
         pageId: 'page',
         type: 'text',
@@ -55,22 +58,28 @@ class DummyBlockRepository implements BlockRepository {
         data: '{}',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      ),);
+      ),
+    );
     return Success(block);
   }
 
-  Future<Result<List<Block>>> getPageBlocks(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getPageBlocks(String pageId) async =>
+      Success(testBlocks);
 
   @override
-  Future<Result<List<Block>>> getBlocksForPage(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getBlocksForPage(String pageId) async =>
+      Success(testBlocks);
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+    return Success(testBlocks
+        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+        .toList(),);
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -79,8 +88,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async {
-    final updatedBlocks = BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
+  Future<Result<List<Block>>> moveBlock(
+      String sourceBlockId, DropIntent intent,) async {
+    final updatedBlocks =
+        BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
       final index = testBlocks.indexWhere((b) => b.id == updatedBlock.id);
       if (index != -1) {
@@ -88,8 +99,8 @@ class DummyBlockRepository implements BlockRepository {
       }
     }
     return Success(updatedBlocks);
-  }  
-  
+  }
+
   Future<Result<void>> updateBlocks(List<Block> blocks) async {
     for (final block in blocks) {
       final index = testBlocks.indexWhere((b) => b.id == block.id);
@@ -129,36 +140,48 @@ class DummyBlockRepository implements BlockRepository {
     return const Success(null);
   }
 
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
 
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async => const Success(null);
+  Future<Result<void>> restoreBlock(String id, String data,
+          String? parentBlockId, double position,) async =>
+      const Success(null);
 }
 
 void main() {
   const pageId = 'test-page';
 
   String textData(String text) => jsonEncode({
-    'spans': [{'text': text, 'bold': false, 'italic': false, 'underline': false, 'strikethrough': false, 'code': false}],
-    'headingLevel': 0,
-  });
+        'spans': [
+          {
+            'text': text,
+            'bold': false,
+            'italic': false,
+            'underline': false,
+            'strikethrough': false,
+            'code': false,
+          }
+        ],
+        'headingLevel': 0,
+      });
 
   String listData(String text) => jsonEncode({
-    'spans': [
-      {
-        'text': text,
-        'bold': false,
-        'italic': false,
-        'underline': false,
-        'strikethrough': false,
-        'code': false,
-      },
-    ],
-    'listType': 'checklist',
-    'checked': false,
-  });
+        'spans': [
+          {
+            'text': text,
+            'bold': false,
+            'italic': false,
+            'underline': false,
+            'strikethrough': false,
+            'code': false,
+          },
+        ],
+        'listType': 'checklist',
+        'checked': false,
+      });
 
   Widget buildTestApp({
     required List<Block> blocks,
@@ -169,7 +192,8 @@ void main() {
       overrides: [
         pageProvider(pageId).overrideWith((ref) => testPage),
         blockRepositoryProvider.overrideWithValue(DummyBlockRepository()),
-        getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+        getPageBlocksUseCaseProvider
+            .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
         focusedBlockIdProvider.overrideWith((ref) => focusedBlockId),
       ],
       child: MaterialApp(
@@ -213,7 +237,8 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1, block2], testPage: testPage));
+      await tester.pumpWidget(
+          buildTestApp(blocks: [block1, block2], testPage: testPage),);
       await tester.pumpAndSettle();
 
       expect(find.byType(BlockEditorWidget), findsOneWidget);
@@ -232,7 +257,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final block2 = Block(
         id: 'block2',
         pageId: pageId,
@@ -250,7 +275,8 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1, block2], testPage: testPage));
+      await tester.pumpWidget(
+          buildTestApp(blocks: [block1, block2], testPage: testPage),);
       await tester.pumpAndSettle();
 
       // Focus on the first block
@@ -266,20 +292,22 @@ void main() {
       expect(container.read(focusedBlockIdProvider), 'block1');
 
       // Move cursor to the end of the text so that arrowDown triggers focusNextBlock
-      textField.controller?.selection = TextSelection.collapsed(offset: textField.controller!.text.length);
+      textField.controller?.selection =
+          TextSelection.collapsed(offset: textField.controller!.text.length);
       await tester.pumpAndSettle();
 
       // Test focus isolation (Arrow Down)
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
-      
+
       // Focus should move to block2
       expect(container.read(focusedBlockIdProvider), 'block2');
 
       // Move cursor to the beginning of the text so that arrowUp triggers focusPreviousBlock
       final secondField = find.byType(TextField).last;
       final secondTextField = tester.widget<TextField>(secondField);
-      secondTextField.controller?.selection = const TextSelection.collapsed(offset: 0);
+      secondTextField.controller?.selection =
+          const TextSelection.collapsed(offset: 0);
       await tester.pumpAndSettle();
 
       // Back to block1
@@ -296,7 +324,7 @@ void main() {
       // The pending block focus is consumed by the new TextBlockWidget, so we shouldn't check it directly.
       // Instead, we verify that there are now 3 BlockWrappers and focus has moved to the new block.
       expect(find.byType(BlockWrapper), findsNWidgets(3));
-      
+
       final currentFocus = container.read(focusedBlockIdProvider);
       expect(currentFocus, isNotNull);
       expect(currentFocus, isNot('block1'));
@@ -313,7 +341,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final block2 = Block(
         id: 'block2',
         pageId: pageId,
@@ -341,56 +369,64 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1, block2, block3], testPage: testPage));
+      await tester.pumpWidget(
+          buildTestApp(blocks: [block1, block2, block3], testPage: testPage),);
       await tester.pumpAndSettle();
 
       // Focus on the second block (which is the empty one, block2)
-      final secondField = find.descendant(
-        of: find.byType(BlockWrapper),
-        matching: find.byType(TextField),
-      ).at(1);
+      final secondField = find
+          .descendant(
+            of: find.byType(BlockWrapper),
+            matching: find.byType(TextField),
+          )
+          .at(1);
       await tester.tap(secondField);
       await tester.pumpAndSettle();
-      
+
       final secondTextField = tester.widget<TextField>(secondField);
-      secondTextField.controller?.selection = const TextSelection.collapsed(offset: 0);
-      
+      secondTextField.controller?.selection =
+          const TextSelection.collapsed(offset: 0);
+
       // Press Backspace in the empty block
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pumpAndSettle();
 
       // Block2 should be deleted. 2 blocks remain.
       expect(find.byType(BlockWrapper), findsNWidgets(2));
-      
+
       final element = tester.element(find.byType(BlockEditorWidget));
       final container = ProviderScope.containerOf(element);
-      
+
       // Focus should be on block1
       expect(container.read(focusedBlockIdProvider), 'block1');
 
       // Now we have block1 and block3. Let's merge block3 into block1.
       // Move to block3, offset 0.
-      final lastFieldFinder = find.descendant(
-        of: find.byType(BlockWrapper),
-        matching: find.byType(TextField),
-      ).last;
+      final lastFieldFinder = find
+          .descendant(
+            of: find.byType(BlockWrapper),
+            matching: find.byType(TextField),
+          )
+          .last;
       await tester.tap(lastFieldFinder);
       await tester.pumpAndSettle();
       final lastField = tester.widget<TextField>(lastFieldFinder);
-      lastField.controller?.selection = const TextSelection.collapsed(offset: 0);
-      
+      lastField.controller?.selection =
+          const TextSelection.collapsed(offset: 0);
+
       // Press Backspace
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pumpAndSettle();
 
       // Block3 merged into Block1. 1 block remains.
       expect(find.byType(BlockWrapper), findsNWidgets(1));
-      
+
       // Focus should be on block1
       expect(container.read(focusedBlockIdProvider), 'block1');
     });
 
-    testWidgets('Focus restoration on Indent and Unnest (Tab/Shift+Tab)', (tester) async {
+    testWidgets('Focus restoration on Indent and Unnest (Tab/Shift+Tab)',
+        (tester) async {
       final block1 = Block(
         id: 'block1',
         pageId: pageId,
@@ -400,7 +436,7 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       final block2 = Block(
         id: 'block2',
         pageId: pageId,
@@ -418,13 +454,14 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1, block2], testPage: testPage));
+      await tester.pumpWidget(
+          buildTestApp(blocks: [block1, block2], testPage: testPage),);
       await tester.pumpAndSettle();
 
       // Focus on block2
       await tester.tap(find.text('Child'));
       await tester.pumpAndSettle();
-      
+
       final element = tester.element(find.byType(BlockEditorWidget));
       final container = ProviderScope.containerOf(element);
 
@@ -438,7 +475,8 @@ void main() {
       // Verify focus is STILL on block2 after structural change
       expect(container.read(focusedBlockIdProvider), 'block2');
       // Verify structurally indented (parent should be block1)
-      final blocksAfterIndent = container.read(editorStateProvider(pageId)).value ?? [];
+      final blocksAfterIndent =
+          container.read(editorStateProvider(pageId)).value ?? [];
       final childBlock = blocksAfterIndent.firstWhere((b) => b.id == 'block2');
       expect(childBlock.parentBlockId, 'block1');
 
@@ -451,8 +489,10 @@ void main() {
       // Verify focus is STILL on block2
       expect(container.read(focusedBlockIdProvider), 'block2');
       // Verify structurally unnested (parent should be null)
-      final blocksAfterUnnest = container.read(editorStateProvider(pageId)).value ?? [];
-      final unnestedBlock = blocksAfterUnnest.firstWhere((b) => b.id == 'block2');
+      final blocksAfterUnnest =
+          container.read(editorStateProvider(pageId)).value ?? [];
+      final unnestedBlock =
+          blocksAfterUnnest.firstWhere((b) => b.id == 'block2');
       expect(unnestedBlock.parentBlockId, isNull);
     });
 
@@ -473,7 +513,8 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [listBlock], testPage: testPage));
+      await tester
+          .pumpWidget(buildTestApp(blocks: [listBlock], testPage: testPage));
       await tester.pumpAndSettle();
 
       final field = find.descendant(

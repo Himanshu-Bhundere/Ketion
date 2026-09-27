@@ -75,7 +75,8 @@ class HtmlExporter implements ExportRepository {
           );
         },
         code: (c) {
-          buffer.writeln('<pre><code class="${_escapeHtml(c.language)}">${_escapeHtml(c.code)}</code></pre>');
+          buffer.writeln(
+              '<pre><code class="${_escapeHtml(c.language)}">${_escapeHtml(c.code)}</code></pre>',);
         },
         divider: (d) {
           buffer.writeln('<hr/>');

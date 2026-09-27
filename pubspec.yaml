@@ -62,6 +62,7 @@ dependencies:
   url_launcher: ^6.3.0
   flutter_timezone: ^5.1.0
   platform: ^3.1.6
+  pdfx: ^2.11.0
 
 dev_dependencies:
   flutter_test:
@@ -87,3 +88,6 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/audio/

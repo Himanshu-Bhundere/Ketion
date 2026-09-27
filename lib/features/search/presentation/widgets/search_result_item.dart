@@ -132,7 +132,8 @@ class SearchResultItem extends StatelessWidget {
                   const SizedBox(width: 8),
                 if (result.matchCount > 1)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -149,7 +150,9 @@ class SearchResultItem extends StatelessWidget {
           ],
         ],
       ),
-      isThreeLine: strongest.breadcrumb != null || strongest.modifiedAt != null || result.matchCount > 1,
+      isThreeLine: strongest.breadcrumb != null ||
+          strongest.modifiedAt != null ||
+          result.matchCount > 1,
       onTap: onTap,
     );
   }

@@ -17,7 +17,7 @@ class UpdateTableCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
@@ -57,7 +57,7 @@ class UpdateTableCellCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
@@ -107,14 +107,15 @@ class AddTableRowCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    
-    final newRows = TableStateTransformer.insertRow(node.rows, columnCount, afterRowIndex + 1);
+
+    final newRows = TableStateTransformer.insertRow(
+        node.rows, columnCount, afterRowIndex + 1,);
 
     document.replaceNodeById(
       node.id,
@@ -144,14 +145,15 @@ class DuplicateTableRowCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    
-    final newRows = TableStateTransformer.duplicateRow(node.rows, columnCount, rowIndex);
+
+    final newRows =
+        TableStateTransformer.duplicateRow(node.rows, columnCount, rowIndex);
 
     document.replaceNodeById(
       node.id,
@@ -181,13 +183,14 @@ class DeleteTableRowCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.deleteRow(node.rows, columnCount, rowIndex);
+    final newRows =
+        TableStateTransformer.deleteRow(node.rows, columnCount, rowIndex);
 
     document.replaceNodeById(
       node.id,
@@ -217,13 +220,14 @@ class AddTableColumnCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.insertColumn(node.rows, columnCount, afterColIndex + 1);
+    final newRows = TableStateTransformer.insertColumn(
+        node.rows, columnCount, afterColIndex + 1,);
     final newColumnCount = columnCount + 1;
 
     document.replaceNodeById(
@@ -255,13 +259,14 @@ class DuplicateTableColumnCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.duplicateColumn(node.rows, columnCount, colIndex);
+    final newRows =
+        TableStateTransformer.duplicateColumn(node.rows, columnCount, colIndex);
     final newColumnCount = columnCount + 1;
 
     document.replaceNodeById(
@@ -293,13 +298,14 @@ class DeleteTableColumnCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.deleteColumn(node.rows, columnCount, colIndex);
+    final newRows =
+        TableStateTransformer.deleteColumn(node.rows, columnCount, colIndex);
     final newColumnCount = columnCount - 1;
 
     document.replaceNodeById(
@@ -333,13 +339,14 @@ class ReorderTableRowCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    final newRows = TableStateTransformer.reorderRowById(node.rows, columnCount, draggedRowId, targetRowId);
+    final newRows = TableStateTransformer.reorderRowById(
+        node.rows, columnCount, draggedRowId, targetRowId,);
 
     document.replaceNodeById(
       node.id,
@@ -371,14 +378,15 @@ class ReorderTableColumnCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final node = document.getNodeById(nodeId);
-    
+
     if (node is! KetionTableNode) {
       return;
     }
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
-    
-    final newRows = TableStateTransformer.reorderColumnByIndex(node.rows, columnCount, draggedColumnIndex, targetColumnIndex);
+
+    final newRows = TableStateTransformer.reorderColumnByIndex(
+        node.rows, columnCount, draggedColumnIndex, targetColumnIndex,);
 
     document.replaceNodeById(
       node.id,

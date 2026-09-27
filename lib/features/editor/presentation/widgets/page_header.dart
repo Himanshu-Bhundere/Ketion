@@ -70,7 +70,8 @@ class PageHeader extends StatelessWidget {
               onLongPress: () => onIconChanged(''),
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 16),
-                child: Text(page.icon!, style: const TextStyle(fontSize: 64, height: 1)),
+                child: Text(page.icon!,
+                    style: const TextStyle(fontSize: 64, height: 1),),
               ),
             ),
           if (!hasIcon || !hasCover)
@@ -87,9 +88,18 @@ class PageHeader extends StatelessWidget {
                     ),
                   ),
                 if (!hasCover)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: Text('Add Cover (coming soon)', style: TextStyle(color: Colors.grey)),
+                  Semantics(
+                    label: 'Add Cover',
+                    button: true,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Add Cover is coming soon!')),
+                        );
+                      },
+                      icon: const Icon(Icons.image_outlined, size: 16),
+                      label: const Text('Add Cover'),
+                    ),
                   ),
               ],
             ),

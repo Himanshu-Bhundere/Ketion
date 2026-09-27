@@ -23,13 +23,15 @@ class _FailingSyncQueueRepository implements SyncQueueRepository {
   Future<Result<List<SyncQueueItem>>> claimNextBatch({
     int limit = 50,
     required Duration leaseDuration,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<Result<void>> clearCompleted() => throw UnimplementedError();
 
   @override
-  Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId) =>
+  Future<Result<SyncQueueItem?>> findPendingItem(
+          String table, String entityId,) =>
       throw UnimplementedError();
 
   @override
@@ -41,7 +43,8 @@ class _FailingSyncQueueRepository implements SyncQueueRepository {
     DateTime? nextRetryAt,
     DateTime? leaseUntil,
     String? lastError,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 }
 
 void main() {
@@ -59,7 +62,9 @@ void main() {
   });
 
   group('PageRepositoryImpl - Atomicity & Sync Queue', () {
-    test('createPage creates page, initial block and sync_queue entries atomically', () async {
+    test(
+        'createPage creates page, initial block and sync_queue entries atomically',
+        () async {
       final newPage = domain.Page(
         id: 'page1',
         title: 'Test Page',
@@ -89,13 +94,15 @@ void main() {
       final queueItems = await database.select(database.syncQueue).get();
       // Should have 2 entries: 1 for page create, 1 for block create
       expect(queueItems.length, 2);
-      
-      final pageQueueItem = queueItems.firstWhere((item) => item.entityTable == 'pages');
+
+      final pageQueueItem =
+          queueItems.firstWhere((item) => item.entityTable == 'pages');
       expect(pageQueueItem.entityId, 'page1');
       expect(pageQueueItem.operation, 'create');
       expect(pageQueueItem.status, 'pending');
 
-      final blockQueueItem = queueItems.firstWhere((item) => item.entityTable == 'blocks');
+      final blockQueueItem =
+          queueItems.firstWhere((item) => item.entityTable == 'blocks');
       expect(blockQueueItem.entityId, initialBlock.id);
       expect(blockQueueItem.operation, 'create');
       expect(blockQueueItem.status, 'pending');
@@ -123,18 +130,20 @@ void main() {
       final queueItems = await (database.select(database.syncQueue)
             ..where((t) => t.entityId.equals('page1')))
           .get();
-      
+
       // Coalesced into a single 'create' due to sync queue coalescing logic
       expect(queueItems.length, 1);
       expect(queueItems.first.operation, 'create');
-      
+
       // Check payload contains updated title
-      final payload = jsonDecode(queueItems.first.payload!) as Map<String, dynamic>;
+      final payload =
+          jsonDecode(queueItems.first.payload!) as Map<String, dynamic>;
       expect(payload['title'], 'Updated Page');
       expect(payload['version'], 2);
     });
 
-    test('rolls back page and initial block when queue insertion fails', () async {
+    test('rolls back page and initial block when queue insertion fails',
+        () async {
       final failingRepository = PageRepositoryImpl(
         database,
         _FailingSyncQueueRepository(),

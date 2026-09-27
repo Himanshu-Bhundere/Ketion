@@ -63,13 +63,13 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   void _handleBlockDragUpdate(Offset globalPosition) {
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
-    
+
     final localPosition = renderBox.globalToLocal(globalPosition);
     final height = renderBox.size.height;
-    
+
     const edgeThreshold = 60.0;
     const scrollAmount = 10.0;
-    
+
     if (localPosition.dy < edgeThreshold) {
       _startAutoScroll(-scrollAmount);
     } else if (localPosition.dy > height - edgeThreshold) {
@@ -84,16 +84,18 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
       _scrollDelta = delta;
       return;
     }
-    
+
     _scrollDelta = delta;
-    _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+    _autoScrollTimer =
+        Timer.periodic(const Duration(milliseconds: 16), (timer) {
       if (!_scrollController.hasClients) return;
-      
+
       final currentScroll = _scrollController.offset;
       final maxScroll = _scrollController.position.maxScrollExtent;
       final minScroll = _scrollController.position.minScrollExtent;
-      
-      final newScroll = (currentScroll + _scrollDelta).clamp(minScroll, maxScroll);
+
+      final newScroll =
+          (currentScroll + _scrollDelta).clamp(minScroll, maxScroll);
       if (newScroll != currentScroll) {
         _scrollController.jumpTo(newScroll);
       } else {
@@ -138,7 +140,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         content = ListBlockWidget(
           block: block,
           onUpdate: _handleBlockUpdate,
-          onSplit: (before, after) => ref.read(editorStateProvider(widget.pageId).notifier).splitListBlock(block, before, after),
+          onSplit: (before, after) => ref
+              .read(editorStateProvider(widget.pageId).notifier)
+              .splitListBlock(block, before, after),
           onMergePrevious: (text) => _handleMergeBlockWithPrevious(block, text),
         );
         break;
@@ -513,16 +517,17 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     final visibleBlocks = ref.watch(visibleBlocksProvider(widget.pageId));
-    
+
     final settingsAsync = ref.watch(appSettingsProvider);
     final settings = settingsAsync.value;
     final screenWidth = MediaQuery.of(context).size.width;
     final layoutConfig = settings != null
-        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance, screenWidth: screenWidth)
+        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance,
+            screenWidth: screenWidth,)
         : EditorLayoutConfig(
             contentWidth: 800,
             padding: EdgeInsets.symmetric(
-              horizontal: screenWidth < 600 ? 16.0 : 24.0, 
+              horizontal: screenWidth < 600 ? 16.0 : 24.0,
               vertical: 24.0,
             ),
             lineSpacing: 1.5,
@@ -581,7 +586,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
             children: [
               Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: layoutConfig.contentWidth),
+                  constraints:
+                      BoxConstraints(maxWidth: layoutConfig.contentWidth),
                   child: CustomScrollView(
                     controller: _scrollController,
                     slivers: [
@@ -593,7 +599,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                         sliver: SliverToBoxAdapter(
                           child: Consumer(
                             builder: (context, ref, _) {
-                              final pageAsync = ref.watch(pageProvider(widget.pageId));
+                              final pageAsync =
+                                  ref.watch(pageProvider(widget.pageId));
                               final page = pageAsync.valueOrNull;
                               if (page == null) return const SizedBox.shrink();
                               return PageHeader(
@@ -610,12 +617,15 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                         padding: EdgeInsets.only(
                           left: layoutConfig.padding.left,
                           right: layoutConfig.padding.right,
-                          bottom: isKeyboardVisible ? 80.0 : layoutConfig.padding.bottom,
+                          bottom: isKeyboardVisible
+                              ? 80.0
+                              : layoutConfig.padding.bottom,
                         ),
                         sliver: SliverList(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                              return _buildBlockWidget(visibleBlocks[index], index);
+                              return _buildBlockWidget(
+                                  visibleBlocks[index], index,);
                             },
                             childCount: visibleBlocks.length,
                           ),

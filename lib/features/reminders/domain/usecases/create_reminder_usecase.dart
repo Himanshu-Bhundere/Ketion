@@ -1,17 +1,23 @@
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
+import 'package:ketion/features/reminders/domain/models/reminder_notification_content.dart';
 import 'package:ketion/features/reminders/domain/repositories/reminder_repository.dart';
 import 'package:ketion/features/reminders/presentation/services/reminder_scheduler.dart';
+import 'package:ketion/features/reminders/presentation/utils/reminder_display_formatter.dart';
+import 'package:ketion/features/pages/domain/repositories/page_repository.dart';
+import 'package:ketion/features/reminders/domain/models/reminder_kind.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 class CreateReminderUseCase {
   final ReminderRepository repository;
   final ReminderScheduler scheduler;
+  final PageRepository pageRepository;
   final Uuid uuid;
 
   CreateReminderUseCase(
     this.repository,
-    this.scheduler, {
+    this.scheduler,
+    this.pageRepository, {
     this.uuid = const Uuid(),
   });
 
@@ -22,6 +28,7 @@ class CreateReminderUseCase {
     required DateTime reminderTime,
     String? timezone,
     String? recurrenceRule,
+    ReminderKind kind = ReminderKind.reminder,
   }) async {
     if (timezone == null || timezone == 'UTC') {
       try {
@@ -41,12 +48,26 @@ class CreateReminderUseCase {
       reminderTime: reminderTime,
       timezone: timezone,
       recurrenceRule: recurrenceRule,
+      kind: kind,
       createdAt: now,
       updatedAt: now,
     );
 
     await repository.addReminder(reminder);
-    await scheduler.scheduleReminder(reminder);
+    
+    String pageTitle = 'Unknown Page';
+    final pageResult = await pageRepository.getPage(pageId);
+    if (pageResult.isSuccess) {
+      final page = pageResult.valueOrNull!;
+      pageTitle = page.title.isNotEmpty ? page.title : 'Untitled Page';
+    }
+
+    final content = ReminderNotificationContent(
+      title: title.isEmpty ? 'Ketion Reminder' : title,
+      body: 'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
+    );
+    
+    await scheduler.scheduleReminder(reminder, content: content);
 
     return reminder;
   }

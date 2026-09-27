@@ -47,10 +47,12 @@ void main() {
       await command.execute(notifier);
 
       expect(notifier.log.length, 1);
-      expect(notifier.log[0], 'moveBlockToIntent(block_1, block_2, DropIntent.after(targetBlockId: block_2))');
+      expect(notifier.log[0],
+          'moveBlockToIntent(block_1, block_2, DropIntent.after(targetBlockId: block_2))',);
     });
 
-    test('execute calls moveBlockToPosition on subsequent runs (redo)', () async {
+    test('execute calls moveBlockToPosition on subsequent runs (redo)',
+        () async {
       final notifier = FakeEditorStateNotifier();
       final command = MoveBlockCommand(
         blockId: 'block_1',

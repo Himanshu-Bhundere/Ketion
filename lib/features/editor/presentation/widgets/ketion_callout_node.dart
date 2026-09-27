@@ -1,6 +1,6 @@
 import 'package:super_editor/super_editor.dart';
 
-class KetionCalloutNode extends TextNode {
+class KetionCalloutNode extends ParagraphNode {
   KetionCalloutNode({
     required super.id,
     required super.text,

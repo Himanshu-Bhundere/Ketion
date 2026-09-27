@@ -22,7 +22,6 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default(false) bool highContrast,
     @Default(false) bool reducedMotion,
     DateTime? lastCleanup,
-
   }) = _AppSettingsModel;
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) =>

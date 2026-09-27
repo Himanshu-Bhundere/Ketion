@@ -11,7 +11,6 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
 
   @override
   Future<void> executeMutation(EditorPersistenceMutation mutation) async {
-
     if (mutation is UpdateBlockMutation) {
       final block = await _persistedBlock(mutation.blockId);
       if (block != null) {
@@ -21,17 +20,25 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           parentBlockId: mutation.parentBlockId ?? block.parentBlockId,
           position: mutation.position,
         );
-        final result = await repository.updateBlock(updated, expectedVersion: mutation.expectedVersion);
-        if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+        final result = await repository.updateBlock(updated,
+            expectedVersion: mutation.expectedVersion,);
+        if (result.isError) {
+          throw Exception(result.fold((_) => '', (f) => f.toString()));
+        }
       } else {
         throw StateError('Block ${mutation.blockId} is unavailable for update');
       }
     } else if (mutation is InsertBlockMutation) {
       double resolvedPosition = mutation.position;
       if (mutation.previousBlockId != null || mutation.nextBlockId != null) {
-        final prev = mutation.previousBlockId != null ? await _persistedBlock(mutation.previousBlockId!) : null;
-        final next = mutation.nextBlockId != null ? await _persistedBlock(mutation.nextBlockId!) : null;
-        resolvedPosition = SiblingPositionManager.calculatePositionBetween(prev?.position, next?.position);
+        final prev = mutation.previousBlockId != null
+            ? await _persistedBlock(mutation.previousBlockId!)
+            : null;
+        final next = mutation.nextBlockId != null
+            ? await _persistedBlock(mutation.nextBlockId!)
+            : null;
+        resolvedPosition = SiblingPositionManager.calculatePositionBetween(
+            prev?.position, next?.position,);
       }
 
       final block = Block(
@@ -45,10 +52,15 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
         updatedAt: mutation.createdAt,
       );
       final result = await repository.createBlock(block);
-      if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+      if (result.isError) {
+        throw Exception(result.fold((_) => '', (f) => f.toString()));
+      }
     } else if (mutation is DeleteBlockMutation) {
-      final result = await repository.deleteBlock(mutation.blockId, expectedVersion: mutation.expectedVersion);
-      if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+      final result = await repository.deleteBlock(mutation.blockId,
+          expectedVersion: mutation.expectedVersion,);
+      if (result.isError) {
+        throw Exception(result.fold((_) => '', (f) => f.toString()));
+      }
     } else if (mutation is RestoreBlockMutation) {
       final result = await repository.restoreBlock(
         mutation.blockId,
@@ -56,7 +68,9 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
         mutation.parentBlockId,
         mutation.position,
       );
-      if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+      if (result.isError) {
+        throw Exception(result.fold((_) => '', (f) => f.toString()));
+      }
     } else if (mutation is SplitBlockMutation) {
       final oldBlock = await _persistedBlock(mutation.originalBlockId);
       if (oldBlock != null) {
@@ -76,7 +90,9 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           originalExpectedVersion: mutation.expectedVersion,
           newBlock: newBlock,
         );
-        if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+        if (result.isError) {
+          throw Exception(result.fold((_) => '', (f) => f.toString()));
+        }
       } else {
         throw StateError(
           'Block ${mutation.originalBlockId} is unavailable for split',
@@ -92,7 +108,9 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           deletedBlockId: mutation.victimBlockId,
           victimExpectedVersion: mutation.victimExpectedVersion,
         );
-        if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+        if (result.isError) {
+          throw Exception(result.fold((_) => '', (f) => f.toString()));
+        }
       } else {
         throw StateError(
           'Block ${mutation.survivorBlockId} is unavailable for merge',
@@ -105,8 +123,11 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           parentBlockId: mutation.parentBlockId,
           position: mutation.position,
         );
-        final result = await repository.updateBlock(updated, expectedVersion: mutation.expectedVersion);
-        if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+        final result = await repository.updateBlock(updated,
+            expectedVersion: mutation.expectedVersion,);
+        if (result.isError) {
+          throw Exception(result.fold((_) => '', (f) => f.toString()));
+        }
       }
     } else if (mutation is ChangeBlockTypeMutation) {
       final block = await _persistedBlock(mutation.blockId);
@@ -115,8 +136,11 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           type: mutation.newType,
           data: mutation.newData,
         );
-        final result = await repository.updateBlock(updated, expectedVersion: mutation.expectedVersion);
-        if (result.isError) throw Exception(result.fold((_) => '', (f) => f.toString()));
+        final result = await repository.updateBlock(updated,
+            expectedVersion: mutation.expectedVersion,);
+        if (result.isError) {
+          throw Exception(result.fold((_) => '', (f) => f.toString()));
+        }
       }
     }
   }

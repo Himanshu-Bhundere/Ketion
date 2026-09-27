@@ -88,9 +88,14 @@ void main() {
     expect(queueItems, isEmpty);
 
     // 6. Verify v14 schema additions exist
-    final appSettingsData = await driftDb.customSelect('SELECT * FROM app_settings_table').get();
-    expect(appSettingsData, isEmpty); // we didn't insert any, but we can verify columns don't crash
-    await driftDb.customSelect('SELECT accent_color, font_size, editor_appearance, high_contrast, reduced_motion FROM app_settings_table').get();
+    final appSettingsData =
+        await driftDb.customSelect('SELECT * FROM app_settings_table').get();
+    expect(appSettingsData,
+        isEmpty,); // we didn't insert any, but we can verify columns don't crash
+    await driftDb
+        .customSelect(
+            'SELECT accent_color, font_size, editor_appearance, high_contrast, reduced_motion FROM app_settings_table',)
+        .get();
 
     await driftDb.close();
   });

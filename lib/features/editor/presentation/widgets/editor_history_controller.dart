@@ -54,7 +54,7 @@ class EditorHistoryController extends ChangeNotifier {
   void undo() {
     debugPrint('KETION: EditorHistoryController.undo() called!');
     if (!canUndo) return;
-    
+
     // 1. Take a pre-history snapshot of the document structure and content
     registry.takeSnapshot(document);
 
@@ -68,7 +68,7 @@ class EditorHistoryController extends ChangeNotifier {
   void redo() {
     debugPrint('KETION: EditorHistoryController.redo() called!');
     if (!canRedo) return;
-    
+
     // 1. Take a pre-history snapshot of the document structure and content
     registry.takeSnapshot(document);
 
@@ -77,6 +77,7 @@ class EditorHistoryController extends ChangeNotifier {
   }
 }
 
-final editorHistoryControllerProvider = StateProvider.family.autoDispose<EditorHistoryController?, String>((ref, pageId) {
+final editorHistoryControllerProvider = StateProvider.family
+    .autoDispose<EditorHistoryController?, String>((ref, pageId) {
   return null;
 });

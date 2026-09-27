@@ -43,14 +43,17 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
 
   @override
   Future<Result<Block>> getBlock(String id) async {
-    final block = testBlocks.firstWhere((b) => b.id == id, orElse: () => Block(
+    final block = testBlocks.firstWhere(
+      (b) => b.id == id,
+      orElse: () => Block(
         id: id,
         pageId: 'page',
         type: 'text',
@@ -58,22 +61,28 @@ class DummyBlockRepository implements BlockRepository {
         data: '{}',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      ),);
+      ),
+    );
     return Success(block);
   }
 
-  Future<Result<List<Block>>> getPageBlocks(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getPageBlocks(String pageId) async =>
+      Success(testBlocks);
 
   @override
-  Future<Result<List<Block>>> getBlocksForPage(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getBlocksForPage(String pageId) async =>
+      Success(testBlocks);
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+    return Success(testBlocks
+        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+        .toList(),);
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -82,8 +91,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async {
-    final updatedBlocks = BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
+  Future<Result<List<Block>>> moveBlock(
+      String sourceBlockId, DropIntent intent,) async {
+    final updatedBlocks =
+        BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
       final index = testBlocks.indexWhere((b) => b.id == updatedBlock.id);
       if (index != -1) {
@@ -91,8 +102,8 @@ class DummyBlockRepository implements BlockRepository {
       }
     }
     return Success(updatedBlocks);
-  }  
-  
+  }
+
   Future<Result<void>> updateBlocks(List<Block> blocks) async {
     for (final block in blocks) {
       final index = testBlocks.indexWhere((b) => b.id == block.id);
@@ -132,12 +143,15 @@ class DummyBlockRepository implements BlockRepository {
     return const Success(null);
   }
 
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
 
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async => const Success(null);
+  Future<Result<void>> restoreBlock(String id, String data,
+          String? parentBlockId, double position,) async =>
+      const Success(null);
 }
 
 /// Block repository that records which repository methods were called,
@@ -152,7 +166,8 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     calls.add('updateBlock:${block.id}:v$expectedVersion');
     return super.updateBlock(block, expectedVersion: expectedVersion);
   }
@@ -172,7 +187,8 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     calls.add('deleteBlock:$id');
     return super.deleteBlock(id, expectedVersion: expectedVersion);
   }
@@ -180,12 +196,14 @@ class SpyBlockRepository extends DummyBlockRepository {
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
-  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty && attempts < 50) {
+  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+      attempts < 50) {
     await tester.pump(const Duration(milliseconds: 50));
     attempts++;
   }
   if (attempts >= 50) {
-    throw Exception('pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear');
+    throw Exception(
+        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -194,19 +212,21 @@ void main() {
   const pageId = 'test-page';
 
   String textData(String text) => jsonEncode({
-    'spans': [{
-      'text': text, 
-      'bold': false, 
-      'italic': false, 
-      'underline': false, 
-      'strikethrough': false, 
-      'code': false,
-      'link': null,
-      'pageLink': null,
-      'pageLinkTitle': null,
-    }],
-    'headingLevel': 0,
-  });
+        'spans': [
+          {
+            'text': text,
+            'bold': false,
+            'italic': false,
+            'underline': false,
+            'strikethrough': false,
+            'code': false,
+            'link': null,
+            'pageLink': null,
+            'pageLinkTitle': null,
+          }
+        ],
+        'headingLevel': 0,
+      });
 
   Widget buildTestApp({
     required List<Block> blocks,
@@ -216,7 +236,8 @@ void main() {
       overrides: [
         pageProvider(pageId).overrideWith((ref) => testPage),
         blockRepositoryProvider.overrideWithValue(DummyBlockRepository()),
-        getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+        getPageBlocksUseCaseProvider
+            .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -236,7 +257,9 @@ void main() {
   }
 
   group('KetionSuperEditorAdapter Undo/Redo validation', () {
-    testWidgets('Validate standard edit round-trip and semantic equality without data loss', (tester) async {
+    testWidgets(
+        'Validate standard edit round-trip and semantic equality without data loss',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block1 = Block(
@@ -256,19 +279,22 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1], testPage: testPage));
+      await tester
+          .pumpWidget(buildTestApp(blocks: [block1], testPage: testPage));
       await pumpUntilInitialized(tester);
 
       // Wait for provider to load and adapter to initialize
       final element = tester.element(find.byType(SuperEditorHost));
       final container = ProviderScope.containerOf(element);
-      
+
       // Get initial state
-      final initialBlocks = container.read(editorStateProvider(pageId)).value ?? [];
+      final initialBlocks =
+          container.read(editorStateProvider(pageId)).value ?? [];
       expect(initialBlocks.length, 1);
-      
+
       // Initial text is 'Initial Text'
-      final initialData = jsonDecode(initialBlocks.first.data) as Map<String, dynamic>;
+      final initialData =
+          jsonDecode(initialBlocks.first.data) as Map<String, dynamic>;
       final initialSpans = initialData['spans'] as List<dynamic>;
       expect(initialSpans.first['text'], 'Initial Text');
 
@@ -279,7 +305,7 @@ void main() {
       // Type some new text
       await tester.tap(superEditorFinder);
       await pumpUntilInitialized(tester);
-      
+
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
       final document = state.document as MutableDocument;
       final editor = state.editor as Editor;
@@ -304,15 +330,17 @@ void main() {
 
       final editedBlocks = List<Block>.from(testBlocks);
       expect(editedBlocks.length, 1);
-      final editedData = jsonDecode(editedBlocks.first.data) as Map<String, dynamic>;
+      final editedData =
+          jsonDecode(editedBlocks.first.data) as Map<String, dynamic>;
       final editedSpans = editedData['spans'] as List<dynamic>;
       expect(editedSpans.first['text'], 'Initial Text and Edited Text');
 
       // Now Undo
       container.read(editorHistoryControllerProvider(pageId))?.undo();
       await tester.pump(const Duration(milliseconds: 500)); // wait for debounce
-      
-      final textAfterUndo = (document.first as ParagraphNode).text.toPlainText();
+
+      final textAfterUndo =
+          (document.first as ParagraphNode).text.toPlainText();
       debugPrint('DOCUMENT TEXT AFTER UNDO: $textAfterUndo');
 
       // Verify the block state is back to initial
@@ -320,13 +348,14 @@ void main() {
 
       final undoneBlocks = List<Block>.from(testBlocks);
       for (final b in undoneBlocks) {
-         debugPrint("Block ID: ${b.id}, text: ${jsonDecode(b.data)['spans']}");
+        debugPrint("Block ID: ${b.id}, text: ${jsonDecode(b.data)['spans']}");
       }
       expect(undoneBlocks.length, 1);
-      final undoneData = jsonDecode(undoneBlocks.first.data) as Map<String, dynamic>;
+      final undoneData =
+          jsonDecode(undoneBlocks.first.data) as Map<String, dynamic>;
       final undoneSpans = undoneData['spans'] as List<dynamic>;
       expect(undoneSpans.first['text'], 'Initial Text');
-      
+
       // Validate semantic equality of initial vs undone state
       expect(undoneBlocks.first.id, initialBlocks.first.id);
       expect(undoneBlocks.first.type, initialBlocks.first.type);
@@ -341,10 +370,11 @@ void main() {
 
       final redoneBlocks = List<Block>.from(testBlocks);
       expect(redoneBlocks.length, 1);
-      final redoneData = jsonDecode(redoneBlocks.first.data) as Map<String, dynamic>;
+      final redoneData =
+          jsonDecode(redoneBlocks.first.data) as Map<String, dynamic>;
       final redoneSpans = redoneData['spans'] as List<dynamic>;
       expect(redoneSpans.first['text'], 'Initial Text and Edited Text');
-      
+
       // Validate semantic equality of edited vs redone state
       expect(redoneBlocks.first.id, editedBlocks.first.id);
       expect(redoneBlocks.first.type, editedBlocks.first.type);
@@ -355,7 +385,8 @@ void main() {
   });
 
   group('KetionSuperEditorAdapter Structural edits', () {
-    testWidgets('Validate node insertion, deletion and block mapping', (tester) async {
+    testWidgets('Validate node insertion, deletion and block mapping',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block1 = Block(
@@ -375,18 +406,18 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      await tester.pumpWidget(buildTestApp(blocks: [block1], testPage: testPage));
+      await tester
+          .pumpWidget(buildTestApp(blocks: [block1], testPage: testPage));
       await pumpUntilInitialized(tester);
-
 
       final superEditorFinder = find.byType(SuperEditor);
       await tester.tap(superEditorFinder);
       await pumpUntilInitialized(tester);
-      
+
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
       final document = state.document as MutableDocument;
       final editor = state.editor as Editor;
-      
+
       final initialNodeId = document.first.id;
 
       // 1. Test Node Insertion
@@ -408,8 +439,9 @@ void main() {
 
       final blocksAfterInsert = List<Block>.from(testBlocks);
       expect(blocksAfterInsert.length, 2);
-      
-      final insertedData = jsonDecode(blocksAfterInsert[1].data) as Map<String, dynamic>;
+
+      final insertedData =
+          jsonDecode(blocksAfterInsert[1].data) as Map<String, dynamic>;
       final insertedSpans = insertedData['spans'] as List<dynamic>;
       expect(insertedSpans.first['text'], 'New Block Text');
       expect(blocksAfterInsert[1].type, 'text');
@@ -431,12 +463,13 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       final blocksAfterTask = List<Block>.from(testBlocks);
       expect(blocksAfterTask.length, 3);
       expect(blocksAfterTask[2].type, 'list');
-      
-      final taskData = jsonDecode(blocksAfterTask[2].data) as Map<String, dynamic>;
+
+      final taskData =
+          jsonDecode(blocksAfterTask[2].data) as Map<String, dynamic>;
       expect(taskData['listType'], 'checklist');
       expect(taskData['checked'], true);
       expect((taskData['spans'] as List).first['text'], 'Task Text');
@@ -448,7 +481,7 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       final blocksAfterDelete = List<Block>.from(testBlocks);
       expect(blocksAfterDelete.length, 2);
       // The task block should now be the second block
@@ -474,7 +507,8 @@ void main() {
         overrides: [
           pageProvider(pageId).overrideWith((ref) => testPage),
           blockRepositoryProvider.overrideWithValue(spy),
-          getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+          getPageBlocksUseCaseProvider
+              .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
         ],
         child: MaterialApp(
           home: Scaffold(
@@ -494,15 +528,15 @@ void main() {
     }
 
     Block makeTextBlock(String id, String text, {int version = 1}) => Block(
-      id: id,
-      pageId: pageId,
-      type: 'text',
-      position: 0,
-      data: textData(text),
-      version: version,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+          id: id,
+          pageId: pageId,
+          type: 'text',
+          position: 0,
+          data: textData(text),
+          version: version,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
     final testPage = page_entity.Page(
       id: pageId,
@@ -512,15 +546,18 @@ void main() {
     );
 
     // --- Test A: Slash to Bullet produces exactly one updateBlock (the ChangeBlockTypeMutation) ---
-    testWidgets('A. Slash to bullet: exactly one persistence call', (tester) async {
+    testWidgets('A. Slash to bullet: exactly one persistence call',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-a', 'Hello');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -533,7 +570,8 @@ void main() {
 
       // Issue the same conversion request that the slash menu issues
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: nodeId, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: nodeId, type: ListItemType.unordered,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -543,9 +581,14 @@ void main() {
       // The ChangeBlockTypeMutation flows through updateBlock.
       // The critical assertion: there should be exactly ONE updateBlock call,
       // not two (which would indicate a duplicate from the adapter).
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      expect(updateCalls.length, 1,
-          reason: 'Slash conversion must produce exactly one updateBlock call (ChangeBlockTypeMutation), not a duplicate',);
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      expect(
+        updateCalls.length,
+        1,
+        reason:
+            'Slash conversion must produce exactly one updateBlock call (ChangeBlockTypeMutation), not a duplicate',
+      );
 
       // Verify the block was converted to list type
       final convertedBlock = testBlocks.firstWhere((b) => b.id == 'block-a');
@@ -555,15 +598,18 @@ void main() {
     });
 
     // --- Test B: Slash to Numbered ---
-    testWidgets('B. Slash to numbered list: exactly one persistence call', (tester) async {
+    testWidgets('B. Slash to numbered list: exactly one persistence call',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-b', 'Hello');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -575,14 +621,16 @@ void main() {
       spyRepo.calls.clear();
 
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: nodeId, type: ListItemType.ordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: nodeId, type: ListItemType.ordered,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
       await tester.pump(const Duration(milliseconds: 100));
 
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
       expect(updateCalls.length, 1);
 
       final convertedBlock = testBlocks.firstWhere((b) => b.id == 'block-b');
@@ -592,15 +640,18 @@ void main() {
     });
 
     // --- Test C: Slash to Checklist ---
-    testWidgets('C. Slash to checklist: exactly one persistence call', (tester) async {
+    testWidgets('C. Slash to checklist: exactly one persistence call',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-c', 'Hello');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -619,7 +670,8 @@ void main() {
       await adapter.flushPendingChanges();
       await tester.pump(const Duration(milliseconds: 100));
 
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
       expect(updateCalls.length, 1);
 
       final convertedBlock = testBlocks.firstWhere((b) => b.id == 'block-c');
@@ -629,15 +681,18 @@ void main() {
     });
 
     // --- Test D: Slash to Heading 2 ---
-    testWidgets('D. Slash to heading 2: exactly one persistence call', (tester) async {
+    testWidgets('D. Slash to heading 2: exactly one persistence call',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-d', 'Hello');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -649,29 +704,34 @@ void main() {
       spyRepo.calls.clear();
 
       editor.execute([
-        ChangeParagraphBlockTypeRequest(nodeId: nodeId, blockType: header2Attribution),
+        ChangeParagraphBlockTypeRequest(
+            nodeId: nodeId, blockType: header2Attribution,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
       await tester.pump(const Duration(milliseconds: 100));
 
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
       expect(updateCalls.length, 1);
 
       debugDefaultTargetPlatformOverride = null;
     });
 
     // --- Test G: Version regression ---
-    testWidgets('G. Version advances correctly: conversion then typing', (tester) async {
+    testWidgets('G. Version advances correctly: conversion then typing',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-g', 'Hello', version: 5);
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -689,7 +749,8 @@ void main() {
 
       // Convert to bullet
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: nodeId, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: nodeId, type: ListItemType.unordered,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -697,13 +758,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // After conversion: version should be 6
-      expect(registry.getBlockVersion(blockId), 6,
-          reason: 'ChangeBlockTypeMutation must increment version 5 to 6',);
+      expect(
+        registry.getBlockVersion(blockId),
+        6,
+        reason: 'ChangeBlockTypeMutation must increment version 5 to 6',
+      );
 
       // The updateBlock call should have carried expectedVersion: 5
-      final firstUpdateCall = spyRepo.calls.firstWhere((c) => c.startsWith('updateBlock:'));
-      expect(firstUpdateCall.contains('v5'), true,
-          reason: 'First updateBlock must carry expectedVersion 5',);
+      final firstUpdateCall =
+          spyRepo.calls.firstWhere((c) => c.startsWith('updateBlock:'));
+      expect(
+        firstUpdateCall.contains('v5'),
+        true,
+        reason: 'First updateBlock must carry expectedVersion 5',
+      );
 
       // Now type into the converted list item
       final currentNodeId = document.first.id;
@@ -728,28 +796,38 @@ void main() {
       // After typing: version should be 7
       final typingBlockId = registry.blockIdForNode(currentNodeId);
       if (typingBlockId == blockId) {
-        expect(registry.getBlockVersion(blockId), 7,
-            reason: 'UpdateBlockMutation must increment version 6 to 7',);
+        expect(
+          registry.getBlockVersion(blockId),
+          7,
+          reason: 'UpdateBlockMutation must increment version 6 to 7',
+        );
       }
 
       // Total: exactly 2 updateBlock calls (conversion + typing)
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      expect(updateCalls.length, 2,
-          reason: 'Conversion + typing must produce exactly 2 updateBlock calls',);
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      expect(
+        updateCalls.length,
+        2,
+        reason: 'Conversion + typing must produce exactly 2 updateBlock calls',
+      );
 
       debugDefaultTargetPlatformOverride = null;
     });
 
     // --- Test I: Non-slash insertion still works ---
-    testWidgets('I. Non-slash Enter creates exactly one new block', (tester) async {
+    testWidgets('I. Non-slash Enter creates exactly one new block',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-i', 'Hello World');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -775,9 +853,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Should produce exactly one splitBlock call
-      final splitCalls = spyRepo.calls.where((c) => c.startsWith('splitBlock:')).toList();
-      expect(splitCalls.length, 1,
-          reason: 'Enter/split must produce exactly one splitBlock call',);
+      final splitCalls =
+          spyRepo.calls.where((c) => c.startsWith('splitBlock:')).toList();
+      expect(
+        splitCalls.length,
+        1,
+        reason: 'Enter/split must produce exactly one splitBlock call',
+      );
 
       // Document should have 2 nodes
       expect(document.nodeCount, 2);
@@ -786,15 +868,19 @@ void main() {
     });
 
     // --- Test J: Event ordering (the critical timing test) ---
-    testWidgets('J. Event ordering: no duplicate updateBlock from adapter during conversion', (tester) async {
+    testWidgets(
+        'J. Event ordering: no duplicate updateBlock from adapter during conversion',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-j', 'Test');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -807,7 +893,8 @@ void main() {
 
       // Issue conversion
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: nodeId, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: nodeId, type: ListItemType.unordered,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -816,23 +903,32 @@ void main() {
 
       // Assert: exactly 1 updateBlock call (from the handler's ChangeBlockTypeMutation),
       // NOT 2 (which would indicate the adapter also produced a duplicate UpdateBlockMutation).
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      expect(updateCalls.length, 1,
-          reason: 'Adapter suppression must prevent a duplicate updateBlock from conversion events',);
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      expect(
+        updateCalls.length,
+        1,
+        reason:
+            'Adapter suppression must prevent a duplicate updateBlock from conversion events',
+      );
 
       debugDefaultTargetPlatformOverride = null;
     });
 
     // --- Test K: Multi-event conversion (task replaces node entirely) ---
-    testWidgets('K. Multi-event conversion: all events suppressed during semantic scope', (tester) async {
+    testWidgets(
+        'K. Multi-event conversion: all events suppressed during semantic scope',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-k', 'Multi event test');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -854,23 +950,31 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Only 1 updateBlock from the semantic handler
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      expect(updateCalls.length, 1,
-          reason: 'Task conversion must produce exactly one updateBlock (all events suppressed)',);
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      expect(
+        updateCalls.length,
+        1,
+        reason:
+            'Task conversion must produce exactly one updateBlock (all events suppressed)',
+      );
 
       debugDefaultTargetPlatformOverride = null;
     });
 
     // --- Test L: Conversion followed by typing ---
-    testWidgets('L. Conversion then typing: 2 total updateBlock calls', (tester) async {
+    testWidgets('L. Conversion then typing: 2 total updateBlock calls',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-l', '');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -883,7 +987,8 @@ void main() {
 
       // Step 1: Convert to bullet
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: nodeId, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: nodeId, type: ListItemType.unordered,),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -908,9 +1013,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Exactly 2: 1 from conversion (ChangeBlockTypeMutation) + 1 from typing (UpdateBlockMutation)
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      expect(updateCalls.length, 2,
-          reason: 'Conversion + typing must produce exactly 2 updateBlock calls',);
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+      expect(
+        updateCalls.length,
+        2,
+        reason: 'Conversion + typing must produce exactly 2 updateBlock calls',
+      );
 
       // Verify final block state
       final convertedBlock = testBlocks.firstWhere((b) => b.id == 'block-l');
@@ -922,15 +1031,19 @@ void main() {
     });
 
     // --- Test M: The full integration scenario ---
-    testWidgets('M. Full flow: Slash -> Numbered -> Enter -> Type -> Enter -> Slash -> Bullet', (tester) async {
+    testWidgets(
+        'M. Full flow: Slash -> Numbered -> Enter -> Type -> Enter -> Slash -> Bullet',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-m', '');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -943,11 +1056,12 @@ void main() {
       // 1. Slash -> Numbered List
       String currentNodeId = document.first.id;
       editor.execute([
-        ConvertParagraphToListItemRequest(nodeId: currentNodeId, type: ListItemType.ordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: currentNodeId, type: ListItemType.ordered,),
       ]);
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       // 2. Type "Hello"
       editor.execute([
         InsertTextRequest(
@@ -1017,13 +1131,17 @@ void main() {
       ]);
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       // Remove '/' and convert to bullet (simulating the user selecting 'Bulleted List')
       editor.execute([
         DeleteContentRequest(
           documentRange: DocumentSelection(
-            base: DocumentPosition(nodeId: currentNodeId, nodePosition: const TextNodePosition(offset: 0)),
-            extent: DocumentPosition(nodeId: currentNodeId, nodePosition: const TextNodePosition(offset: 1)),
+            base: DocumentPosition(
+                nodeId: currentNodeId,
+                nodePosition: const TextNodePosition(offset: 0),),
+            extent: DocumentPosition(
+                nodeId: currentNodeId,
+                nodePosition: const TextNodePosition(offset: 1),),
           ),
         ),
         ChangeListItemTypeRequest(
@@ -1036,37 +1154,45 @@ void main() {
 
       // Verify that three separate blocks exist
       expect(testBlocks.length, 3);
-      
+
       final firstBlock = testBlocks.firstWhere((b) => b.id == 'block-m');
       expect(firstBlock.type, 'list');
       expect(jsonDecode(firstBlock.data)['listType'], 'numbered');
-      
+
       // The other two blocks should have different IDs
       final blockIds = testBlocks.map((b) => b.id).toSet();
-      expect(blockIds.length, 3, reason: 'Each split must create a new block ID');
-      
+      expect(blockIds.length, 3,
+          reason: 'Each split must create a new block ID',);
+
       // Finding the other blocks
       final newBlocks = testBlocks.where((b) => b.id != 'block-m').toList();
       expect(newBlocks[0].type, 'list');
       expect(newBlocks[1].type, 'list');
-      
+
       // The last one should be bulleted
-      final lastBlock = testBlocks.lastWhere((b) => b.id == (state.registry as EditorIdentityRegistry).blockIdForNode(currentNodeId));
+      final lastBlock = testBlocks.lastWhere((b) =>
+          b.id ==
+          (state.registry as EditorIdentityRegistry)
+              .blockIdForNode(currentNodeId),);
       expect(jsonDecode(lastBlock.data)['listType'], 'bullet');
-      
+
       debugDefaultTargetPlatformOverride = null;
     });
 
     // --- Test N: Single Insertion (Unowned NodeInsertedEvent routes to InsertBlockMutation) ---
-    testWidgets('N. Single Insertion: unowned NodeInsertedEvent routes to InsertBlockMutation', (tester) async {
+    testWidgets(
+        'N. Single Insertion: unowned NodeInsertedEvent routes to InsertBlockMutation',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-n', 'Paragraph 1');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -1077,12 +1203,16 @@ void main() {
 
       // Trigger an unowned NodeInsertedEvent (simulating a paste or external insertion)
       final newNodeId = Editor.createNodeId();
-      final newNode = ParagraphNode(id: newNodeId, text: AttributedText('Pasted Paragraph'));
-      document.insertNodeAfter(existingNodeId: document.first.id, newNode: newNode);
-      
-      adapter.onDocumentChangeForTesting(DocumentChangeLog([
-        NodeInsertedEvent(newNodeId, 1),
-      ]),);
+      final newNode = ParagraphNode(
+          id: newNodeId, text: AttributedText('Pasted Paragraph'),);
+      document.insertNodeAfter(
+          existingNodeId: document.first.id, newNode: newNode,);
+
+      adapter.onDocumentChangeForTesting(
+        DocumentChangeLog([
+          NodeInsertedEvent(newNodeId, 1),
+        ]),
+      );
 
       // We wait for the adapter to flush
       await tester.pump(const Duration(milliseconds: 500));
@@ -1091,11 +1221,16 @@ void main() {
 
       // The adapter should have created exactly 1 InsertBlockMutation
       // which results in 1 call to createBlock on the repository.
-      final createCalls = spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      
-      expect(createCalls.length, 1, reason: 'Must produce exactly one createBlock call');
-      expect(updateCalls.length, 0, reason: 'Must NOT produce an updateBlock call for a newly inserted node');
+      final createCalls =
+          spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+
+      expect(createCalls.length, 1,
+          reason: 'Must produce exactly one createBlock call',);
+      expect(updateCalls.length, 0,
+          reason:
+              'Must NOT produce an updateBlock call for a newly inserted node',);
 
       // Check testBlocks
       expect(testBlocks.length, 2);
@@ -1107,15 +1242,19 @@ void main() {
     });
 
     // --- Test O: Multi-Node / Paste Ordering Test ---
-    testWidgets('O. Paste Ordering: multiple nodes pasted maintain correct order', (tester) async {
+    testWidgets(
+        'O. Paste Ordering: multiple nodes pasted maintain correct order',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-o', 'Block A');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -1125,32 +1264,40 @@ void main() {
       spyRepo.calls.clear();
 
       // We insert Block B, Block C, Block D in that order after Block A
-      final nodeB = ParagraphNode(id: Editor.createNodeId(), text: AttributedText('Block B'));
-      final nodeC = ParagraphNode(id: Editor.createNodeId(), text: AttributedText('Block C'));
-      final nodeD = ParagraphNode(id: Editor.createNodeId(), text: AttributedText('Block D'));
+      final nodeB = ParagraphNode(
+          id: Editor.createNodeId(), text: AttributedText('Block B'),);
+      final nodeC = ParagraphNode(
+          id: Editor.createNodeId(), text: AttributedText('Block C'),);
+      final nodeD = ParagraphNode(
+          id: Editor.createNodeId(), text: AttributedText('Block D'),);
 
       // Insert sequentially so their document index represents A < B < C < D
-      document.insertNodeAfter(existingNodeId: document.first.id, newNode: nodeB);
+      document.insertNodeAfter(
+          existingNodeId: document.first.id, newNode: nodeB,);
       document.insertNodeAfter(existingNodeId: nodeB.id, newNode: nodeC);
       document.insertNodeAfter(existingNodeId: nodeC.id, newNode: nodeD);
 
-      adapter.onDocumentChangeForTesting(DocumentChangeLog([
-        NodeInsertedEvent(nodeB.id, 1),
-        NodeInsertedEvent(nodeC.id, 2),
-        NodeInsertedEvent(nodeD.id, 3),
-      ]),);
+      adapter.onDocumentChangeForTesting(
+        DocumentChangeLog([
+          NodeInsertedEvent(nodeB.id, 1),
+          NodeInsertedEvent(nodeC.id, 2),
+          NodeInsertedEvent(nodeD.id, 3),
+        ]),
+      );
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
       await tester.pump(const Duration(milliseconds: 100));
 
-      final createCalls = spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      expect(createCalls.length, 3, reason: 'Must produce exactly three createBlock calls');
+      final createCalls =
+          spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
+      expect(createCalls.length, 3,
+          reason: 'Must produce exactly three createBlock calls',);
 
       // Assert positional ordering A < B < C < D in testBlocks
       testBlocks.sort((b1, b2) => b1.position.compareTo(b2.position));
       expect(testBlocks.length, 4);
-      
+
       expect(jsonDecode(testBlocks[0].data)['spans'][0]['text'], 'Block A');
       expect(jsonDecode(testBlocks[1].data)['spans'][0]['text'], 'Block B');
       expect(jsonDecode(testBlocks[2].data)['spans'][0]['text'], 'Block C');
@@ -1164,11 +1311,13 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-p', 'My Task');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -1213,15 +1362,18 @@ void main() {
     });
 
     // --- Test Q: Heading Visual Test ---
-    testWidgets('Q. Heading Visual: Text styles are applied correctly', (tester) async {
+    testWidgets('Q. Heading Visual: Text styles are applied correctly',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-q', 'Heading Test');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -1230,46 +1382,73 @@ void main() {
       final nodeId = document.first.id;
 
       // Verify default paragraph style
-      final paragraphElement = find.byWidgetPredicate(
-        (widget) => widget is RichText && widget.text.toPlainText() == 'Heading Test',
-      ).evaluate().first.widget as RichText;
-      
+      final paragraphElement = find
+          .byWidgetPredicate(
+            (widget) =>
+                widget is RichText &&
+                widget.text.toPlainText() == 'Heading Test',
+          )
+          .evaluate()
+          .first
+          .widget as RichText;
+
       expect(paragraphElement.text.style?.fontSize, 18);
 
       // Convert to H1
       editor.execute([
-        ChangeParagraphBlockTypeRequest(nodeId: nodeId, blockType: header1Attribution),
+        ChangeParagraphBlockTypeRequest(
+            nodeId: nodeId, blockType: header1Attribution,),
       ]);
       await tester.pump();
-      
-      final h1Element = find.byWidgetPredicate(
-        (widget) => widget is RichText && widget.text.toPlainText() == 'Heading Test',
-      ).evaluate().first.widget as RichText;
-      
+
+      final h1Element = find
+          .byWidgetPredicate(
+            (widget) =>
+                widget is RichText &&
+                widget.text.toPlainText() == 'Heading Test',
+          )
+          .evaluate()
+          .first
+          .widget as RichText;
+
       expect(h1Element.text.style!.fontSize! > 18.0, true);
 
       // Convert to H2
       editor.execute([
-        ChangeParagraphBlockTypeRequest(nodeId: nodeId, blockType: header2Attribution),
+        ChangeParagraphBlockTypeRequest(
+            nodeId: nodeId, blockType: header2Attribution,),
       ]);
       await tester.pump();
-      
-      final h2Element = find.byWidgetPredicate(
-        (widget) => widget is RichText && widget.text.toPlainText() == 'Heading Test',
-      ).evaluate().first.widget as RichText;
-      
+
+      final h2Element = find
+          .byWidgetPredicate(
+            (widget) =>
+                widget is RichText &&
+                widget.text.toPlainText() == 'Heading Test',
+          )
+          .evaluate()
+          .first
+          .widget as RichText;
+
       expect(h2Element.text.style!.fontSize! > 18.0, true);
 
       // Convert to H3
       editor.execute([
-        ChangeParagraphBlockTypeRequest(nodeId: nodeId, blockType: header3Attribution),
+        ChangeParagraphBlockTypeRequest(
+            nodeId: nodeId, blockType: header3Attribution,),
       ]);
       await tester.pump();
-      
-      final h3Element = find.byWidgetPredicate(
-        (widget) => widget is RichText && widget.text.toPlainText() == 'Heading Test',
-      ).evaluate().first.widget as RichText;
-      
+
+      final h3Element = find
+          .byWidgetPredicate(
+            (widget) =>
+                widget is RichText &&
+                widget.text.toPlainText() == 'Heading Test',
+          )
+          .evaluate()
+          .first
+          .widget as RichText;
+
       expect(h3Element.text.style!.fontSize! > 18.0, true);
 
       debugDefaultTargetPlatformOverride = null;

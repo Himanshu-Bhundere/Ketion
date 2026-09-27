@@ -3,10 +3,10 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:super_editor/super_editor.dart';
 
-/// A secure registry that manages the identity mapping between Ketion Blocks 
-/// and Super Editor DocumentNodes. 
+/// A secure registry that manages the identity mapping between Ketion Blocks
+/// and Super Editor DocumentNodes.
 ///
-/// It maintains a strict 1:1 relationship and prevents generating duplicate 
+/// It maintains a strict 1:1 relationship and prevents generating duplicate
 /// UUIDs or overlapping mappings.
 ///
 /// Also provides:
@@ -42,13 +42,19 @@ class EditorIdentityRegistry {
 
   // --- Active mapping accessors ---
 
-  String? blockIdForNode(String nodeId) => _nodeToBlock[nodeId] ?? _pendingNodeToBlock[nodeId];
-  
-  String? nodeIdForBlock(String blockId) => _blockToNode[blockId] ?? _pendingBlockToNode[blockId];
+  String? blockIdForNode(String nodeId) =>
+      _nodeToBlock[nodeId] ?? _pendingNodeToBlock[nodeId];
 
-  bool containsNode(String nodeId) => _nodeToBlock.containsKey(nodeId) || _pendingNodeToBlock.containsKey(nodeId);
-  
-  bool containsBlock(String blockId) => _blockToNode.containsKey(blockId) || _pendingBlockToNode.containsKey(blockId);
+  String? nodeIdForBlock(String blockId) =>
+      _blockToNode[blockId] ?? _pendingBlockToNode[blockId];
+
+  bool containsNode(String nodeId) =>
+      _nodeToBlock.containsKey(nodeId) ||
+      _pendingNodeToBlock.containsKey(nodeId);
+
+  bool containsBlock(String blockId) =>
+      _blockToNode.containsKey(blockId) ||
+      _pendingBlockToNode.containsKey(blockId);
 
   Iterable<String> get mappedNodeIds => _nodeToBlock.keys;
 
@@ -57,14 +63,18 @@ class EditorIdentityRegistry {
   void registerMapping({required String nodeId, required String blockId}) {
     // 1:1 Invariant checks
     if (_nodeToBlock.containsKey(nodeId) && _nodeToBlock[nodeId] != blockId) {
-      assert(false, 'Invariant violation: Node $nodeId already mapped to ${_nodeToBlock[nodeId]}. Cannot map to $blockId.');
-      debugPrint('Error: Mapping conflict. Node $nodeId is already mapped to ${_nodeToBlock[nodeId]}. Ignoring new mapping to $blockId.');
+      assert(false,
+          'Invariant violation: Node $nodeId already mapped to ${_nodeToBlock[nodeId]}. Cannot map to $blockId.',);
+      debugPrint(
+          'Error: Mapping conflict. Node $nodeId is already mapped to ${_nodeToBlock[nodeId]}. Ignoring new mapping to $blockId.',);
       return;
     }
-    
+
     if (_blockToNode.containsKey(blockId) && _blockToNode[blockId] != nodeId) {
-      assert(false, 'Invariant violation: Block $blockId already mapped to ${_blockToNode[blockId]}. Cannot map to $nodeId.');
-      debugPrint('Error: Mapping conflict. Block $blockId is already mapped to ${_blockToNode[blockId]}. Ignoring new mapping to $nodeId.');
+      assert(false,
+          'Invariant violation: Block $blockId already mapped to ${_blockToNode[blockId]}. Cannot map to $nodeId.',);
+      debugPrint(
+          'Error: Mapping conflict. Block $blockId is already mapped to ${_blockToNode[blockId]}. Ignoring new mapping to $nodeId.',);
       return;
     }
 
@@ -72,7 +82,8 @@ class EditorIdentityRegistry {
     _blockToNode[blockId] = nodeId;
   }
 
-  void registerPendingMapping({required String nodeId, required String blockId}) {
+  void registerPendingMapping(
+      {required String nodeId, required String blockId,}) {
     _pendingNodeToBlock[nodeId] = blockId;
     _pendingBlockToNode[blockId] = nodeId;
   }
@@ -205,6 +216,10 @@ class EditorIdentityRegistry {
     );
   }
 
+  /// Returns true if a snapshot has been taken, indicating that an undo/redo
+  /// history operation is in progress and reconciliation will occur.
+  bool get isReconcilingHistory => _snapshot != null;
+
   /// Returns the set of node IDs that were affected by undo/redo by diffing
   /// the snapshot (pre-undo state) against a set of currently-present node IDs
   /// and their content hashes.
@@ -251,18 +266,21 @@ class EditorIdentityRegistry {
     // For simplicity, if the ordered lists differ, we might need to flag them.
     // However, Ketion recalculates position on save. If parent is same and relative sibling
     // order is same, position is fine. If a node moved, its index among siblings changed.
-    // A simple heuristic: if its index in the flat list changed significantly compared to its 
+    // A simple heuristic: if its index in the flat list changed significantly compared to its
     // neighbors, or we can just flag structural changes and let the listener recalculate position.
-    
+
     // For now, any node whose previous node changed is considered structure changed.
     for (int i = 0; i < currentOrderedNodeIds.length; i++) {
       final nodeId = currentOrderedNodeIds[i];
-      if (!snapshotNodeIds.contains(nodeId)) continue; // restored node, already handled
+      if (!snapshotNodeIds.contains(nodeId)) {
+        continue; // restored node, already handled
+      }
 
       final prevNodeId = i > 0 ? currentOrderedNodeIds[i - 1] : null;
-      
+
       final oldIdx = snapshot.orderedNodeIds.indexOf(nodeId);
-      final oldPrevNodeId = oldIdx > 0 ? snapshot.orderedNodeIds[oldIdx - 1] : null;
+      final oldPrevNodeId =
+          oldIdx > 0 ? snapshot.orderedNodeIds[oldIdx - 1] : null;
 
       if (prevNodeId != oldPrevNodeId) {
         structureChangedNodeIds.add(nodeId);
@@ -361,4 +379,3 @@ class RegistryDiff {
       contentChangedNodeIds.isNotEmpty ||
       structureChangedNodeIds.isNotEmpty;
 }
-

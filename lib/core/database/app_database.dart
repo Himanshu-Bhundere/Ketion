@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration {
@@ -393,7 +393,9 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(appSettingsTable, appSettingsTable.accentColor);
           await m.addColumn(appSettingsTable, appSettingsTable.fontSize);
           await m.addColumn(
-              appSettingsTable, appSettingsTable.editorAppearance,);
+            appSettingsTable,
+            appSettingsTable.editorAppearance,
+          );
           await m.addColumn(appSettingsTable, appSettingsTable.highContrast);
           await m.addColumn(appSettingsTable, appSettingsTable.reducedMotion);
         }
@@ -427,13 +429,16 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           await customStatement(
-              'DELETE FROM search_fts WHERE entityType = "block"',);
+            'DELETE FROM search_fts WHERE entityType = "block"',
+          );
         }
         if (from < 16) {
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_blocks_parent_pos ON blocks (parent_block_id, position);',);
+            'CREATE INDEX IF NOT EXISTS idx_blocks_parent_pos ON blocks (parent_block_id, position);',
+          );
           await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_blocks_page ON blocks (page_id);',);
+            'CREATE INDEX IF NOT EXISTS idx_blocks_page ON blocks (page_id);',
+          );
         }
         if (from < 17) {
           // v15 introduced searchable_text but left existing serialized editor
@@ -524,6 +529,9 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           await rebuildSearchIndex();
+        }
+        if (from < 19) {
+          await m.addColumn(reminders, reminders.kind);
         }
       },
       beforeOpen: (details) async {

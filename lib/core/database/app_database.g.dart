@@ -2030,6 +2030,13 @@ class $RemindersTable extends Reminders
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('UTC'));
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+      'kind', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('reminder'));
   static const VerificationMeta _recurrenceRuleMeta =
       const VerificationMeta('recurrenceRule');
   @override
@@ -2094,6 +2101,7 @@ class $RemindersTable extends Reminders
         title,
         reminderTime,
         timezone,
+        kind,
         recurrenceRule,
         snoozeUntil,
         completed,
@@ -2142,6 +2150,10 @@ class $RemindersTable extends Reminders
     if (data.containsKey('timezone')) {
       context.handle(_timezoneMeta,
           timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta));
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     }
     if (data.containsKey('recurrence_rule')) {
       context.handle(
@@ -2196,6 +2208,8 @@ class $RemindersTable extends Reminders
           DriftSqlType.dateTime, data['${effectivePrefix}reminder_time'])!,
       timezone: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}timezone'])!,
+      kind: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
       recurrenceRule: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}recurrence_rule']),
       snoozeUntil: attachedDatabase.typeMapping
@@ -2226,6 +2240,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
   final String title;
   final DateTime reminderTime;
   final String timezone;
+  final String kind;
   final String? recurrenceRule;
   final DateTime? snoozeUntil;
   final bool completed;
@@ -2240,6 +2255,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       required this.title,
       required this.reminderTime,
       required this.timezone,
+      required this.kind,
       this.recurrenceRule,
       this.snoozeUntil,
       required this.completed,
@@ -2258,6 +2274,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     map['title'] = Variable<String>(title);
     map['reminder_time'] = Variable<DateTime>(reminderTime);
     map['timezone'] = Variable<String>(timezone);
+    map['kind'] = Variable<String>(kind);
     if (!nullToAbsent || recurrenceRule != null) {
       map['recurrence_rule'] = Variable<String>(recurrenceRule);
     }
@@ -2282,6 +2299,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       title: Value(title),
       reminderTime: Value(reminderTime),
       timezone: Value(timezone),
+      kind: Value(kind),
       recurrenceRule: recurrenceRule == null && nullToAbsent
           ? const Value.absent()
           : Value(recurrenceRule),
@@ -2306,6 +2324,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       title: serializer.fromJson<String>(json['title']),
       reminderTime: serializer.fromJson<DateTime>(json['reminderTime']),
       timezone: serializer.fromJson<String>(json['timezone']),
+      kind: serializer.fromJson<String>(json['kind']),
       recurrenceRule: serializer.fromJson<String?>(json['recurrenceRule']),
       snoozeUntil: serializer.fromJson<DateTime?>(json['snoozeUntil']),
       completed: serializer.fromJson<bool>(json['completed']),
@@ -2325,6 +2344,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       'title': serializer.toJson<String>(title),
       'reminderTime': serializer.toJson<DateTime>(reminderTime),
       'timezone': serializer.toJson<String>(timezone),
+      'kind': serializer.toJson<String>(kind),
       'recurrenceRule': serializer.toJson<String?>(recurrenceRule),
       'snoozeUntil': serializer.toJson<DateTime?>(snoozeUntil),
       'completed': serializer.toJson<bool>(completed),
@@ -2342,6 +2362,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           String? title,
           DateTime? reminderTime,
           String? timezone,
+          String? kind,
           Value<String?> recurrenceRule = const Value.absent(),
           Value<DateTime?> snoozeUntil = const Value.absent(),
           bool? completed,
@@ -2356,6 +2377,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
         title: title ?? this.title,
         reminderTime: reminderTime ?? this.reminderTime,
         timezone: timezone ?? this.timezone,
+        kind: kind ?? this.kind,
         recurrenceRule:
             recurrenceRule.present ? recurrenceRule.value : this.recurrenceRule,
         snoozeUntil: snoozeUntil.present ? snoozeUntil.value : this.snoozeUntil,
@@ -2375,6 +2397,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ? data.reminderTime.value
           : this.reminderTime,
       timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      kind: data.kind.present ? data.kind.value : this.kind,
       recurrenceRule: data.recurrenceRule.present
           ? data.recurrenceRule.value
           : this.recurrenceRule,
@@ -2397,6 +2420,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           ..write('title: $title, ')
           ..write('reminderTime: $reminderTime, ')
           ..write('timezone: $timezone, ')
+          ..write('kind: $kind, ')
           ..write('recurrenceRule: $recurrenceRule, ')
           ..write('snoozeUntil: $snoozeUntil, ')
           ..write('completed: $completed, ')
@@ -2416,6 +2440,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       title,
       reminderTime,
       timezone,
+      kind,
       recurrenceRule,
       snoozeUntil,
       completed,
@@ -2433,6 +2458,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           other.title == this.title &&
           other.reminderTime == this.reminderTime &&
           other.timezone == this.timezone &&
+          other.kind == this.kind &&
           other.recurrenceRule == this.recurrenceRule &&
           other.snoozeUntil == this.snoozeUntil &&
           other.completed == this.completed &&
@@ -2449,6 +2475,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<String> title;
   final Value<DateTime> reminderTime;
   final Value<String> timezone;
+  final Value<String> kind;
   final Value<String?> recurrenceRule;
   final Value<DateTime?> snoozeUntil;
   final Value<bool> completed;
@@ -2464,6 +2491,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.title = const Value.absent(),
     this.reminderTime = const Value.absent(),
     this.timezone = const Value.absent(),
+    this.kind = const Value.absent(),
     this.recurrenceRule = const Value.absent(),
     this.snoozeUntil = const Value.absent(),
     this.completed = const Value.absent(),
@@ -2480,6 +2508,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     this.title = const Value.absent(),
     required DateTime reminderTime,
     this.timezone = const Value.absent(),
+    this.kind = const Value.absent(),
     this.recurrenceRule = const Value.absent(),
     this.snoozeUntil = const Value.absent(),
     this.completed = const Value.absent(),
@@ -2498,6 +2527,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     Expression<String>? title,
     Expression<DateTime>? reminderTime,
     Expression<String>? timezone,
+    Expression<String>? kind,
     Expression<String>? recurrenceRule,
     Expression<DateTime>? snoozeUntil,
     Expression<bool>? completed,
@@ -2514,6 +2544,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       if (title != null) 'title': title,
       if (reminderTime != null) 'reminder_time': reminderTime,
       if (timezone != null) 'timezone': timezone,
+      if (kind != null) 'kind': kind,
       if (recurrenceRule != null) 'recurrence_rule': recurrenceRule,
       if (snoozeUntil != null) 'snooze_until': snoozeUntil,
       if (completed != null) 'completed': completed,
@@ -2532,6 +2563,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       Value<String>? title,
       Value<DateTime>? reminderTime,
       Value<String>? timezone,
+      Value<String>? kind,
       Value<String?>? recurrenceRule,
       Value<DateTime?>? snoozeUntil,
       Value<bool>? completed,
@@ -2547,6 +2579,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
       title: title ?? this.title,
       reminderTime: reminderTime ?? this.reminderTime,
       timezone: timezone ?? this.timezone,
+      kind: kind ?? this.kind,
       recurrenceRule: recurrenceRule ?? this.recurrenceRule,
       snoozeUntil: snoozeUntil ?? this.snoozeUntil,
       completed: completed ?? this.completed,
@@ -2578,6 +2611,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     }
     if (timezone.present) {
       map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
     }
     if (recurrenceRule.present) {
       map['recurrence_rule'] = Variable<String>(recurrenceRule.value);
@@ -2615,6 +2651,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
           ..write('title: $title, ')
           ..write('reminderTime: $reminderTime, ')
           ..write('timezone: $timezone, ')
+          ..write('kind: $kind, ')
           ..write('recurrenceRule: $recurrenceRule, ')
           ..write('snoozeUntil: $snoozeUntil, ')
           ..write('completed: $completed, ')
@@ -7833,6 +7870,7 @@ typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   Value<String> title,
   required DateTime reminderTime,
   Value<String> timezone,
+  Value<String> kind,
   Value<String?> recurrenceRule,
   Value<DateTime?> snoozeUntil,
   Value<bool> completed,
@@ -7849,6 +7887,7 @@ typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
   Value<String> title,
   Value<DateTime> reminderTime,
   Value<String> timezone,
+  Value<String> kind,
   Value<String?> recurrenceRule,
   Value<DateTime?> snoozeUntil,
   Value<bool> completed,
@@ -7910,6 +7949,9 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<String> get timezone => $composableBuilder(
       column: $table.timezone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule,
@@ -7996,6 +8038,9 @@ class $$RemindersTableOrderingComposer
   ColumnOrderings<String> get timezone => $composableBuilder(
       column: $table.timezone, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule,
       builder: (column) => ColumnOrderings(column));
@@ -8079,6 +8124,9 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<String> get timezone =>
       $composableBuilder(column: $table.timezone, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   GeneratedColumn<String> get recurrenceRule => $composableBuilder(
       column: $table.recurrenceRule, builder: (column) => column);
@@ -8171,6 +8219,7 @@ class $$RemindersTableTableManager extends RootTableManager<
             Value<String> title = const Value.absent(),
             Value<DateTime> reminderTime = const Value.absent(),
             Value<String> timezone = const Value.absent(),
+            Value<String> kind = const Value.absent(),
             Value<String?> recurrenceRule = const Value.absent(),
             Value<DateTime?> snoozeUntil = const Value.absent(),
             Value<bool> completed = const Value.absent(),
@@ -8187,6 +8236,7 @@ class $$RemindersTableTableManager extends RootTableManager<
             title: title,
             reminderTime: reminderTime,
             timezone: timezone,
+            kind: kind,
             recurrenceRule: recurrenceRule,
             snoozeUntil: snoozeUntil,
             completed: completed,
@@ -8203,6 +8253,7 @@ class $$RemindersTableTableManager extends RootTableManager<
             Value<String> title = const Value.absent(),
             required DateTime reminderTime,
             Value<String> timezone = const Value.absent(),
+            Value<String> kind = const Value.absent(),
             Value<String?> recurrenceRule = const Value.absent(),
             Value<DateTime?> snoozeUntil = const Value.absent(),
             Value<bool> completed = const Value.absent(),
@@ -8219,6 +8270,7 @@ class $$RemindersTableTableManager extends RootTableManager<
             title: title,
             reminderTime: reminderTime,
             timezone: timezone,
+            kind: kind,
             recurrenceRule: recurrenceRule,
             snoozeUntil: snoozeUntil,
             completed: completed,

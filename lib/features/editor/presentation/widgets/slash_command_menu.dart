@@ -12,6 +12,7 @@ enum SlashCommandCategory {
 }
 
 class SlashCommandOption {
+  final String id;
   final String title;
   final String subtitle;
   final IconData icon;
@@ -21,6 +22,7 @@ class SlashCommandOption {
   final bool isSupported;
 
   SlashCommandOption({
+    this.id = '',
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -89,7 +91,8 @@ class _SlashCommandMenuState extends State<SlashCommandMenu> {
                         return ListTile(
                           leading: Icon(option.icon),
                           title: Text(option.title),
-                          subtitle: Text(option.subtitle, style: const TextStyle(fontSize: 12)),
+                          subtitle: Text(option.subtitle,
+                              style: const TextStyle(fontSize: 12),),
                           onTap: () {
                             // SlashCommandMenu does not have context of nodeId.
                             // If this widget is used, it needs refactoring.

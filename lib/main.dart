@@ -5,7 +5,10 @@ import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
 import 'package:ketion/core/theme/app_theme.dart';
 import 'package:ketion/core/theme/app_colors.dart';
 import 'package:ketion/core/router/app_router.dart';
+import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
+import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 
 void main() async {
   await AppBootstrap.initialize();
@@ -29,6 +32,22 @@ class _KetionAppState extends ConsumerState<KetionApp> {
   void initState() {
     super.initState();
     WidgetBootstrap.listenToDeepLinks();
+
+    // Eagerly connect notification action dispatcher to Riverpod
+    Future.microtask(() {
+      ref.read(notificationActionDispatcherProvider);
+      
+      // Handle pending cold-start navigation
+      final pending = NotificationBootstrap.pendingNavigation;
+      if (pending != null && pending.type == 'alarm') {
+        NotificationBootstrap.pendingNavigation = null;
+        appRouter.pushNamed(
+          Routes.alarmRingingName,
+          pathParameters: {'reminderId': pending.reminderId},
+          extra: {'occurrenceTime': pending.occurrenceTime},
+        );
+      }
+    });
   }
 
   @override
@@ -63,7 +82,8 @@ class _KetionAppState extends ConsumerState<KetionApp> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Failed to load settings: $err')),
+      error: (err, stack) =>
+          Center(child: Text('Failed to load settings: $err')),
     );
   }
 }

@@ -21,6 +21,7 @@ class CreatePageUseCase {
     String? icon,
     String? coverImage,
     bool isTemplate = false,
+    String initialBlockType = 'text',
   }) async {
     final now = DateTime.now();
     final page = Page(
@@ -34,7 +35,7 @@ class CreatePageUseCase {
       updatedAt: now,
     );
 
-    final result = await _repository.createPage(page);
+    final result = await _repository.createPage(page, initialBlockType: initialBlockType);
     if (result is Success) {
       unawaited(
         _updateWidgetsUseCase().catchError((Object e, StackTrace s) {

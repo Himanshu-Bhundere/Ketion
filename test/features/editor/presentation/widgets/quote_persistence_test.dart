@@ -34,24 +34,31 @@ class MockGetPageBlocksUseCase implements GetPageBlocksUseCase {
 class _MockPageRepo implements PageRepository {
   final page_entity.Page page;
   _MockPageRepo(this.page);
-  
+
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage) async => Success(page);
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+      Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
-  Future<Result<page_entity.Page>> updatePage(page_entity.Page updatedPage) async => Success(updatedPage);
+  Future<Result<page_entity.Page>> updatePage(
+          page_entity.Page updatedPage,) async =>
+      Success(updatedPage);
   @override
-  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getFavoritePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getFavoritePages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getRecentPages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getRecentPages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getTemplatePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getTemplatePages() async =>
+      const Success([]);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -60,41 +67,56 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.add(block);
     return Success(block);
   }
+
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
+
   @override
   Future<Result<Block>> getBlock(String id) async {
     final block = testBlocks.firstWhere((b) => b.id == id);
     return Success(block);
   }
+
   Future<Result<List<Block>>> getPageBlocks(String pageId) async {
-    final sorted = List<Block>.from(testBlocks)..sort((a, b) => a.position.compareTo(b.position));
+    final sorted = List<Block>.from(testBlocks)
+      ..sort((a, b) => a.position.compareTo(b.position));
     return Success(sorted);
   }
+
   @override
   Future<Result<List<Block>>> getBlocksForPage(String pageId) async {
-    final sorted = List<Block>.from(testBlocks)..sort((a, b) => a.position.compareTo(b.position));
+    final sorted = List<Block>.from(testBlocks)
+      ..sort((a, b) => a.position.compareTo(b.position));
     return Success(sorted);
   }
+
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+    return Success(testBlocks
+        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+        .toList(),);
   }
+
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
     }
     return const Success(null);
   }
+
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async {
+  Future<Result<List<Block>>> moveBlock(
+      String sourceBlockId, DropIntent intent,) async {
     return const Success([]);
   }
+
   @override
   Future<Result<void>> splitBlock({
     required Block updatedOriginalBlock,
@@ -104,6 +126,7 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.add(newBlock);
     return const Success(null);
   }
+
   @override
   Future<Result<void>> mergeBlocks({
     required Block mergedBlock,
@@ -114,6 +137,7 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.removeWhere((b) => b.id == deletedBlockId);
     return const Success(null);
   }
+
   Future<Result<void>> updateBlocks(List<Block> blocks) async {
     for (final block in blocks) {
       final index = testBlocks.indexWhere((b) => b.id == block.id);
@@ -123,32 +147,39 @@ class DummyBlockRepository implements BlockRepository {
     }
     return const Success(null);
   }
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async {
-    testBlocks.add(Block(
-      id: id,
-      pageId: 'test-page',
-      type: 'text',
-      data: data,
-      parentBlockId: parentBlockId,
-      position: position,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    ),);
+  Future<Result<void>> restoreBlock(
+      String id, String data, String? parentBlockId, double position,) async {
+    testBlocks.add(
+      Block(
+        id: id,
+        pageId: 'test-page',
+        type: 'text',
+        data: data,
+        parentBlockId: parentBlockId,
+        position: position,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
     return const Success(null);
   }
 }
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
-  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty && attempts < 50) {
+  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+      attempts < 50) {
     await tester.pump(const Duration(milliseconds: 50));
     attempts++;
   }
   if (attempts >= 50) {
-    throw Exception('pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear');
+    throw Exception(
+        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -156,10 +187,12 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp({required List<Block> blocks, required page_entity.Page testPage}) {
+  Widget buildTestApp(
+      {required List<Block> blocks, required page_entity.Page testPage,}) {
     return ProviderScope(
       overrides: [
-        getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+        getPageBlocksUseCaseProvider
+            .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
         blockRepositoryProvider.overrideWithValue(DummyBlockRepository()),
         pageRepositoryProvider.overrideWithValue(_MockPageRepo(testPage)),
       ],
@@ -194,7 +227,9 @@ void main() {
         pageId: pageId,
         type: 'text',
         data: jsonEncode({
-          'spans': [{'text': 'Current Paragraph'}],
+          'spans': [
+            {'text': 'Current Paragraph'},
+          ],
           'headingLevel': 0,
         }),
         position: 1000,
@@ -203,7 +238,8 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(buildTestApp(blocks: initialBlocks, testPage: testPage));
+    await tester
+        .pumpWidget(buildTestApp(blocks: initialBlocks, testPage: testPage));
     await pumpUntilInitialized(tester);
 
     final State state = tester.state(find.byType(SuperEditorHost));
@@ -215,9 +251,10 @@ void main() {
     final currentParaId = document.first.id;
 
     // Simulate convert to Quote via slash command
-    final List<SlashCommandOption> options = hostState.getSlashOptionsForTesting('') as List<SlashCommandOption>;
+    final List<SlashCommandOption> options =
+        hostState.getSlashOptionsForTesting('') as List<SlashCommandOption>;
     final quoteOption = options.firstWhere((o) => o.title == 'Quote');
-    
+
     List<EditRequest> requests = [];
     if (quoteOption is KetionSlashCommand) {
       requests = quoteOption.getEditRequestsWithDoc(currentParaId, document);
@@ -225,7 +262,7 @@ void main() {
       requests = quoteOption.getEditRequests(currentParaId);
     }
     editor.execute(requests);
-    
+
     // Allow for persistence coordinator to sync
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
@@ -238,16 +275,17 @@ void main() {
     // Verify SQLite block persistence (DummyBlockRepository)
     final quoteBlock = testBlocks.firstWhere((b) => b.id == 'b1');
     expect(quoteBlock.type, 'text'); // Ketion persists quotes as text blocks
-    
+
     final data = jsonDecode(quoteBlock.data);
     expect(data['quote'], true); // Verified that quote flag is used
     expect(data['runtimeType'], 'text');
-    
+
     // Now let's "reopen" the editor with the persisted blocks and verify
     // the document nodes are correctly reconstructed.
-    
+
     await tester.pumpWidget(const SizedBox()); // Clear
-    await tester.pumpWidget(buildTestApp(blocks: testBlocks, testPage: testPage));
+    await tester
+        .pumpWidget(buildTestApp(blocks: testBlocks, testPage: testPage));
     await pumpUntilInitialized(tester);
 
     final State stateReopened = tester.state(find.byType(SuperEditorHost));
@@ -257,7 +295,10 @@ void main() {
     expect(documentReopened.nodeCount, 1);
     expect(documentReopened.first is ParagraphNode, isTrue);
     final reopenedPara = documentReopened.first as ParagraphNode;
-    expect(reopenedPara.metadata['blockType'], blockquoteAttribution,
-      reason: 'Reopened quote block must map back to blockquoteAttribution',);
+    expect(
+      reopenedPara.metadata['blockType'],
+      blockquoteAttribution,
+      reason: 'Reopened quote block must map back to blockquoteAttribution',
+    );
   });
 }

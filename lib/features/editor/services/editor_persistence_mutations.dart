@@ -30,7 +30,7 @@ sealed class EditorPersistenceMutation {
 
   // Preconditions required before this mutation may execute atomically.
   List<BlockVersionPrecondition> get versionPreconditions;
-  
+
   List<BlockVersionTransition> get versionTransitions;
 
   EditorPersistenceMutation rebase(Map<String, int> currentVersions);
@@ -83,17 +83,20 @@ class UpdateBlockMutation extends ContentMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: blockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: blockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.increment),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.increment,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return UpdateBlockMutation(
         pageId: pageId,
         blockId: blockId,
@@ -139,13 +142,15 @@ class InsertBlockMutation extends StructuralMutation {
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.create),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.create,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
     // Inserts don't typically have preconditions that need rebasing, but just in case
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return InsertBlockMutation(
         pageId: pageId,
         blockId: blockId,
@@ -176,17 +181,20 @@ class DeleteBlockMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: blockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: blockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.softDelete),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.softDelete,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return DeleteBlockMutation(
         pageId: pageId,
         blockId: blockId,
@@ -221,17 +229,20 @@ class RestoreBlockMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: blockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: blockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.increment),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.increment,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return RestoreBlockMutation(
         pageId: pageId,
         blockId: blockId,
@@ -255,7 +266,7 @@ class SplitBlockMutation extends StructuralMutation {
   final String? originalParentBlockId;
   final double originalPosition;
   final DateTime originalBlockCreatedAt;
-  
+
   final String newBlockId;
   final String newData;
   final String newType;
@@ -280,18 +291,23 @@ class SplitBlockMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: originalBlockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: originalBlockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: originalBlockId, operation: VersionChangeOperation.increment),
-    BlockVersionTransition(blockId: newBlockId, operation: VersionChangeOperation.create),
-  ];
+        BlockVersionTransition(
+            blockId: originalBlockId,
+            operation: VersionChangeOperation.increment,),
+        BlockVersionTransition(
+            blockId: newBlockId, operation: VersionChangeOperation.create,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(originalBlockId) && currentVersions[originalBlockId] != expectedVersion) {
+    if (currentVersions.containsKey(originalBlockId) &&
+        currentVersions[originalBlockId] != expectedVersion) {
       return SplitBlockMutation(
         pageId: pageId,
         originalBlockId: originalBlockId,
@@ -317,7 +333,7 @@ class MergeBlocksMutation extends StructuralMutation {
   final String survivorData;
   final int survivorExpectedVersion;
   final DateTime survivorBlockCreatedAt;
-  
+
   final String victimBlockId;
   final int victimExpectedVersion;
 
@@ -334,31 +350,39 @@ class MergeBlocksMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: survivorBlockId, expectedVersion: survivorExpectedVersion),
-    BlockVersionPrecondition(blockId: victimBlockId, expectedVersion: victimExpectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: survivorBlockId, expectedVersion: survivorExpectedVersion,),
+        BlockVersionPrecondition(
+            blockId: victimBlockId, expectedVersion: victimExpectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: survivorBlockId, operation: VersionChangeOperation.increment),
-    BlockVersionTransition(blockId: victimBlockId, operation: VersionChangeOperation.softDelete),
-  ];
+        BlockVersionTransition(
+            blockId: survivorBlockId,
+            operation: VersionChangeOperation.increment,),
+        BlockVersionTransition(
+            blockId: victimBlockId,
+            operation: VersionChangeOperation.softDelete,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
     bool changed = false;
     int rebasedSurvivorVersion = survivorExpectedVersion;
     int rebasedVictimVersion = victimExpectedVersion;
-    
-    if (currentVersions.containsKey(survivorBlockId) && currentVersions[survivorBlockId] != survivorExpectedVersion) {
+
+    if (currentVersions.containsKey(survivorBlockId) &&
+        currentVersions[survivorBlockId] != survivorExpectedVersion) {
       rebasedSurvivorVersion = currentVersions[survivorBlockId]!;
       changed = true;
     }
-    if (currentVersions.containsKey(victimBlockId) && currentVersions[victimBlockId] != victimExpectedVersion) {
+    if (currentVersions.containsKey(victimBlockId) &&
+        currentVersions[victimBlockId] != victimExpectedVersion) {
       rebasedVictimVersion = currentVersions[victimBlockId]!;
       changed = true;
     }
-    
+
     if (changed) {
       return MergeBlocksMutation(
         pageId: pageId,
@@ -394,17 +418,20 @@ class MoveBlockMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: blockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: blockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.increment),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.increment,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return MoveBlockMutation(
         pageId: pageId,
         blockId: blockId,
@@ -438,17 +465,20 @@ class ChangeBlockTypeMutation extends StructuralMutation {
 
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
-    BlockVersionPrecondition(blockId: blockId, expectedVersion: expectedVersion),
-  ];
+        BlockVersionPrecondition(
+            blockId: blockId, expectedVersion: expectedVersion,),
+      ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
-    BlockVersionTransition(blockId: blockId, operation: VersionChangeOperation.increment),
-  ];
+        BlockVersionTransition(
+            blockId: blockId, operation: VersionChangeOperation.increment,),
+      ];
 
   @override
   EditorPersistenceMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return ChangeBlockTypeMutation(
         pageId: pageId,
         blockId: blockId,
@@ -482,7 +512,8 @@ class UpdateToggleMutation extends UpdateBlockMutation {
 
   @override
   UpdateToggleMutation rebase(Map<String, int> currentVersions) {
-    if (currentVersions.containsKey(blockId) && currentVersions[blockId] != expectedVersion) {
+    if (currentVersions.containsKey(blockId) &&
+        currentVersions[blockId] != expectedVersion) {
       return UpdateToggleMutation(
         pageId: pageId,
         blockId: blockId,
@@ -500,4 +531,3 @@ class UpdateToggleMutation extends UpdateBlockMutation {
     return this;
   }
 }
-

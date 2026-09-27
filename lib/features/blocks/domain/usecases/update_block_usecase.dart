@@ -9,5 +9,6 @@ class UpdateBlockUseCase {
 
   /// The repository transaction is the sole authority for block versions and
   /// timestamps, so callers can safely submit a stale editor model.
-  Future<Result<void>> call(Block block) => _repository.updateBlock(block, expectedVersion: block.version);
+  Future<Result<void>> call(Block block) =>
+      _repository.updateBlock(block, expectedVersion: block.version);
 }

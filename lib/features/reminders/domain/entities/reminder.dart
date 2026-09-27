@@ -1,4 +1,7 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../models/reminder_kind.dart';
 
 part 'reminder.freezed.dart';
 part 'reminder.g.dart';
@@ -12,6 +15,8 @@ class ReminderEntity with _$ReminderEntity {
     @Default('') String title,
     required DateTime reminderTime,
     @Default('UTC') String timezone,
+    @JsonKey(defaultValue: ReminderKind.reminder, unknownEnumValue: ReminderKind.reminder)
+    @Default(ReminderKind.reminder) ReminderKind kind,
     String? recurrenceRule,
     DateTime? snoozeUntil,
     @Default(false) bool completed,

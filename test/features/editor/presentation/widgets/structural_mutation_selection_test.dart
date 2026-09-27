@@ -29,24 +29,31 @@ class MockGetPageBlocksUseCase implements GetPageBlocksUseCase {
 class _MockPageRepo implements PageRepository {
   final page_entity.Page page;
   _MockPageRepo(this.page);
-  
+
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage) async => Success(page);
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+      Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
-  Future<Result<page_entity.Page>> updatePage(page_entity.Page updatedPage) async => Success(updatedPage);
+  Future<Result<page_entity.Page>> updatePage(
+          page_entity.Page updatedPage,) async =>
+      Success(updatedPage);
   @override
-  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getFavoritePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getFavoritePages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getRecentPages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getRecentPages() async =>
+      const Success([]);
   @override
-  Future<Result<List<page_entity.Page>>> getTemplatePages() async => const Success([]);
+  Future<Result<List<page_entity.Page>>> getTemplatePages() async =>
+      const Success([]);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -55,14 +62,19 @@ class DummyBlockRepository implements BlockRepository {
     testBlocks.add(block);
     return Success(block);
   }
+
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
+
   @override
   Future<Result<Block>> getBlock(String id) async {
-    final block = testBlocks.firstWhere((b) => b.id == id, orElse: () => Block(
+    final block = testBlocks.firstWhere(
+      (b) => b.id == id,
+      orElse: () => Block(
         id: id,
         pageId: 'page',
         type: 'text',
@@ -74,13 +86,20 @@ class DummyBlockRepository implements BlockRepository {
     );
     return Success(block);
   }
-  Future<Result<List<Block>>> getPageBlocks(String pageId) async => Success(testBlocks);
+
+  Future<Result<List<Block>>> getPageBlocks(String pageId) async =>
+      Success(testBlocks);
   @override
-  Future<Result<List<Block>>> getBlocksForPage(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getBlocksForPage(String pageId) async =>
+      Success(testBlocks);
   @override
-  Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async => Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+  Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async =>
+      Success(testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),);
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -89,32 +108,40 @@ class DummyBlockRepository implements BlockRepository {
     }
     return const Success(null);
   }
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
 
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async => const Success(null);
+  Future<Result<void>> restoreBlock(String id, String data,
+          String? parentBlockId, double position,) async =>
+      const Success(null);
   @override
   Future<Result<void>> mergeBlocks({
     required Block mergedBlock,
     required int survivorExpectedVersion,
     required String deletedBlockId,
     required int victimExpectedVersion,
-  }) async => const Success(null);
+  }) async =>
+      const Success(null);
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async => const Success([]);
+  Future<Result<List<Block>>> moveBlock(
+          String sourceBlockId, DropIntent intent,) async =>
+      const Success([]);
   @override
   Future<Result<void>> splitBlock({
     required Block updatedOriginalBlock,
     required int originalExpectedVersion,
     required Block newBlock,
-  }) async => const Success(null);
+  }) async =>
+      const Success(null);
 }
 
 void main() {
   group('Structural Mutation Selection Integrity', () {
     late ProviderContainer container;
-    
+
     setUp(() {
       testBlocks = [
         Block(
@@ -130,13 +157,15 @@ void main() {
 
       container = ProviderContainer(
         overrides: [
-          pageRepositoryProvider.overrideWithValue(_MockPageRepo(page_entity.Page(
-            id: 'page-1',
-            title: 'Test',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-          ),
+          pageRepositoryProvider.overrideWithValue(
+            _MockPageRepo(
+              page_entity.Page(
+                id: 'page-1',
+                title: 'Test',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ),
           ),
           blockRepositoryProvider.overrideWithValue(DummyBlockRepository()),
         ],
@@ -149,7 +178,7 @@ void main() {
         onTitleChanged: (title) async => const Success(null),
         onIconChanged: (icon) async => const Success(null),
       );
-      
+
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -160,12 +189,13 @@ void main() {
           ),
         ),
       );
-      
+
       await tester.pumpAndSettle();
       return host;
     }
 
-    testWidgets('Slash conversion and Enter split sequence (Bullet List)', (WidgetTester tester) async {
+    testWidgets('Slash conversion and Enter split sequence (Bullet List)',
+        (WidgetTester tester) async {
       await buildEditor(tester);
       final dynamic state = tester.state(find.byType(SuperEditorHost));
       final Editor editor = state.editor as Editor;
@@ -175,44 +205,53 @@ void main() {
       // Initial: Paragraph("")
       final initialNode = document.first as TextNode;
       expect(initialNode, isA<ParagraphNode>());
-      
+
       // Simulate typing "/bullet"
       editor.execute([
         InsertTextRequest(
-          documentPosition: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 0)),
+          documentPosition: DocumentPosition(
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 0),),
           textToInsert: '/bullet',
           attributions: {},
         ),
       ]);
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(
-          nodeId: initialNode.id,
-          nodePosition: const TextNodePosition(offset: 7),
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 7),
+          ),
         ),
-      ),
       );
-      
+
       // Slash conversion -> Bullet
       // Simulate slash command logic deleting "/bullet" and converting
       editor.execute([
         DeleteContentRequest(
           documentRange: DocumentRange(
-            start: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 0)),
-            end: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 7)),
+            start: DocumentPosition(
+                nodeId: initialNode.id,
+                nodePosition: const TextNodePosition(offset: 0),),
+            end: DocumentPosition(
+                nodeId: initialNode.id,
+                nodePosition: const TextNodePosition(offset: 7),),
           ),
         ),
-        ConvertParagraphToListItemRequest(nodeId: initialNode.id, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: initialNode.id, type: ListItemType.unordered,),
       ]);
-      
+
       await tester.pumpAndSettle();
-      
+
       // Manually mimic slash controller synchronous selection restoration (offset 0 because "/bullet" deleted)
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(
-          nodeId: initialNode.id,
-          nodePosition: const TextNodePosition(offset: 0),
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
         ),
-      ),
       );
 
       // Verify Layer 1: Document
@@ -223,7 +262,8 @@ void main() {
 
       // Verify Layer 2: Composer
       expect(composer.selection!.extent.nodeId, initialNode.id);
-      expect(composer.selection!.extent.nodePosition, const TextNodePosition(offset: 0));
+      expect(composer.selection!.extent.nodePosition,
+          const TextNodePosition(offset: 0),);
 
       // Layer 3: Input "First"
       editor.execute([
@@ -235,15 +275,18 @@ void main() {
       ]);
       await tester.pumpAndSettle();
       // Update composer for text insertion
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(
-          nodeId: initialNode.id,
-          nodePosition: const TextNodePosition(offset: 5),
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 5),
+          ),
         ),
-      ),
       );
-      
-      expect((document.getNodeById(initialNode.id) as TextNode).text.toPlainText(), 'First');
+
+      expect(
+          (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
+          'First',);
 
       // Now simulate Enter (SplitListItemRequest)
       editor.execute([
@@ -263,7 +306,8 @@ void main() {
 
       // Verify Layer 2: Composer updated to new node @ 0
       expect(composer.selection!.extent.nodeId, newNode.id);
-      expect(composer.selection!.extent.nodePosition, const TextNodePosition(offset: 0));
+      expect(composer.selection!.extent.nodePosition,
+          const TextNodePosition(offset: 0),);
 
       // Layer 3: Input "Second"
       editor.execute([
@@ -273,12 +317,14 @@ void main() {
           attributions: {},
         ),
       ]);
-      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(), 'Second');
-      
+      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
+          'Second',);
+
       await tester.pump(const Duration(milliseconds: 300));
     });
 
-    testWidgets('Slash deletion calculation handles preceding text correctly', (WidgetTester tester) async {
+    testWidgets('Slash deletion calculation handles preceding text correctly',
+        (WidgetTester tester) async {
       await buildEditor(tester);
       final dynamic state = tester.state(find.byType(SuperEditorHost));
       final Editor editor = state.editor as Editor;
@@ -286,40 +332,48 @@ void main() {
       final composer = editor.context.composer;
 
       final initialNode = document.first as TextNode;
-      
+
       // Simulate typing "Hello /bullet"
       editor.execute([
         InsertTextRequest(
-          documentPosition: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 0)),
+          documentPosition: DocumentPosition(
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 0),),
           textToInsert: 'Hello /bullet',
           attributions: {},
         ),
       ]);
-      
+
       // SlashStartOffset = 6, CursorOffset = 13
       const slashStartOffset = 6;
       const cursorOffset = 13;
-      
+
       editor.execute([
         DeleteContentRequest(
           documentRange: DocumentRange(
-            start: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: slashStartOffset)),
-            end: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: cursorOffset)),
+            start: DocumentPosition(
+                nodeId: initialNode.id,
+                nodePosition: const TextNodePosition(offset: slashStartOffset),),
+            end: DocumentPosition(
+                nodeId: initialNode.id,
+                nodePosition: const TextNodePosition(offset: cursorOffset),),
           ),
         ),
-        ConvertParagraphToListItemRequest(nodeId: initialNode.id, type: ListItemType.unordered),
+        ConvertParagraphToListItemRequest(
+            nodeId: initialNode.id, type: ListItemType.unordered,),
       ]);
-      
+
       final textNode = document.getNodeById(initialNode.id) as TextNode;
       final textLength = textNode.text.toPlainText().length;
       final finalOffset = slashStartOffset.clamp(0, textLength);
-      
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(
-          nodeId: initialNode.id,
-          nodePosition: TextNodePosition(offset: finalOffset),
+
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: initialNode.id,
+            nodePosition: TextNodePosition(offset: finalOffset),
+          ),
         ),
-      ),
       );
 
       // Verify Layer 1: Document
@@ -329,12 +383,14 @@ void main() {
 
       // Verify Layer 2: Composer Offset is exactly 6
       expect(composer.selection!.extent.nodeId, initialNode.id);
-      expect(composer.selection!.extent.nodePosition, const TextNodePosition(offset: 6));
+      expect(composer.selection!.extent.nodePosition,
+          const TextNodePosition(offset: 6),);
 
       await tester.pumpAndSettle(const Duration(milliseconds: 300));
     });
-    
-    testWidgets('Slash conversion and Enter split sequence (Checklist)', (WidgetTester tester) async {
+
+    testWidgets('Slash conversion and Enter split sequence (Checklist)',
+        (WidgetTester tester) async {
       await buildEditor(tester);
       final dynamic state = tester.state(find.byType(SuperEditorHost));
       final Editor editor = state.editor as Editor;
@@ -342,14 +398,17 @@ void main() {
       final composer = editor.context.composer;
 
       final initialNode = document.first as TextNode;
-      
+
       editor.execute([
         ConvertParagraphToTaskRequest(nodeId: initialNode.id),
       ]);
       await tester.pumpAndSettle();
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 0)),
-      ),
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 0),),
+        ),
       );
 
       final taskNode = document.getNodeById(initialNode.id)!;
@@ -363,12 +422,17 @@ void main() {
         ),
       ]);
       await tester.pumpAndSettle();
-      composer.setSelectionWithReason(DocumentSelection.collapsed(
-        position: DocumentPosition(nodeId: initialNode.id, nodePosition: const TextNodePosition(offset: 5)),
-      ),
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 5),),
+        ),
       );
-      
-      expect((document.getNodeById(initialNode.id) as TextNode).text.toPlainText(), 'First');
+
+      expect(
+          (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
+          'First',);
 
       editor.execute([
         SplitExistingTaskRequest(
@@ -377,7 +441,7 @@ void main() {
         ),
       ]);
       await tester.pumpAndSettle();
-      
+
       // Verify Layer 1
       expect(document.length, 2);
       final newNode = document.last as TaskNode;
@@ -385,7 +449,8 @@ void main() {
 
       // Verify Layer 2 (should be newNode@0)
       expect(composer.selection!.extent.nodeId, newNode.id);
-      expect(composer.selection!.extent.nodePosition, const TextNodePosition(offset: 0));
+      expect(composer.selection!.extent.nodePosition,
+          const TextNodePosition(offset: 0),);
 
       // Verify Layer 3
       editor.execute([
@@ -395,10 +460,10 @@ void main() {
           attributions: {},
         ),
       ]);
-      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(), 'Second');
-      
+      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
+          'Second',);
+
       await tester.pump(const Duration(milliseconds: 300));
     });
-
   });
 }

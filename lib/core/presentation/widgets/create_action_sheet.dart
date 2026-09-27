@@ -74,16 +74,49 @@ class _CreateActionSheetState extends ConsumerState<CreateActionSheet> {
           ListTile(
             leading: const Icon(Icons.check_box),
             title: const Text('Checklist'),
-            subtitle: const Text('Coming Soon', style: TextStyle(fontStyle: FontStyle.italic)),
-            enabled: false,
-            onTap: () {},
+            enabled: !_isCreating,
+            onTap: () async {
+              if (_isCreating) return;
+              setState(() => _isCreating = true);
+              final messenger = ScaffoldMessenger.of(context);
+              
+              final result = await ref.read(createPageUseCaseProvider)(
+                title: '',
+                initialBlockType: 'checklist',
+              );
+              
+              result.fold(
+                (page) {
+                  ref.invalidate(recentPagesProvider);
+                  ref.invalidate(favoritePagesProvider);
+                  ref.invalidate(pageProvider(page.id));
+                  if (mounted) {
+                    Navigator.of(context).pop(page);
+                  }
+                },
+                (error) {
+                  if (mounted) {
+                    setState(() => _isCreating = false);
+                  }
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Failed to create checklist: $error')),
+                  );
+                },
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.file_upload),
             title: const Text('Import'),
-            subtitle: const Text('Coming Soon', style: TextStyle(fontStyle: FontStyle.italic)),
-            enabled: false,
-            onTap: () {},
+            subtitle: const Text('Coming Soon',
+                style: TextStyle(fontStyle: FontStyle.italic),),
+            enabled: true,
+            onTap: () {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Import is coming soon!')),
+              );
+            },
           ),
           const SizedBox(height: 16),
         ],

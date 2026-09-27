@@ -86,7 +86,7 @@ void main() {
       final queueItems = await (database.select(database.syncQueue)
             ..where((t) => t.entityId.equals('reminder1')))
           .get();
-      
+
       expect(queueItems.length, 1); // coalesced update into create
       expect(queueItems.last.operation, 'create');
     });
@@ -120,9 +120,9 @@ void main() {
       final queueItems = await (database.select(database.syncQueue)
             ..where((t) => t.entityId.equals('reminder1')))
           .get();
-      
+
       // 1 create + 1 delete = coalesced and removed
-      expect(queueItems.length, 0); 
+      expect(queueItems.length, 0);
     });
 
     test('markCompleted updates completed status', () async {

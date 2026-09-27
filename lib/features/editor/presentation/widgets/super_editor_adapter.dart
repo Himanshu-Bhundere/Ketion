@@ -13,7 +13,8 @@ import '../../domain/services/attribution_converter.dart';
 import '../../domain/services/block_tree_service.dart';
 import '../../domain/services/block_data_serializer.dart';
 import '../../services/editor_persistence_coordinator.dart';
-import '../../services/editor_persistence_mutations.dart' as persistence_mutations;
+import '../../services/editor_persistence_mutations.dart'
+    as persistence_mutations;
 import '../../services/editor_persistence_snapshot.dart';
 import '../../services/structural_mutation_builder.dart';
 import 'editor_identity_registry.dart';
@@ -24,7 +25,7 @@ class KetionSuperEditorAdapter {
   late final Editor editor;
   final EditorPersistenceCoordinator coordinator;
   final EditorPersistenceSnapshot snapshot;
-  
+
   bool _isSyncingFromKetion = false;
   final EditorIdentityRegistry _registry = EditorIdentityRegistry();
   final Set<String> _pendingNodeIds = {};
@@ -48,49 +49,55 @@ class KetionSuperEditorAdapter {
   /// and [KetionEditListener].
   EditorIdentityRegistry get registry => _registry;
 
-  StreamSubscription<persistence_mutations.EditorPersistenceMutation>? _mutationSuccessSubscription;
+  StreamSubscription<persistence_mutations.EditorPersistenceMutation>?
+      _mutationSuccessSubscription;
 
   KetionSuperEditorAdapter({
     required this.pageId,
     required this.coordinator,
     required this.snapshot,
   }) {
-    _mutationSuccessSubscription = coordinator.onMutationSuccess.listen(_onMutationSuccess);
+    _mutationSuccessSubscription =
+        coordinator.onMutationSuccess.listen(_onMutationSuccess);
   }
 
-  void _onMutationSuccess(persistence_mutations.EditorPersistenceMutation mutation) {
+  void _onMutationSuccess(
+      persistence_mutations.EditorPersistenceMutation mutation,) {
     for (final transition in mutation.versionTransitions) {
-      if (transition.operation == persistence_mutations.VersionChangeOperation.increment) {
+      if (transition.operation ==
+          persistence_mutations.VersionChangeOperation.increment) {
         final current = _registry.getBlockVersion(transition.blockId);
         _registry.setBlockVersion(transition.blockId, current + 1);
-      } else if (transition.operation == persistence_mutations.VersionChangeOperation.create) {
+      } else if (transition.operation ==
+          persistence_mutations.VersionChangeOperation.create) {
         _registry.promotePendingMapping(transition.blockId);
         _registry.setBlockVersion(transition.blockId, 1);
-      } else if (transition.operation == persistence_mutations.VersionChangeOperation.softDelete) {
+      } else if (transition.operation ==
+          persistence_mutations.VersionChangeOperation.softDelete) {
         final current = _registry.getBlockVersion(transition.blockId);
         _registry.markDeleted(transition.blockId, current + 1);
       }
     }
 
-    if (mutation is persistence_mutations.UpdateBlockMutation) {
+    if (mutation is persistence_mutations.UpdateToggleMutation) {
+      final nodeId = _registry.nodeIdForBlock(mutation.blockId);
+      if (nodeId != null) {
+        if (mutation.isExpanded) {
+          restoreSubtree(mutation.blockId);
+        } else {
+          hideSubtree(mutation.blockId);
+        }
+      }
+    } else if (mutation is persistence_mutations.UpdateBlockMutation) {
       final nodeId = _registry.nodeIdForBlock(mutation.blockId);
       if (nodeId != null) {
         final node = document.getNodeById(nodeId);
         if (node is TextNode) {
-          final currentHash = EditorIdentityRegistry.hashContent(_buildDataFromNode(node));
+          final currentHash =
+              EditorIdentityRegistry.hashContent(_buildDataFromNode(node));
           if (currentHash == mutation.contentHash) {
             _registry.setContentHash(nodeId, currentHash);
             _pendingNodeIds.remove(nodeId);
-          }
-        }
-      }
-
-      if (mutation is persistence_mutations.UpdateToggleMutation) {
-        if (nodeId != null) {
-          if (mutation.isExpanded) {
-            restoreSubtree(mutation.blockId);
-          } else {
-            hideSubtree(mutation.blockId);
           }
         }
       }
@@ -100,10 +107,11 @@ class KetionSuperEditorAdapter {
   MutableDocument createDocument(List<Block> blocks) {
     _isSyncingFromKetion = true;
     try {
-      final projectedBlocks = BlockTreeService.buildFullTreeWithVisibility(blocks);
-      
+      final projectedBlocks =
+          BlockTreeService.buildFullTreeWithVisibility(blocks);
+
       final nodes = <DocumentNode>[];
-      
+
       for (final pb in projectedBlocks) {
         final block = pb.block;
         final node = _convertKetionBlockToNode(block, pb.depth);
@@ -112,22 +120,26 @@ class KetionSuperEditorAdapter {
           _registry.setBlockVersion(block.id, block.version);
           _registry.setBlockCreatedAt(block.id, block.createdAt);
           if (node is TextNode) {
-            _registry.setContentHash(node.id, EditorIdentityRegistry.hashContent(_buildDataFromNode(node)));
+            _registry.setContentHash(node.id,
+                EditorIdentityRegistry.hashContent(_buildDataFromNode(node)),);
           }
 
           if (pb.hiddenByAncestorId == null) {
             nodes.add(node);
           } else {
-            _hiddenNodeCache.putIfAbsent(pb.hiddenByAncestorId!, () => []).add(node);
+            _hiddenNodeCache
+                .putIfAbsent(pb.hiddenByAncestorId!, () => [])
+                .add(node);
           }
         }
       }
-      
+
       if (nodes.isEmpty) {
-         final node = ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
-         nodes.add(node);
+        final node =
+            ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
+        nodes.add(node);
       }
-      
+
       return MutableDocument(nodes: nodes);
     } finally {
       _isSyncingFromKetion = false;
@@ -149,15 +161,15 @@ class KetionSuperEditorAdapter {
   void hideSubtree(String toggleBlockId) {
     final toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
     if (toggleNodeId == null) return;
-    
+
     final toggleIndex = document.getNodeIndexById(toggleNodeId);
     if (toggleIndex == -1) return;
-    
+
     final toggleNode = document.getNodeAt(toggleIndex);
     final toggleDepth = toggleNode?.metadata['depth'] as int? ?? 0;
-    
+
     final descendants = <DocumentNode>[];
-    
+
     for (int i = toggleIndex + 1; i < document.nodeCount; i++) {
       final node = document.getNodeAt(i);
       if (node == null) continue;
@@ -183,22 +195,22 @@ class KetionSuperEditorAdapter {
   void restoreSubtree(String toggleBlockId) {
     final toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
     if (toggleNodeId == null) return;
-    
+
     int toggleIndex = document.getNodeIndexById(toggleNodeId);
     if (toggleIndex == -1) return;
 
     final cachedNodes = _hiddenNodeCache.remove(toggleBlockId);
-    
+
     if (cachedNodes != null && cachedNodes.isNotEmpty) {
       final nodeIds = cachedNodes.map((n) => n.id).toSet();
       beginSemanticMutation(nodeIds);
-      
+
       int insertIndex = toggleIndex + 1;
       for (final node in cachedNodes) {
         document.insertNodeAt(insertIndex, node);
         insertIndex++;
       }
-      
+
       endSemanticMutation(nodeIds);
     }
   }
@@ -206,7 +218,7 @@ class KetionSuperEditorAdapter {
   void invalidateSubtree(String toggleBlockId) {
     _hiddenNodeCache.remove(toggleBlockId);
   }
-  
+
   void invalidateNode(String nodeId) {
     for (final list in _hiddenNodeCache.values) {
       list.removeWhere((n) => n.id == nodeId);
@@ -217,9 +229,9 @@ class KetionSuperEditorAdapter {
     try {
       final data = jsonDecode(block.data) as Map<String, dynamic>;
       final spans = data['spans'] as List<dynamic>? ?? [];
-      
+
       final attributedText = AttributionConverter.fromKetionSpans(spans);
-      
+
       final nodeId = Editor.createNodeId();
       final metadata = <String, dynamic>{};
       if (block.parentBlockId != null) {
@@ -239,59 +251,89 @@ class KetionSuperEditorAdapter {
               header3Attribution,
             ][headingLevel - 1];
             metadata['blockType'] = type;
-            return ParagraphNode(id: nodeId, text: attributedText, metadata: metadata);
+            return ParagraphNode(
+                id: nodeId, text: attributedText, metadata: metadata,);
           } else if (isQuote) {
             metadata['blockType'] = blockquoteAttribution;
-            return ParagraphNode(id: nodeId, text: attributedText, metadata: metadata);
+            return ParagraphNode(
+                id: nodeId, text: attributedText, metadata: metadata,);
           }
-          return ParagraphNode(id: nodeId, text: attributedText, metadata: metadata.isNotEmpty ? metadata : null);
-        
+          return ParagraphNode(
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata.isNotEmpty ? metadata : null,);
+
         case 'callout':
           final icon = data['icon'] as String? ?? '💡';
           final color = data['color'] as String? ?? 'grey';
-          return KetionCalloutNode(id: nodeId, text: attributedText, metadata: metadata, icon: icon, color: color);
-        
+          return KetionCalloutNode(
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata,
+              icon: icon,
+              color: color,);
+
         case 'list':
           final listType = data['listType'] as String? ?? 'bullet';
           if (listType == 'numbered') {
-            return ListItemNode.ordered(id: nodeId, text: attributedText, metadata: metadata.isNotEmpty ? metadata : null);
+            return ListItemNode.ordered(
+                id: nodeId,
+                text: attributedText,
+                metadata: metadata.isNotEmpty ? metadata : null,);
           } else if (listType == 'checklist') {
-            return TaskNode(id: nodeId, text: attributedText, isComplete: data['checked'] as bool? ?? false, metadata: metadata.isNotEmpty ? metadata : null);
+            return TaskNode(
+                id: nodeId,
+                text: attributedText,
+                isComplete: data['checked'] as bool? ?? false,
+                metadata: metadata.isNotEmpty ? metadata : null,);
           } else if (listType == 'toggle') {
             metadata['blockType'] = const NamedAttribution('toggle');
             metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
-            return ParagraphNode(id: nodeId, text: attributedText, metadata: metadata);
+            return ParagraphNode(
+                id: nodeId, text: attributedText, metadata: metadata,);
           } else {
-            return ListItemNode.unordered(id: nodeId, text: attributedText, metadata: metadata.isNotEmpty ? metadata : null);
+            return ListItemNode.unordered(
+                id: nodeId,
+                text: attributedText,
+                metadata: metadata.isNotEmpty ? metadata : null,);
           }
-        
+
         case 'code':
           final codeText = data['code'] as String? ?? '';
           metadata['blockType'] = codeAttribution;
           metadata['language'] = data['language'] as String? ?? 'plaintext';
-          metadata['showLineNumbers'] = data['showLineNumbers'] as bool? ?? false;
+          metadata['showLineNumbers'] =
+              data['showLineNumbers'] as bool? ?? false;
           metadata['wrapLines'] = data['wrapLines'] as bool? ?? true;
-          return ParagraphNode(id: nodeId, text: AttributedText(codeText), metadata: metadata);
-          
+          return ParagraphNode(
+              id: nodeId, text: AttributedText(codeText), metadata: metadata,);
+
         case 'image':
           final attachmentId = data['attachmentId'] as String? ?? '';
-          return ImageNode(id: nodeId, imageUrl: attachmentId, metadata: metadata.isNotEmpty ? metadata : null);
+          return ImageNode(
+              id: nodeId,
+              imageUrl: attachmentId,
+              metadata: metadata.isNotEmpty ? metadata : null,);
 
         case 'video':
           final attachmentId = data['attachmentId'] as String? ?? '';
-          return KetionVideoNode(id: nodeId, attachmentId: attachmentId, metadata: metadata);
+          return KetionVideoNode(
+              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
 
         case 'audio':
           final attachmentId = data['attachmentId'] as String? ?? '';
-          return KetionAudioNode(id: nodeId, attachmentId: attachmentId, metadata: metadata);
+          return KetionAudioNode(
+              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
 
         case 'pdf':
           final attachmentId = data['attachmentId'] as String? ?? '';
-          return KetionPdfNode(id: nodeId, attachmentId: attachmentId, metadata: metadata);
+          return KetionPdfNode(
+              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
 
         case 'file':
           final attachmentId = data['attachmentId'] as String? ?? '';
-          return KetionFileNode(id: nodeId, attachmentId: attachmentId, metadata: metadata);
+          return KetionFileNode(
+              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
 
         case 'bookmark':
           final url = data['url'] as String? ?? '';
@@ -304,7 +346,8 @@ class KetionSuperEditorAdapter {
 
         case 'pageLink':
           final pageId = data['pageId'] as String? ?? '';
-          return KetionPageLinkNode(id: nodeId, pageId: pageId, metadata: metadata);
+          return KetionPageLinkNode(
+              id: nodeId, pageId: pageId, metadata: metadata,);
 
         case 'webLink':
           final url = data['url'] as String? ?? '';
@@ -317,9 +360,9 @@ class KetionSuperEditorAdapter {
           final recurrenceRule = data['recurrenceRule'] as String?;
           final completed = data['completed'] as bool? ?? false;
           return KetionReminderNode(
-            id: nodeId, 
-            title: title, 
-            dueAt: dueAt, 
+            id: nodeId,
+            title: title,
+            dueAt: dueAt,
             timezone: timezone,
             recurrenceRule: recurrenceRule,
             completed: completed,
@@ -327,10 +370,14 @@ class KetionSuperEditorAdapter {
           );
 
         case 'divider':
-          return HorizontalRuleNode(id: nodeId, metadata: metadata.isNotEmpty ? metadata : null);
+          return HorizontalRuleNode(
+              id: nodeId, metadata: metadata.isNotEmpty ? metadata : null,);
 
         default:
-          return ParagraphNode(id: nodeId, text: attributedText, metadata: metadata.isNotEmpty ? metadata : null);
+          return ParagraphNode(
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata.isNotEmpty ? metadata : null,);
       }
     } catch (e) {
       return null;
@@ -350,7 +397,8 @@ class KetionSuperEditorAdapter {
   /// whether a block is structurally new — the semantic request handler
   /// remains the authoritative source for structural mutations.
   void beginSemanticMutation(Set<String> nodeIds) {
-    debugPrint('KETION: beginSemanticMutation for $nodeIds\n${StackTrace.current}');
+    debugPrint(
+        'KETION: beginSemanticMutation for $nodeIds\n${StackTrace.current}',);
     _activeSemanticMutationNodeIds.addAll(nodeIds);
   }
 
@@ -382,16 +430,18 @@ class KetionSuperEditorAdapter {
     if (_isSyncingFromKetion) return;
 
     for (final change in log.changes) {
-      debugPrint('KETION: _onDocumentChange change type: ${change.runtimeType}');
+      debugPrint(
+          'KETION: _onDocumentChange change type: ${change.runtimeType}',);
       if (change is NodeChangeEvent) {
         if (_activeSemanticMutationNodeIds.contains(change.nodeId)) {
           debugPrint('KETION: Suppressed NodeChangeEvent for ${change.nodeId}');
           continue;
         }
-        
+
         final node = document.getNodeById(change.nodeId);
         if (node is KetionTableNode) {
-          debugPrint('KETION: Discarded generic NodeChangeEvent for KetionTableNode (must use semantic handler)');
+          debugPrint(
+              'KETION: Discarded generic NodeChangeEvent for KetionTableNode (must use semantic handler)',);
           continue;
         }
 
@@ -399,21 +449,24 @@ class KetionSuperEditorAdapter {
         _pendingNodeIds.add(change.nodeId);
       } else if (change is NodeInsertedEvent) {
         if (_activeSemanticMutationNodeIds.contains(change.nodeId)) {
-          debugPrint('KETION: Suppressed NodeInsertedEvent for ${change.nodeId}');
+          debugPrint(
+              'KETION: Suppressed NodeInsertedEvent for ${change.nodeId}',);
           continue;
         }
-        debugPrint('KETION: Unsuppressed NodeInsertedEvent for ${change.nodeId}');
-        
+        debugPrint(
+            'KETION: Unsuppressed NodeInsertedEvent for ${change.nodeId}',);
+
         // Allocate identity if it's missing
         if (_registry.blockIdForNode(change.nodeId) == null) {
           final newBlockId = const Uuid().v7();
-          _registry.registerPendingMapping(nodeId: change.nodeId, blockId: newBlockId);
+          _registry.registerPendingMapping(
+              nodeId: change.nodeId, blockId: newBlockId,);
         }
-        
+
         _pendingInsertNodeIds.add(change.nodeId);
       }
     }
-    
+
     if (_pendingNodeIds.isNotEmpty || _pendingInsertNodeIds.isNotEmpty) {
       _debounceTimer?.cancel();
       _debounceTimer = Timer(const Duration(milliseconds: 300), () {
@@ -424,7 +477,8 @@ class KetionSuperEditorAdapter {
 
   Future<void> flushPendingChanges() {
     if (_activeFlush != null) return _activeFlush!;
-    _activeFlush = _flushPendingChangesInternal().whenComplete(() => _activeFlush = null);
+    _activeFlush =
+        _flushPendingChangesInternal().whenComplete(() => _activeFlush = null);
     return _activeFlush!;
   }
 
@@ -435,16 +489,19 @@ class KetionSuperEditorAdapter {
 
   Future<void> _flushPendingChangesInternal() async {
     if (_pendingNodeIds.isEmpty && _pendingInsertNodeIds.isEmpty) return;
-    
+
     // Process insertions in document order first
     final insertNodeIdsToProcess = _pendingInsertNodeIds.toSet();
     _pendingInsertNodeIds.clear();
-    
+
     final documentNodesInOrder = document.map((n) => n.id).toList();
     final sortedInsertNodeIds = insertNodeIdsToProcess.toList()
-      ..sort((a, b) => documentNodesInOrder.indexOf(a).compareTo(documentNodesInOrder.indexOf(b)));
+      ..sort((a, b) => documentNodesInOrder
+          .indexOf(a)
+          .compareTo(documentNodesInOrder.indexOf(b)),);
 
-    final insertMutationsToEnqueue = <persistence_mutations.InsertBlockMutation>[];
+    final insertMutationsToEnqueue =
+        <persistence_mutations.InsertBlockMutation>[];
 
     for (final nodeId in sortedInsertNodeIds) {
       final node = document.getNodeById(nodeId);
@@ -459,8 +516,19 @@ class KetionSuperEditorAdapter {
       final previousNode = document.getNodeBeforeById(nodeId);
       final nextNode = document.getNodeAfterById(nodeId);
 
-      final previousBlockId = previousNode != null ? _registry.blockIdForNode(previousNode.id) : null;
-      final nextBlockId = nextNode != null ? _registry.blockIdForNode(nextNode.id) : null;
+      final previousBlockId = previousNode != null
+          ? _registry.blockIdForNode(previousNode.id)
+          : null;
+      final nextBlockId =
+          nextNode != null ? _registry.blockIdForNode(nextNode.id) : null;
+
+      String? providedParent = node.metadata['parentBlockId'] as String?;
+      if (providedParent != null && !providedParent.contains('-')) {
+        final mappedBlockId = _registry.blockIdForNode(providedParent);
+        if (mappedBlockId != null) {
+          providedParent = mappedBlockId;
+        }
+      }
 
       final insertMutation = StructuralMutationBuilder.buildInsertMutation(
         pageId: pageId,
@@ -470,6 +538,7 @@ class KetionSuperEditorAdapter {
         previousBlockId: previousBlockId,
         nextBlockId: nextBlockId,
         snapshot: snapshot,
+        providedParentBlockId: providedParent,
       );
 
       if (insertMutation != null) {
@@ -484,7 +553,8 @@ class KetionSuperEditorAdapter {
       try {
         coordinator.enqueue(mutation);
       } catch (e) {
-        debugPrint('KETION: Flush enqueue failed for insert block ${mutation.blockId}: $e');
+        debugPrint(
+            'KETION: Flush enqueue failed for insert block ${mutation.blockId}: $e',);
       }
     }
 
@@ -495,14 +565,14 @@ class KetionSuperEditorAdapter {
     _pendingNodeIds.clear();
 
     final mutationsToEnqueue = <persistence_mutations.UpdateBlockMutation>[];
-    
+
     for (final nodeId in nodeIdsToProcess) {
       final node = document.getNodeById(nodeId);
       if (node != null) {
         final currentMetadata = node.metadata;
         final newData = _buildDataFromNode(node);
         final hash = EditorIdentityRegistry.hashContent(newData);
-        
+
         final blockId = _registry.blockIdForNode(nodeId);
         if (blockId != null) {
           mutationsToEnqueue.add(
@@ -510,11 +580,15 @@ class KetionSuperEditorAdapter {
               pageId: pageId,
               blockId: blockId,
               data: newData,
-              parentBlockId: currentMetadata['parentBlockId'] as String? ?? snapshot.getBlock(blockId)?.parentBlockId,
-              position: (currentMetadata['position'] as num?)?.toDouble() ?? snapshot.getBlock(blockId)?.position ?? 0.0,
+              parentBlockId: currentMetadata['parentBlockId'] as String? ??
+                  snapshot.getBlock(blockId)?.parentBlockId,
+              position: (currentMetadata['position'] as num?)?.toDouble() ??
+                  snapshot.getBlock(blockId)?.position ??
+                  0.0,
               type: BlockDataSerializer.blockTypeFor(node),
               expectedVersion: _registry.getBlockVersion(blockId),
-              blockCreatedAt: _registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
+              blockCreatedAt: _registry.getBlockCreatedAt(blockId) ??
+                  DateTime.now().toUtc(),
               createdAt: DateTime.now().toUtc(),
               contentHash: hash,
             ),
@@ -522,12 +596,13 @@ class KetionSuperEditorAdapter {
         }
       }
     }
-    
+
     for (final mutation in mutationsToEnqueue) {
       try {
         coordinator.enqueue(mutation);
       } catch (e) {
-        debugPrint('KETION: Flush enqueue failed for block ${mutation.blockId}: $e');
+        debugPrint(
+            'KETION: Flush enqueue failed for block ${mutation.blockId}: $e',);
       }
     }
   }

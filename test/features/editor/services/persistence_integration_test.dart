@@ -38,7 +38,8 @@ void main() {
   });
 
   group('EditorPersistenceCoordinator & Repository Integration', () {
-    test('roundtrip: enqueue insert, wait, and read back from sqlite', () async {
+    test('roundtrip: enqueue insert, wait, and read back from sqlite',
+        () async {
       final insert = InsertBlockMutation(
         pageId: 'page1',
         blockId: 'block1',
@@ -56,58 +57,67 @@ void main() {
 
       final blockResult = await repository.getBlock('block1');
       expect(blockResult.isSuccess, isTrue);
-      
+
       final block = blockResult.valueOrNull!;
       expect(block.data, 'Hello');
       expect(block.version, 1);
     });
 
-    test('rapid structural edits complete serially and coalesce where possible', () async {
-      coordinator.enqueue(InsertBlockMutation(
-        pageId: 'page1',
-        blockId: 'block1',
-        type: 'text',
-        data: 'Init',
-        position: 1.0,
-        expectedVersion: 1,
-        createdAt: DateTime.now(),
-      ),);
+    test('rapid structural edits complete serially and coalesce where possible',
+        () async {
+      coordinator.enqueue(
+        InsertBlockMutation(
+          pageId: 'page1',
+          blockId: 'block1',
+          type: 'text',
+          data: 'Init',
+          position: 1.0,
+          expectedVersion: 1,
+          createdAt: DateTime.now(),
+        ),
+      );
 
-      coordinator.enqueue(UpdateBlockMutation(
-        pageId: 'page1',
-        blockId: 'block1',
-        data: 'Init A',
-        type: 'text',
-        position: 1.0,
-        expectedVersion: 1,
-        blockCreatedAt: DateTime.now().toUtc(),
-        createdAt: DateTime.now().toUtc(),
-      ),);
-      
-      coordinator.enqueue(UpdateBlockMutation(
-        pageId: 'page1',
-        blockId: 'block1',
-        data: 'Init B',
-        type: 'text',
-        position: 1.0,
-        expectedVersion: 2,
-        blockCreatedAt: DateTime.now().toUtc(),
-        createdAt: DateTime.now().toUtc(),
-      ),);
-      
-      coordinator.enqueue(SplitBlockMutation(
-        pageId: 'page1',
-        originalBlockId: 'block1',
-        originalData: 'Init ',
-        expectedVersion: 2,
-        originalBlockCreatedAt: DateTime.now().toUtc(),
-        createdAt: DateTime.now().toUtc(),
-        originalPosition: 1.0,
-        newBlockId: 'block2',
-        newData: 'B',
-        newType: 'text',
-        newPosition: 2.0,
-      ),);
+      coordinator.enqueue(
+        UpdateBlockMutation(
+          pageId: 'page1',
+          blockId: 'block1',
+          data: 'Init A',
+          type: 'text',
+          position: 1.0,
+          expectedVersion: 1,
+          blockCreatedAt: DateTime.now().toUtc(),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+
+      coordinator.enqueue(
+        UpdateBlockMutation(
+          pageId: 'page1',
+          blockId: 'block1',
+          data: 'Init B',
+          type: 'text',
+          position: 1.0,
+          expectedVersion: 2,
+          blockCreatedAt: DateTime.now().toUtc(),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+
+      coordinator.enqueue(
+        SplitBlockMutation(
+          pageId: 'page1',
+          originalBlockId: 'block1',
+          originalData: 'Init ',
+          expectedVersion: 2,
+          originalBlockCreatedAt: DateTime.now().toUtc(),
+          createdAt: DateTime.now().toUtc(),
+          originalPosition: 1.0,
+          newBlockId: 'block2',
+          newData: 'B',
+          newType: 'text',
+          newPosition: 2.0,
+        ),
+      );
 
       await coordinator.flush();
 
@@ -116,38 +126,44 @@ void main() {
 
       expect(block1.data, 'Init ');
       expect(block2.data, 'B');
-      expect(block1.version, 3); // 1 create + 1 coalesced update + 1 split update
+      expect(
+          block1.version, 3,); // 1 create + 1 coalesced update + 1 split update
     });
 
-    test('failure handles cleanly without breaking subsequent mutations', () async {
+    test('failure handles cleanly without breaking subsequent mutations',
+        () async {
       // Intentionally insert a block that doesn't exist via Update
-      final f1 = coordinator.enqueue(UpdateBlockMutation(
-        pageId: 'page1',
-        blockId: 'non_existent_block',
-        data: 'Fail',
-        type: 'text',
-        position: 1.0,
-        expectedVersion: 1,
-        blockCreatedAt: DateTime.now().toUtc(),
-        createdAt: DateTime.now().toUtc(),
-      ),);
+      final f1 = coordinator.enqueue(
+        UpdateBlockMutation(
+          pageId: 'page1',
+          blockId: 'non_existent_block',
+          data: 'Fail',
+          type: 'text',
+          position: 1.0,
+          expectedVersion: 1,
+          blockCreatedAt: DateTime.now().toUtc(),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
 
       expect(f1, isTrue);
-      
+
       await coordinator.flush();
-      
+
       expect(coordinator.hasFailedMutations, isTrue);
 
       // Now insert a real block
-      final f2 = coordinator.enqueue(InsertBlockMutation(
-        pageId: 'page1',
-        blockId: 'block_new',
-        type: 'text',
-        data: 'Success',
-        position: 1.0,
-        expectedVersion: 1,
-        createdAt: DateTime.now(),
-      ),);
+      final f2 = coordinator.enqueue(
+        InsertBlockMutation(
+          pageId: 'page1',
+          blockId: 'block_new',
+          type: 'text',
+          data: 'Success',
+          position: 1.0,
+          expectedVersion: 1,
+          createdAt: DateTime.now(),
+        ),
+      );
 
       expect(f2, isTrue);
 

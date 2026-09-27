@@ -67,10 +67,12 @@ class SettingsPage extends ConsumerWidget {
                         }
                       },
                       items: AccentColor.values
-                          .map<DropdownMenuItem<AccentColor>>((AccentColor value) {
+                          .map<DropdownMenuItem<AccentColor>>(
+                              (AccentColor value) {
                         return DropdownMenuItem<AccentColor>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
+                          child: Text(value.name[0].toUpperCase() +
+                              value.name.substring(1),),
                         );
                       }).toList(),
                     ),
@@ -88,10 +90,12 @@ class SettingsPage extends ConsumerWidget {
                         }
                       },
                       items: FontSizePreference.values
-                          .map<DropdownMenuItem<FontSizePreference>>((FontSizePreference value) {
+                          .map<DropdownMenuItem<FontSizePreference>>(
+                              (FontSizePreference value) {
                         return DropdownMenuItem<FontSizePreference>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
+                          child: Text(value.name[0].toUpperCase() +
+                              value.name.substring(1),),
                         );
                       }).toList(),
                     ),
@@ -109,10 +113,12 @@ class SettingsPage extends ConsumerWidget {
                         }
                       },
                       items: EditorAppearance.values
-                          .map<DropdownMenuItem<EditorAppearance>>((EditorAppearance value) {
+                          .map<DropdownMenuItem<EditorAppearance>>(
+                              (EditorAppearance value) {
                         return DropdownMenuItem<EditorAppearance>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
+                          child: Text(value.name[0].toUpperCase() +
+                              value.name.substring(1),),
                         );
                       }).toList(),
                     ),
@@ -150,7 +156,6 @@ class SettingsPage extends ConsumerWidget {
                     },
                   ),
                   const Divider(),
-
                   const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
@@ -318,7 +323,6 @@ class SettingsPage extends ConsumerWidget {
                       }
                     },
                   ),
-
                 ],
               );
             },

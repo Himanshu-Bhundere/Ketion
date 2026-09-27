@@ -8,7 +8,6 @@ import '../../domain/repositories/search_repository.dart';
 import '../../domain/usecases/search_notes_usecase.dart';
 import '../../../../core/utils/logger.dart';
 
-
 final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return SearchRepositoryImpl(db, appLogger);
@@ -19,7 +18,8 @@ final searchNotesUseCaseProvider = Provider<SearchNotesUseCase>((ref) {
   return SearchNotesUseCase(repo);
 });
 
-class SearchNotifier extends StateNotifier<AsyncValue<List<GroupedSearchResult>>> {
+class SearchNotifier
+    extends StateNotifier<AsyncValue<List<GroupedSearchResult>>> {
   final SearchNotesUseCase _searchNotes;
   Timer? _debounceTimer;
   int _currentRequestId = 0;
@@ -39,7 +39,7 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<GroupedSearchResult>>
 
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
       final result = await _searchNotes(query, typeFilter: typeFilter);
-      
+
       if (requestId != _currentRequestId) return;
 
       result.fold(
@@ -59,12 +59,14 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<GroupedSearchResult>>
 
   List<GroupedSearchResult> _groupResults(List<SearchResult> results) {
     final Map<String, List<SearchResult>> groups = {};
-    
+
     for (final result in results) {
-      final groupId = (result.entityType == 'tag') ? result.entityId : (result.pageId ?? result.entityId);
+      final groupId = (result.entityType == 'tag')
+          ? result.entityId
+          : (result.pageId ?? result.entityId);
       groups.putIfAbsent(groupId, () => []).add(result);
     }
-    
+
     return groups.entries.map((entry) {
       final matches = entry.value;
       return GroupedSearchResult(
@@ -84,9 +86,8 @@ class SearchNotifier extends StateNotifier<AsyncValue<List<GroupedSearchResult>>
   }
 }
 
-final searchNotifierProvider =
-    StateNotifierProvider<SearchNotifier, AsyncValue<List<GroupedSearchResult>>>(
-        (ref) {
+final searchNotifierProvider = StateNotifierProvider<SearchNotifier,
+    AsyncValue<List<GroupedSearchResult>>>((ref) {
   final useCase = ref.watch(searchNotesUseCaseProvider);
   return SearchNotifier(useCase);
 });

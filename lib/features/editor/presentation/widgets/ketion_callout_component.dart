@@ -52,7 +52,8 @@ class KetionCalloutComponentBuilder implements ComponentBuilder {
   const KetionCalloutComponentBuilder();
 
   @override
-  SingleColumnLayoutComponentViewModel? createViewModel(Document document, DocumentNode node) {
+  SingleColumnLayoutComponentViewModel? createViewModel(
+      Document document, DocumentNode node,) {
     if (node is! KetionCalloutNode) {
       return null;
     }
@@ -65,9 +66,10 @@ class KetionCalloutComponentBuilder implements ComponentBuilder {
       padding: EdgeInsets.zero,
       text: node.text,
       textDirection: textDirection,
-      textAlignment: textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+      textAlignment:
+          textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
       textStyleBuilder: noStyleBuilder,
-      selectionColor: const Color(0x00000000),
+      selectionColor: Colors.blue.withValues(alpha: 0.4),
       icon: node.icon,
       colorString: node.color,
     );
@@ -83,13 +85,11 @@ class KetionCalloutComponentBuilder implements ComponentBuilder {
     }
 
     final icon = componentViewModel.icon;
-    final colorString = componentViewModel.colorString;
-
     return KetionCalloutComponent(
       key: componentContext.componentKey,
       viewModel: componentViewModel,
       icon: icon,
-      colorString: colorString,
+      colorString: componentViewModel.colorString,
     );
   }
 }
@@ -112,14 +112,42 @@ class KetionCalloutComponent extends StatefulWidget {
   State<KetionCalloutComponent> createState() => _KetionCalloutComponentState();
 }
 
-class _KetionCalloutComponentState extends State<KetionCalloutComponent> with ProxyDocumentComponent<KetionCalloutComponent>, ProxyTextComposable {
+class _KetionCalloutComponentState extends State<KetionCalloutComponent>
+    with ProxyDocumentComponent<KetionCalloutComponent>, ProxyTextComposable {
   final _textKey = GlobalKey();
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
 
   @override
-  TextComposable get childTextComposable => childDocumentComponentKey.currentState as TextComposable;
+  TextComposable get childTextComposable =>
+      childDocumentComponentKey.currentState as TextComposable;
+
+  @override
+  NodePosition? getPositionAtOffset(Offset localOffset) {
+    final childPosition = super.getPositionAtOffset(localOffset);
+    if (childPosition != null) {
+      return childPosition;
+    }
+
+    final childContext = childDocumentComponentKey.currentContext;
+    if (childContext == null) return null;
+    final childRenderObject = childContext.findRenderObject() as RenderBox?;
+    if (childRenderObject == null) return null;
+
+    final parentRenderObject = context.findRenderObject() as RenderBox;
+    final childOffset = parentRenderObject.globalToLocal(
+      childRenderObject.localToGlobal(Offset.zero),
+    );
+
+    final childLocalOffset = localOffset - childOffset;
+    
+    // Snap to the closest text boundary
+    final dx = childLocalOffset.dx.clamp(0.0, childRenderObject.size.width);
+    final dy = childLocalOffset.dy.clamp(0.0, childRenderObject.size.height);
+    
+    return (childDocumentComponentKey.currentState as DocumentComponent).getPositionAtOffset(Offset(dx, dy));
+  }
 
   Color _getBackgroundColor(BuildContext context, String colorString) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -127,13 +155,21 @@ class _KetionCalloutComponentState extends State<KetionCalloutComponent> with Pr
       case 'grey':
         return isDark ? Colors.grey.shade800 : Colors.grey.shade100;
       case 'blue':
-        return isDark ? Colors.blue.shade900.withValues(alpha: 0.4) : Colors.blue.shade50;
+        return isDark
+            ? Colors.blue.shade900.withValues(alpha: 0.4)
+            : Colors.blue.shade50;
       case 'green':
-        return isDark ? Colors.green.shade900.withValues(alpha: 0.4) : Colors.green.shade50;
+        return isDark
+            ? Colors.green.shade900.withValues(alpha: 0.4)
+            : Colors.green.shade50;
       case 'yellow':
-        return isDark ? Colors.yellow.shade900.withValues(alpha: 0.4) : Colors.yellow.shade50;
+        return isDark
+            ? Colors.yellow.shade900.withValues(alpha: 0.4)
+            : Colors.yellow.shade50;
       case 'red':
-        return isDark ? Colors.red.shade900.withValues(alpha: 0.4) : Colors.red.shade50;
+        return isDark
+            ? Colors.red.shade900.withValues(alpha: 0.4)
+            : Colors.red.shade50;
       default:
         return isDark ? Colors.grey.shade800 : Colors.grey.shade100;
     }
@@ -161,7 +197,7 @@ class _KetionCalloutComponentState extends State<KetionCalloutComponent> with Pr
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = _getBorderColor(context, widget.colorString);
-    
+
     return Directionality(
       textDirection: widget.viewModel.textDirection,
       child: Container(
@@ -169,9 +205,12 @@ class _KetionCalloutComponentState extends State<KetionCalloutComponent> with Pr
           color: _getBackgroundColor(context, widget.colorString),
           border: Border(
             left: BorderSide(color: borderColor, width: 4),
-            top: BorderSide(color: isDark ? Colors.transparent : Colors.grey.shade200),
-            right: BorderSide(color: isDark ? Colors.transparent : Colors.grey.shade200),
-            bottom: BorderSide(color: isDark ? Colors.transparent : Colors.grey.shade200),
+            top: BorderSide(
+                color: isDark ? Colors.transparent : Colors.grey.shade200,),
+            right: BorderSide(
+                color: isDark ? Colors.transparent : Colors.grey.shade200,),
+            bottom: BorderSide(
+                color: isDark ? Colors.transparent : Colors.grey.shade200,),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

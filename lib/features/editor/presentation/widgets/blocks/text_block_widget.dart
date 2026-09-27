@@ -37,7 +37,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
   late TextBlockData _blockData;
   Timer? _debounce;
   final Map<String, String> _pageLinks = {}; // Title -> PageId
-  
+
   final LayerLink _layerLink = LayerLink();
   final GlobalKey _anchorKey = GlobalKey();
   late SlashCommandController _slashController;
@@ -65,10 +65,12 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
         if (pending.action == 'start') {
           _controller.selection = const TextSelection.collapsed(offset: 0);
         } else if (pending.action == 'end') {
-          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+          _controller.selection =
+              TextSelection.collapsed(offset: _controller.text.length);
         } else if (pending.action.startsWith('offset:')) {
           final offset = int.tryParse(pending.action.substring(7)) ?? 0;
-          _controller.selection = TextSelection.collapsed(offset: offset.clamp(0, _controller.text.length));
+          _controller.selection = TextSelection.collapsed(
+              offset: offset.clamp(0, _controller.text.length),);
         }
         ref.read(pendingBlockFocusProvider.notifier).state = null;
       }
@@ -220,7 +222,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
         },
       ),
     ];
-    
+
     final normalizedQuery = query.toLowerCase();
     return allOptions.where((option) {
       return normalizedQuery.isEmpty ||
@@ -231,7 +233,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
   void _handleEnter() {
     final selection = _controller.selection;
-    final cursor = selection.isValid ? selection.start : _controller.text.length;
+    final cursor =
+        selection.isValid ? selection.start : _controller.text.length;
     final before = _controller.text.substring(0, cursor);
     final after = _controller.text.substring(selection.end);
     _controller.value = TextEditingValue(
@@ -270,7 +273,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         final selection = _controller.selection;
         if (selection.isValid && selection.start == 0 && selection.end == 0) {
-          final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+          final editor =
+              ref.read(editorStateProvider(widget.block.pageId).notifier);
           editor.focusPreviousBlock(widget.block.id);
           return KeyEventResult.handled;
         }
@@ -278,8 +282,11 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
         final selection = _controller.selection;
         final len = _controller.text.length;
-        if (selection.isValid && selection.start == len && selection.end == len) {
-          final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+        if (selection.isValid &&
+            selection.start == len &&
+            selection.end == len) {
+          final editor =
+              ref.read(editorStateProvider(widget.block.pageId).notifier);
           editor.focusNextBlock(widget.block.id);
           return KeyEventResult.handled;
         }
@@ -300,7 +307,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       }
     }
     if (event.logicalKey == LogicalKeyboardKey.tab) {
-      final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+      final editor =
+          ref.read(editorStateProvider(widget.block.pageId).notifier);
       final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
       if (isShiftPressed) {
         unawaited(editor.outdentBlock(widget.block.id));
@@ -336,18 +344,22 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<BlockFocusIntent?>(pendingBlockFocusProvider, (previous, pending) {
+    ref.listen<BlockFocusIntent?>(pendingBlockFocusProvider,
+        (previous, pending) {
       if (pending != null && pending.id == widget.block.id) {
         _focusNode.requestFocus();
         if (pending.action == 'start') {
           _controller.selection = const TextSelection.collapsed(offset: 0);
         } else if (pending.action == 'end') {
-          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+          _controller.selection =
+              TextSelection.collapsed(offset: _controller.text.length);
         } else if (pending.action.startsWith('offset:')) {
           final offset = int.tryParse(pending.action.substring(7)) ?? 0;
-          _controller.selection = TextSelection.collapsed(offset: offset.clamp(0, _controller.text.length));
+          _controller.selection = TextSelection.collapsed(
+              offset: offset.clamp(0, _controller.text.length),);
         }
-        Future.microtask(() => ref.read(pendingBlockFocusProvider.notifier).state = null);
+        Future.microtask(
+            () => ref.read(pendingBlockFocusProvider.notifier).state = null,);
       }
     });
 
@@ -388,7 +400,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
           onChanged: (value) {
             if (_handleImeNewline(value)) return;
             _slashController.check(value);
-            
+
             if (value.endsWith('[[')) {
               _showPagePicker();
             } else if (value.startsWith('# ')) {
@@ -441,7 +453,6 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       _focusNode.requestFocus();
     });
   }
-
 
   Future<void> _pickImage() async {
     final mediaPicker = ref.read(mediaPickerProvider);

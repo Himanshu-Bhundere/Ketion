@@ -23,11 +23,12 @@ class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
 
 class KetionToggleComponentBuilder implements ComponentBuilder {
   const KetionToggleComponentBuilder(this.editor);
-  
+
   final Editor editor;
 
   @override
-  SingleColumnLayoutComponentViewModel? createViewModel(Document document, DocumentNode node) {
+  SingleColumnLayoutComponentViewModel? createViewModel(
+      Document document, DocumentNode node,) {
     if (node is! ParagraphNode || node.metadata['blockType'] != 'toggle') {
       return null;
     }
@@ -41,17 +42,20 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
       padding: EdgeInsets.zero,
       text: node.text,
       textDirection: textDirection,
-      textAlignment: textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+      textAlignment:
+          textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
       textStyleBuilder: noStyleBuilder,
       selectionColor: const Color(0x00000000),
       isExpanded: isExpanded,
       setExpanded: (bool expanded) {
-         editor.execute([
-           ToggleExpandedRequest(
-             nodeId: node.id,
-             isExpanded: expanded,
-           ),
-         ],);
+        editor.execute(
+          [
+            ToggleExpandedRequest(
+              nodeId: node.id,
+              isExpanded: expanded,
+            ),
+          ],
+        );
       },
     );
   }
@@ -92,14 +96,42 @@ class KetionToggleComponent extends StatefulWidget {
   State<KetionToggleComponent> createState() => _KetionToggleComponentState();
 }
 
-class _KetionToggleComponentState extends State<KetionToggleComponent> with ProxyDocumentComponent<KetionToggleComponent>, ProxyTextComposable {
+class _KetionToggleComponentState extends State<KetionToggleComponent>
+    with ProxyDocumentComponent<KetionToggleComponent>, ProxyTextComposable {
   final _textKey = GlobalKey();
 
   @override
   GlobalKey<State<StatefulWidget>> get childDocumentComponentKey => _textKey;
 
   @override
-  TextComposable get childTextComposable => childDocumentComponentKey.currentState as TextComposable;
+  TextComposable get childTextComposable =>
+      childDocumentComponentKey.currentState as TextComposable;
+
+  @override
+  NodePosition? getPositionAtOffset(Offset localOffset) {
+    final childPosition = super.getPositionAtOffset(localOffset);
+    if (childPosition != null) {
+      return childPosition;
+    }
+
+    final childContext = childDocumentComponentKey.currentContext;
+    if (childContext == null) return null;
+    final childRenderObject = childContext.findRenderObject() as RenderBox?;
+    if (childRenderObject == null) return null;
+
+    final parentRenderObject = context.findRenderObject() as RenderBox;
+    final childOffset = parentRenderObject.globalToLocal(
+      childRenderObject.localToGlobal(Offset.zero),
+    );
+
+    final childLocalOffset = localOffset - childOffset;
+    
+    // Snap to the closest text boundary
+    final dx = childLocalOffset.dx.clamp(0.0, childRenderObject.size.width);
+    final dy = childLocalOffset.dy.clamp(0.0, childRenderObject.size.height);
+    
+    return (childDocumentComponentKey.currentState as DocumentComponent).getPositionAtOffset(Offset(dx, dy));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,9 +149,14 @@ class _KetionToggleComponentState extends State<KetionToggleComponent> with Prox
                 child: GestureDetector(
                   onTap: () => widget.onToggle(!widget.isExpanded),
                   child: Icon(
-                    widget.isExpanded ? Icons.arrow_drop_down : Icons.arrow_right,
+                    widget.isExpanded
+                        ? Icons.arrow_drop_down
+                        : Icons.arrow_right,
                     size: 24,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
                   ),
                 ),
               ),

@@ -12,6 +12,9 @@ import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'dart:async';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
+import 'package:ketion/features/reminders/presentation/utils/reminder_display_formatter.dart';
+import 'package:ketion/features/reminders/domain/models/reminder_kind.dart' as ketion_kind;
+import 'package:ketion/features/reminders/domain/usecases/resolve_reminder_usecase.dart' as ketion_resolve;
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -71,46 +74,69 @@ class HomePage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Today\'s Reminders', style: AppTypography.title),
+        const Text('Today\'s Schedule', style: AppTypography.title),
         const SizedBox(height: AppSpacing.lg),
         remindersAsync.when(
           data: (reminders) {
             if (reminders.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: Text('No reminders for today.'),
+                child: Text('No schedule for today.'),
               );
             }
             return Column(
               children: reminders.map((reminder) {
+                final isAlarm = reminder.kind == ketion_kind.ReminderKind.alarm;
                 return Card(
                   elevation: 0,
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   margin: const EdgeInsets.only(bottom: 8.0),
                   child: ListTile(
-                    leading: Checkbox(
-                      value: reminder.completed,
-                      onChanged: (val) async {
-                        if (val != null) {
-                          final updateUseCase =
-                              ref.read(updateReminderUseCaseProvider);
-                          await updateUseCase
-                              .execute(reminder.copyWith(completed: val));
-                        }
-                      },
-                    ),
+                    leading: Icon(isAlarm ? Icons.alarm : Icons.notifications_active),
                     title: Text(reminder.title),
                     subtitle: Text(
-                        'Due: ${reminder.reminderTime.toLocal().toString().substring(11, 16)}',
+                      ReminderDisplayFormatter.formatDueLabel(context, reminder.reminderTime),
                     ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () async {
-                        final deleteUseCase =
-                            ref.read(deleteReminderUseCaseProvider);
-                        await deleteUseCase.execute(reminder.id);
-                      },
-                    ),
+                    trailing: isAlarm
+                        ? IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: 'Delete alarm',
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Alarm'),
+                                  content: const Text('Are you sure you want to delete this alarm?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                final deleteUseCase = ref.read(deleteReminderUseCaseProvider);
+                                await deleteUseCase.execute(reminder.id);
+                              }
+                            },
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.check_circle_outline),
+                            tooltip: 'Complete',
+                            onPressed: () async {
+                              final resolveUseCase = ref.read(resolveReminderUseCaseProvider);
+                              await resolveUseCase.execute(
+                                reminderId: reminder.id,
+                                action: ketion_resolve.ReminderResolutionAction.complete,
+                                occurrenceTime: reminder.reminderTime,
+                              );
+                            },
+                          ),
                   ),
                 );
               }).toList(),
@@ -121,7 +147,7 @@ class HomePage extends ConsumerWidget {
             height: 72,
             borderRadius: BorderRadius.circular(12),
           ),
-          error: (e, st) => const Text('Failed to load reminders'),
+          error: (e, st) => const Text('Failed to load schedule'),
         ),
       ],
     );
@@ -222,7 +248,8 @@ class HomePage extends ConsumerWidget {
             if (width >= AppBreakpoints.medium) {
               ref.read(activePageIdProvider.notifier).state = page.id;
             } else {
-              context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
+              context.pushNamed(Routes.editorName,
+                  pathParameters: {'pageId': page.id},);
             }
           },
           child: Padding(

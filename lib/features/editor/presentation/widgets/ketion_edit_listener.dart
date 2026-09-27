@@ -7,7 +7,8 @@ import '../../../blocks/domain/entities/block.dart';
 import '../../domain/services/block_data_serializer.dart';
 import '../../domain/services/sibling_position_manager.dart';
 import '../../services/editor_persistence_coordinator.dart';
-import '../../services/editor_persistence_mutations.dart' as persistence_mutations;
+import '../../services/editor_persistence_mutations.dart'
+    as persistence_mutations;
 import 'editor_identity_registry.dart';
 
 /// EditListener that handles undo/redo reconciliation.
@@ -45,7 +46,8 @@ class KetionEditListener extends EditListener {
 
   @override
   void onEdit(List<EditEvent> changeList) {
-    debugPrint('KETION: EditListener.onEdit called. changeList length: ${changeList.length}');
+    debugPrint(
+        'KETION: EditListener.onEdit called. changeList length: ${changeList.length}',);
     for (final change in changeList) {
       debugPrint('KETION: EditListener change event: ${change.runtimeType}');
     }
@@ -83,8 +85,8 @@ class KetionEditListener extends EditListener {
       currentOrderedNodeIds.add(node.id);
       currentParents[node.id] = node.metadata['parentBlockId'] as String?;
 
-      currentContentHashes[node.id] =
-          EditorIdentityRegistry.hashContent(BlockDataSerializer.encodeDocumentNode(node));
+      currentContentHashes[node.id] = EditorIdentityRegistry.hashContent(
+          BlockDataSerializer.encodeDocumentNode(node),);
     }
 
     final diff = registry.diffAgainstSnapshot(
@@ -115,7 +117,8 @@ class KetionEditListener extends EditListener {
     }
 
     // Persist content and structure changes for nodes that already existed
-    final nodesToUpdate = diff.contentChangedNodeIds.union(diff.structureChangedNodeIds);
+    final nodesToUpdate =
+        diff.contentChangedNodeIds.union(diff.structureChangedNodeIds);
     if (nodesToUpdate.isNotEmpty) {
       _reconcileNodeUpdates(nodesToUpdate, currentContentHashes);
     }
@@ -126,7 +129,8 @@ class KetionEditListener extends EditListener {
     // Try tombstone restoration first — this preserves the original Ketion block ID
     final restoredBlockId = registry.restoreFromTombstone(nodeId);
     if (restoredBlockId != null) {
-      debugPrint('KETION: Restored node $nodeId from tombstone → block $restoredBlockId');
+      debugPrint(
+          'KETION: Restored node $nodeId from tombstone → block $restoredBlockId',);
       // The block should still exist in SQLite (it was "deleted" but may still be there
       // depending on delete implementation). Re-create it if needed.
       _ensureBlockExists(nodeId, restoredBlockId);
@@ -152,7 +156,8 @@ class KetionEditListener extends EditListener {
     registry.removeMappingForNode(nodeId);
     registry.removeContentHash(nodeId);
 
-    debugPrint('KETION: Node $nodeId removed by undo. Tombstoned block $blockId.');
+    debugPrint(
+        'KETION: Node $nodeId removed by undo. Tombstoned block $blockId.',);
 
     // Delete the block from Ketion
     _deleteBlock(blockId);
@@ -184,14 +189,16 @@ class KetionEditListener extends EditListener {
   double _calculatePositionForNode(String nodeId, String? parentBlockId) {
     Block? previousSibling;
     final previousNode = document.getNodeBeforeById(nodeId);
-    if (previousNode != null && previousNode.metadata['parentBlockId'] == parentBlockId) {
+    if (previousNode != null &&
+        previousNode.metadata['parentBlockId'] == parentBlockId) {
       final prevBlockId = registry.blockIdForNode(previousNode.id);
       if (prevBlockId != null) {
         previousSibling = Block(
           id: prevBlockId,
           pageId: pageId,
           type: BlockDataSerializer.blockTypeFor(previousNode),
-          position: (previousNode.metadata['position'] as num?)?.toDouble() ?? 0,
+          position:
+              (previousNode.metadata['position'] as num?)?.toDouble() ?? 0,
           data: '',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -201,7 +208,8 @@ class KetionEditListener extends EditListener {
 
     Block? nextSibling;
     final nextNode = document.getNodeAfterById(nodeId);
-    if (nextNode != null && nextNode.metadata['parentBlockId'] == parentBlockId) {
+    if (nextNode != null &&
+        nextNode.metadata['parentBlockId'] == parentBlockId) {
       final nextBlockId = registry.blockIdForNode(nextNode.id);
       if (nextBlockId != null) {
         nextSibling = Block(
@@ -217,7 +225,8 @@ class KetionEditListener extends EditListener {
     }
 
     return SiblingPositionManager.calculatePositionBetweenBlocks(
-      previousSibling, nextSibling,
+      previousSibling,
+      nextSibling,
     );
   }
 
@@ -228,8 +237,9 @@ class KetionEditListener extends EditListener {
 
       final parentBlockId = node.metadata['parentBlockId'] as String?;
       final position = _calculatePositionForNode(nodeId, parentBlockId);
-      
-      final block = _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
+
+      final block =
+          _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
       coordinator.enqueue(
         persistence_mutations.RestoreBlockMutation(
@@ -247,7 +257,8 @@ class KetionEditListener extends EditListener {
 
       registry.setContentHash(
         nodeId,
-        EditorIdentityRegistry.hashContent(BlockDataSerializer.encodeDocumentNode(node)),
+        EditorIdentityRegistry.hashContent(
+            BlockDataSerializer.encodeDocumentNode(node),),
       );
     } catch (e) {
       debugPrint('KETION: Failed to ensure block exists for node $nodeId: $e');
@@ -261,8 +272,9 @@ class KetionEditListener extends EditListener {
 
       final parentBlockId = node.metadata['parentBlockId'] as String?;
       final position = _calculatePositionForNode(nodeId, parentBlockId);
-      
-      final block = _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
+
+      final block =
+          _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
       coordinator.enqueue(
         persistence_mutations.InsertBlockMutation(
@@ -279,7 +291,8 @@ class KetionEditListener extends EditListener {
 
       registry.setContentHash(
         nodeId,
-        EditorIdentityRegistry.hashContent(BlockDataSerializer.encodeDocumentNode(node)),
+        EditorIdentityRegistry.hashContent(
+            BlockDataSerializer.encodeDocumentNode(node),),
       );
     } catch (e) {
       debugPrint('KETION: Failed to create block for node $nodeId: $e');
@@ -305,8 +318,9 @@ class KetionEditListener extends EditListener {
     try {
       final parentBlockId = node.metadata['parentBlockId'] as String?;
       final position = _calculatePositionForNode(node.id, parentBlockId);
-      
-      final block = _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
+
+      final block =
+          _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
       coordinator.enqueue(
         persistence_mutations.UpdateBlockMutation(
@@ -329,8 +343,11 @@ class KetionEditListener extends EditListener {
 
 /// Builds a Ketion Block from a Super Editor DocumentNode.
 Block _buildBlockFromNode(
-  DocumentNode node, String blockId, String pageId,
-  String? parentBlockId, double position,
+  DocumentNode node,
+  String blockId,
+  String pageId,
+  String? parentBlockId,
+  double position,
 ) {
   return Block(
     id: blockId,

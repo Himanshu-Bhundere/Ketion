@@ -11,7 +11,8 @@ class KetionImageComponentBuilder implements ComponentBuilder {
   const KetionImageComponentBuilder();
 
   @override
-  SingleColumnLayoutComponentViewModel? createViewModel(Document document, DocumentNode node) {
+  SingleColumnLayoutComponentViewModel? createViewModel(
+      Document document, DocumentNode node,) {
     if (node is! ImageNode) {
       return null;
     }
@@ -43,7 +44,8 @@ class KetionImageComponentBuilder implements ComponentBuilder {
   }
 }
 
-class KetionImageComponentViewModel extends SingleColumnLayoutComponentViewModel {
+class KetionImageComponentViewModel
+    extends SingleColumnLayoutComponentViewModel {
   KetionImageComponentViewModel({
     required super.nodeId,
     super.maxWidth,
@@ -83,7 +85,8 @@ class KetionImageComponent extends ConsumerStatefulWidget {
   final bool showDebugPaint;
 
   @override
-  ConsumerState<KetionImageComponent> createState() => _KetionImageComponentState();
+  ConsumerState<KetionImageComponent> createState() =>
+      _KetionImageComponentState();
 }
 
 class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
@@ -101,11 +104,11 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
     return attachmentAsync.when(
       data: (attachment) {
         if (attachment == null) {
-           // Fallback if not an attachment ID (maybe a direct URL from old data)
-           if (attachmentId.startsWith('http')) {
-              return _buildNetworkImage(attachmentId);
-           }
-           return _buildPlaceholder(context, 'Image not found.');
+          // Fallback if not an attachment ID (maybe a direct URL from old data)
+          if (attachmentId.startsWith('http')) {
+            return _buildNetworkImage(attachmentId);
+          }
+          return _buildPlaceholder(context, 'Image not found.');
         }
 
         final pathAsync = ref.watch(attachmentPathProvider(attachment));
@@ -117,11 +120,17 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: kIsWeb
-                    ? Image.network(localPath, fit: BoxFit.contain)
-                    : Image.file(io.File(localPath), fit: BoxFit.contain),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 280),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: kIsWeb
+                        ? Image.network(localPath, fit: BoxFit.contain)
+                        : Image.file(io.File(localPath), fit: BoxFit.contain),
+                  ),
+                ),
               ),
             );
           },
@@ -129,7 +138,8 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
             height: 100,
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (e, st) => _buildPlaceholder(context, 'Error loading image path.'),
+          error: (e, st) =>
+              _buildPlaceholder(context, 'Error loading image path.'),
         );
       },
       loading: () => const SizedBox(
@@ -145,8 +155,8 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
       height: 100,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? Colors.grey.shade900 
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey.shade900
             : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -166,9 +176,15 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
   Widget _buildNetworkImage(String url) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: Image.network(url, fit: BoxFit.contain),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 280),
+        child: SizedBox(
+          width: double.infinity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.network(url, fit: BoxFit.contain),
+          ),
+        ),
       ),
     );
   }

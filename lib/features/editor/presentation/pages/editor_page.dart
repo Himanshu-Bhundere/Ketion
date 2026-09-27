@@ -29,7 +29,8 @@ class EditorPage extends ConsumerWidget {
       return const Error(StorageFailure('Page is unavailable'));
     }
 
-    final updatedPage = page.copyWith(title: title ?? page.title, icon: icon ?? page.icon);
+    final updatedPage =
+        page.copyWith(title: title ?? page.title, icon: icon ?? page.icon);
     final result = await ref.read(updatePageUseCaseProvider)(updatedPage);
     if (result is Success<void>) {
       ref.invalidate(pageProvider(pageId));

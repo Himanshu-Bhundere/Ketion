@@ -12,6 +12,7 @@ class Reminders extends Table {
   TextColumn get title => text().withDefault(const Constant(''))();
   DateTimeColumn get reminderTime => dateTime()();
   TextColumn get timezone => text().withDefault(const Constant('UTC'))();
+  TextColumn get kind => text().withDefault(const Constant('reminder'))();
   TextColumn get recurrenceRule => text().nullable()();
   DateTimeColumn get snoozeUntil => dateTime().nullable()();
   BoolColumn get completed => boolean().withDefault(const Constant(false))();

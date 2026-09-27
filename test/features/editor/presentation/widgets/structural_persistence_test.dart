@@ -41,14 +41,17 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
 
   @override
   Future<Result<Block>> getBlock(String id) async {
-    final block = testBlocks.firstWhere((b) => b.id == id, orElse: () => Block(
+    final block = testBlocks.firstWhere(
+      (b) => b.id == id,
+      orElse: () => Block(
         id: id,
         pageId: 'page',
         type: 'text',
@@ -56,22 +59,28 @@ class DummyBlockRepository implements BlockRepository {
         data: '{}',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      ),);
+      ),
+    );
     return Success(block);
   }
 
-  Future<Result<List<Block>>> getPageBlocks(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getPageBlocks(String pageId) async =>
+      Success(testBlocks);
 
   @override
-  Future<Result<List<Block>>> getBlocksForPage(String pageId) async => Success(testBlocks);
+  Future<Result<List<Block>>> getBlocksForPage(String pageId) async =>
+      Success(testBlocks);
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks.where((b) => b.parentBlockId == parentBlockId && !b.deleted).toList());
+    return Success(testBlocks
+        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+        .toList(),);
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -80,8 +89,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<List<Block>>> moveBlock(String sourceBlockId, DropIntent intent) async {
-    final updatedBlocks = BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
+  Future<Result<List<Block>>> moveBlock(
+      String sourceBlockId, DropIntent intent,) async {
+    final updatedBlocks =
+        BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
       final index = testBlocks.indexWhere((b) => b.id == updatedBlock.id);
       if (index != -1) {
@@ -89,8 +100,8 @@ class DummyBlockRepository implements BlockRepository {
       }
     }
     return Success(updatedBlocks);
-  }  
-  
+  }
+
   Future<Result<void>> updateBlocks(List<Block> blocks) async {
     for (final block in blocks) {
       final index = testBlocks.indexWhere((b) => b.id == block.id);
@@ -130,12 +141,15 @@ class DummyBlockRepository implements BlockRepository {
     return const Success(null);
   }
 
-  Future<Result<void>> deleteBlocks(List<String> ids) async => const Success(null);
+  Future<Result<void>> deleteBlocks(List<String> ids) async =>
+      const Success(null);
 
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data, String? parentBlockId, double position) async => const Success(null);
+  Future<Result<void>> restoreBlock(String id, String data,
+          String? parentBlockId, double position,) async =>
+      const Success(null);
 }
 
 /// Block repository that records which repository methods were called,
@@ -150,7 +164,8 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block, {required int expectedVersion}) async {
+  Future<Result<void>> updateBlock(Block block,
+      {required int expectedVersion,}) async {
     calls.add('updateBlock:${block.id}:v$expectedVersion');
     return super.updateBlock(block, expectedVersion: expectedVersion);
   }
@@ -170,7 +185,8 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id, {required int expectedVersion}) async {
+  Future<Result<void>> deleteBlock(String id,
+      {required int expectedVersion,}) async {
     calls.add('deleteBlock:$id');
     return super.deleteBlock(id, expectedVersion: expectedVersion);
   }
@@ -178,12 +194,14 @@ class SpyBlockRepository extends DummyBlockRepository {
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
-  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty && attempts < 50) {
+  while (find.byType(CircularProgressIndicator).evaluate().isNotEmpty &&
+      attempts < 50) {
     await tester.pump(const Duration(milliseconds: 50));
     attempts++;
   }
   if (attempts >= 50) {
-    throw Exception('pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear');
+    throw Exception(
+        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -192,19 +210,21 @@ void main() {
   const pageId = 'test-page';
 
   String textData(String text) => jsonEncode({
-    'spans': [{
-      'text': text, 
-      'bold': false, 
-      'italic': false, 
-      'underline': false, 
-      'strikethrough': false, 
-      'code': false,
-      'link': null,
-      'pageLink': null,
-      'pageLinkTitle': null,
-    }],
-    'headingLevel': 0,
-  });
+        'spans': [
+          {
+            'text': text,
+            'bold': false,
+            'italic': false,
+            'underline': false,
+            'strikethrough': false,
+            'code': false,
+            'link': null,
+            'pageLink': null,
+            'pageLinkTitle': null,
+          }
+        ],
+        'headingLevel': 0,
+      });
 
   Widget buildTestAppWithSpy({
     required List<Block> blocks,
@@ -215,7 +235,8 @@ void main() {
       overrides: [
         pageProvider(pageId).overrideWith((ref) => testPage),
         blockRepositoryProvider.overrideWithValue(spy),
-        getPageBlocksUseCaseProvider.overrideWithValue(MockGetPageBlocksUseCase(blocks)),
+        getPageBlocksUseCaseProvider
+            .overrideWithValue(MockGetPageBlocksUseCase(blocks)),
       ],
       child: MaterialApp(
         home: Scaffold(
@@ -235,14 +256,14 @@ void main() {
   }
 
   Block makeTextBlock(String id, String text, {double position = 0}) => Block(
-    id: id,
-    pageId: pageId,
-    type: 'text',
-    position: position,
-    data: textData(text),
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
+        id: id,
+        pageId: pageId,
+        type: 'text',
+        position: position,
+        data: textData(text),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
   final testPage = page_entity.Page(
     id: pageId,
@@ -258,15 +279,20 @@ void main() {
       spyRepo = SpyBlockRepository();
     });
 
-    testWidgets('Single unowned NodeInsertedEvent creates InsertBlockMutation (not update)', (tester) async {
+    testWidgets(
+        'Single unowned NodeInsertedEvent creates InsertBlockMutation (not update)',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
-      final block = makeTextBlock('block-init', 'Initial Block', position: 100.0);
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      final block =
+          makeTextBlock('block-init', 'Initial Block', position: 100.0);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -292,29 +318,40 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       // Verify the result
       expect(testBlocks.length, 2);
-      
-      final createdCalls = spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      final updateCalls = spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
-      
+
+      final createdCalls =
+          spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
+
       // Crucial part: it MUST create a block (InsertBlockMutation), not update.
-      expect(createdCalls.length, 1, reason: 'Unowned insertion should create a block via InsertBlockMutation');
-      expect(updateCalls.length, 0, reason: 'Unowned insertion should not trigger an updateBlock for the new block');
+      expect(createdCalls.length, 1,
+          reason:
+              'Unowned insertion should create a block via InsertBlockMutation',);
+      expect(updateCalls.length, 0,
+          reason:
+              'Unowned insertion should not trigger an updateBlock for the new block',);
 
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('Multi-node insertion (paste) preserving document order/positions', (tester) async {
+    testWidgets(
+        'Multi-node insertion (paste) preserving document order/positions',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
-      final block = makeTextBlock('block-init', 'Initial Block', position: 100.0);
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      final block =
+          makeTextBlock('block-init', 'Initial Block', position: 100.0);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -331,25 +368,30 @@ void main() {
       editor.execute([
         InsertNodeAtIndexRequest(
           nodeIndex: 1,
-          newNode: ParagraphNode(id: pasteNode1Id, text: AttributedText('Paste 1')),
+          newNode:
+              ParagraphNode(id: pasteNode1Id, text: AttributedText('Paste 1')),
         ),
         InsertNodeAtIndexRequest(
           nodeIndex: 2,
-          newNode: ParagraphNode(id: pasteNode2Id, text: AttributedText('Paste 2')),
+          newNode:
+              ParagraphNode(id: pasteNode2Id, text: AttributedText('Paste 2')),
         ),
         InsertNodeAtIndexRequest(
           nodeIndex: 3,
-          newNode: ParagraphNode(id: pasteNode3Id, text: AttributedText('Paste 3')),
+          newNode:
+              ParagraphNode(id: pasteNode3Id, text: AttributedText('Paste 3')),
         ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       expect(testBlocks.length, 4);
-      
-      final createdCalls = spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      expect(createdCalls.length, 3, reason: 'Three blocks should have been created');
+
+      final createdCalls =
+          spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
+      expect(createdCalls.length, 3,
+          reason: 'Three blocks should have been created',);
 
       // Check document order/positions.
       // Since they were inserted after the first block (position 100.0), their positions should be monotonically increasing.
@@ -358,7 +400,7 @@ void main() {
       expect(newBlocks[0].position, greaterThan(100.0));
       expect(newBlocks[1].position, greaterThan(newBlocks[0].position));
       expect(newBlocks[2].position, greaterThan(newBlocks[1].position));
-      
+
       final data1 = jsonDecode(newBlocks[0].data);
       expect(data1['spans'][0]['text'], 'Paste 1');
 
@@ -368,15 +410,18 @@ void main() {
       debugDefaultTargetPlatformOverride = null;
     });
 
-    testWidgets('Checklist persistence verification after reopen', (tester) async {
+    testWidgets('Checklist persistence verification after reopen',
+        (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
 
       final block = makeTextBlock('block-checklist-test', 'Original Text');
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [block],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -392,12 +437,12 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
-      
+
       // Verify persistence
       expect(testBlocks.length, 1);
       final persistedBlock = testBlocks.first;
       expect(persistedBlock.type, 'list');
-      
+
       final parsedData = jsonDecode(persistedBlock.data);
       expect(parsedData['listType'], 'checklist');
       expect(parsedData['checked'], false);
@@ -405,20 +450,22 @@ void main() {
 
       // Now "reopen" - load from testBlocks again
       final blockToReopen = testBlocks.first;
-      
+
       await tester.pumpWidget(Container()); // unmount
-      
+
       // Re-mount using the persisted block
-      await tester.pumpWidget(buildTestAppWithSpy(
-        blocks: [blockToReopen],
-        testPage: testPage,
-        spy: spyRepo,
-      ),);
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [blockToReopen],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
       await pumpUntilInitialized(tester);
-      
+
       final newState = tester.state(find.byType(SuperEditorHost)) as dynamic;
       final newDocument = newState.document as MutableDocument;
-      
+
       // Verify it loaded back as a TaskNode
       final firstNode = newDocument.first;
       expect(firstNode is TaskNode, isTrue);

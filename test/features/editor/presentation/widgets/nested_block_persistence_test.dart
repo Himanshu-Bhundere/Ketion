@@ -11,7 +11,8 @@ class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool enqueue(EditorPersistenceMutation mutation) => true;
 
   @override
-  Stream<EditorPersistenceMutation> get onMutationSuccess => const Stream.empty();
+  Stream<EditorPersistenceMutation> get onMutationSuccess =>
+      const Stream.empty();
 
   @override
   Future<bool> flush() async => true;
@@ -69,21 +70,24 @@ void main() {
       adapter.dispose();
     });
 
-    test('indenting a block moves it as a child of the previous sibling', () async {
+    test('indenting a block moves it as a child of the previous sibling',
+        () async {
       // 1. Setup two blocks
       const block1Id = 'block-1';
       const block2Id = 'block-2';
-      
+
       final node1 = ParagraphNode(id: 'node-1', text: AttributedText('Line 1'));
       final node2 = ParagraphNode(id: 'node-2', text: AttributedText('Line 2'));
       document.insertNodeAt(0, node1);
       document.insertNodeAt(1, node2);
-      
-      adapter.registry.registerPendingMapping(nodeId: 'node-1', blockId: block1Id);
+
+      adapter.registry
+          .registerPendingMapping(nodeId: 'node-1', blockId: block1Id);
       adapter.registry.promotePendingMapping(block1Id);
-      adapter.registry.registerPendingMapping(nodeId: 'node-2', blockId: block2Id);
+      adapter.registry
+          .registerPendingMapping(nodeId: 'node-2', blockId: block2Id);
       adapter.registry.promotePendingMapping(block2Id);
-      
+
       snapshot.applyMutation(
         InsertBlockMutation(
           pageId: 'page-123',
@@ -95,7 +99,7 @@ void main() {
           createdAt: DateTime.now().toUtc(),
         ),
       );
-      
+
       snapshot.applyMutation(
         InsertBlockMutation(
           pageId: 'page-123',
@@ -110,24 +114,24 @@ void main() {
 
       // 2. We don't have the full editor request pipeline here because we didn't inject KetionEditRequestHandler.
       // But we can directly test the StructuralMutationBuilder output.
-      
+
       final indentMutation = StructuralMutationBuilder.buildIndentMutation(
         pageId: 'page-123',
         blockId: block2Id,
         snapshot: snapshot,
       );
-      
+
       expect(indentMutation, isNotNull);
       expect(indentMutation!.parentBlockId, equals(block1Id));
-      
+
       snapshot.applyMutation(indentMutation);
-      
+
       final unindentMutation = StructuralMutationBuilder.buildUnindentMutation(
         pageId: 'page-123',
         blockId: block2Id,
         snapshot: snapshot,
       );
-      
+
       expect(unindentMutation, isNotNull);
       expect(unindentMutation!.parentBlockId, isNull);
     });

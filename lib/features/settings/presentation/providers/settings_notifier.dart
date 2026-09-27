@@ -19,6 +19,51 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
+  Future<void> updateAccentColor(String color) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(accentColor: color);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
+  Future<void> updateFontSize(String size) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(fontSize: size);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
+  Future<void> updateEditorAppearance(String appearance) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(editorAppearance: appearance);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
+  Future<void> updateHighContrast(bool enabled) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(highContrast: enabled);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
+  Future<void> updateReducedMotion(bool enabled) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(reducedMotion: enabled);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
   Future<void> updateSyncFrequency(String frequency) async {
     final current = state.value;
     if (current == null) return;

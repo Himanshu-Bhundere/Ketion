@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ketion/core/router/routes.dart';
+import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
 import 'package:ketion/features/home/presentation/providers/home_providers.dart';
@@ -88,7 +91,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () {
-                      // TODO: Navigate to create new note
+                      CreateActionSheet.show(context);
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('New Note'),
@@ -256,7 +259,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     if (width >= AppBreakpoints.medium) {
       ref.read(activePageIdProvider.notifier).state = page.id;
     } else {
-      // TODO: Use go_router push
+      context.pushNamed(Routes.editor, pathParameters: {'pageId': page.id});
     }
   }
 }

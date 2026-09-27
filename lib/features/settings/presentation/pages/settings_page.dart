@@ -53,11 +53,74 @@ class SettingsPage extends ConsumerWidget {
                       }).toList(),
                     ),
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.color_lens),
+                    title: const Text('Accent Color'),
+                    trailing: DropdownButton<String>(
+                      value: settings.accentColor,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updateAccentColor(newValue);
+                        }
+                      },
+                      items: <String>['Blue', 'Red', 'Green', 'Purple', 'Orange']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.text_fields),
+                    title: const Text('Typography'),
+                    trailing: DropdownButton<String>(
+                      value: settings.fontSize,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updateFontSize(newValue);
+                        }
+                      },
+                      items: <String>['Small', 'Medium', 'Large', 'Extra Large']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.view_agenda),
+                    title: const Text('Editor Appearance'),
+                    trailing: DropdownButton<String>(
+                      value: settings.editorAppearance,
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          ref
+                              .read(appSettingsProvider.notifier)
+                              .updateEditorAppearance(newValue);
+                        }
+                      },
+                      items: <String>['Compact', 'Comfortable', 'Wide', 'Centered']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                   const Divider(),
                   const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
-                      'Editor',
+                      'Accessibility',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -65,13 +128,28 @@ class SettingsPage extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const ListTile(
-                    leading: Icon(Icons.text_format),
-                    title: Text('Default Typography'),
-                    subtitle:
-                        Text('Set standard text formatting for new notes'),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.contrast),
+                    title: const Text('High Contrast'),
+                    value: settings.highContrast,
+                    onChanged: (bool value) {
+                      ref
+                          .read(appSettingsProvider.notifier)
+                          .updateHighContrast(value);
+                    },
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.animation),
+                    title: const Text('Reduced Motion'),
+                    value: settings.reducedMotion,
+                    onChanged: (bool value) {
+                      ref
+                          .read(appSettingsProvider.notifier)
+                          .updateReducedMotion(value);
+                    },
                   ),
                   const Divider(),
+
                   const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
@@ -239,42 +317,7 @@ class SettingsPage extends ConsumerWidget {
                       }
                     },
                   ),
-                  const Divider(),
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'Accessibility',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  const ListTile(
-                    leading: Icon(Icons.accessibility),
-                    title: Text('High Contrast'),
-                    subtitle: Text('Increase color contrast across the app'),
-                    trailing: Switch(value: false, onChanged: null),
-                  ),
-                  const Divider(),
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'Diagnostics',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  const ListTile(
-                    leading: Icon(Icons.bug_report),
-                    title: Text('Export Debug Logs'),
-                    subtitle:
-                        Text('Save error and sync logs for troubleshooting'),
-                  ),
+
                 ],
               );
             },

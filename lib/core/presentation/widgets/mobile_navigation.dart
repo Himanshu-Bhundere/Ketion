@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 
 class MobileNavigation extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -48,7 +49,7 @@ class MobileNavigation extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Open FAB creation menu
+          CreateActionSheet.show(context);
         },
         child: const Icon(Icons.add),
       ),

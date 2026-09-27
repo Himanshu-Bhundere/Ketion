@@ -10,8 +10,13 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default('15 minutes') String syncFrequency,
     @Default(true) bool autoSync,
     @Default(100) int cacheLimitMB,
-    @Default(30) int tombstoneRetentionDays,
+    @Default('Blue') String accentColor,
+    @Default('Medium') String fontSize,
+    @Default('Comfortable') String editorAppearance,
+    @Default(false) bool highContrast,
+    @Default(false) bool reducedMotion,
     DateTime? lastCleanup,
+
   }) = _AppSettingsModel;
 
   factory AppSettingsModel.fromJson(Map<String, dynamic> json) =>

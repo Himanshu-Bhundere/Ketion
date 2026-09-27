@@ -34,7 +34,6 @@ class FakeSettingsRepository implements SettingsRepository {
   AppSettingsModel _settings = const AppSettingsModel(
     autoSync: true,
     syncFrequency: '15 minutes',
-    tombstoneRetentionDays: 30,
     themeMode: 'system',
   );
 
@@ -181,7 +180,6 @@ void main() {
       syncProvider: syncProvider,
       stateRepository: syncStateRepo,
       queueRepository: syncQueue,
-      settingsRepository: FakeSettingsRepository(),
       conflictResolver: ConflictResolver(database),
       entityApplier: SyncEntityApplier(database),
     );

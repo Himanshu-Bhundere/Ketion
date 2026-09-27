@@ -16,7 +16,6 @@ import 'package:ketion/features/sync/data/utils/sync_entity_applier.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:drift/drift.dart';
 
-import 'package:ketion/features/settings/domain/repositories/settings_repository.dart';
 
 class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncProvider _syncProvider;
@@ -25,7 +24,6 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
   final SyncStateRepository _stateRepository;
   final ConflictResolver _conflictResolver;
   final SyncEntityApplier _entityApplier;
-  final SettingsRepository _settingsRepository;
   final AppDatabase _db;
 
   static const List<String> _driveScopes = [
@@ -40,7 +38,6 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
     required SyncStateRepository stateRepository,
     required ConflictResolver conflictResolver,
     required SyncEntityApplier entityApplier,
-    required SettingsRepository settingsRepository,
     required AppDatabase db,
   })  : _syncProvider = syncProvider,
         _authService = authService,
@@ -48,7 +45,6 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
         _stateRepository = stateRepository,
         _conflictResolver = conflictResolver,
         _entityApplier = entityApplier,
-        _settingsRepository = settingsRepository,
         _db = db;
 
   bool _isSyncing = false;
@@ -256,9 +252,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       }
 
       // 6. Cleanup old tombstones
-      final settings = await _settingsRepository.getSettings();
       await _db.cleanupTombstones(
-        retentionDays: settings.tombstoneRetentionDays,
+        retentionDays: 30, // Using default of 30 days since it was removed from settings
       );
 
       return const Success(null);

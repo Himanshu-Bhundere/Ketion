@@ -18,7 +18,6 @@ import 'package:ketion/features/sync/data/utils/conflict_resolver.dart';
 import 'package:ketion/features/sync/data/utils/sync_entity_applier.dart';
 import 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 import 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
-import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
 
 export 'package:ketion/features/sync/domain/utils/sync_mutex.dart';
 export 'package:ketion/features/sync/domain/services/sync_scheduler.dart';
@@ -47,8 +46,6 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
   final stateRepo = ref.watch(syncStateRepositoryProvider);
   final conflictResolver = ConflictResolver(db);
   final entityApplier = SyncEntityApplier(db);
-  final settingsRepo = ref.watch(settingsRepositoryProvider);
-
   return SyncEngineRepositoryImpl(
     syncProvider: syncProvider,
     authService: authService,
@@ -56,7 +53,6 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
     stateRepository: stateRepo,
     conflictResolver: conflictResolver,
     entityApplier: entityApplier,
-    settingsRepository: settingsRepo,
     db: db,
   );
 });

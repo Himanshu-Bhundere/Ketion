@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ketion/core/router/routes.dart';
+import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
 import 'package:ketion/core/theme/breakpoints.dart';
 import 'package:ketion/features/home/presentation/providers/home_providers.dart';
+import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
@@ -29,7 +33,7 @@ class HomePage extends ConsumerWidget {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _buildRemindersSection(context),
+                  _buildRemindersSection(context, ref),
                   const SizedBox(height: AppSpacing.xxl),
                   _buildRecentlyViewedSection(context, ref),
                   // Additional sections like Pinned can go here
@@ -43,7 +47,7 @@ class HomePage extends ConsumerWidget {
           MediaQuery.of(context).size.width < AppBreakpoints.medium
               ? FloatingActionButton(
                   onPressed: () {
-                    // TODO: Wire up actual new note logic and route push
+                    CreateActionSheet.show(context);
                   },
                   child: const Icon(Icons.add),
                 )
@@ -51,21 +55,63 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRemindersSection(BuildContext context) {
+  Widget _buildRemindersSection(BuildContext context, WidgetRef ref) {
+    final remindersAsync = ref.watch(todayRemindersProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Today\'s Reminders', style: AppTypography.title),
         const SizedBox(height: AppSpacing.lg),
-        // Mock data for now
-        Card(
-          elevation: 0,
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const ListTile(
-            leading: Icon(Icons.check_circle_outline),
-            title: Text('Review Phase 1.1 architecture'),
-            subtitle: Text('Due Today at 5:00 PM'),
+        remindersAsync.when(
+          data: (reminders) {
+            if (reminders.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text('No reminders for today.'),
+              );
+            }
+            return Column(
+              children: reminders.map((reminder) {
+                return Card(
+                  elevation: 0,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  margin: const EdgeInsets.only(bottom: 8.0),
+                  child: ListTile(
+                    leading: Checkbox(
+                      value: reminder.completed,
+                      onChanged: (val) async {
+                        if (val != null) {
+                          final updateUseCase =
+                              ref.read(updateReminderUseCaseProvider);
+                          await updateUseCase
+                              .execute(reminder.copyWith(completed: val));
+                        }
+                      },
+                    ),
+                    title: Text(reminder.title),
+                    subtitle: Text(
+                        'Due: ${reminder.reminderTime.toLocal().toString().substring(11, 16)}',
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () async {
+                        final deleteUseCase =
+                            ref.read(deleteReminderUseCaseProvider);
+                        await deleteUseCase.execute(reminder.id);
+                      },
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => SkeletonLoader(
+            width: double.infinity,
+            height: 72,
+            borderRadius: BorderRadius.circular(12),
           ),
+          error: (e, st) => const Text('Failed to load reminders'),
         ),
       ],
     );
@@ -166,7 +212,7 @@ class HomePage extends ConsumerWidget {
             if (width >= AppBreakpoints.medium) {
               ref.read(activePageIdProvider.notifier).state = page.id;
             } else {
-              // TODO: use go_router push
+              context.pushNamed(Routes.editor, pathParameters: {'pageId': page.id});
             }
           },
           child: Padding(

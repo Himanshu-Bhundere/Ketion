@@ -10,6 +10,8 @@ import '../../domain/entities/page.dart' as domain;
 import '../../domain/repositories/page_repository.dart';
 import '../../../sync/domain/repositories/sync_queue_repository.dart';
 import '../../../sync/domain/entities/sync_queue_item.dart';
+import '../../../blocks/domain/entities/block.dart' as block_domain;
+import '../../../blocks/data/models/block_mapper.dart';
 import '../models/page_mapper.dart';
 
 class PageRepositoryImpl implements PageRepository {
@@ -23,8 +25,21 @@ class PageRepositoryImpl implements PageRepository {
   Future<Result<void>> createPage(domain.Page page) async {
     try {
       final newPage = page.copyWith(version: 1, updatedAt: DateTime.now());
+      final initialBlock = block_domain.Block(
+        id: const Uuid().v7(),
+        pageId: newPage.id,
+        type: 'text',
+        position: 0,
+        data: jsonEncode({'runtimeType': 'text', 'spans': <dynamic>[], 'headingLevel': 0}),
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+        version: 1,
+      );
+
       await _db.transaction(() async {
         await _db.into(_db.pages).insert(newPage.toCompanion());
+        await _db.into(_db.blocks).insert(initialBlock.toCompanion());
+
         await _syncQueue.enqueueOrCoalesce(
           SyncQueueItem(
             id: const Uuid().v7(),
@@ -35,6 +50,20 @@ class PageRepositoryImpl implements PageRepository {
             batchId: null,
             version: newPage.version,
             updatedAt: newPage.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'blocks',
+            entityId: initialBlock.id,
+            operation: 'create',
+            payload: jsonEncode(initialBlock.toJson()),
+            batchId: null,
+            version: initialBlock.version,
+            updatedAt: initialBlock.updatedAt,
             createdAt: DateTime.now().toUtc(),
           ),
         );

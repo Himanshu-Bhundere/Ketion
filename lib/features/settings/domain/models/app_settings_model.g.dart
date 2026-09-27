@@ -13,8 +13,11 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
       syncFrequency: json['syncFrequency'] as String? ?? '15 minutes',
       autoSync: json['autoSync'] as bool? ?? true,
       cacheLimitMB: (json['cacheLimitMB'] as num?)?.toInt() ?? 100,
-      tombstoneRetentionDays:
-          (json['tombstoneRetentionDays'] as num?)?.toInt() ?? 30,
+      accentColor: json['accentColor'] as String? ?? 'Blue',
+      fontSize: json['fontSize'] as String? ?? 'Medium',
+      editorAppearance: json['editorAppearance'] as String? ?? 'Comfortable',
+      highContrast: json['highContrast'] as bool? ?? false,
+      reducedMotion: json['reducedMotion'] as bool? ?? false,
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),
@@ -27,6 +30,10 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'syncFrequency': instance.syncFrequency,
       'autoSync': instance.autoSync,
       'cacheLimitMB': instance.cacheLimitMB,
-      'tombstoneRetentionDays': instance.tombstoneRetentionDays,
+      'accentColor': instance.accentColor,
+      'fontSize': instance.fontSize,
+      'editorAppearance': instance.editorAppearance,
+      'highContrast': instance.highContrast,
+      'reducedMotion': instance.reducedMotion,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };

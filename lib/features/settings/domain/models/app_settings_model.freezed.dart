@@ -24,7 +24,11 @@ mixin _$AppSettingsModel {
   String get syncFrequency => throw _privateConstructorUsedError;
   bool get autoSync => throw _privateConstructorUsedError;
   int get cacheLimitMB => throw _privateConstructorUsedError;
-  int get tombstoneRetentionDays => throw _privateConstructorUsedError;
+  String get accentColor => throw _privateConstructorUsedError;
+  String get fontSize => throw _privateConstructorUsedError;
+  String get editorAppearance => throw _privateConstructorUsedError;
+  bool get highContrast => throw _privateConstructorUsedError;
+  bool get reducedMotion => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -44,7 +48,11 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
-      int tombstoneRetentionDays,
+      String accentColor,
+      String fontSize,
+      String editorAppearance,
+      bool highContrast,
+      bool reducedMotion,
       DateTime? lastCleanup});
 }
 
@@ -65,7 +73,11 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
     Object? syncFrequency = null,
     Object? autoSync = null,
     Object? cacheLimitMB = null,
-    Object? tombstoneRetentionDays = null,
+    Object? accentColor = null,
+    Object? fontSize = null,
+    Object? editorAppearance = null,
+    Object? highContrast = null,
+    Object? reducedMotion = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_value.copyWith(
@@ -85,10 +97,26 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
           ? _value.cacheLimitMB
           : cacheLimitMB // ignore: cast_nullable_to_non_nullable
               as int,
-      tombstoneRetentionDays: null == tombstoneRetentionDays
-          ? _value.tombstoneRetentionDays
-          : tombstoneRetentionDays // ignore: cast_nullable_to_non_nullable
-              as int,
+      accentColor: null == accentColor
+          ? _value.accentColor
+          : accentColor // ignore: cast_nullable_to_non_nullable
+              as String,
+      fontSize: null == fontSize
+          ? _value.fontSize
+          : fontSize // ignore: cast_nullable_to_non_nullable
+              as String,
+      editorAppearance: null == editorAppearance
+          ? _value.editorAppearance
+          : editorAppearance // ignore: cast_nullable_to_non_nullable
+              as String,
+      highContrast: null == highContrast
+          ? _value.highContrast
+          : highContrast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      reducedMotion: null == reducedMotion
+          ? _value.reducedMotion
+          : reducedMotion // ignore: cast_nullable_to_non_nullable
+              as bool,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -110,7 +138,11 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
-      int tombstoneRetentionDays,
+      String accentColor,
+      String fontSize,
+      String editorAppearance,
+      bool highContrast,
+      bool reducedMotion,
       DateTime? lastCleanup});
 }
 
@@ -129,7 +161,11 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
     Object? syncFrequency = null,
     Object? autoSync = null,
     Object? cacheLimitMB = null,
-    Object? tombstoneRetentionDays = null,
+    Object? accentColor = null,
+    Object? fontSize = null,
+    Object? editorAppearance = null,
+    Object? highContrast = null,
+    Object? reducedMotion = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_$AppSettingsModelImpl(
@@ -149,10 +185,26 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
           ? _value.cacheLimitMB
           : cacheLimitMB // ignore: cast_nullable_to_non_nullable
               as int,
-      tombstoneRetentionDays: null == tombstoneRetentionDays
-          ? _value.tombstoneRetentionDays
-          : tombstoneRetentionDays // ignore: cast_nullable_to_non_nullable
-              as int,
+      accentColor: null == accentColor
+          ? _value.accentColor
+          : accentColor // ignore: cast_nullable_to_non_nullable
+              as String,
+      fontSize: null == fontSize
+          ? _value.fontSize
+          : fontSize // ignore: cast_nullable_to_non_nullable
+              as String,
+      editorAppearance: null == editorAppearance
+          ? _value.editorAppearance
+          : editorAppearance // ignore: cast_nullable_to_non_nullable
+              as String,
+      highContrast: null == highContrast
+          ? _value.highContrast
+          : highContrast // ignore: cast_nullable_to_non_nullable
+              as bool,
+      reducedMotion: null == reducedMotion
+          ? _value.reducedMotion
+          : reducedMotion // ignore: cast_nullable_to_non_nullable
+              as bool,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -169,7 +221,11 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.syncFrequency = '15 minutes',
       this.autoSync = true,
       this.cacheLimitMB = 100,
-      this.tombstoneRetentionDays = 30,
+      this.accentColor = 'Blue',
+      this.fontSize = 'Medium',
+      this.editorAppearance = 'Comfortable',
+      this.highContrast = false,
+      this.reducedMotion = false,
       this.lastCleanup});
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -189,13 +245,25 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   final int cacheLimitMB;
   @override
   @JsonKey()
-  final int tombstoneRetentionDays;
+  final String accentColor;
+  @override
+  @JsonKey()
+  final String fontSize;
+  @override
+  @JsonKey()
+  final String editorAppearance;
+  @override
+  @JsonKey()
+  final bool highContrast;
+  @override
+  @JsonKey()
+  final bool reducedMotion;
   @override
   final DateTime? lastCleanup;
 
   @override
   String toString() {
-    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, tombstoneRetentionDays: $tombstoneRetentionDays, lastCleanup: $lastCleanup)';
+    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, lastCleanup: $lastCleanup)';
   }
 
   @override
@@ -211,16 +279,34 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
                 other.autoSync == autoSync) &&
             (identical(other.cacheLimitMB, cacheLimitMB) ||
                 other.cacheLimitMB == cacheLimitMB) &&
-            (identical(other.tombstoneRetentionDays, tombstoneRetentionDays) ||
-                other.tombstoneRetentionDays == tombstoneRetentionDays) &&
+            (identical(other.accentColor, accentColor) ||
+                other.accentColor == accentColor) &&
+            (identical(other.fontSize, fontSize) ||
+                other.fontSize == fontSize) &&
+            (identical(other.editorAppearance, editorAppearance) ||
+                other.editorAppearance == editorAppearance) &&
+            (identical(other.highContrast, highContrast) ||
+                other.highContrast == highContrast) &&
+            (identical(other.reducedMotion, reducedMotion) ||
+                other.reducedMotion == reducedMotion) &&
             (identical(other.lastCleanup, lastCleanup) ||
                 other.lastCleanup == lastCleanup));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, themeMode, syncFrequency,
-      autoSync, cacheLimitMB, tombstoneRetentionDays, lastCleanup);
+  int get hashCode => Object.hash(
+      runtimeType,
+      themeMode,
+      syncFrequency,
+      autoSync,
+      cacheLimitMB,
+      accentColor,
+      fontSize,
+      editorAppearance,
+      highContrast,
+      reducedMotion,
+      lastCleanup);
 
   @JsonKey(ignore: true)
   @override
@@ -243,7 +329,11 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final String syncFrequency,
       final bool autoSync,
       final int cacheLimitMB,
-      final int tombstoneRetentionDays,
+      final String accentColor,
+      final String fontSize,
+      final String editorAppearance,
+      final bool highContrast,
+      final bool reducedMotion,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
 
   factory _AppSettingsModel.fromJson(Map<String, dynamic> json) =
@@ -258,7 +348,15 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   @override
   int get cacheLimitMB;
   @override
-  int get tombstoneRetentionDays;
+  String get accentColor;
+  @override
+  String get fontSize;
+  @override
+  String get editorAppearance;
+  @override
+  bool get highContrast;
+  @override
+  bool get reducedMotion;
   @override
   DateTime? get lastCleanup;
   @override

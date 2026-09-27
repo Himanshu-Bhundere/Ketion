@@ -90,10 +90,22 @@ class FakeSyncProvider implements SyncProvider {
     if (crashOnListChanges) {
       throw Exception('Simulated crash during listChanges');
     }
+    
+    if (cursor == 'next_cursor') {
+       return Success(
+         SyncDownloadResult(
+           changes: [],
+           nextCursor: null,
+           hasMore: false,
+         ),
+       );
+    }
+    
     return Success(
       SyncDownloadResult(
         changes: returnChanges,
         nextCursor: returnChanges.isEmpty ? null : 'next_cursor',
+        hasMore: returnChanges.isNotEmpty,
       ),
     );
   }
@@ -178,6 +190,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-1',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-1',
             'title': 'Remote Page',
@@ -222,6 +236,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-2',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-2',
             'title': 'Batch 2',
@@ -260,6 +276,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-late',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-late',
             'title': 'Late Page',
@@ -298,6 +316,9 @@ void main() {
           'table': 'pages',
           'entityId': 'page-skew',
           'operation': 'upsert',
+          'version': 3,
+          'updatedAt':
+                now.subtract(const Duration(minutes: 5)).toIso8601String(),
           'payload': {
             'id': 'page-skew',
             'title': 'Remote Skew Title',
@@ -312,11 +333,11 @@ void main() {
 
       await syncEngine.syncNow();
 
-      // Local should win because local updatedAt is newer, despite remote version being higher.
+      // Remote should win because remote version is higher, despite local updatedAt being newer.
       final pages = await database.select(database.pages).get();
       expect(pages.length, 1);
       expect(pages.first.title,
-          'Local Title'); // Kept local due to newer timestamp
+          'Remote Skew Title'); // Kept remote due to higher version
     });
     test('Multi-entity batch is atomic on error', () async {
       // If a batch contains 2 changes, and the 2nd change crashes (e.g., malformed),
@@ -329,6 +350,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-a',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-a',
             'title': 'Valid Page',
@@ -376,6 +399,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-norequeue',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-norequeue',
             'title': 'Remote Page',
@@ -430,6 +455,8 @@ void main() {
           'table': 'pages',
           'entityId': 'page-boot-1',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'page-boot-1',
             'title': 'Boot Page',
@@ -453,6 +480,16 @@ void main() {
     });
 
     test('Syncs secondary entities (collections, tags, reminders)', () async {
+      await database.into(database.pages).insert(
+            PagesCompanion.insert(
+              id: 'page-1',
+              title: const Value('Test Page'),
+              version: const Value(1),
+              createdAt: DateTime.now().toUtc(),
+              updatedAt: DateTime.now().toUtc(),
+            ),
+          );
+
       syncProvider.returnChanges = [
         {
           'batchId': 'batch-sec-1',
@@ -460,6 +497,8 @@ void main() {
           'table': 'collections',
           'entityId': 'col-1',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'col-1',
             'name': 'Test Collection',
@@ -474,6 +513,8 @@ void main() {
           'table': 'tags',
           'entityId': 'tag-1',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'tag-1',
             'name': 'Test Tag',
@@ -488,6 +529,8 @@ void main() {
           'table': 'reminders',
           'entityId': 'rem-1',
           'operation': 'upsert',
+          'version': 1,
+          'updatedAt': DateTime.now().toIso8601String(),
           'payload': {
             'id': 'rem-1',
             'pageId': 'page-1',

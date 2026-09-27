@@ -11,7 +11,8 @@ import '../../domain/services/block_tree_service.dart';
 final focusedBlockIdProvider = StateProvider<String?>((ref) => null);
 
 // A derived provider that builds the visible tree automatically
-final visibleBlocksProvider = Provider.family<List<VisibleBlock>, String>((ref, pageId) {
+final visibleBlocksProvider =
+    Provider.family<List<VisibleBlock>, String>((ref, pageId) {
   final blocksAsync = ref.watch(editorStateProvider(pageId));
   return blocksAsync.maybeWhen(
     data: (blocks) => BlockTreeService.buildVisibleTree(blocks),
@@ -21,7 +22,7 @@ final visibleBlocksProvider = Provider.family<List<VisibleBlock>, String>((ref, 
 
 class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
   late String _pageId;
-  
+
   final List<EditorCommand> _undoStack = [];
   final List<EditorCommand> _redoStack = [];
 
@@ -125,7 +126,8 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
   Future<void> updateBlock(Block block) async {
     final currentBlocks = state.valueOrNull ?? [];
     final oldBlock = currentBlocks.firstWhere((b) => b.id == block.id);
-    await executeCommand(UpdateBlockCommand(oldBlock: oldBlock, newBlock: block));
+    await executeCommand(
+        UpdateBlockCommand(oldBlock: oldBlock, newBlock: block));
   }
 
   Future<void> insertBlockAfter(Block existingBlock) async {
@@ -138,7 +140,8 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
       pageId: _pageId,
       parentBlockId: existingBlock.parentBlockId,
       type: 'text',
-      position: existingBlock.position + 10.0, // Simplified for now, real app should use SiblingPositionManager
+      position: existingBlock.position +
+          10.0, // Simplified for now, real app should use SiblingPositionManager
       data: '{"spans": [], "headingLevel": 0}',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -151,8 +154,9 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final currentBlocks = state.valueOrNull ?? [];
     final index = currentBlocks.indexWhere((b) => b.id == blockId);
     if (index == -1) return;
-    
-    await executeCommand(DeleteBlockCommand(block: currentBlocks[index], index: index));
+
+    await executeCommand(
+        DeleteBlockCommand(block: currentBlocks[index], index: index));
   }
 
   Future<void> indentBlock(String blockId) async {
@@ -160,7 +164,8 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final oldBlock = currentBlocks.firstWhere((b) => b.id == blockId);
     final updatedBlocks = BlockTreeService.indentBlock(blockId, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(UpdateBlockCommand(
+          oldBlock: oldBlock, newBlock: updatedBlocks.first));
     }
   }
 
@@ -169,16 +174,20 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final oldBlock = currentBlocks.firstWhere((b) => b.id == blockId);
     final updatedBlocks = BlockTreeService.outdentBlock(blockId, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(UpdateBlockCommand(
+          oldBlock: oldBlock, newBlock: updatedBlocks.first));
     }
   }
 
-  Future<void> handleDropIntent(String draggedBlockId, DropIntent intent) async {
+  Future<void> handleDropIntent(
+      String draggedBlockId, DropIntent intent) async {
     final currentBlocks = state.valueOrNull ?? [];
     final oldBlock = currentBlocks.firstWhere((b) => b.id == draggedBlockId);
-    final updatedBlocks = BlockTreeService.moveBlock(draggedBlockId, intent, currentBlocks);
+    final updatedBlocks =
+        BlockTreeService.moveBlock(draggedBlockId, intent, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(UpdateBlockCommand(
+          oldBlock: oldBlock, newBlock: updatedBlocks.first));
     }
   }
 }

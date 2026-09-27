@@ -13,6 +13,7 @@ import 'package:ketion/features/blocks/presentation/providers/block_providers.da
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ketion/features/import_export/presentation/providers/import_export_providers.dart';
+
 class EditorPage extends ConsumerWidget {
   final String pageId;
 
@@ -39,9 +40,11 @@ class EditorPage extends ConsumerWidget {
                   if (page.isTemplate)
                     TextButton.icon(
                       icon: const Icon(Icons.file_copy, color: Colors.white),
-                      label: const Text('Use Template', style: TextStyle(color: Colors.white)),
+                      label: const Text('Use Template',
+                          style: TextStyle(color: Colors.white)),
                       onPressed: () async {
-                        final createUseCase = ref.read(createPageUseCaseProvider);
+                        final createUseCase =
+                            ref.read(createPageUseCaseProvider);
                         final result = await createUseCase(
                           title: page.title,
                           isTemplate: false,
@@ -51,20 +54,25 @@ class EditorPage extends ConsumerWidget {
                         );
                         final newPage = result.valueOrNull;
                         if (newPage == null) return;
-                        
-                        final blocks = ref.read(editorStateProvider(pageId)).valueOrNull ?? [];
-                        final updateBlockUseCase = ref.read(updateBlockUseCaseProvider);
-                        
+
+                        final blocks =
+                            ref.read(editorStateProvider(pageId)).valueOrNull ??
+                                [];
+                        final updateBlockUseCase =
+                            ref.read(updateBlockUseCaseProvider);
+
                         // Map old block ID to new block ID for parent-child relationships
                         final idMap = <String, String>{};
                         for (final b in blocks) {
                           idMap[b.id] = const Uuid().v7();
                         }
-                        
+
                         for (final b in blocks) {
                           final newBlockId = idMap[b.id]!;
-                          final newParentId = b.parentBlockId != null ? idMap[b.parentBlockId] : null;
-                          
+                          final newParentId = b.parentBlockId != null
+                              ? idMap[b.parentBlockId]
+                              : null;
+
                           final newBlock = b.copyWith(
                             id: newBlockId,
                             pageId: newPage.id,
@@ -74,7 +82,7 @@ class EditorPage extends ConsumerWidget {
                           );
                           await updateBlockUseCase(newBlock);
                         }
-                        
+
                         // ignore: unused_result
                         ref.invalidate(recentPagesProvider);
                         if (context.mounted) {
@@ -83,10 +91,14 @@ class EditorPage extends ConsumerWidget {
                       },
                     ),
                   IconButton(
-                    icon: Icon(page.isFavorite ? Icons.star : Icons.star_border),
+                    icon:
+                        Icon(page.isFavorite ? Icons.star : Icons.star_border),
                     onPressed: () {
-                      final updatedPage = page.copyWith(isFavorite: !page.isFavorite);
-                      ref.read(updatePageUseCaseProvider)(updatedPage).then((_) {
+                      final updatedPage =
+                          page.copyWith(isFavorite: !page.isFavorite);
+                      ref
+                          .read(updatePageUseCaseProvider)(updatedPage)
+                          .then((_) {
                         ref.invalidate(pageProvider(pageId));
                       });
                     },

@@ -52,7 +52,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
           jsonDecode(widget.block.data) as Map<String, dynamic>;
       json['runtimeType'] = 'text';
       _blockData = BlockDataModel.fromJson(json) as TextBlockData;
-      
+
       for (final span in _blockData.spans) {
         if (span.pageLink != null && span.pageLinkTitle != null) {
           _pageLinks[span.pageLinkTitle!] = span.pageLink!;
@@ -92,23 +92,26 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
     for (final match in regex.allMatches(text)) {
       if (match.start > lastMatchEnd) {
-        newSpans.add(TextSpanData(text: text.substring(lastMatchEnd, match.start)));
+        newSpans
+            .add(TextSpanData(text: text.substring(lastMatchEnd, match.start)));
       }
       final title = match.group(1)!;
       final pageId = _pageLinks[title];
       if (pageId != null) {
-        newSpans.add(TextSpanData(text: '', pageLink: pageId, pageLinkTitle: title));
+        newSpans.add(
+            TextSpanData(text: '', pageLink: pageId, pageLinkTitle: title));
       } else {
         newSpans.add(TextSpanData(text: match.group(0)!));
       }
       lastMatchEnd = match.end;
     }
-    
+
     if (lastMatchEnd < text.length) {
       newSpans.add(TextSpanData(text: text.substring(lastMatchEnd)));
     }
 
-    final newData = _blockData.copyWith(spans: newSpans.isEmpty ? [TextSpanData(text: text)] : newSpans);
+    final newData = _blockData.copyWith(
+        spans: newSpans.isEmpty ? [TextSpanData(text: text)] : newSpans);
 
     final json = newData.toJson();
     json.remove('runtimeType');
@@ -199,7 +202,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       },
     );
   }
-  
+
   void _showPagePicker() {
     _focusNode.unfocus();
     showModalBottomSheet<page_entity.Page>(
@@ -209,15 +212,18 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       if (selectedPage != null) {
         _pageLinks[selectedPage.title] = selectedPage.id;
         final text = _controller.text;
-        final newText = '${text.substring(0, text.length - 2)}[[${selectedPage.title}]]';
+        final newText =
+            '${text.substring(0, text.length - 2)}[[${selectedPage.title}]]';
         _controller.text = newText;
         _controller.selection = TextSelection.collapsed(offset: newText.length);
         _saveChanges();
       } else {
         // Did not select, clear [[ if it was the last thing typed
         if (_controller.text.endsWith('[[')) {
-          _controller.text = _controller.text.substring(0, _controller.text.length - 2);
-          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+          _controller.text =
+              _controller.text.substring(0, _controller.text.length - 2);
+          _controller.selection =
+              TextSelection.collapsed(offset: _controller.text.length);
         }
       }
       _focusNode.requestFocus();
@@ -362,7 +368,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
   void _convertToHeading(int level) {
     _blockData = _blockData.copyWith(headingLevel: level);
-    
+
     final text = _controller.text;
     if (level == 1 && text.startsWith('# ')) {
       _controller.text = text.substring(2);
@@ -382,7 +388,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     final text = _controller.text;
     String newText = text;
 
-    if (listType == 'bullet' && (text.startsWith('- ') || text.startsWith('* '))) {
+    if (listType == 'bullet' &&
+        (text.startsWith('- ') || text.startsWith('* '))) {
       newText = text.substring(2);
     } else if (listType == 'checklist' && text.startsWith('[] ')) {
       newText = text.substring(3);

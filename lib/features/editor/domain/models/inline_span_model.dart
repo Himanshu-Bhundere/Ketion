@@ -12,5 +12,6 @@ class InlineSpanModel with _$InlineSpanModel {
     String? value, // e.g. for link URL or color hex
   }) = _InlineSpanModel;
 
-  factory InlineSpanModel.fromJson(Map<String, dynamic> json) => _$InlineSpanModelFromJson(json);
+  factory InlineSpanModel.fromJson(Map<String, dynamic> json) =>
+      _$InlineSpanModelFromJson(json);
 }

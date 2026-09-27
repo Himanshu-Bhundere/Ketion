@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -56,7 +57,9 @@ class _VideoBlockWidgetState extends ConsumerState<VideoBlockWidget> {
   Future<void> _initController(String filePath) async {
     if (_controller != null) return;
 
-    final controller = VideoPlayerController.file(File(filePath));
+    final controller = kIsWeb
+        ? VideoPlayerController.networkUrl(Uri.parse(filePath))
+        : VideoPlayerController.file(io.File(filePath));
     await controller.initialize();
     if (mounted) {
       setState(() {

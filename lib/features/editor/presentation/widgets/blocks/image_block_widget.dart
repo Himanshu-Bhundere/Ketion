@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../blocks/domain/entities/block.dart';
@@ -81,17 +82,20 @@ class _ImageBlockWidgetState extends ConsumerState<ImageBlockWidget> {
               );
             }
 
-            final imageFile = File(localPath);
-
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: Image.file(
-                    imageFile,
-                    fit: BoxFit.contain,
-                  ),
+                  child: kIsWeb
+                      ? Image.network(
+                          localPath,
+                          fit: BoxFit.contain,
+                        )
+                      : Image.file(
+                          io.File(localPath),
+                          fit: BoxFit.contain,
+                        ),
                 ),
                 if (_blockData.caption != null &&
                     _blockData.caption!.isNotEmpty)

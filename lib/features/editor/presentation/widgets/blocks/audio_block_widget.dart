@@ -201,8 +201,9 @@ class _AudioBlockWidgetState extends ConsumerState<AudioBlockWidget> {
                               ),
                               activeTrackColor:
                                   Theme.of(context).colorScheme.primary,
-                              inactiveTrackColor:
-                                  Theme.of(context).colorScheme.surfaceContainerHighest,
+                              inactiveTrackColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
                             ),
                             child: Slider(
                               value: _duration.inMilliseconds > 0
@@ -222,8 +223,7 @@ class _AudioBlockWidgetState extends ConsumerState<AudioBlockWidget> {
                             ),
                           ),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 _formatDuration(_position),

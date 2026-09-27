@@ -43,7 +43,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
         break;
     }
 
-    ref.read(editorStateProvider(widget.pageId).notifier).handleDropIntent(draggedBlockId, intent);
+    ref
+        .read(editorStateProvider(widget.pageId).notifier)
+        .handleDropIntent(draggedBlockId, intent);
   }
 
   @override
@@ -59,7 +61,7 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
         padding: EdgeInsets.only(left: (widget.depth * 24.0)),
         child: DragTarget<String>(
           onAcceptWithDetails: (details) {
-            // Simplified drop zone resolution. 
+            // Simplified drop zone resolution.
             // Real implementation could check local cursor position to determine Before/Child/After.
             // For now, assume After.
             _handleDrop(details.data, 'after');
@@ -81,7 +83,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                         child: Container(
                           width: 300,
                           padding: const EdgeInsets.all(8),
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           child: const Text('Dragging block...'),
                         ),
                       ),
@@ -95,7 +99,8 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                           ),
                           onPressed: () {},
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          constraints:
+                              const BoxConstraints(minWidth: 24, minHeight: 24),
                         ),
                       ),
                       child: IconButton(
@@ -108,7 +113,8 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                           // Show block options menu
                         },
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                        constraints:
+                            const BoxConstraints(minWidth: 24, minHeight: 24),
                       ),
                     ),
                   ),

@@ -23,7 +23,10 @@ class DocumentSelection with _$DocumentSelection {
 
 @freezed
 sealed class EditorSelection with _$EditorSelection {
-  const factory EditorSelection.text(TextSelection selection) = EditorTextSelection;
-  const factory EditorSelection.document(DocumentSelection selection) = EditorDocumentSelection;
-  const factory EditorSelection.block(List<String> blockIds) = EditorBlockSelection;
+  const factory EditorSelection.text(TextSelection selection) =
+      EditorTextSelection;
+  const factory EditorSelection.document(DocumentSelection selection) =
+      EditorDocumentSelection;
+  const factory EditorSelection.block(List<String> blockIds) =
+      EditorBlockSelection;
 }

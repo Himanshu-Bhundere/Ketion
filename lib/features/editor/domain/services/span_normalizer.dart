@@ -31,7 +31,8 @@ class SpanNormalizer {
 
         // If next starts before or exactly when current ends, merge them
         if (next.offset <= current.offset + current.length) {
-          final newEnd = max(current.offset + current.length, next.offset + next.length);
+          final newEnd =
+              max(current.offset + current.length, next.offset + next.length);
           current = current.copyWith(length: newEnd - current.offset);
         } else {
           // No overlap, save current and move to next
@@ -53,17 +54,19 @@ class SpanNormalizer {
     List<InlineSpanModel> existingSpans,
     int offset,
     int length,
-    String type,
-    {String? value,}
-  ) {
+    String type, {
+    String? value,
+  }) {
     final List<InlineSpanModel> updatedSpans = List.from(existingSpans);
-    
+
     // Check if the entire range is currently covered by this format
     bool isFullyCovered = false;
-    final relevantSpans = existingSpans.where((s) => s.type == type && s.value == value).toList();
-    
+    final relevantSpans =
+        existingSpans.where((s) => s.type == type && s.value == value).toList();
+
     for (final span in relevantSpans) {
-      if (span.offset <= offset && (span.offset + span.length) >= (offset + length)) {
+      if (span.offset <= offset &&
+          (span.offset + span.length) >= (offset + length)) {
         isFullyCovered = true;
         break;
       }
@@ -74,31 +77,38 @@ class SpanNormalizer {
       final spanToRemove = relevantSpans.firstWhere(
         (s) => s.offset <= offset && (s.offset + s.length) >= (offset + length),
       );
-      
+
       updatedSpans.remove(spanToRemove);
-      
+
       // Add left part if any
       if (spanToRemove.offset < offset) {
-        updatedSpans.add(spanToRemove.copyWith(
-          length: offset - spanToRemove.offset,
-        ),);
+        updatedSpans.add(
+          spanToRemove.copyWith(
+            length: offset - spanToRemove.offset,
+          ),
+        );
       }
-      
+
       // Add right part if any
       if ((spanToRemove.offset + spanToRemove.length) > (offset + length)) {
-        updatedSpans.add(spanToRemove.copyWith(
-          offset: offset + length,
-          length: (spanToRemove.offset + spanToRemove.length) - (offset + length),
-        ),);
+        updatedSpans.add(
+          spanToRemove.copyWith(
+            offset: offset + length,
+            length:
+                (spanToRemove.offset + spanToRemove.length) - (offset + length),
+          ),
+        );
       }
     } else {
       // Add the new span and let normalization merge it
-      updatedSpans.add(InlineSpanModel(
-        offset: offset,
-        length: length,
-        type: type,
-        value: value,
-      ),);
+      updatedSpans.add(
+        InlineSpanModel(
+          offset: offset,
+          length: length,
+          type: type,
+          value: value,
+        ),
+      );
     }
 
     return normalize(updatedSpans);

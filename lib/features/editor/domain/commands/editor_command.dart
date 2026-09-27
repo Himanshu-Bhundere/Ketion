@@ -4,7 +4,7 @@ import '../../presentation/providers/editor_state_provider.dart';
 abstract class EditorCommand {
   /// Executes the command and returns the modified state.
   Future<void> execute(EditorStateNotifier controller);
-  
+
   /// Undoes the command and returns the modified state.
   Future<void> undo(EditorStateNotifier controller);
 }

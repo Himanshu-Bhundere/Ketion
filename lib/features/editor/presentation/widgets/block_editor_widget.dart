@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +55,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
 
   Widget _buildBlockWidget(VisibleBlock visibleBlock, int index) {
     final block = visibleBlock.block;
-    
+
     Widget content;
     switch (block.type) {
       case 'list':
@@ -125,46 +127,65 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   Future<void> _addMedia(String type) async {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
-    
+
     final blocks = ref.read(visibleBlocksProvider(widget.pageId));
-    final visibleBlock = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first);
+    final visibleBlock = blocks.firstWhere((b) => b.block.id == focusedId,
+        orElse: () => blocks.first);
     final block = visibleBlock.block;
-    
+
     final mediaPicker = ref.read(mediaPickerProvider);
-    
+
     Future<bool> handleSizeCheck(int sizeInBytes) async {
       final sizeMB = sizeInBytes / (1024 * 1024);
       if (sizeMB > 200) {
         return await showDialog<bool>(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Very Large File'),
-            content: Text('This file is ${sizeMB.toStringAsFixed(1)} MB. Syncing might take a long time and use a lot of storage. Are you sure?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Import Anyway')),
-            ],
-          ),
-        ) ?? false;
+              context: context,
+              builder: (c) => AlertDialog(
+                title: const Text('Very Large File'),
+                content: Text(
+                    'This file is ${sizeMB.toStringAsFixed(1)} MB. Syncing might take a long time and use a lot of storage. Are you sure?'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(c, false),
+                      child: const Text('Cancel')),
+                  TextButton(
+                      onPressed: () => Navigator.pop(c, true),
+                      child: const Text('Import Anyway')),
+                ],
+              ),
+            ) ??
+            false;
       } else if (sizeMB > 50) {
         return await showDialog<bool>(
-          context: context,
-          builder: (c) => AlertDialog(
-            title: const Text('Large File'),
-            content: Text('This file is ${sizeMB.toStringAsFixed(1)} MB. Do you want to proceed?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Proceed')),
-            ],
-          ),
-        ) ?? false;
+              context: context,
+              builder: (c) => AlertDialog(
+                title: const Text('Large File'),
+                content: Text(
+                    'This file is ${sizeMB.toStringAsFixed(1)} MB. Do you want to proceed?'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(c, false),
+                      child: const Text('Cancel')),
+                  TextButton(
+                      onPressed: () => Navigator.pop(c, true),
+                      child: const Text('Proceed')),
+                ],
+              ),
+            ) ??
+            false;
       }
       return true;
     }
 
     final attachment = type == 'image'
-        ? await mediaPicker.pickImage(pageId: block.pageId, blockId: block.id, onCheckSize: handleSizeCheck)
-        : await mediaPicker.pickFile(pageId: block.pageId, blockId: block.id, onCheckSize: handleSizeCheck);
+        ? await mediaPicker.pickImage(
+            pageId: block.pageId,
+            blockId: block.id,
+            onCheckSize: handleSizeCheck)
+        : await mediaPicker.pickFile(
+            pageId: block.pageId,
+            blockId: block.id,
+            onCheckSize: handleSizeCheck);
 
     if (attachment != null) {
       // Determine block type from media type
@@ -207,13 +228,16 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   void _convertFocusedToHeading() {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
-    
+
     final blocks = ref.read(visibleBlocksProvider(widget.pageId));
-    final block = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first).block;
-    
+    final block = blocks
+        .firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first)
+        .block;
+
     if (block.type == 'text') {
       try {
-        final Map<String, dynamic> json = jsonDecode(block.data) as Map<String, dynamic>;
+        final Map<String, dynamic> json =
+            jsonDecode(block.data) as Map<String, dynamic>;
         json['headingLevel'] = 1;
         _handleBlockUpdate(block.copyWith(data: jsonEncode(json)));
       } catch (_) {}
@@ -223,15 +247,21 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   void _convertFocusedToList() {
     final focusedId = ref.read(focusedBlockIdProvider);
     if (focusedId == null) return;
-    
+
     final blocks = ref.read(visibleBlocksProvider(widget.pageId));
-    final block = blocks.firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first).block;
-    
+    final block = blocks
+        .firstWhere((b) => b.block.id == focusedId, orElse: () => blocks.first)
+        .block;
+
     if (block.type == 'text') {
       try {
-        final Map<String, dynamic> json = jsonDecode(block.data) as Map<String, dynamic>;
+        final Map<String, dynamic> json =
+            jsonDecode(block.data) as Map<String, dynamic>;
         final listData = BlockDataModel.list(
-          spans: (json['spans'] as List?)?.map((e) => TextSpanData.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+          spans: (json['spans'] as List?)
+                  ?.map((e) => TextSpanData.fromJson(e as Map<String, dynamic>))
+                  .toList() ??
+              [],
           listType: 'bullet',
         );
         _handleBlockUpdate(
@@ -255,18 +285,38 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     for (final format in [Formats.png, Formats.jpeg]) {
       if (reader.canProvide(format)) {
         reader.getFile(format, (clipFile) async {
-          final tempDir = Directory.systemTemp;
           final ext = format == Formats.png ? '.png' : '.jpg';
-          final tempFile = File('${tempDir.path}/paste_${DateTime.now().millisecondsSinceEpoch}$ext');
-          final stream = clipFile.getStream();
-          final sink = tempFile.openWrite();
-          await stream.cast<List<int>>().pipe(sink);
+          if (kIsWeb) {
+            final stream = clipFile.getStream();
+            final bytes = <int>[];
+            await for (final chunk in stream.cast<List<int>>()) {
+              bytes.addAll(chunk);
+            }
+            final platformFile = PlatformFile(
+              name: 'paste$ext',
+              size: bytes.length,
+              bytes: Uint8List.fromList(bytes),
+            );
+            await _importFileAsBlock(platformFile, 'image/${ext.substring(1)}');
+          } else {
+            final tempDir = io.Directory.systemTemp;
+            final tempFile = io.File(
+                '${tempDir.path}/paste_${DateTime.now().millisecondsSinceEpoch}$ext');
+            final stream = clipFile.getStream();
+            final sink = tempFile.openWrite();
+            await stream.cast<List<int>>().pipe(sink);
 
-          await _importFileAsBlock(tempFile, 'image/${ext.substring(1)}');
+            final platformFile = PlatformFile(
+              name: 'paste$ext',
+              size: await tempFile.length(),
+              path: tempFile.path,
+            );
+            await _importFileAsBlock(platformFile, 'image/${ext.substring(1)}');
 
-          // Clean up temp file
-          if (await tempFile.exists()) {
-            await tempFile.delete();
+            // Clean up temp file
+            if (await tempFile.exists()) {
+              await tempFile.delete();
+            }
           }
         });
         return;
@@ -276,8 +326,10 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
 
   /// Handle drop of files — import them as media blocks.
   Future<void> _handleDrop(List<String> paths) async {
+    if (kIsWeb)
+      return; // Drop from paths might need web specific handling via bytes
     for (final path in paths) {
-      final file = File(path);
+      final file = io.File(path);
       if (!await file.exists()) continue;
 
       final ext = path.split('.').last.toLowerCase();
@@ -293,12 +345,17 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         mimeType = 'application/pdf';
       }
 
-      await _importFileAsBlock(file, mimeType);
+      final platformFile = PlatformFile(
+        name: path.split('/').last,
+        size: await file.length(),
+        path: path,
+      );
+      await _importFileAsBlock(platformFile, mimeType);
     }
   }
 
-  /// Core helper: import a [File] into the note as a new media block.
-  Future<void> _importFileAsBlock(File file, String mimeType) async {
+  /// Core helper: import a [PlatformFile] into the note as a new media block.
+  Future<void> _importFileAsBlock(PlatformFile file, String mimeType) async {
     final focusedId = ref.read(focusedBlockIdProvider);
     final blocks = ref.read(visibleBlocksProvider(widget.pageId));
     final visibleBlock = focusedId != null
@@ -353,13 +410,16 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
       final data = jsonEncode(model.toJson()..remove('runtimeType'));
 
       // Insert a new block after the focused one
-      await ref.read(editorStateProvider(widget.pageId).notifier).insertBlockAfter(block);
+      await ref
+          .read(editorStateProvider(widget.pageId).notifier)
+          .insertBlockAfter(block);
       final updatedBlocks = ref.read(visibleBlocksProvider(widget.pageId));
       final newBlock = updatedBlocks.firstWhere(
         (b) => b.block.position > block.position,
         orElse: () => updatedBlocks.last,
       );
-      _handleBlockUpdate(newBlock.block.copyWith(type: resolvedType, data: data));
+      _handleBlockUpdate(
+          newBlock.block.copyWith(type: resolvedType, data: data));
     } catch (_) {
       // Import failed silently
     }
@@ -378,10 +438,12 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
           ref.read(editorStateProvider(widget.pageId).notifier).undo();
         },
-        const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true): () {
+        const SingleActivator(LogicalKeyboardKey.keyZ,
+            control: true, shift: true): () {
           ref.read(editorStateProvider(widget.pageId).notifier).redo();
         },
-        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true): () {
+        const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):
+            () {
           ref.read(editorStateProvider(widget.pageId).notifier).redo();
         },
         const SingleActivator(LogicalKeyboardKey.keyV, control: true): () {

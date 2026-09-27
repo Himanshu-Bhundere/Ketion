@@ -4,7 +4,9 @@ import 'package:ketion/features/editor/domain/services/span_normalizer.dart';
 
 void main() {
   group('SpanNormalizer', () {
-    test('normalize removes zero-length spans (if length=0 was supported, but currently it just handles them normally)', () {
+    test(
+        'normalize removes zero-length spans (if length=0 was supported, but currently it just handles them normally)',
+        () {
       final spans = [
         const InlineSpanModel(offset: 0, length: 5, type: 'bold'),
         const InlineSpanModel(offset: 5, length: 0, type: 'italic'),

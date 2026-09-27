@@ -25,13 +25,13 @@ void main() {
     test('createBlock creates block and sync_queue entry atomically', () async {
       // Setup foreign key constraint requirements
       await database.into(database.pages).insert(
-        PagesCompanion.insert(
-          id: 'page1',
-          title: const drift.Value('Test Page'),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+            PagesCompanion.insert(
+              id: 'page1',
+              title: const drift.Value('Test Page'),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
 
       final newBlock = domain.Block(
         id: 'block1',
@@ -46,7 +46,9 @@ void main() {
       await repository.createBlock(newBlock);
 
       // Verify Block exists and version is 1
-      final blockInDb = await (database.select(database.blocks)..where((t) => t.id.equals('block1'))).getSingle();
+      final blockInDb = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('block1')))
+          .getSingle();
       expect(blockInDb.data, 'Hello');
       expect(blockInDb.version, 1);
 
@@ -61,13 +63,13 @@ void main() {
 
     test('updateBlock bumps version and creates sync_queue entry', () async {
       await database.into(database.pages).insert(
-        PagesCompanion.insert(
-          id: 'page1',
-          title: const drift.Value('Test Page'),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+            PagesCompanion.insert(
+              id: 'page1',
+              title: const drift.Value('Test Page'),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
 
       final block = domain.Block(
         id: 'block1',
@@ -84,24 +86,28 @@ void main() {
       final updatedBlock = block.copyWith(data: 'Hello Updated');
       await repository.updateBlock(updatedBlock);
 
-      final blockInDb = await (database.select(database.blocks)..where((t) => t.id.equals('block1'))).getSingle();
+      final blockInDb = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('block1')))
+          .getSingle();
       expect(blockInDb.data, 'Hello Updated');
       expect(blockInDb.version, 2);
 
-      final queueItems = await (database.select(database.syncQueue)..where((t) => t.entityId.equals('block1'))).get();
+      final queueItems = await (database.select(database.syncQueue)
+            ..where((t) => t.entityId.equals('block1')))
+          .get();
       expect(queueItems.length, 1); // coalesced update into create
       expect(queueItems.last.operation, 'create');
     });
 
     test('deleteBlock creates sync_queue entry', () async {
       await database.into(database.pages).insert(
-        PagesCompanion.insert(
-          id: 'page1',
-          title: const drift.Value('Test Page'),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+            PagesCompanion.insert(
+              id: 'page1',
+              title: const drift.Value('Test Page'),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
 
       final block = domain.Block(
         id: 'block1',
@@ -120,9 +126,11 @@ void main() {
       expect(blocksInDb.length, 1);
       expect(blocksInDb.single.deleted, true);
 
-      final queueItems = await (database.select(database.syncQueue)..where((t) => t.entityId.equals('block1'))).get();
-      expect(queueItems.length, 0); // 1 create + 1 delete = coalesced and removed
-
+      final queueItems = await (database.select(database.syncQueue)
+            ..where((t) => t.entityId.equals('block1')))
+          .get();
+      expect(
+          queueItems.length, 0); // 1 create + 1 delete = coalesced and removed
     });
   });
 }

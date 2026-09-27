@@ -36,8 +36,7 @@ class _PdfBlockWidgetState extends ConsumerState<PdfBlockWidget> {
       json['runtimeType'] = 'pdf';
       _blockData = BlockDataModel.fromJson(json) as PdfBlockData;
     } catch (e) {
-      _blockData =
-          const BlockDataModel.pdf(attachmentId: '') as PdfBlockData;
+      _blockData = const BlockDataModel.pdf(attachmentId: '') as PdfBlockData;
     }
   }
 
@@ -81,7 +80,8 @@ class _PdfBlockWidgetState extends ConsumerState<PdfBlockWidget> {
               );
             }
 
-            final fileName = attachment.localPath?.split('/').last ?? 'Document.pdf';
+            final fileName =
+                attachment.localPath?.split('/').last ?? 'Document.pdf';
             final fileSize = attachment.fileSize / 1024 / 1024;
 
             return Card(
@@ -122,7 +122,9 @@ class _PdfBlockWidgetState extends ConsumerState<PdfBlockWidget> {
                               _blockData.caption?.isNotEmpty == true
                                   ? _blockData.caption!
                                   : fileName,
-                              style: Theme.of(context).textTheme.bodyMedium
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -130,7 +132,9 @@ class _PdfBlockWidgetState extends ConsumerState<PdfBlockWidget> {
                             const SizedBox(height: 2),
                             Text(
                               '${fileSize.toStringAsFixed(2)} MB • PDF',
-                              style: Theme.of(context).textTheme.bodySmall
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
                                   ?.copyWith(color: Colors.grey),
                             ),
                           ],

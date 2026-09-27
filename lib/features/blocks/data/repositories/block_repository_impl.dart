@@ -25,14 +25,19 @@ class BlockRepositoryImpl implements BlockRepository {
       final newBlock = block.copyWith(version: 1, updatedAt: DateTime.now());
       await _db.transaction(() async {
         await _db.into(_db.blocks).insert(newBlock.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'blocks',
-          entityId: newBlock.id,
-          operation: 'create',
-          payload: jsonEncode(newBlock.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'blocks',
+            entityId: newBlock.id,
+            operation: 'create',
+            payload: jsonEncode(newBlock.toJson()),
+            batchId: null,
+            version: newBlock.version,
+            updatedAt: newBlock.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -60,20 +65,37 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> updateBlock(domain.Block block) async {
     try {
-      final newBlock = block.copyWith(
-        version: block.version + 1, 
-        updatedAt: DateTime.now().toUtc(),
-      );
       await _db.transaction(() async {
-        await _db.into(_db.blocks).insertOnConflictUpdate(newBlock.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'blocks',
-          entityId: newBlock.id,
-          operation: 'update',
-          payload: jsonEncode(newBlock.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        final existingRecord = await (_db.select(_db.blocks)
+              ..where((t) => t.id.equals(block.id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          throw Exception('Block not found');
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newBlock = block.copyWith(
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
+        await _db
+            .into(_db.blocks)
+            .insertOnConflictUpdate(newBlock.toCompanion());
+
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'blocks',
+            entityId: newBlock.id,
+            operation: 'update',
+            payload: jsonEncode(newBlock.toJson()),
+            batchId: null,
+            version: newBlock.version,
+            updatedAt: newBlock.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -91,26 +113,39 @@ class BlockRepositoryImpl implements BlockRepository {
       }
       final block = (blockRecord as Success<domain.Block>).value;
 
-      final newBlock = block.copyWith(
-        deleted: true,
-        version: block.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
-
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.blocks)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          return;
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newBlock = block.copyWith(
+          deleted: true,
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.blocks)
               ..where((t) => t.id.equals(id)))
             .write(newBlock.toCompanion());
-            
+
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'blocks',
-            entityId: id,
-            operation: 'delete',
-            payload: jsonEncode(newBlock.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'blocks',
+              entityId: id,
+              operation: 'delete',
+              payload: jsonEncode(newBlock.toJson()),
+              batchId: null,
+              version: newBlock.version,
+              updatedAt: newBlock.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);

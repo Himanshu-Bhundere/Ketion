@@ -1,4 +1,3 @@
-
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,18 +19,21 @@ class AttachmentCacheManager {
   /// and uploadStatus to AttachmentUploadStatus.uploaded (if it was already uploaded).
   Future<void> enforceCacheLimit(int maxSizeBytes) async {
     // Note: For LRU eviction, we need a way to track "last accessed" time.
-    // Currently, we'll use `updatedAt` on the attachment as a proxy, 
-    // or we could just use file modification time. 
+    // Currently, we'll use `updatedAt` on the attachment as a proxy,
+    // or we could just use file modification time.
     // The query finds unpinned attachments that have local files, ordered by oldest first.
-    
+
     // First, let's get all attachments that are unpinned and have a local path.
     final rows = await (_db.select(_db.attachments)
           ..where((t) => t.isPinnedOffline.equals(false))
           ..where((t) => t.localPath.isNotNull())
-          ..where((t) => t.uploadStatus.equals('uploaded')) // Only evict if backed up
+          ..where((t) =>
+              t.uploadStatus.equals('uploaded')) // Only evict if backed up
           ..where((t) => t.deleted.equals(false))
           // Order by oldest first
-          ..orderBy([(t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.asc)]))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.asc)
+          ]))
         .get();
 
     int totalSize = 0;
@@ -58,7 +60,8 @@ class AttachmentCacheManager {
       }
 
       // Update database to remove local paths
-      await (_db.update(_db.attachments)..where((t) => t.id.equals(row.id))).write(
+      await (_db.update(_db.attachments)..where((t) => t.id.equals(row.id)))
+          .write(
         const AttachmentsCompanion(
           localPath: Value(null),
           thumbnailPath: Value(null),

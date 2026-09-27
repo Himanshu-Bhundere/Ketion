@@ -1,4 +1,6 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/attachment.dart';
@@ -15,12 +17,14 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
   final SyncProvider _syncProvider;
   final AttachmentStorageService _storageService;
 
-  AttachmentSyncServiceImpl(this._repository, this._syncProvider, this._storageService);
+  AttachmentSyncServiceImpl(
+      this._repository, this._syncProvider, this._storageService);
 
   @override
   Future<void> uploadAttachment(Attachment attachment) async {
-    if (attachment.localPath == null || attachment.checksumSha256 == null) return;
-    
+    if (attachment.localPath == null || attachment.checksumSha256 == null)
+      return;
+
     // Resolve absolute path
     final absolutePath = await _repository.resolveAttachmentPath(attachment);
 
@@ -50,11 +54,16 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
   @override
   Future<void> downloadAttachment(Attachment attachment) async {
     if (attachment.driveFileId == null) return;
-    
+
+    if (kIsWeb) {
+      throw UnsupportedError(
+          'Local attachment download is not supported on the web');
+    }
+
     // We need a temp directory
-    final tempDir = Directory.systemTemp;
-    final tempFile = File('${tempDir.path}/${attachment.id}_download');
-    
+    final tempDir = io.Directory.systemTemp;
+    final tempFile = io.File('${tempDir.path}/${attachment.id}_download');
+
     final result = await _syncProvider.downloadAttachment(
       attachment.driveFileId!,
       tempFile.path,
@@ -62,15 +71,22 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
 
     await result.fold(
       (_) async {
+        final platformFile = PlatformFile(
+          name: '${attachment.id}_download',
+          size: await tempFile.length(),
+          path: tempFile.path,
+        );
+
         // Save the downloaded file to managed storage
         final saveResult = await _storageService.saveAttachment(
-          tempFile,
+          platformFile,
           generateThumbnail: attachment.mimeType.startsWith('image/'),
         );
         final localPath = saveResult.$1;
         final downloadedHash = saveResult.$3;
 
-        if (attachment.checksumSha256 != null && downloadedHash != attachment.checksumSha256) {
+        if (attachment.checksumSha256 != null &&
+            downloadedHash != attachment.checksumSha256) {
           // Checksum mismatch, delete from storage
           await _storageService.deleteFile(localPath);
           if (saveResult.$2 != null) {
@@ -85,7 +101,7 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
           );
           return;
         }
-        
+
         // Clean up temp file
         if (await tempFile.exists()) {
           await tempFile.delete();

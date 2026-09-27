@@ -18,7 +18,8 @@ class Attachment with _$Attachment {
     int? height,
     int? duration,
     String? thumbnailPath,
-    @Default(AttachmentUploadStatus.pending) AttachmentUploadStatus uploadStatus,
+    @Default(AttachmentUploadStatus.pending)
+    AttachmentUploadStatus uploadStatus,
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default(1) int version,

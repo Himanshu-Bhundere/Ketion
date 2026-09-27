@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +26,7 @@ class MediaPickerService {
     final xFile = await _imagePicker.pickImage(source: ImageSource.gallery);
     if (xFile == null) return null;
 
-    final file = File(xFile.path);
-    final size = await file.length();
+    final size = await xFile.length();
 
     if (onCheckSize != null) {
       final shouldProceed = await onCheckSize(size);
@@ -35,10 +34,17 @@ class MediaPickerService {
     }
 
     try {
+      final platformFile = PlatformFile(
+        name: xFile.name,
+        size: size,
+        path: xFile.path,
+        bytes: kIsWeb ? await xFile.readAsBytes() : null,
+      );
+
       final attachment = await _repository.saveAttachment(
         pageId: pageId,
         blockId: blockId,
-        sourceFile: file,
+        sourceFile: platformFile,
         mimeType: 'image/jpeg',
       );
       return attachment;
@@ -52,11 +58,11 @@ class MediaPickerService {
     required String blockId,
     Future<bool> Function(int sizeInBytes)? onCheckSize,
   }) async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result == null || result.files.single.path == null) return null;
+    final result = await FilePicker.platform.pickFiles(withData: kIsWeb);
+    if (result == null || result.files.isEmpty) return null;
 
-    final file = File(result.files.single.path!);
-    final size = await file.length();
+    final platformFile = result.files.single;
+    final size = platformFile.size;
 
     if (onCheckSize != null) {
       final shouldProceed = await onCheckSize(size);
@@ -66,15 +72,18 @@ class MediaPickerService {
     try {
       // Improved mimeType detection (rudimentary)
       String mimeType = 'application/octet-stream';
-      final extension = file.path.split('.').last.toLowerCase();
-      if (['mp4', 'mov', 'avi'].contains(extension)) mimeType = 'video/$extension';
-      if (['mp3', 'wav', 'm4a'].contains(extension)) mimeType = 'audio/$extension';
+      final extension = platformFile.extension ??
+          platformFile.name.split('.').last.toLowerCase();
+      if (['mp4', 'mov', 'avi'].contains(extension))
+        mimeType = 'video/$extension';
+      if (['mp3', 'wav', 'm4a'].contains(extension))
+        mimeType = 'audio/$extension';
       if (extension == 'pdf') mimeType = 'application/pdf';
 
       final attachment = await _repository.saveAttachment(
         pageId: pageId,
         blockId: blockId,
-        sourceFile: file,
+        sourceFile: platformFile,
         mimeType: mimeType,
       );
       return attachment;

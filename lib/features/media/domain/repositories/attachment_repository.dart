@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import '../entities/attachment.dart';
 
 /// Repository for managing media attachments.
@@ -7,7 +7,7 @@ abstract class AttachmentRepository {
   Future<Attachment> saveAttachment({
     required String pageId,
     required String blockId,
-    required File sourceFile,
+    required PlatformFile sourceFile,
     required String mimeType,
   });
 
@@ -28,7 +28,8 @@ abstract class AttachmentRepository {
   Future<void> garbageCollectOrphanedFiles();
 
   /// Updates the sync status and drive file ID for an attachment.
-  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus, {String? driveFileId, String? localPath});
+  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus,
+      {String? driveFileId, String? localPath});
 
   /// Retrieves all attachments that are pending upload or failed.
   Future<List<Attachment>> getPendingUploads();

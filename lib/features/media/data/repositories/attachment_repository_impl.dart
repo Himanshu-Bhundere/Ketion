@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -25,10 +25,10 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
   Future<Attachment> saveAttachment({
     required String pageId,
     required String blockId,
-    required File sourceFile,
+    required PlatformFile sourceFile,
     required String mimeType,
   }) async {
-    final fileSize = await sourceFile.length();
+    final fileSize = sourceFile.size;
 
     // Save to storage service (will deduplicate automatically if exists)
     final mediaResult = await _storageService.saveAttachment(
@@ -78,14 +78,16 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             ),
           );
 
-      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-        id: const Uuid().v7(),
-        entityTable: 'attachments',
-        entityId: id,
-        operation: 'create',
-        payload: jsonEncode(attachment.toJson()),
-        createdAt: DateTime.now().toUtc(),
-      ),);
+      await _syncQueue.enqueueOrCoalesce(
+        SyncQueueItem(
+          id: const Uuid().v7(),
+          entityTable: 'attachments',
+          entityId: id,
+          operation: 'create',
+          payload: jsonEncode(attachment.toJson()),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
     });
 
     return attachment;
@@ -110,7 +112,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
       ..where(_db.attachments.deleted.equals(false));
 
     final rows = await query.get();
-    return rows.map((row) => _mapRowToEntity(row.readTable(_db.attachments))).toList();
+    return rows
+        .map((row) => _mapRowToEntity(row.readTable(_db.attachments)))
+        .toList();
   }
 
   @override
@@ -122,7 +126,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
       final newVersion = attachment.version + 1;
 
       // Soft delete in database
-      final updatedRows = await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
+      final updatedRows = await (_db.update(_db.attachments)
+            ..where((t) => t.id.equals(id)))
+          .write(
         AttachmentsCompanion(
           deleted: const Value(true),
           version: Value(newVersion),
@@ -131,18 +137,24 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
       );
 
       if (updatedRows > 0) {
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'attachments',
-          entityId: id,
-          operation: 'update',
-          payload: jsonEncode(attachment.copyWith(
-            deleted: true,
-            version: newVersion,
-            updatedAt: DateTime.now(),
-          ).toJson(),),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'attachments',
+            entityId: id,
+            operation: 'update',
+            payload: jsonEncode(
+              attachment
+                  .copyWith(
+                    deleted: true,
+                    version: newVersion,
+                    updatedAt: DateTime.now(),
+                  )
+                  .toJson(),
+            ),
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       }
     });
 
@@ -160,7 +172,7 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
   @override
   Future<void> garbageCollectOrphanedFiles() async {
     final validPaths = <String>{};
-    
+
     // Get all non-deleted attachments
     final rows = await (_db.select(_db.attachments)
           ..where((t) => t.deleted.equals(false)))
@@ -179,34 +191,42 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
   }
 
   @override
-  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus, {String? driveFileId, String? localPath}) async {
+  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus,
+      {String? driveFileId, String? localPath}) async {
     await _db.transaction(() async {
       final companion = AttachmentsCompanion(
         uploadStatus: Value(uploadStatus),
         updatedAt: Value(DateTime.now()),
-        driveFileId: driveFileId != null ? Value(driveFileId) : const Value.absent(),
+        driveFileId:
+            driveFileId != null ? Value(driveFileId) : const Value.absent(),
         localPath: localPath != null ? Value(localPath) : const Value.absent(),
       );
 
-      final updatedRows = await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(companion);
-      
+      final updatedRows = await (_db.update(_db.attachments)
+            ..where((t) => t.id.equals(id)))
+          .write(companion);
+
       // If we assigned a driveFileId, we need to sync this metadata to other devices
       if (updatedRows > 0 && driveFileId != null) {
         final attachment = await getAttachment(id);
         if (attachment != null) {
           final newVersion = attachment.version + 1;
-          await (_db.update(_db.attachments)..where((t) => t.id.equals(id))).write(
+          await (_db.update(_db.attachments)..where((t) => t.id.equals(id)))
+              .write(
             AttachmentsCompanion(version: Value(newVersion)),
           );
-          
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'attachments',
-            entityId: id,
-            operation: 'update',
-            payload: jsonEncode(attachment.copyWith(version: newVersion).toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'attachments',
+              entityId: id,
+              operation: 'update',
+              payload:
+                  jsonEncode(attachment.copyWith(version: newVersion).toJson()),
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       }
     });

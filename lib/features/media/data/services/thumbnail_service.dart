@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:path/path.dart' as p;
@@ -13,9 +14,9 @@ class ThumbnailService {
   static const int _thumbWidth = 256;
   static const int _thumbQuality = 70;
 
-  Future<Directory> get _thumbCacheDir async {
+  Future<io.Directory> get _thumbCacheDir async {
     final dir = await getApplicationSupportDirectory();
-    final thumbDir = Directory(p.join(dir.path, 'Thumbnails'));
+    final thumbDir = io.Directory(p.join(dir.path, 'Thumbnails'));
     if (!await thumbDir.exists()) {
       await thumbDir.create(recursive: true);
     }
@@ -26,10 +27,11 @@ class ThumbnailService {
   ///
   /// Returns the absolute path to the generated thumbnail, or `null` on failure.
   Future<String?> generateThumbnail({
-    required File sourceFile,
+    required io.File sourceFile,
     required String mimeType,
     required String hash,
   }) async {
+    if (kIsWeb) return null;
     if (mimeType.startsWith('image/')) {
       return _generateImageThumbnail(sourceFile, hash);
     } else if (mimeType.startsWith('video/')) {
@@ -41,11 +43,12 @@ class ThumbnailService {
   }
 
   /// Image thumbnail: decode → resize → encode as JPEG.
-  Future<String?> _generateImageThumbnail(File sourceFile, String hash) async {
+  Future<String?> _generateImageThumbnail(
+      io.File sourceFile, String hash) async {
     try {
       final thumbDir = await _thumbCacheDir;
       final thumbPath = p.join(thumbDir.path, '${hash}_thumb.jpg');
-      final thumbFile = File(thumbPath);
+      final thumbFile = io.File(thumbPath);
 
       if (await thumbFile.exists()) return thumbPath;
 
@@ -67,20 +70,25 @@ class ThumbnailService {
   ///
   /// Falls back to null when ffmpeg is not installed (the UI should display a
   /// generic video icon in that case).
-  Future<String?> _generateVideoThumbnail(File sourceFile, String hash) async {
+  Future<String?> _generateVideoThumbnail(
+      io.File sourceFile, String hash) async {
     try {
       final thumbDir = await _thumbCacheDir;
       final thumbPath = p.join(thumbDir.path, '${hash}_video_thumb.jpg');
-      final thumbFile = File(thumbPath);
+      final thumbFile = io.File(thumbPath);
 
       if (await thumbFile.exists()) return thumbPath;
 
       // Attempt ffmpeg first-frame extraction
-      final result = await Process.run('ffmpeg', [
-        '-i', sourceFile.path,
-        '-vframes', '1',
-        '-vf', 'scale=$_thumbWidth:-1',
-        '-q:v', '5',
+      final result = await io.Process.run('ffmpeg', [
+        '-i',
+        sourceFile.path,
+        '-vframes',
+        '1',
+        '-vf',
+        'scale=$_thumbWidth:-1',
+        '-q:v',
+        '5',
         '-y',
         thumbPath,
       ]);
@@ -98,20 +106,22 @@ class ThumbnailService {
   /// PDF preview: rasterise the first page.
   ///
   /// Uses a lightweight approach with external tooling. Falls back gracefully.
-  Future<String?> _generatePdfThumbnail(File sourceFile, String hash) async {
+  Future<String?> _generatePdfThumbnail(io.File sourceFile, String hash) async {
     try {
       final thumbDir = await _thumbCacheDir;
       final thumbPath = p.join(thumbDir.path, '${hash}_pdf_thumb.jpg');
-      final thumbFile = File(thumbPath);
+      final thumbFile = io.File(thumbPath);
 
       if (await thumbFile.exists()) return thumbPath;
 
       // Attempt using ImageMagick/Ghostscript `convert` for first-page render
-      final result = await Process.run('magick', [
+      final result = await io.Process.run('magick', [
         'convert',
         '${sourceFile.path}[0]',
-        '-resize', '${_thumbWidth}x',
-        '-quality', '$_thumbQuality',
+        '-resize',
+        '${_thumbWidth}x',
+        '-quality',
+        '$_thumbQuality',
         thumbPath,
       ]);
 

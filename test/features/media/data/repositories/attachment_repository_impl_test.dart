@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/media/data/repositories/attachment_repository_impl.dart';
@@ -47,40 +48,40 @@ void main() {
 
     testFile = File(p.join(tempDir.path, 'test_image.png'));
     await testFile.writeAsString('fake image content');
-    
+
     // We need to insert a block first, because FTS triggers or foreign keys might require it.
     // However, blocks require a page. So let's insert a page and a block.
     final now = DateTime.now();
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page-1', 
-        title: const Value('Test Page'),
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          PagesCompanion.insert(
+            id: 'page-1',
+            title: const Value('Test Page'),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
     await database.into(database.blocks).insert(
-      BlocksCompanion.insert(
-        id: 'block-1', 
-        pageId: 'page-1', 
-        data: 'test data', 
-        type: 'text',
-        position: 0,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          BlocksCompanion.insert(
+            id: 'block-1',
+            pageId: 'page-1',
+            data: 'test data',
+            type: 'text',
+            position: 0,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
     await database.into(database.blocks).insert(
-      BlocksCompanion.insert(
-        id: 'block-2', 
-        pageId: 'page-1', 
-        data: 'test data', 
-        type: 'text',
-        position: 1,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          BlocksCompanion.insert(
+            id: 'block-2',
+            pageId: 'page-1',
+            data: 'test data',
+            type: 'text',
+            position: 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
   });
 
   tearDown(() async {
@@ -94,7 +95,10 @@ void main() {
     final attachment = await repository.saveAttachment(
       pageId: 'page-1',
       blockId: 'block-1',
-      sourceFile: testFile,
+      sourceFile: PlatformFile(
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync()),
       mimeType: 'image/png',
     );
 
@@ -118,14 +122,20 @@ void main() {
     await repository.saveAttachment(
       pageId: 'page-1',
       blockId: 'block-1',
-      sourceFile: testFile,
+      sourceFile: PlatformFile(
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync()),
       mimeType: 'image/png',
     );
 
     final att2 = await repository.saveAttachment(
       pageId: 'page-1',
       blockId: 'block-2',
-      sourceFile: testFile,
+      sourceFile: PlatformFile(
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync()),
       mimeType: 'image/png',
     );
 
@@ -144,7 +154,10 @@ void main() {
     final attachment = await repository.saveAttachment(
       pageId: 'page-1',
       blockId: 'block-1',
-      sourceFile: testFile,
+      sourceFile: PlatformFile(
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync()),
       mimeType: 'image/png',
     );
 

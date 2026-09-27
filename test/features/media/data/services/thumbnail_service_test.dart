@@ -45,9 +45,11 @@ void main() {
       expect(result, isNull);
     });
 
-    test('generateThumbnail handles video gracefully when ffmpeg is missing', () async {
+    test('generateThumbnail handles video gracefully when ffmpeg is missing',
+        () async {
       final dummyFile = File(p.join(tempDir.path, 'test.mp4'));
-      await dummyFile.writeAsBytes([0, 0, 0, 0]); // Invalid video, but tests ffmpeg fallback
+      await dummyFile.writeAsBytes(
+          [0, 0, 0, 0]); // Invalid video, but tests ffmpeg fallback
 
       final result = await service.generateThumbnail(
         sourceFile: dummyFile,
@@ -59,7 +61,8 @@ void main() {
       expect(result, anyOf(isNull, isA<String>()));
     });
 
-    test('generateThumbnail handles pdf gracefully when imagemagick is missing', () async {
+    test('generateThumbnail handles pdf gracefully when imagemagick is missing',
+        () async {
       final dummyFile = File(p.join(tempDir.path, 'test.pdf'));
       await dummyFile.writeAsString('%PDF-1.4 dummy');
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/media/data/repositories/attachment_repository_impl.dart';
@@ -47,35 +48,35 @@ void main() {
 
     final now = DateTime.now();
     await database.into(database.pages).insert(
-      PagesCompanion.insert(
-        id: 'page-dedup',
-        title: const Value('Dedup Test Page'),
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          PagesCompanion.insert(
+            id: 'page-dedup',
+            title: const Value('Dedup Test Page'),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
     await database.into(database.blocks).insert(
-      BlocksCompanion.insert(
-        id: 'block-dedup-1',
-        pageId: 'page-dedup',
-        data: 'test data',
-        type: 'text',
-        position: 0,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          BlocksCompanion.insert(
+            id: 'block-dedup-1',
+            pageId: 'page-dedup',
+            data: 'test data',
+            type: 'text',
+            position: 0,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
     await database.into(database.blocks).insert(
-      BlocksCompanion.insert(
-        id: 'block-dedup-2',
-        pageId: 'page-dedup',
-        data: 'test data',
-        type: 'text',
-        position: 1,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    );
+          BlocksCompanion.insert(
+            id: 'block-dedup-2',
+            pageId: 'page-dedup',
+            data: 'test data',
+            type: 'text',
+            position: 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
   });
 
   tearDown(() async {
@@ -86,18 +87,26 @@ void main() {
   });
 
   group('Attachment deduplication integration', () {
-    test('two saves of the same file produce the same checksum and share storage', () async {
+    test(
+        'two saves of the same file produce the same checksum and share storage',
+        () async {
       final att1 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
       final att2 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
@@ -110,18 +119,26 @@ void main() {
       expect(att1.localPath, equals(att2.localPath));
     });
 
-    test('deleting one duplicate does not remove the file when another reference exists', () async {
+    test(
+        'deleting one duplicate does not remove the file when another reference exists',
+        () async {
       final att1 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
       final att2 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
@@ -145,14 +162,20 @@ void main() {
       final att1 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
       final att2 = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
-        sourceFile: otherFile,
+        sourceFile: PlatformFile(
+            name: p.basename(otherFile.path),
+            path: otherFile.path,
+            size: otherFile.lengthSync()),
         mimeType: 'image/png',
       );
 
@@ -164,7 +187,10 @@ void main() {
       await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 
@@ -176,7 +202,10 @@ void main() {
       final att = await repository.saveAttachment(
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
-        sourceFile: testFile,
+        sourceFile: PlatformFile(
+            name: p.basename(testFile.path),
+            path: testFile.path,
+            size: testFile.lengthSync()),
         mimeType: 'image/png',
       );
 

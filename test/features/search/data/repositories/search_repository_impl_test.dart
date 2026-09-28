@@ -5,6 +5,7 @@ import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/search/data/repositories/search_repository_impl.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/search/domain/models/search_result.dart';
+import 'package:ketion/core/utils/logger.dart';
 
 void main() {
   late AppDatabase database;
@@ -12,7 +13,7 @@ void main() {
 
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
-    searchRepository = SearchRepositoryImpl(database);
+    searchRepository = SearchRepositoryImpl(database, appLogger);
   });
 
   tearDown(() async {

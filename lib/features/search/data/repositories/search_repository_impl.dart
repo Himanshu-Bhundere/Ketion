@@ -5,11 +5,14 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/models/search_result.dart';
 import '../../domain/repositories/search_repository.dart';
+import '../../../../core/utils/logger.dart';
+
 
 class SearchRepositoryImpl implements SearchRepository {
   final AppDatabase _database;
+  final AppLogger _logger;
 
-  SearchRepositoryImpl(this._database);
+  SearchRepositoryImpl(this._database, this._logger);
 
   @override
   Future<Result<List<SearchResult>>> searchNotes(

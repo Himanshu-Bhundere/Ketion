@@ -6,10 +6,12 @@ import '../../data/repositories/search_repository_impl.dart';
 import '../../domain/models/search_result.dart';
 import '../../domain/repositories/search_repository.dart';
 import '../../domain/usecases/search_notes_usecase.dart';
+import '../../../../core/utils/logger.dart';
+
 
 final searchRepositoryProvider = Provider<SearchRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return SearchRepositoryImpl(db);
+  return SearchRepositoryImpl(db, appLogger);
 });
 
 final searchNotesUseCaseProvider = Provider<SearchNotesUseCase>((ref) {

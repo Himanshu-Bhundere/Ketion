@@ -23,7 +23,8 @@ import '../../../media/presentation/providers/media_picker_provider.dart';
 import '../../domain/models/block_data_models.dart';
 import '../../domain/models/visible_block.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
-
+import '../../../settings/presentation/providers/settings_providers.dart';
+import '../../../../core/theme/editor_layout_config.dart';
 class BlockEditorWidget extends ConsumerStatefulWidget {
   final String pageId;
 
@@ -442,6 +443,16 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     final visibleBlocks = ref.watch(visibleBlocksProvider(widget.pageId));
+    
+    final settingsAsync = ref.watch(appSettingsProvider);
+    final settings = settingsAsync.value;
+    final layoutConfig = settings != null
+        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance)
+        : const EditorLayoutConfig(
+            contentWidth: 800,
+            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            lineSpacing: 1.5,
+          );
 
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
@@ -494,18 +505,20 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
           },
           child: Stack(
             children: [
-              ListView.builder(
-                controller: _scrollController,
-                padding: EdgeInsets.only(
-                  left: 16.0,
-                  right: 16.0,
-                  top: 24.0,
-                  bottom: isKeyboardVisible ? 80.0 : 24.0,
+              Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: layoutConfig.contentWidth),
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: layoutConfig.padding.copyWith(
+                      bottom: isKeyboardVisible ? 80.0 : layoutConfig.padding.bottom,
+                    ),
+                    itemCount: visibleBlocks.length,
+                    itemBuilder: (context, index) {
+                      return _buildBlockWidget(visibleBlocks[index], index);
+                    },
+                  ),
                 ),
-                itemCount: visibleBlocks.length,
-                itemBuilder: (context, index) {
-                  return _buildBlockWidget(visibleBlocks[index], index);
-                },
               ),
               if (isKeyboardVisible)
                 Positioned(

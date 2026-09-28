@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -85,7 +85,7 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('''
           CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              VALUES (new.id, new.page_id, 'block', new.data);
+              VALUES (new.id, new.page_id, 'block', new.searchable_text);
           END;
         ''');
 
@@ -99,7 +99,7 @@ class AppDatabase extends _$AppDatabase {
           CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
             DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
             INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              SELECT new.id, new.page_id, 'block', new.data WHERE new.deleted = 0;
+              SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
           END;
         ''');
 
@@ -310,7 +310,7 @@ class AppDatabase extends _$AppDatabase {
           await customStatement('''
             CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              VALUES (new.id, new.page_id, 'block', new.data);
+              VALUES (new.id, new.page_id, 'block', new.searchable_text);
             END;
           ''');
 
@@ -324,7 +324,7 @@ class AppDatabase extends _$AppDatabase {
             CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
               DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
               INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              SELECT new.id, new.page_id, 'block', new.data WHERE new.deleted = 0;
+              SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
             END;
           ''');
 
@@ -340,7 +340,7 @@ class AppDatabase extends _$AppDatabase {
 
           await customStatement('''
             INSERT INTO search_fts(entityId, pageId, entityType, content)
-            SELECT id, page_id, 'block', data FROM blocks WHERE deleted = 0;
+            SELECT id, page_id, 'block', searchable_text FROM blocks WHERE deleted = 0;
           ''');
         }
         if (from < 9) {
@@ -389,6 +389,44 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(syncQueue, syncQueue.version);
           await m.addColumn(syncQueue, syncQueue.updatedAt);
         }
+        if (from < 14) {
+          await m.addColumn(appSettingsTable, appSettingsTable.accentColor);
+          await m.addColumn(appSettingsTable, appSettingsTable.fontSize);
+          await m.addColumn(appSettingsTable, appSettingsTable.editorAppearance);
+          await m.addColumn(appSettingsTable, appSettingsTable.highContrast);
+          await m.addColumn(appSettingsTable, appSettingsTable.reducedMotion);
+        }
+        if (from < 15) {
+          await m.addColumn(blocks, blocks.searchableText);
+
+          // Update existing triggers
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ai');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ad');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_au');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
+              INSERT INTO search_fts(entityId, pageId, entityType, content) 
+              VALUES (new.id, new.page_id, 'block', new.searchable_text);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
+              DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
+              DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
+              INSERT INTO search_fts(entityId, pageId, entityType, content) 
+              SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
+            END;
+          ''');
+          
+          await customStatement('DELETE FROM search_fts WHERE entityType = "block"');
+        }
       },
       beforeOpen: (details) async {
         // Enforce foreign keys
@@ -409,7 +447,7 @@ class AppDatabase extends _$AppDatabase {
 
     await customStatement('''
       INSERT INTO search_fts(entityId, pageId, entityType, content)
-            SELECT id, page_id, 'block', data FROM blocks WHERE deleted = 0;
+            SELECT id, page_id, 'block', searchable_text FROM blocks WHERE deleted = 0;
     ''');
   }
 

@@ -24,9 +24,9 @@ mixin _$AppSettingsModel {
   String get syncFrequency => throw _privateConstructorUsedError;
   bool get autoSync => throw _privateConstructorUsedError;
   int get cacheLimitMB => throw _privateConstructorUsedError;
-  String get accentColor => throw _privateConstructorUsedError;
-  String get fontSize => throw _privateConstructorUsedError;
-  String get editorAppearance => throw _privateConstructorUsedError;
+  AccentColor get accentColor => throw _privateConstructorUsedError;
+  FontSizePreference get fontSize => throw _privateConstructorUsedError;
+  EditorAppearance get editorAppearance => throw _privateConstructorUsedError;
   bool get highContrast => throw _privateConstructorUsedError;
   bool get reducedMotion => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
@@ -48,9 +48,9 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
-      String accentColor,
-      String fontSize,
-      String editorAppearance,
+      AccentColor accentColor,
+      FontSizePreference fontSize,
+      EditorAppearance editorAppearance,
       bool highContrast,
       bool reducedMotion,
       DateTime? lastCleanup});
@@ -100,15 +100,15 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
       accentColor: null == accentColor
           ? _value.accentColor
           : accentColor // ignore: cast_nullable_to_non_nullable
-              as String,
+              as AccentColor,
       fontSize: null == fontSize
           ? _value.fontSize
           : fontSize // ignore: cast_nullable_to_non_nullable
-              as String,
+              as FontSizePreference,
       editorAppearance: null == editorAppearance
           ? _value.editorAppearance
           : editorAppearance // ignore: cast_nullable_to_non_nullable
-              as String,
+              as EditorAppearance,
       highContrast: null == highContrast
           ? _value.highContrast
           : highContrast // ignore: cast_nullable_to_non_nullable
@@ -138,9 +138,9 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       String syncFrequency,
       bool autoSync,
       int cacheLimitMB,
-      String accentColor,
-      String fontSize,
-      String editorAppearance,
+      AccentColor accentColor,
+      FontSizePreference fontSize,
+      EditorAppearance editorAppearance,
       bool highContrast,
       bool reducedMotion,
       DateTime? lastCleanup});
@@ -188,15 +188,15 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
       accentColor: null == accentColor
           ? _value.accentColor
           : accentColor // ignore: cast_nullable_to_non_nullable
-              as String,
+              as AccentColor,
       fontSize: null == fontSize
           ? _value.fontSize
           : fontSize // ignore: cast_nullable_to_non_nullable
-              as String,
+              as FontSizePreference,
       editorAppearance: null == editorAppearance
           ? _value.editorAppearance
           : editorAppearance // ignore: cast_nullable_to_non_nullable
-              as String,
+              as EditorAppearance,
       highContrast: null == highContrast
           ? _value.highContrast
           : highContrast // ignore: cast_nullable_to_non_nullable
@@ -221,9 +221,9 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.syncFrequency = '15 minutes',
       this.autoSync = true,
       this.cacheLimitMB = 100,
-      this.accentColor = 'Blue',
-      this.fontSize = 'Medium',
-      this.editorAppearance = 'Comfortable',
+      this.accentColor = AccentColor.blue,
+      this.fontSize = FontSizePreference.medium,
+      this.editorAppearance = EditorAppearance.comfortable,
       this.highContrast = false,
       this.reducedMotion = false,
       this.lastCleanup});
@@ -245,13 +245,13 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   final int cacheLimitMB;
   @override
   @JsonKey()
-  final String accentColor;
+  final AccentColor accentColor;
   @override
   @JsonKey()
-  final String fontSize;
+  final FontSizePreference fontSize;
   @override
   @JsonKey()
-  final String editorAppearance;
+  final EditorAppearance editorAppearance;
   @override
   @JsonKey()
   final bool highContrast;
@@ -329,9 +329,9 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final String syncFrequency,
       final bool autoSync,
       final int cacheLimitMB,
-      final String accentColor,
-      final String fontSize,
-      final String editorAppearance,
+      final AccentColor accentColor,
+      final FontSizePreference fontSize,
+      final EditorAppearance editorAppearance,
       final bool highContrast,
       final bool reducedMotion,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
@@ -348,11 +348,11 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   @override
   int get cacheLimitMB;
   @override
-  String get accentColor;
+  AccentColor get accentColor;
   @override
-  String get fontSize;
+  FontSizePreference get fontSize;
   @override
-  String get editorAppearance;
+  EditorAppearance get editorAppearance;
   @override
   bool get highContrast;
   @override

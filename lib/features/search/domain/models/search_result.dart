@@ -4,12 +4,20 @@ class SearchResult {
   final String entityType;
   final String snippet;
 
-  // Future enhancements could include page title, rank score, etc.
+  final String? pageTitle;
+  final String? blockType;
+  final DateTime? modifiedAt;
+  final String? breadcrumb;
+
   const SearchResult({
     required this.entityId,
     this.pageId,
     required this.entityType,
     required this.snippet,
+    this.pageTitle,
+    this.blockType,
+    this.modifiedAt,
+    this.breadcrumb,
   });
 
   @override
@@ -20,7 +28,11 @@ class SearchResult {
         other.entityId == entityId &&
         other.pageId == pageId &&
         other.entityType == entityType &&
-        other.snippet == snippet;
+        other.snippet == snippet &&
+        other.pageTitle == pageTitle &&
+        other.blockType == blockType &&
+        other.modifiedAt == modifiedAt &&
+        other.breadcrumb == breadcrumb;
   }
 
   @override
@@ -28,6 +40,10 @@ class SearchResult {
     return entityId.hashCode ^
         pageId.hashCode ^
         entityType.hashCode ^
-        snippet.hashCode;
+        snippet.hashCode ^
+        pageTitle.hashCode ^
+        blockType.hashCode ^
+        modifiedAt.hashCode ^
+        breadcrumb.hashCode;
   }
 }

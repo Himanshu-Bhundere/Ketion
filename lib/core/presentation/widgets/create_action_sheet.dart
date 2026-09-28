@@ -36,11 +36,17 @@ class CreateActionSheet extends ConsumerWidget {
 
               result.fold(
                 (page) {
+                  // Invalidate lists so new page appears immediately
+                  ref.invalidate(recentPagesProvider);
+                  ref.invalidate(favoritePagesProvider);
+                  ref.invalidate(pageProvider(page.id));
+
                   // Navigate to the new page
-                  context.pushNamed(Routes.editor, pathParameters: {'pageId': page.id});
+                  context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
                 },
                 (error) {
                   if (context.mounted) {
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Failed to create note: $error')),
                     );

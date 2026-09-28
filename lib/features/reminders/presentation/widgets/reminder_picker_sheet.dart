@@ -16,6 +16,8 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
 
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,7 +37,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                   : '${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}',
             ),
             trailing: const Icon(Icons.calendar_today),
-            onTap: () async {
+            onTap: _isLoading ? null : () async {
               final date = await showDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
@@ -56,7 +58,7 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                   : _selectedTime!.format(context),
             ),
             trailing: const Icon(Icons.access_time),
-            onTap: () async {
+            onTap: _isLoading ? null : () async {
               final time = await showTimePicker(
                 context: context,
                 initialTime: TimeOfDay.now(),
@@ -70,30 +72,43 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: (_selectedDate != null && _selectedTime != null)
+            onPressed: (_selectedDate != null && _selectedTime != null && !_isLoading)
                 ? () async {
-                    final dateTime = DateTime(
-                      _selectedDate!.year,
-                      _selectedDate!.month,
-                      _selectedDate!.day,
-                      _selectedTime!.hour,
-                      _selectedTime!.minute,
-                    );
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    try {
+                      final dateTime = DateTime(
+                        _selectedDate!.year,
+                        _selectedDate!.month,
+                        _selectedDate!.day,
+                        _selectedTime!.hour,
+                        _selectedTime!.minute,
+                      );
 
-                    final createReminder =
-                        ref.read(createReminderUseCaseProvider);
-                    await createReminder.execute(
-                      pageId: widget.pageId,
-                      title: 'Ketion Reminder',
-                      reminderTime: dateTime,
-                    );
+                      final createReminder =
+                          ref.read(createReminderUseCaseProvider);
+                      await createReminder.execute(
+                        pageId: widget.pageId,
+                        title: 'Ketion Reminder',
+                        reminderTime: dateTime,
+                      );
 
-                    if (context.mounted) {
-                      Navigator.pop(context);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                      }
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
                     }
                   }
                 : null,
-            child: const Text('Save Reminder'),
+            child: _isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                : const Text('Save Reminder'),
           ),
         ],
       ),

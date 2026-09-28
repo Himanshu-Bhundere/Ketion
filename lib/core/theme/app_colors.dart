@@ -21,4 +21,22 @@ class AppColors {
 
   static const Color textPrimaryDark = Color(0xFFFFFFFF);
   static const Color textSecondaryDark = Color(0xB3FFFFFF);
+
+  static Color getAccentColor(String accent) {
+    switch (accent) {
+      case 'purple':
+        return Colors.purple;
+      case 'teal':
+        return Colors.teal;
+      case 'green':
+        return Colors.green;
+      case 'orange':
+        return Colors.orange;
+      case 'red':
+        return Colors.red;
+      case 'blue':
+      default:
+        return primary;
+    }
+  }
 }

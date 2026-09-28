@@ -11,6 +11,7 @@ class Blocks extends Table {
   TextColumn get type => text()();
   RealColumn get position => real()();
   TextColumn get data => text()(); // JSON string
+  TextColumn get searchableText => text().nullable()();
   IntColumn get version => integer().withDefault(const Constant(1))();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();

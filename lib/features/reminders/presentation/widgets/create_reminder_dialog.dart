@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
+import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 
 class CreateReminderDialog extends ConsumerStatefulWidget {
-  final String pageId;
-  const CreateReminderDialog({super.key, required this.pageId});
+  const CreateReminderDialog({super.key});
 
   @override
   ConsumerState<CreateReminderDialog> createState() => _CreateReminderDialogState();
@@ -13,6 +13,7 @@ class CreateReminderDialog extends ConsumerStatefulWidget {
 class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
   final _titleController = TextEditingController();
   DateTime? _selectedTime;
+  String? _selectedPageId;
 
   @override
   void dispose() {
@@ -48,16 +49,16 @@ class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
 
   void _save() async {
     final title = _titleController.text.trim();
-    if (title.isEmpty || _selectedTime == null) {
+    if (title.isEmpty || _selectedTime == null || _selectedPageId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title and select a time')),
+        const SnackBar(content: Text('Please enter a title, select a page, and choose a time')),
       );
       return;
     }
 
     final createUseCase = ref.read(createReminderUseCaseProvider);
     await createUseCase.execute(
-      pageId: widget.pageId,
+      pageId: _selectedPageId!,
       title: title,
       reminderTime: _selectedTime!,
     );
@@ -69,6 +70,8 @@ class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final pagesAsync = ref.watch(recentPagesProvider);
+
     return AlertDialog(
       title: const Text('New Reminder'),
       content: Column(
@@ -77,6 +80,35 @@ class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(labelText: 'Title'),
+          ),
+          const SizedBox(height: 16),
+          pagesAsync.when(
+            data: (pages) {
+              if (pages.isEmpty) {
+                return const Text('Create a note first to attach reminders.');
+              }
+              // Initialize if null and we have pages
+              if (_selectedPageId == null && pages.isNotEmpty) {
+                _selectedPageId = pages.first.id;
+              }
+              return DropdownButtonFormField<String>(
+                initialValue: _selectedPageId,
+                items: pages.map((p) {
+                  return DropdownMenuItem(
+                    value: p.id,
+                    child: Text(p.title.isEmpty ? 'Untitled' : p.title),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _selectedPageId = val;
+                  });
+                },
+                decoration: const InputDecoration(labelText: 'Attach to Note'),
+              );
+            },
+            loading: () => const CircularProgressIndicator(),
+            error: (_, __) => const Text('Error loading pages'),
           ),
           const SizedBox(height: 16),
           Row(

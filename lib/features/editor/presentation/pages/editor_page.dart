@@ -29,7 +29,30 @@ class EditorPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editor'),
+        title: pageAsync.when(
+          data: (page) {
+            if (page == null) return const Text('Editor');
+            return TextFormField(
+              initialValue: page.title,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Page Title',
+              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              onFieldSubmitted: (value) async {
+                if (value.trim().isNotEmpty && value != page.title) {
+                  final updatedPage = page.copyWith(title: value.trim());
+                  await ref.read(updatePageUseCaseProvider)(updatedPage);
+                  ref.invalidate(pageProvider(pageId));
+                  ref.invalidate(recentPagesProvider);
+                  ref.invalidate(favoritePagesProvider);
+                }
+              },
+            );
+          },
+          loading: () => const Text('Loading...'),
+          error: (_, __) => const Text('Error'),
+        ),
         actions: [
           pageAsync.when(
             data: (page) {
@@ -153,6 +176,16 @@ class EditorPage extends ConsumerWidget {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) async {
+              if (value == 'move_to_trash') {
+                final deleteUseCase = ref.read(deletePageUseCaseProvider);
+                await deleteUseCase(pageId);
+                ref.invalidate(recentPagesProvider);
+                ref.invalidate(favoritePagesProvider);
+                if (context.mounted) {
+                  context.pop();
+                }
+                return;
+              }
               if (value.startsWith('export_')) {
                 final ext = value.split('_')[1];
                 final page = pageAsync.valueOrNull;
@@ -175,6 +208,11 @@ class EditorPage extends ConsumerWidget {
               const PopupMenuItem(
                 value: 'export_pdf',
                 child: Text('Export as PDF'),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                value: 'move_to_trash',
+                child: Text('Move to Trash', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),

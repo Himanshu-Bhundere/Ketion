@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../features/settings/domain/models/app_settings_model.dart';
 
 /// Canonical typography tokens as defined in the UI architecture.
 class AppTypography {
@@ -29,4 +30,28 @@ class AppTypography {
     fontSize: 12,
     fontWeight: FontWeight.normal,
   );
+
+  static double _getScaleFactor(FontSizePreference preference) {
+    switch (preference) {
+      case FontSizePreference.small:
+        return 0.85;
+      case FontSizePreference.large:
+        return 1.15;
+      case FontSizePreference.extraLarge:
+        return 1.30;
+      case FontSizePreference.medium:
+        return 1.0;
+    }
+  }
+
+  static TextTheme getScaledTextTheme(FontSizePreference preference) {
+    final scale = _getScaleFactor(preference);
+    return TextTheme(
+      displayLarge: display.copyWith(fontSize: display.fontSize! * scale),
+      headlineMedium: heading.copyWith(fontSize: heading.fontSize! * scale),
+      titleMedium: title.copyWith(fontSize: title.fontSize! * scale),
+      bodyMedium: body.copyWith(fontSize: body.fontSize! * scale),
+      bodySmall: caption.copyWith(fontSize: caption.fontSize! * scale),
+    );
+  }
 }

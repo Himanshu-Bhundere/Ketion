@@ -488,13 +488,14 @@ class __$$TextBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$TextBlockDataImpl implements TextBlockData {
+class _$TextBlockDataImpl extends TextBlockData {
   const _$TextBlockDataImpl(
       {final List<TextSpanData> spans = const [],
       this.headingLevel = 0,
       final String? $type})
       : _spans = spans,
-        $type = $type ?? 'text';
+        $type = $type ?? 'text',
+        super._();
 
   factory _$TextBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$TextBlockDataImplFromJson(json);
@@ -651,10 +652,11 @@ class _$TextBlockDataImpl implements TextBlockData {
   }
 }
 
-abstract class TextBlockData implements BlockDataModel {
+abstract class TextBlockData extends BlockDataModel {
   const factory TextBlockData(
       {final List<TextSpanData> spans,
       final int headingLevel}) = _$TextBlockDataImpl;
+  const TextBlockData._() : super._();
 
   factory TextBlockData.fromJson(Map<String, dynamic> json) =
       _$TextBlockDataImpl.fromJson;
@@ -709,14 +711,15 @@ class __$$ListBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$ListBlockDataImpl implements ListBlockData {
+class _$ListBlockDataImpl extends ListBlockData {
   const _$ListBlockDataImpl(
       {final List<TextSpanData> spans = const [],
       this.checked = false,
       this.listType = 'bullet',
       final String? $type})
       : _spans = spans,
-        $type = $type ?? 'list';
+        $type = $type ?? 'list',
+        super._();
 
   factory _$ListBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$ListBlockDataImplFromJson(json);
@@ -877,11 +880,12 @@ class _$ListBlockDataImpl implements ListBlockData {
   }
 }
 
-abstract class ListBlockData implements BlockDataModel {
+abstract class ListBlockData extends BlockDataModel {
   const factory ListBlockData(
       {final List<TextSpanData> spans,
       final bool checked,
       final String listType}) = _$ListBlockDataImpl;
+  const ListBlockData._() : super._();
 
   factory ListBlockData.fromJson(Map<String, dynamic> json) =
       _$ListBlockDataImpl.fromJson;
@@ -927,11 +931,12 @@ class __$$UnknownBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$UnknownBlockDataImpl implements UnknownBlockData {
+class _$UnknownBlockDataImpl extends UnknownBlockData {
   const _$UnknownBlockDataImpl(
       {final Map<String, dynamic> rawData = const {}, final String? $type})
       : _rawData = rawData,
-        $type = $type ?? 'unknown';
+        $type = $type ?? 'unknown',
+        super._();
 
   factory _$UnknownBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$UnknownBlockDataImplFromJson(json);
@@ -1083,9 +1088,10 @@ class _$UnknownBlockDataImpl implements UnknownBlockData {
   }
 }
 
-abstract class UnknownBlockData implements BlockDataModel {
+abstract class UnknownBlockData extends BlockDataModel {
   const factory UnknownBlockData({final Map<String, dynamic> rawData}) =
       _$UnknownBlockDataImpl;
+  const UnknownBlockData._() : super._();
 
   factory UnknownBlockData.fromJson(Map<String, dynamic> json) =
       _$UnknownBlockDataImpl.fromJson;
@@ -1134,10 +1140,11 @@ class __$$ImageBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$ImageBlockDataImpl implements ImageBlockData {
+class _$ImageBlockDataImpl extends ImageBlockData {
   const _$ImageBlockDataImpl(
       {required this.attachmentId, this.caption, final String? $type})
-      : $type = $type ?? 'image';
+      : $type = $type ?? 'image',
+        super._();
 
   factory _$ImageBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$ImageBlockDataImplFromJson(json);
@@ -1286,10 +1293,11 @@ class _$ImageBlockDataImpl implements ImageBlockData {
   }
 }
 
-abstract class ImageBlockData implements BlockDataModel {
+abstract class ImageBlockData extends BlockDataModel {
   const factory ImageBlockData(
       {required final String attachmentId,
       final String? caption}) = _$ImageBlockDataImpl;
+  const ImageBlockData._() : super._();
 
   factory ImageBlockData.fromJson(Map<String, dynamic> json) =
       _$ImageBlockDataImpl.fromJson;
@@ -1339,10 +1347,11 @@ class __$$VideoBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$VideoBlockDataImpl implements VideoBlockData {
+class _$VideoBlockDataImpl extends VideoBlockData {
   const _$VideoBlockDataImpl(
       {required this.attachmentId, this.caption, final String? $type})
-      : $type = $type ?? 'video';
+      : $type = $type ?? 'video',
+        super._();
 
   factory _$VideoBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$VideoBlockDataImplFromJson(json);
@@ -1491,10 +1500,11 @@ class _$VideoBlockDataImpl implements VideoBlockData {
   }
 }
 
-abstract class VideoBlockData implements BlockDataModel {
+abstract class VideoBlockData extends BlockDataModel {
   const factory VideoBlockData(
       {required final String attachmentId,
       final String? caption}) = _$VideoBlockDataImpl;
+  const VideoBlockData._() : super._();
 
   factory VideoBlockData.fromJson(Map<String, dynamic> json) =
       _$VideoBlockDataImpl.fromJson;
@@ -1544,10 +1554,11 @@ class __$$AudioBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$AudioBlockDataImpl implements AudioBlockData {
+class _$AudioBlockDataImpl extends AudioBlockData {
   const _$AudioBlockDataImpl(
       {required this.attachmentId, this.caption, final String? $type})
-      : $type = $type ?? 'audio';
+      : $type = $type ?? 'audio',
+        super._();
 
   factory _$AudioBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$AudioBlockDataImplFromJson(json);
@@ -1696,10 +1707,11 @@ class _$AudioBlockDataImpl implements AudioBlockData {
   }
 }
 
-abstract class AudioBlockData implements BlockDataModel {
+abstract class AudioBlockData extends BlockDataModel {
   const factory AudioBlockData(
       {required final String attachmentId,
       final String? caption}) = _$AudioBlockDataImpl;
+  const AudioBlockData._() : super._();
 
   factory AudioBlockData.fromJson(Map<String, dynamic> json) =
       _$AudioBlockDataImpl.fromJson;
@@ -1749,10 +1761,11 @@ class __$$PdfBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$PdfBlockDataImpl implements PdfBlockData {
+class _$PdfBlockDataImpl extends PdfBlockData {
   const _$PdfBlockDataImpl(
       {required this.attachmentId, this.caption, final String? $type})
-      : $type = $type ?? 'pdf';
+      : $type = $type ?? 'pdf',
+        super._();
 
   factory _$PdfBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$PdfBlockDataImplFromJson(json);
@@ -1900,10 +1913,11 @@ class _$PdfBlockDataImpl implements PdfBlockData {
   }
 }
 
-abstract class PdfBlockData implements BlockDataModel {
+abstract class PdfBlockData extends BlockDataModel {
   const factory PdfBlockData(
       {required final String attachmentId,
       final String? caption}) = _$PdfBlockDataImpl;
+  const PdfBlockData._() : super._();
 
   factory PdfBlockData.fromJson(Map<String, dynamic> json) =
       _$PdfBlockDataImpl.fromJson;
@@ -1953,10 +1967,11 @@ class __$$FileBlockDataImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$FileBlockDataImpl implements FileBlockData {
+class _$FileBlockDataImpl extends FileBlockData {
   const _$FileBlockDataImpl(
       {required this.attachmentId, this.caption, final String? $type})
-      : $type = $type ?? 'file';
+      : $type = $type ?? 'file',
+        super._();
 
   factory _$FileBlockDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$FileBlockDataImplFromJson(json);
@@ -2104,10 +2119,11 @@ class _$FileBlockDataImpl implements FileBlockData {
   }
 }
 
-abstract class FileBlockData implements BlockDataModel {
+abstract class FileBlockData extends BlockDataModel {
   const factory FileBlockData(
       {required final String attachmentId,
       final String? caption}) = _$FileBlockDataImpl;
+  const FileBlockData._() : super._();
 
   factory FileBlockData.fromJson(Map<String, dynamic> json) =
       _$FileBlockDataImpl.fromJson;

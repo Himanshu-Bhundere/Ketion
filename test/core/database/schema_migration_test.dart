@@ -19,7 +19,17 @@ void main() {
       CREATE TABLE page_tags (page_id TEXT NOT NULL, tag_id TEXT NOT NULL, PRIMARY KEY(page_id, tag_id));
       CREATE TABLE sync_queue (id TEXT NOT NULL PRIMARY KEY, entity_table TEXT NOT NULL, entity_id TEXT NOT NULL, operation TEXT NOT NULL, payload TEXT, created_at INTEGER NOT NULL, status TEXT NOT NULL, attempt_count INTEGER NOT NULL, last_attempt_at INTEGER, next_retry_at INTEGER, last_error TEXT);
       CREATE TABLE sync_states (device_id TEXT NOT NULL, provider TEXT NOT NULL, last_sync_time INTEGER, last_drive_cursor TEXT, PRIMARY KEY(device_id, provider));
-      CREATE TABLE app_settings (id INTEGER NOT NULL PRIMARY KEY);
+      CREATE TABLE app_settings_table (
+        id TEXT NOT NULL PRIMARY KEY,
+        theme_mode TEXT NOT NULL DEFAULT 'System',
+        sync_frequency TEXT NOT NULL DEFAULT '15 minutes',
+        auto_sync INTEGER NOT NULL DEFAULT 1,
+        cache_limit_m_b INTEGER NOT NULL DEFAULT 100,
+        tombstone_retention_days INTEGER NOT NULL DEFAULT 30,
+        last_cleanup INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
       
       -- The v10 attachments table (before v11 migration)
       CREATE TABLE attachments (
@@ -69,6 +79,11 @@ void main() {
         .customSelect('SELECT * FROM sync_queue WHERE lease_until IS NOT NULL')
         .get();
     expect(queueItems, isEmpty);
+
+    // 6. Verify v14 schema additions exist
+    final appSettingsData = await driftDb.customSelect('SELECT * FROM app_settings_table').get();
+    expect(appSettingsData, isEmpty); // we didn't insert any, but we can verify columns don't crash
+    await driftDb.customSelect('SELECT accent_color, font_size, editor_appearance, high_contrast, reduced_motion FROM app_settings_table').get();
 
     await driftDb.close();
   });

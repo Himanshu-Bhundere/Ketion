@@ -212,7 +212,7 @@ class HomePage extends ConsumerWidget {
             if (width >= AppBreakpoints.medium) {
               ref.read(activePageIdProvider.notifier).state = page.id;
             } else {
-              context.pushNamed(Routes.editor, pathParameters: {'pageId': page.id});
+              context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
             }
           },
           child: Padding(

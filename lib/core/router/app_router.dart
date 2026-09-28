@@ -69,6 +69,7 @@ final appRouter = GoRouter(
     ),
     // Routes outside the shell, or independent
     GoRoute(
+      name: Routes.editorName,
       parentNavigatorKey: _rootNavigatorKey,
       path: Routes.editor,
       builder: (context, state) {

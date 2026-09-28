@@ -55,7 +55,7 @@ class RemindersPage extends ConsumerWidget {
         onPressed: () {
           showDialog<void>(
             context: context,
-            builder: (context) => const CreateReminderDialog(pageId: 'global'),
+            builder: (context) => const CreateReminderDialog(),
           );
         },
         child: const Icon(Icons.add),

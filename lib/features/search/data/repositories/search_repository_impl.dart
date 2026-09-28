@@ -23,8 +23,8 @@ class SearchRepositoryImpl implements SearchRepository {
       final sanitizedQuery = '"${query.replaceAll('"', '""')}"*';
 
       final String whereClause = typeFilter != null
-          ? 'search_fts MATCH ? AND entityType = ?'
-          : 'search_fts MATCH ?';
+          ? 's.search_fts MATCH ? AND s.entityType = ?'
+          : 's.search_fts MATCH ?';
 
       final variables = typeFilter != null
           ? [
@@ -36,29 +36,42 @@ class SearchRepositoryImpl implements SearchRepository {
       final rows = await _database.customSelect(
         '''
         SELECT 
-          entityId, 
-          pageId, 
-          entityType, 
-          snippet(search_fts, 3, '<mark>', '</mark>', '...', 64) as snippet
-        FROM search_fts
+          s.entityId, 
+          s.pageId, 
+          s.entityType, 
+          snippet(search_fts, 3, '<mark>', '</mark>', '...', 64) as snippet,
+          p.title as pageTitle,
+          b.type as blockType,
+          COALESCE(b.updated_at, p.updated_at) as modifiedAt,
+          (SELECT name FROM collections WHERE id = (SELECT collection_id FROM page_collections WHERE page_id = s.pageId LIMIT 1)) as breadcrumb
+        FROM search_fts s
+        LEFT JOIN pages p ON p.id = s.pageId
+        LEFT JOIN blocks b ON b.id = s.entityId AND s.entityType = 'block'
         WHERE $whereClause
-        ORDER BY rank
+        ORDER BY s.rank
         LIMIT 50
         ''',
         variables: variables,
       ).get();
 
       final results = rows.map((row) {
+        final parsedModifiedAt = row.readNullable<DateTime>('modifiedAt');
+
         return SearchResult(
           entityId: row.read<String>('entityId'),
           pageId: row.read<String?>('pageId'),
           entityType: row.read<String>('entityType'),
           snippet: row.read<String>('snippet'),
+          pageTitle: row.readNullable<String>('pageTitle'),
+          blockType: row.readNullable<String>('blockType'),
+          modifiedAt: parsedModifiedAt,
+          breadcrumb: row.readNullable<String>('breadcrumb'),
         );
       }).toList();
 
       return Success(results);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _logger.e('Failed to search notes: $e', e, stackTrace);
       return Error(StorageFailure('Failed to search notes: $e'));
     }
   }

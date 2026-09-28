@@ -658,6 +658,12 @@ class $BlocksTable extends Blocks with TableInfo<$BlocksTable, Block> {
   late final GeneratedColumn<String> data = GeneratedColumn<String>(
       'data', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _searchableTextMeta =
+      const VerificationMeta('searchableText');
+  @override
+  late final GeneratedColumn<String> searchableText = GeneratedColumn<String>(
+      'searchable_text', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _versionMeta =
       const VerificationMeta('version');
   @override
@@ -696,6 +702,7 @@ class $BlocksTable extends Blocks with TableInfo<$BlocksTable, Block> {
         type,
         position,
         data,
+        searchableText,
         version,
         deleted,
         createdAt,
@@ -746,6 +753,12 @@ class $BlocksTable extends Blocks with TableInfo<$BlocksTable, Block> {
     } else if (isInserting) {
       context.missing(_dataMeta);
     }
+    if (data.containsKey('searchable_text')) {
+      context.handle(
+          _searchableTextMeta,
+          searchableText.isAcceptableOrUnknown(
+              data['searchable_text']!, _searchableTextMeta));
+    }
     if (data.containsKey('version')) {
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
@@ -787,6 +800,8 @@ class $BlocksTable extends Blocks with TableInfo<$BlocksTable, Block> {
           .read(DriftSqlType.double, data['${effectivePrefix}position'])!,
       data: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}data'])!,
+      searchableText: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}searchable_text']),
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       deleted: attachedDatabase.typeMapping
@@ -811,6 +826,7 @@ class Block extends DataClass implements Insertable<Block> {
   final String type;
   final double position;
   final String data;
+  final String? searchableText;
   final int version;
   final bool deleted;
   final DateTime createdAt;
@@ -822,6 +838,7 @@ class Block extends DataClass implements Insertable<Block> {
       required this.type,
       required this.position,
       required this.data,
+      this.searchableText,
       required this.version,
       required this.deleted,
       required this.createdAt,
@@ -837,6 +854,9 @@ class Block extends DataClass implements Insertable<Block> {
     map['type'] = Variable<String>(type);
     map['position'] = Variable<double>(position);
     map['data'] = Variable<String>(data);
+    if (!nullToAbsent || searchableText != null) {
+      map['searchable_text'] = Variable<String>(searchableText);
+    }
     map['version'] = Variable<int>(version);
     map['deleted'] = Variable<bool>(deleted);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -854,6 +874,9 @@ class Block extends DataClass implements Insertable<Block> {
       type: Value(type),
       position: Value(position),
       data: Value(data),
+      searchableText: searchableText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(searchableText),
       version: Value(version),
       deleted: Value(deleted),
       createdAt: Value(createdAt),
@@ -871,6 +894,7 @@ class Block extends DataClass implements Insertable<Block> {
       type: serializer.fromJson<String>(json['type']),
       position: serializer.fromJson<double>(json['position']),
       data: serializer.fromJson<String>(json['data']),
+      searchableText: serializer.fromJson<String?>(json['searchableText']),
       version: serializer.fromJson<int>(json['version']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -887,6 +911,7 @@ class Block extends DataClass implements Insertable<Block> {
       'type': serializer.toJson<String>(type),
       'position': serializer.toJson<double>(position),
       'data': serializer.toJson<String>(data),
+      'searchableText': serializer.toJson<String?>(searchableText),
       'version': serializer.toJson<int>(version),
       'deleted': serializer.toJson<bool>(deleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -901,6 +926,7 @@ class Block extends DataClass implements Insertable<Block> {
           String? type,
           double? position,
           String? data,
+          Value<String?> searchableText = const Value.absent(),
           int? version,
           bool? deleted,
           DateTime? createdAt,
@@ -913,6 +939,8 @@ class Block extends DataClass implements Insertable<Block> {
         type: type ?? this.type,
         position: position ?? this.position,
         data: data ?? this.data,
+        searchableText:
+            searchableText.present ? searchableText.value : this.searchableText,
         version: version ?? this.version,
         deleted: deleted ?? this.deleted,
         createdAt: createdAt ?? this.createdAt,
@@ -928,6 +956,9 @@ class Block extends DataClass implements Insertable<Block> {
       type: data.type.present ? data.type.value : this.type,
       position: data.position.present ? data.position.value : this.position,
       data: data.data.present ? data.data.value : this.data,
+      searchableText: data.searchableText.present
+          ? data.searchableText.value
+          : this.searchableText,
       version: data.version.present ? data.version.value : this.version,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -944,6 +975,7 @@ class Block extends DataClass implements Insertable<Block> {
           ..write('type: $type, ')
           ..write('position: $position, ')
           ..write('data: $data, ')
+          ..write('searchableText: $searchableText, ')
           ..write('version: $version, ')
           ..write('deleted: $deleted, ')
           ..write('createdAt: $createdAt, ')
@@ -954,7 +986,7 @@ class Block extends DataClass implements Insertable<Block> {
 
   @override
   int get hashCode => Object.hash(id, pageId, parentBlockId, type, position,
-      data, version, deleted, createdAt, updatedAt);
+      data, searchableText, version, deleted, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -965,6 +997,7 @@ class Block extends DataClass implements Insertable<Block> {
           other.type == this.type &&
           other.position == this.position &&
           other.data == this.data &&
+          other.searchableText == this.searchableText &&
           other.version == this.version &&
           other.deleted == this.deleted &&
           other.createdAt == this.createdAt &&
@@ -978,6 +1011,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
   final Value<String> type;
   final Value<double> position;
   final Value<String> data;
+  final Value<String?> searchableText;
   final Value<int> version;
   final Value<bool> deleted;
   final Value<DateTime> createdAt;
@@ -990,6 +1024,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
     this.type = const Value.absent(),
     this.position = const Value.absent(),
     this.data = const Value.absent(),
+    this.searchableText = const Value.absent(),
     this.version = const Value.absent(),
     this.deleted = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1003,6 +1038,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
     required String type,
     required double position,
     required String data,
+    this.searchableText = const Value.absent(),
     this.version = const Value.absent(),
     this.deleted = const Value.absent(),
     required DateTime createdAt,
@@ -1022,6 +1058,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
     Expression<String>? type,
     Expression<double>? position,
     Expression<String>? data,
+    Expression<String>? searchableText,
     Expression<int>? version,
     Expression<bool>? deleted,
     Expression<DateTime>? createdAt,
@@ -1035,6 +1072,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
       if (type != null) 'type': type,
       if (position != null) 'position': position,
       if (data != null) 'data': data,
+      if (searchableText != null) 'searchable_text': searchableText,
       if (version != null) 'version': version,
       if (deleted != null) 'deleted': deleted,
       if (createdAt != null) 'created_at': createdAt,
@@ -1050,6 +1088,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
       Value<String>? type,
       Value<double>? position,
       Value<String>? data,
+      Value<String?>? searchableText,
       Value<int>? version,
       Value<bool>? deleted,
       Value<DateTime>? createdAt,
@@ -1062,6 +1101,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
       type: type ?? this.type,
       position: position ?? this.position,
       data: data ?? this.data,
+      searchableText: searchableText ?? this.searchableText,
       version: version ?? this.version,
       deleted: deleted ?? this.deleted,
       createdAt: createdAt ?? this.createdAt,
@@ -1091,6 +1131,9 @@ class BlocksCompanion extends UpdateCompanion<Block> {
     if (data.present) {
       map['data'] = Variable<String>(data.value);
     }
+    if (searchableText.present) {
+      map['searchable_text'] = Variable<String>(searchableText.value);
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -1118,6 +1161,7 @@ class BlocksCompanion extends UpdateCompanion<Block> {
           ..write('type: $type, ')
           ..write('position: $position, ')
           ..write('data: $data, ')
+          ..write('searchableText: $searchableText, ')
           ..write('version: $version, ')
           ..write('deleted: $deleted, ')
           ..write('createdAt: $createdAt, ')
@@ -5170,6 +5214,50 @@ class $AppSettingsTableTable extends AppSettingsTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(30));
+  static const VerificationMeta _accentColorMeta =
+      const VerificationMeta('accentColor');
+  @override
+  late final GeneratedColumn<String> accentColor = GeneratedColumn<String>(
+      'accent_color', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('blue'));
+  static const VerificationMeta _fontSizeMeta =
+      const VerificationMeta('fontSize');
+  @override
+  late final GeneratedColumn<String> fontSize = GeneratedColumn<String>(
+      'font_size', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('medium'));
+  static const VerificationMeta _editorAppearanceMeta =
+      const VerificationMeta('editorAppearance');
+  @override
+  late final GeneratedColumn<String> editorAppearance = GeneratedColumn<String>(
+      'editor_appearance', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('comfortable'));
+  static const VerificationMeta _highContrastMeta =
+      const VerificationMeta('highContrast');
+  @override
+  late final GeneratedColumn<bool> highContrast = GeneratedColumn<bool>(
+      'high_contrast', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("high_contrast" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _reducedMotionMeta =
+      const VerificationMeta('reducedMotion');
+  @override
+  late final GeneratedColumn<bool> reducedMotion = GeneratedColumn<bool>(
+      'reduced_motion', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("reduced_motion" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _lastCleanupMeta =
       const VerificationMeta('lastCleanup');
   @override
@@ -5196,6 +5284,11 @@ class $AppSettingsTableTable extends AppSettingsTable
         autoSync,
         cacheLimitMB,
         tombstoneRetentionDays,
+        accentColor,
+        fontSize,
+        editorAppearance,
+        highContrast,
+        reducedMotion,
         lastCleanup,
         createdAt,
         updatedAt
@@ -5241,6 +5334,34 @@ class $AppSettingsTableTable extends AppSettingsTable
           tombstoneRetentionDays.isAcceptableOrUnknown(
               data['tombstone_retention_days']!, _tombstoneRetentionDaysMeta));
     }
+    if (data.containsKey('accent_color')) {
+      context.handle(
+          _accentColorMeta,
+          accentColor.isAcceptableOrUnknown(
+              data['accent_color']!, _accentColorMeta));
+    }
+    if (data.containsKey('font_size')) {
+      context.handle(_fontSizeMeta,
+          fontSize.isAcceptableOrUnknown(data['font_size']!, _fontSizeMeta));
+    }
+    if (data.containsKey('editor_appearance')) {
+      context.handle(
+          _editorAppearanceMeta,
+          editorAppearance.isAcceptableOrUnknown(
+              data['editor_appearance']!, _editorAppearanceMeta));
+    }
+    if (data.containsKey('high_contrast')) {
+      context.handle(
+          _highContrastMeta,
+          highContrast.isAcceptableOrUnknown(
+              data['high_contrast']!, _highContrastMeta));
+    }
+    if (data.containsKey('reduced_motion')) {
+      context.handle(
+          _reducedMotionMeta,
+          reducedMotion.isAcceptableOrUnknown(
+              data['reduced_motion']!, _reducedMotionMeta));
+    }
     if (data.containsKey('last_cleanup')) {
       context.handle(
           _lastCleanupMeta,
@@ -5281,6 +5402,16 @@ class $AppSettingsTableTable extends AppSettingsTable
       tombstoneRetentionDays: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}tombstone_retention_days'])!,
+      accentColor: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}accent_color'])!,
+      fontSize: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}font_size'])!,
+      editorAppearance: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}editor_appearance'])!,
+      highContrast: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}high_contrast'])!,
+      reducedMotion: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}reduced_motion'])!,
       lastCleanup: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_cleanup']),
       createdAt: attachedDatabase.typeMapping
@@ -5304,6 +5435,11 @@ class AppSettingEntity extends DataClass
   final bool autoSync;
   final int cacheLimitMB;
   final int tombstoneRetentionDays;
+  final String accentColor;
+  final String fontSize;
+  final String editorAppearance;
+  final bool highContrast;
+  final bool reducedMotion;
   final DateTime? lastCleanup;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5314,6 +5450,11 @@ class AppSettingEntity extends DataClass
       required this.autoSync,
       required this.cacheLimitMB,
       required this.tombstoneRetentionDays,
+      required this.accentColor,
+      required this.fontSize,
+      required this.editorAppearance,
+      required this.highContrast,
+      required this.reducedMotion,
       this.lastCleanup,
       required this.createdAt,
       required this.updatedAt});
@@ -5326,6 +5467,11 @@ class AppSettingEntity extends DataClass
     map['auto_sync'] = Variable<bool>(autoSync);
     map['cache_limit_m_b'] = Variable<int>(cacheLimitMB);
     map['tombstone_retention_days'] = Variable<int>(tombstoneRetentionDays);
+    map['accent_color'] = Variable<String>(accentColor);
+    map['font_size'] = Variable<String>(fontSize);
+    map['editor_appearance'] = Variable<String>(editorAppearance);
+    map['high_contrast'] = Variable<bool>(highContrast);
+    map['reduced_motion'] = Variable<bool>(reducedMotion);
     if (!nullToAbsent || lastCleanup != null) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup);
     }
@@ -5342,6 +5488,11 @@ class AppSettingEntity extends DataClass
       autoSync: Value(autoSync),
       cacheLimitMB: Value(cacheLimitMB),
       tombstoneRetentionDays: Value(tombstoneRetentionDays),
+      accentColor: Value(accentColor),
+      fontSize: Value(fontSize),
+      editorAppearance: Value(editorAppearance),
+      highContrast: Value(highContrast),
+      reducedMotion: Value(reducedMotion),
       lastCleanup: lastCleanup == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCleanup),
@@ -5361,6 +5512,11 @@ class AppSettingEntity extends DataClass
       cacheLimitMB: serializer.fromJson<int>(json['cacheLimitMB']),
       tombstoneRetentionDays:
           serializer.fromJson<int>(json['tombstoneRetentionDays']),
+      accentColor: serializer.fromJson<String>(json['accentColor']),
+      fontSize: serializer.fromJson<String>(json['fontSize']),
+      editorAppearance: serializer.fromJson<String>(json['editorAppearance']),
+      highContrast: serializer.fromJson<bool>(json['highContrast']),
+      reducedMotion: serializer.fromJson<bool>(json['reducedMotion']),
       lastCleanup: serializer.fromJson<DateTime?>(json['lastCleanup']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -5376,6 +5532,11 @@ class AppSettingEntity extends DataClass
       'autoSync': serializer.toJson<bool>(autoSync),
       'cacheLimitMB': serializer.toJson<int>(cacheLimitMB),
       'tombstoneRetentionDays': serializer.toJson<int>(tombstoneRetentionDays),
+      'accentColor': serializer.toJson<String>(accentColor),
+      'fontSize': serializer.toJson<String>(fontSize),
+      'editorAppearance': serializer.toJson<String>(editorAppearance),
+      'highContrast': serializer.toJson<bool>(highContrast),
+      'reducedMotion': serializer.toJson<bool>(reducedMotion),
       'lastCleanup': serializer.toJson<DateTime?>(lastCleanup),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -5389,6 +5550,11 @@ class AppSettingEntity extends DataClass
           bool? autoSync,
           int? cacheLimitMB,
           int? tombstoneRetentionDays,
+          String? accentColor,
+          String? fontSize,
+          String? editorAppearance,
+          bool? highContrast,
+          bool? reducedMotion,
           Value<DateTime?> lastCleanup = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -5400,6 +5566,11 @@ class AppSettingEntity extends DataClass
         cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
         tombstoneRetentionDays:
             tombstoneRetentionDays ?? this.tombstoneRetentionDays,
+        accentColor: accentColor ?? this.accentColor,
+        fontSize: fontSize ?? this.fontSize,
+        editorAppearance: editorAppearance ?? this.editorAppearance,
+        highContrast: highContrast ?? this.highContrast,
+        reducedMotion: reducedMotion ?? this.reducedMotion,
         lastCleanup: lastCleanup.present ? lastCleanup.value : this.lastCleanup,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -5418,6 +5589,18 @@ class AppSettingEntity extends DataClass
       tombstoneRetentionDays: data.tombstoneRetentionDays.present
           ? data.tombstoneRetentionDays.value
           : this.tombstoneRetentionDays,
+      accentColor:
+          data.accentColor.present ? data.accentColor.value : this.accentColor,
+      fontSize: data.fontSize.present ? data.fontSize.value : this.fontSize,
+      editorAppearance: data.editorAppearance.present
+          ? data.editorAppearance.value
+          : this.editorAppearance,
+      highContrast: data.highContrast.present
+          ? data.highContrast.value
+          : this.highContrast,
+      reducedMotion: data.reducedMotion.present
+          ? data.reducedMotion.value
+          : this.reducedMotion,
       lastCleanup:
           data.lastCleanup.present ? data.lastCleanup.value : this.lastCleanup,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -5434,6 +5617,11 @@ class AppSettingEntity extends DataClass
           ..write('autoSync: $autoSync, ')
           ..write('cacheLimitMB: $cacheLimitMB, ')
           ..write('tombstoneRetentionDays: $tombstoneRetentionDays, ')
+          ..write('accentColor: $accentColor, ')
+          ..write('fontSize: $fontSize, ')
+          ..write('editorAppearance: $editorAppearance, ')
+          ..write('highContrast: $highContrast, ')
+          ..write('reducedMotion: $reducedMotion, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -5442,8 +5630,21 @@ class AppSettingEntity extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, themeMode, syncFrequency, autoSync,
-      cacheLimitMB, tombstoneRetentionDays, lastCleanup, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id,
+      themeMode,
+      syncFrequency,
+      autoSync,
+      cacheLimitMB,
+      tombstoneRetentionDays,
+      accentColor,
+      fontSize,
+      editorAppearance,
+      highContrast,
+      reducedMotion,
+      lastCleanup,
+      createdAt,
+      updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5454,6 +5655,11 @@ class AppSettingEntity extends DataClass
           other.autoSync == this.autoSync &&
           other.cacheLimitMB == this.cacheLimitMB &&
           other.tombstoneRetentionDays == this.tombstoneRetentionDays &&
+          other.accentColor == this.accentColor &&
+          other.fontSize == this.fontSize &&
+          other.editorAppearance == this.editorAppearance &&
+          other.highContrast == this.highContrast &&
+          other.reducedMotion == this.reducedMotion &&
           other.lastCleanup == this.lastCleanup &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -5466,6 +5672,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
   final Value<bool> autoSync;
   final Value<int> cacheLimitMB;
   final Value<int> tombstoneRetentionDays;
+  final Value<String> accentColor;
+  final Value<String> fontSize;
+  final Value<String> editorAppearance;
+  final Value<bool> highContrast;
+  final Value<bool> reducedMotion;
   final Value<DateTime?> lastCleanup;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -5477,6 +5688,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.autoSync = const Value.absent(),
     this.cacheLimitMB = const Value.absent(),
     this.tombstoneRetentionDays = const Value.absent(),
+    this.accentColor = const Value.absent(),
+    this.fontSize = const Value.absent(),
+    this.editorAppearance = const Value.absent(),
+    this.highContrast = const Value.absent(),
+    this.reducedMotion = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5489,6 +5705,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.autoSync = const Value.absent(),
     this.cacheLimitMB = const Value.absent(),
     this.tombstoneRetentionDays = const Value.absent(),
+    this.accentColor = const Value.absent(),
+    this.fontSize = const Value.absent(),
+    this.editorAppearance = const Value.absent(),
+    this.highContrast = const Value.absent(),
+    this.reducedMotion = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -5503,6 +5724,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     Expression<bool>? autoSync,
     Expression<int>? cacheLimitMB,
     Expression<int>? tombstoneRetentionDays,
+    Expression<String>? accentColor,
+    Expression<String>? fontSize,
+    Expression<String>? editorAppearance,
+    Expression<bool>? highContrast,
+    Expression<bool>? reducedMotion,
     Expression<DateTime>? lastCleanup,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5516,6 +5742,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       if (cacheLimitMB != null) 'cache_limit_m_b': cacheLimitMB,
       if (tombstoneRetentionDays != null)
         'tombstone_retention_days': tombstoneRetentionDays,
+      if (accentColor != null) 'accent_color': accentColor,
+      if (fontSize != null) 'font_size': fontSize,
+      if (editorAppearance != null) 'editor_appearance': editorAppearance,
+      if (highContrast != null) 'high_contrast': highContrast,
+      if (reducedMotion != null) 'reduced_motion': reducedMotion,
       if (lastCleanup != null) 'last_cleanup': lastCleanup,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5530,6 +5761,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       Value<bool>? autoSync,
       Value<int>? cacheLimitMB,
       Value<int>? tombstoneRetentionDays,
+      Value<String>? accentColor,
+      Value<String>? fontSize,
+      Value<String>? editorAppearance,
+      Value<bool>? highContrast,
+      Value<bool>? reducedMotion,
       Value<DateTime?>? lastCleanup,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -5542,6 +5778,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       cacheLimitMB: cacheLimitMB ?? this.cacheLimitMB,
       tombstoneRetentionDays:
           tombstoneRetentionDays ?? this.tombstoneRetentionDays,
+      accentColor: accentColor ?? this.accentColor,
+      fontSize: fontSize ?? this.fontSize,
+      editorAppearance: editorAppearance ?? this.editorAppearance,
+      highContrast: highContrast ?? this.highContrast,
+      reducedMotion: reducedMotion ?? this.reducedMotion,
       lastCleanup: lastCleanup ?? this.lastCleanup,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5571,6 +5812,21 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       map['tombstone_retention_days'] =
           Variable<int>(tombstoneRetentionDays.value);
     }
+    if (accentColor.present) {
+      map['accent_color'] = Variable<String>(accentColor.value);
+    }
+    if (fontSize.present) {
+      map['font_size'] = Variable<String>(fontSize.value);
+    }
+    if (editorAppearance.present) {
+      map['editor_appearance'] = Variable<String>(editorAppearance.value);
+    }
+    if (highContrast.present) {
+      map['high_contrast'] = Variable<bool>(highContrast.value);
+    }
+    if (reducedMotion.present) {
+      map['reduced_motion'] = Variable<bool>(reducedMotion.value);
+    }
     if (lastCleanup.present) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup.value);
     }
@@ -5595,6 +5851,11 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
           ..write('autoSync: $autoSync, ')
           ..write('cacheLimitMB: $cacheLimitMB, ')
           ..write('tombstoneRetentionDays: $tombstoneRetentionDays, ')
+          ..write('accentColor: $accentColor, ')
+          ..write('fontSize: $fontSize, ')
+          ..write('editorAppearance: $editorAppearance, ')
+          ..write('highContrast: $highContrast, ')
+          ..write('reducedMotion: $reducedMotion, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -6701,6 +6962,7 @@ typedef $$BlocksTableCreateCompanionBuilder = BlocksCompanion Function({
   required String type,
   required double position,
   required String data,
+  Value<String?> searchableText,
   Value<int> version,
   Value<bool> deleted,
   required DateTime createdAt,
@@ -6714,6 +6976,7 @@ typedef $$BlocksTableUpdateCompanionBuilder = BlocksCompanion Function({
   Value<String> type,
   Value<double> position,
   Value<String> data,
+  Value<String?> searchableText,
   Value<int> version,
   Value<bool> deleted,
   Value<DateTime> createdAt,
@@ -6786,6 +7049,10 @@ class $$BlocksTableFilterComposer
 
   ColumnFilters<String> get data => $composableBuilder(
       column: $table.data, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get searchableText => $composableBuilder(
+      column: $table.searchableText,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
@@ -6882,6 +7149,10 @@ class $$BlocksTableOrderingComposer
   ColumnOrderings<String> get data => $composableBuilder(
       column: $table.data, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get searchableText => $composableBuilder(
+      column: $table.searchableText,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
 
@@ -6955,6 +7226,9 @@ class $$BlocksTableAnnotationComposer
 
   GeneratedColumn<String> get data =>
       $composableBuilder(column: $table.data, builder: (column) => column);
+
+  GeneratedColumn<String> get searchableText => $composableBuilder(
+      column: $table.searchableText, builder: (column) => column);
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
@@ -7060,6 +7334,7 @@ class $$BlocksTableTableManager extends RootTableManager<
             Value<String> type = const Value.absent(),
             Value<double> position = const Value.absent(),
             Value<String> data = const Value.absent(),
+            Value<String?> searchableText = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7073,6 +7348,7 @@ class $$BlocksTableTableManager extends RootTableManager<
             type: type,
             position: position,
             data: data,
+            searchableText: searchableText,
             version: version,
             deleted: deleted,
             createdAt: createdAt,
@@ -7086,6 +7362,7 @@ class $$BlocksTableTableManager extends RootTableManager<
             required String type,
             required double position,
             required String data,
+            Value<String?> searchableText = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             required DateTime createdAt,
@@ -7099,6 +7376,7 @@ class $$BlocksTableTableManager extends RootTableManager<
             type: type,
             position: position,
             data: data,
+            searchableText: searchableText,
             version: version,
             deleted: deleted,
             createdAt: createdAt,
@@ -9958,6 +10236,11 @@ typedef $$AppSettingsTableTableCreateCompanionBuilder
   Value<bool> autoSync,
   Value<int> cacheLimitMB,
   Value<int> tombstoneRetentionDays,
+  Value<String> accentColor,
+  Value<String> fontSize,
+  Value<String> editorAppearance,
+  Value<bool> highContrast,
+  Value<bool> reducedMotion,
   Value<DateTime?> lastCleanup,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -9971,6 +10254,11 @@ typedef $$AppSettingsTableTableUpdateCompanionBuilder
   Value<bool> autoSync,
   Value<int> cacheLimitMB,
   Value<int> tombstoneRetentionDays,
+  Value<String> accentColor,
+  Value<String> fontSize,
+  Value<String> editorAppearance,
+  Value<bool> highContrast,
+  Value<bool> reducedMotion,
   Value<DateTime?> lastCleanup,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -10004,6 +10292,22 @@ class $$AppSettingsTableTableFilterComposer
   ColumnFilters<int> get tombstoneRetentionDays => $composableBuilder(
       column: $table.tombstoneRetentionDays,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fontSize => $composableBuilder(
+      column: $table.fontSize, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get editorAppearance => $composableBuilder(
+      column: $table.editorAppearance,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get highContrast => $composableBuilder(
+      column: $table.highContrast, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get reducedMotion => $composableBuilder(
+      column: $table.reducedMotion, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnFilters(column));
@@ -10045,6 +10349,24 @@ class $$AppSettingsTableTableOrderingComposer
       column: $table.tombstoneRetentionDays,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fontSize => $composableBuilder(
+      column: $table.fontSize, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get editorAppearance => $composableBuilder(
+      column: $table.editorAppearance,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get highContrast => $composableBuilder(
+      column: $table.highContrast,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get reducedMotion => $composableBuilder(
+      column: $table.reducedMotion,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnOrderings(column));
 
@@ -10081,6 +10403,21 @@ class $$AppSettingsTableTableAnnotationComposer
 
   GeneratedColumn<int> get tombstoneRetentionDays => $composableBuilder(
       column: $table.tombstoneRetentionDays, builder: (column) => column);
+
+  GeneratedColumn<String> get accentColor => $composableBuilder(
+      column: $table.accentColor, builder: (column) => column);
+
+  GeneratedColumn<String> get fontSize =>
+      $composableBuilder(column: $table.fontSize, builder: (column) => column);
+
+  GeneratedColumn<String> get editorAppearance => $composableBuilder(
+      column: $table.editorAppearance, builder: (column) => column);
+
+  GeneratedColumn<bool> get highContrast => $composableBuilder(
+      column: $table.highContrast, builder: (column) => column);
+
+  GeneratedColumn<bool> get reducedMotion => $composableBuilder(
+      column: $table.reducedMotion, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => column);
@@ -10125,6 +10462,11 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> autoSync = const Value.absent(),
             Value<int> cacheLimitMB = const Value.absent(),
             Value<int> tombstoneRetentionDays = const Value.absent(),
+            Value<String> accentColor = const Value.absent(),
+            Value<String> fontSize = const Value.absent(),
+            Value<String> editorAppearance = const Value.absent(),
+            Value<bool> highContrast = const Value.absent(),
+            Value<bool> reducedMotion = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10137,6 +10479,11 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             autoSync: autoSync,
             cacheLimitMB: cacheLimitMB,
             tombstoneRetentionDays: tombstoneRetentionDays,
+            accentColor: accentColor,
+            fontSize: fontSize,
+            editorAppearance: editorAppearance,
+            highContrast: highContrast,
+            reducedMotion: reducedMotion,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -10149,6 +10496,11 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> autoSync = const Value.absent(),
             Value<int> cacheLimitMB = const Value.absent(),
             Value<int> tombstoneRetentionDays = const Value.absent(),
+            Value<String> accentColor = const Value.absent(),
+            Value<String> fontSize = const Value.absent(),
+            Value<String> editorAppearance = const Value.absent(),
+            Value<bool> highContrast = const Value.absent(),
+            Value<bool> reducedMotion = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -10161,6 +10513,11 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             autoSync: autoSync,
             cacheLimitMB: cacheLimitMB,
             tombstoneRetentionDays: tombstoneRetentionDays,
+            accentColor: accentColor,
+            fontSize: fontSize,
+            editorAppearance: editorAppearance,
+            highContrast: highContrast,
+            reducedMotion: reducedMotion,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,

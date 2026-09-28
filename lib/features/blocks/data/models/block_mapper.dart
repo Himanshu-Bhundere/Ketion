@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import '../../../../core/database/app_database.dart' as db;
+import '../../../editor/domain/models/block_data_models.dart';
 import '../../domain/entities/block.dart' as domain;
 
 extension BlockMapper on db.Block {
@@ -21,6 +23,16 @@ extension BlockMapper on db.Block {
 
 extension DomainBlockMapper on domain.Block {
   db.BlocksCompanion toCompanion() {
+    String? searchableText;
+    try {
+      final json = jsonDecode(data) as Map<String, dynamic>;
+      final model = BlockDataModel.fromJson(json);
+      searchableText = model.searchableText;
+    } catch (e) {
+      // Fallback if parsing fails
+      searchableText = null;
+    }
+
     return db.BlocksCompanion.insert(
       id: id,
       pageId: pageId,
@@ -28,6 +40,7 @@ extension DomainBlockMapper on domain.Block {
       type: type,
       position: position,
       data: data,
+      searchableText: drift.Value(searchableText),
       version: drift.Value(version),
       deleted: drift.Value(deleted),
       createdAt: createdAt,

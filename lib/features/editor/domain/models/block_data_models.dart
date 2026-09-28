@@ -23,6 +23,8 @@ class TextSpanData with _$TextSpanData {
 
 @freezed
 sealed class BlockDataModel with _$BlockDataModel {
+  const BlockDataModel._();
+
   const factory BlockDataModel.text({
     @Default([]) List<TextSpanData> spans,
     @Default(0) int headingLevel, // 0 for paragraph, 1, 2, 3 for H1, H2, H3
@@ -66,4 +68,17 @@ sealed class BlockDataModel with _$BlockDataModel {
 
   factory BlockDataModel.fromJson(Map<String, dynamic> json) =>
       _$BlockDataModelFromJson(json);
+
+  String get searchableText {
+    return map(
+      text: (t) => t.spans.map((s) => s.text).join(' '),
+      list: (l) => l.spans.map((s) => s.text).join(' '),
+      unknown: (_) => '',
+      image: (i) => i.caption ?? '',
+      video: (v) => v.caption ?? '',
+      audio: (a) => a.caption ?? '',
+      pdf: (p) => p.caption ?? '',
+      file: (f) => f.caption ?? '',
+    );
+  }
 }

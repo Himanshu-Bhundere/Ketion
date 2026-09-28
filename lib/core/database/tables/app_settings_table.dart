@@ -10,6 +10,11 @@ class AppSettingsTable extends Table {
   IntColumn get cacheLimitMB => integer().withDefault(const Constant(100))();
   IntColumn get tombstoneRetentionDays =>
       integer().withDefault(const Constant(30))();
+  TextColumn get accentColor => text().withDefault(const Constant('blue'))();
+  TextColumn get fontSize => text().withDefault(const Constant('medium'))();
+  TextColumn get editorAppearance => text().withDefault(const Constant('comfortable'))();
+  BoolColumn get highContrast => boolean().withDefault(const Constant(false))();
+  BoolColumn get reducedMotion => boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastCleanup => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

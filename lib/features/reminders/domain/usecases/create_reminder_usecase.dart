@@ -24,7 +24,7 @@ class CreateReminderUseCase {
   }) async {
     final now = DateTime.now().toUtc();
     final reminder = ReminderEntity(
-      id: uuid.v4(),
+      id: uuid.v7(),
       pageId: pageId,
       blockId: blockId,
       title: title,

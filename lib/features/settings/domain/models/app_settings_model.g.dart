@@ -13,9 +13,15 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
       syncFrequency: json['syncFrequency'] as String? ?? '15 minutes',
       autoSync: json['autoSync'] as bool? ?? true,
       cacheLimitMB: (json['cacheLimitMB'] as num?)?.toInt() ?? 100,
-      accentColor: json['accentColor'] as String? ?? 'Blue',
-      fontSize: json['fontSize'] as String? ?? 'Medium',
-      editorAppearance: json['editorAppearance'] as String? ?? 'Comfortable',
+      accentColor:
+          $enumDecodeNullable(_$AccentColorEnumMap, json['accentColor']) ??
+              AccentColor.blue,
+      fontSize:
+          $enumDecodeNullable(_$FontSizePreferenceEnumMap, json['fontSize']) ??
+              FontSizePreference.medium,
+      editorAppearance: $enumDecodeNullable(
+              _$EditorAppearanceEnumMap, json['editorAppearance']) ??
+          EditorAppearance.comfortable,
       highContrast: json['highContrast'] as bool? ?? false,
       reducedMotion: json['reducedMotion'] as bool? ?? false,
       lastCleanup: json['lastCleanup'] == null
@@ -30,10 +36,33 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'syncFrequency': instance.syncFrequency,
       'autoSync': instance.autoSync,
       'cacheLimitMB': instance.cacheLimitMB,
-      'accentColor': instance.accentColor,
-      'fontSize': instance.fontSize,
-      'editorAppearance': instance.editorAppearance,
+      'accentColor': _$AccentColorEnumMap[instance.accentColor]!,
+      'fontSize': _$FontSizePreferenceEnumMap[instance.fontSize]!,
+      'editorAppearance': _$EditorAppearanceEnumMap[instance.editorAppearance]!,
       'highContrast': instance.highContrast,
       'reducedMotion': instance.reducedMotion,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };
+
+const _$AccentColorEnumMap = {
+  AccentColor.blue: 'blue',
+  AccentColor.purple: 'purple',
+  AccentColor.teal: 'teal',
+  AccentColor.green: 'green',
+  AccentColor.orange: 'orange',
+  AccentColor.red: 'red',
+};
+
+const _$FontSizePreferenceEnumMap = {
+  FontSizePreference.small: 'small',
+  FontSizePreference.medium: 'medium',
+  FontSizePreference.large: 'large',
+  FontSizePreference.extraLarge: 'extraLarge',
+};
+
+const _$EditorAppearanceEnumMap = {
+  EditorAppearance.compact: 'compact',
+  EditorAppearance.comfortable: 'comfortable',
+  EditorAppearance.wide: 'wide',
+  EditorAppearance.centered: 'centered',
+};

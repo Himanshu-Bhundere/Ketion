@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/settings_providers.dart';
+import '../../domain/models/app_settings_model.dart';
 import '../../../sync/presentation/providers/sync_providers.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,20 +57,20 @@ class SettingsPage extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.color_lens),
                     title: const Text('Accent Color'),
-                    trailing: DropdownButton<String>(
+                    trailing: DropdownButton<AccentColor>(
                       value: settings.accentColor,
-                      onChanged: (String? newValue) {
+                      onChanged: (AccentColor? newValue) {
                         if (newValue != null) {
                           ref
                               .read(appSettingsProvider.notifier)
                               .updateAccentColor(newValue);
                         }
                       },
-                      items: <String>['Blue', 'Red', 'Green', 'Purple', 'Orange']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
+                      items: AccentColor.values
+                          .map<DropdownMenuItem<AccentColor>>((AccentColor value) {
+                        return DropdownMenuItem<AccentColor>(
                           value: value,
-                          child: Text(value),
+                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
                         );
                       }).toList(),
                     ),
@@ -77,20 +78,20 @@ class SettingsPage extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.text_fields),
                     title: const Text('Typography'),
-                    trailing: DropdownButton<String>(
+                    trailing: DropdownButton<FontSizePreference>(
                       value: settings.fontSize,
-                      onChanged: (String? newValue) {
+                      onChanged: (FontSizePreference? newValue) {
                         if (newValue != null) {
                           ref
                               .read(appSettingsProvider.notifier)
                               .updateFontSize(newValue);
                         }
                       },
-                      items: <String>['Small', 'Medium', 'Large', 'Extra Large']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
+                      items: FontSizePreference.values
+                          .map<DropdownMenuItem<FontSizePreference>>((FontSizePreference value) {
+                        return DropdownMenuItem<FontSizePreference>(
                           value: value,
-                          child: Text(value),
+                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
                         );
                       }).toList(),
                     ),
@@ -98,20 +99,20 @@ class SettingsPage extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.view_agenda),
                     title: const Text('Editor Appearance'),
-                    trailing: DropdownButton<String>(
+                    trailing: DropdownButton<EditorAppearance>(
                       value: settings.editorAppearance,
-                      onChanged: (String? newValue) {
+                      onChanged: (EditorAppearance? newValue) {
                         if (newValue != null) {
                           ref
                               .read(appSettingsProvider.notifier)
                               .updateEditorAppearance(newValue);
                         }
                       },
-                      items: <String>['Compact', 'Comfortable', 'Wide', 'Centered']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
+                      items: EditorAppearance.values
+                          .map<DropdownMenuItem<EditorAppearance>>((EditorAppearance value) {
+                        return DropdownMenuItem<EditorAppearance>(
                           value: value,
-                          child: Text(value),
+                          child: Text(value.name[0].toUpperCase() + value.name.substring(1)),
                         );
                       }).toList(),
                     ),

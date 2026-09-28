@@ -19,7 +19,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
-  Future<void> updateAccentColor(String color) async {
+  Future<void> updateAccentColor(AccentColor color) async {
     final current = state.value;
     if (current == null) return;
 
@@ -28,7 +28,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
-  Future<void> updateFontSize(String size) async {
+  Future<void> updateFontSize(FontSizePreference size) async {
     final current = state.value;
     if (current == null) return;
 
@@ -37,7 +37,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
-  Future<void> updateEditorAppearance(String appearance) async {
+  Future<void> updateEditorAppearance(EditorAppearance appearance) async {
     final current = state.value;
     if (current == null) return;
 

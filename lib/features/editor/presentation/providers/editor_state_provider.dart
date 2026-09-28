@@ -60,17 +60,7 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     return result.fold(
       (blocks) {
         if (blocks.isEmpty) {
-          return [
-            Block(
-              id: const Uuid().v7(),
-              pageId: _pageId,
-              type: 'text',
-              position: 0.0,
-              data: '{"spans": [], "headingLevel": 0}',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          ];
+          return [];
         }
 
         final sorted = List<Block>.from(blocks);

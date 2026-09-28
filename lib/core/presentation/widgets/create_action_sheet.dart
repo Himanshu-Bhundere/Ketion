@@ -42,7 +42,11 @@ class CreateActionSheet extends ConsumerWidget {
                   ref.invalidate(pageProvider(page.id));
 
                   // Navigate to the new page
-                  context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
+                  context.pushNamed(
+                    Routes.editorName,
+                    pathParameters: {'pageId': page.id},
+                    extra: {'focusTitle': true},
+                  );
                 },
                 (error) {
                   if (context.mounted) {

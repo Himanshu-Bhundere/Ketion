@@ -44,6 +44,13 @@ void main() {
         deleted INTEGER NOT NULL DEFAULT 0
       );
       
+      CREATE VIRTUAL TABLE search_fts USING fts5(
+        entityId UNINDEXED,
+        pageId UNINDEXED,
+        entityType UNINDEXED,
+        content
+      );
+      
       PRAGMA user_version = 10;
     ''');
 

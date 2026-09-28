@@ -12,30 +12,44 @@ class EditorLayoutConfig {
     required this.lineSpacing,
   });
 
-  factory EditorLayoutConfig.fromAppearance(EditorAppearance appearance) {
+  factory EditorLayoutConfig.fromAppearance(EditorAppearance appearance, {double? screenWidth}) {
+    final bool isMobile = screenWidth != null && screenWidth < 600;
+
     switch (appearance) {
       case EditorAppearance.compact:
         return const EditorLayoutConfig(
           contentWidth: 800,
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: 16.0, 
+            vertical: 12.0,
+          ),
           lineSpacing: 1.2,
         );
       case EditorAppearance.wide:
-        return const EditorLayoutConfig(
+        return EditorLayoutConfig(
           contentWidth: 1200,
-          padding: EdgeInsets.symmetric(horizontal: 48.0, vertical: 32.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16.0 : 48.0, 
+            vertical: 32.0,
+          ),
           lineSpacing: 1.6,
         );
       case EditorAppearance.centered:
-        return const EditorLayoutConfig(
+        return EditorLayoutConfig(
           contentWidth: 600,
-          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16.0 : 24.0, 
+            vertical: 24.0,
+          ),
           lineSpacing: 1.5,
         );
       case EditorAppearance.comfortable:
-        return const EditorLayoutConfig(
+        return EditorLayoutConfig(
           contentWidth: 800,
-          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16.0 : 24.0, 
+            vertical: 24.0,
+          ),
           lineSpacing: 1.5,
         );
     }

@@ -32,6 +32,7 @@ void main() {
             pageId: 'page1',
             type: 'text',
             data: 'This is some important content',
+            searchableText: const drift.Value('This is some important content'),
             position: 1.0,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),

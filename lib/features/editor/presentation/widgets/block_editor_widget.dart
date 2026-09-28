@@ -25,12 +25,17 @@ import '../../domain/models/visible_block.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../../../core/theme/editor_layout_config.dart';
+import '../../../pages/presentation/providers/page_providers.dart';
+import 'page_header.dart';
+
 class BlockEditorWidget extends ConsumerStatefulWidget {
   final String pageId;
+  final bool focusTitle;
 
   const BlockEditorWidget({
     super.key,
     required this.pageId,
+    this.focusTitle = false,
   });
 
   @override
@@ -446,11 +451,15 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     
     final settingsAsync = ref.watch(appSettingsProvider);
     final settings = settingsAsync.value;
+    final screenWidth = MediaQuery.of(context).size.width;
     final layoutConfig = settings != null
-        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance)
-        : const EditorLayoutConfig(
+        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance, screenWidth: screenWidth)
+        : EditorLayoutConfig(
             contentWidth: 800,
-            padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth < 600 ? 16.0 : 24.0, 
+              vertical: 24.0,
+            ),
             lineSpacing: 1.5,
           );
 
@@ -508,15 +517,41 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
               Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: layoutConfig.contentWidth),
-                  child: ListView.builder(
+                  child: CustomScrollView(
                     controller: _scrollController,
-                    padding: layoutConfig.padding.copyWith(
-                      bottom: isKeyboardVisible ? 80.0 : layoutConfig.padding.bottom,
-                    ),
-                    itemCount: visibleBlocks.length,
-                    itemBuilder: (context, index) {
-                      return _buildBlockWidget(visibleBlocks[index], index);
-                    },
+                    slivers: [
+                      SliverPadding(
+                        padding: EdgeInsets.only(
+                          left: layoutConfig.padding.left,
+                          right: layoutConfig.padding.right,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: Consumer(
+                            builder: (context, ref, _) {
+                              final pageAsync = ref.watch(pageProvider(widget.pageId));
+                              final page = pageAsync.valueOrNull;
+                              if (page == null) return const SizedBox.shrink();
+                              return PageHeader(page: page, focusTitle: widget.focusTitle);
+                            },
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.only(
+                          left: layoutConfig.padding.left,
+                          right: layoutConfig.padding.right,
+                          bottom: isKeyboardVisible ? 80.0 : layoutConfig.padding.bottom,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return _buildBlockWidget(visibleBlocks[index], index);
+                            },
+                            childCount: visibleBlocks.length,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

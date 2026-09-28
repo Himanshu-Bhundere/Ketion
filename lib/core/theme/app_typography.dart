@@ -11,6 +11,13 @@ class AppTypography {
     letterSpacing: -0.5,
   );
 
+  static const TextStyle pageTitle = TextStyle(
+    fontSize: 40,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    height: 1.2,
+  );
+
   static const TextStyle heading = TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w700,

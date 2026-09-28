@@ -71,54 +71,55 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Drag handle and options
-                SizedBox(
-                  width: 32,
-                  child: AnimatedOpacity(
-                    opacity: (!isDesktop || _isHovered) ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Draggable<String>(
-                      data: widget.blockId,
-                      feedback: Material(
-                        elevation: 4.0,
-                        child: Container(
-                          width: 300,
-                          padding: const EdgeInsets.all(8),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          child: const Text('Dragging block...'),
+                if (isDesktop)
+                  SizedBox(
+                    width: 32,
+                    child: AnimatedOpacity(
+                      opacity: _isHovered ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 150),
+                      child: Draggable<String>(
+                        data: widget.blockId,
+                        feedback: Material(
+                          elevation: 4.0,
+                          child: Container(
+                            width: 300,
+                            padding: const EdgeInsets.all(8),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            child: const Text('Dragging block...'),
+                          ),
                         ),
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.3,
+                        childWhenDragging: Opacity(
+                          opacity: 0.3,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.drag_indicator,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {},
+                            padding: EdgeInsets.zero,
+                            constraints:
+                                const BoxConstraints(minWidth: 24, minHeight: 24),
+                          ),
+                        ),
                         child: IconButton(
                           icon: const Icon(
                             Icons.drag_indicator,
                             size: 18,
                             color: Colors.grey,
                           ),
-                          onPressed: () {},
+                          onPressed: () {
+                            // Show block options menu
+                          },
                           padding: EdgeInsets.zero,
                           constraints:
                               const BoxConstraints(minWidth: 24, minHeight: 24),
                         ),
                       ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.drag_indicator,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                        onPressed: () {
-                          // Show block options menu
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 24, minHeight: 24),
-                      ),
                     ),
                   ),
-                ),
 
                 // The block content
                 Expanded(

@@ -74,7 +74,9 @@ final appRouter = GoRouter(
       path: Routes.editor,
       builder: (context, state) {
         final pageId = state.pathParameters['pageId']!;
-        return EditorPage(pageId: pageId);
+        final extra = state.extra as Map<String, dynamic>?;
+        final focusTitle = extra?['focusTitle'] as bool? ?? false;
+        return EditorPage(pageId: pageId, focusTitle: focusTitle);
       },
     ),
   ],

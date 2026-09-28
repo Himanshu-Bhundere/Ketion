@@ -10,7 +10,7 @@ class CreatePageUseCase {
   final UpdateWidgetsUseCase _updateWidgetsUseCase;
   final Uuid _uuid;
 
-  CreatePageUseCase(this._repository, this._updateWidgetsUseCase, {Uuid? uuid})
+  CreatePageUseCase(this._repository, this._updateWidgetsUseCase, [Uuid? uuid])
       : _uuid = uuid ?? const Uuid();
 
   Future<Result<Page>> call({

@@ -30,13 +30,13 @@ class PageHeader extends StatelessWidget {
             final result = await onIconChanged(emoji.emoji);
             if (ctx.mounted && result is Success<void>) Navigator.pop(ctx);
           },
-          config: Config(
+          config: const Config(
             checkPlatformCompatibility: true,
             emojiViewConfig: EmojiViewConfig(
               columns: 7,
               emojiSizeMax: 32 * (kIsWeb ? 1.2 : 1.15),
             ),
-            bottomActionBarConfig: const BottomActionBarConfig(),
+            bottomActionBarConfig: BottomActionBarConfig(),
           ),
         ),
       ),

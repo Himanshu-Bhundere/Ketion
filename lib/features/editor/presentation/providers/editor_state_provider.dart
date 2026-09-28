@@ -160,10 +160,12 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
       type: 'text', position: SiblingPositionManager.calculatePositionBetweenBlocks(block, next),
       data: _textData(after), createdAt: DateTime.now().toUtc(), updatedAt: DateTime.now().toUtc(),
     );
-    await executeCommand(BatchCommand([
-      UpdateBlockCommand(oldBlock: block, newBlock: updated),
-      InsertBlockCommand(block: inserted, index: index + 1),
-    ]));
+    await executeCommand(
+      BatchCommand([
+        UpdateBlockCommand(oldBlock: block, newBlock: updated),
+        InsertBlockCommand(block: inserted, index: index + 1),
+      ]),
+    );
     ref.read(pendingBlockFocusProvider.notifier).state = inserted.id;
   }
 

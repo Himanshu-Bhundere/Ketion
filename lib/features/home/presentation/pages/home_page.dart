@@ -39,14 +39,15 @@ class HomePage extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: MediaQuery.of(context).size.width < AppBreakpoints.medium
-          ? FloatingActionButton(
-              onPressed: () {
-                // TODO: Wire up actual new note logic and route push
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton:
+          MediaQuery.of(context).size.width < AppBreakpoints.medium
+              ? FloatingActionButton(
+                  onPressed: () {
+                    // TODO: Wire up actual new note logic and route push
+                  },
+                  child: const Icon(Icons.add),
+                )
+              : null,
     );
   }
 
@@ -87,7 +88,8 @@ class HomePage extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.history, color: Theme.of(context).colorScheme.outline),
+                      Icon(Icons.history,
+                          color: Theme.of(context).colorScheme.outline),
                       const SizedBox(height: AppSpacing.sm),
                       const Text('No recent pages.', style: AppTypography.body),
                     ],
@@ -97,7 +99,8 @@ class HomePage extends ConsumerWidget {
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: pages.length,
-                separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.lg),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: AppSpacing.lg),
                 itemBuilder: (context, index) {
                   return _buildRecentCard(context, ref, pages[index]);
                 },
@@ -106,7 +109,8 @@ class HomePage extends ConsumerWidget {
             loading: () => ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: 4,
-              separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.lg),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: AppSpacing.lg),
               itemBuilder: (context, index) => SkeletonLoader(
                 width: 140,
                 height: 160,
@@ -117,7 +121,8 @@ class HomePage extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+                  Icon(Icons.error_outline,
+                      color: Theme.of(context).colorScheme.error),
                   const SizedBox(height: AppSpacing.sm),
                   const Text('Failed to load', style: AppTypography.body),
                   TextButton(
@@ -133,7 +138,8 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentCard(BuildContext context, WidgetRef ref, entity.Page page) {
+  Widget _buildRecentCard(
+      BuildContext context, WidgetRef ref, entity.Page page) {
     return SizedBox(
       width: 140,
       child: Card(
@@ -162,13 +168,14 @@ class HomePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  page.isFavorite ? Icons.star : Icons.description, 
+                  page.isFavorite ? Icons.star : Icons.description,
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   page.title.isEmpty ? 'Untitled' : page.title,
-                  style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
+                  style:
+                      AppTypography.body.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

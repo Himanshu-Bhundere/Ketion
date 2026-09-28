@@ -10,31 +10,32 @@ class HtmlExporter implements ExportRepository {
   @override
   Future<Uint8List> exportDocument(ExportDocument document) async {
     final buffer = StringBuffer();
-    
+
     buffer.writeln('<!DOCTYPE html>');
     buffer.writeln('<html>');
     buffer.writeln('<head>');
     buffer.writeln('<meta charset="utf-8">');
     buffer.writeln('<title>${_escapeHtml(document.title)}</title>');
     buffer.writeln('<style>');
-    buffer.writeln('body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; }');
+    buffer.writeln(
+        'body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; }');
     buffer.writeln('img { max-width: 100%; height: auto; }');
     buffer.writeln('</style>');
     buffer.writeln('</head>');
     buffer.writeln('<body>');
     buffer.writeln('<h1>${_escapeHtml(document.title)}</h1>');
-    
+
     bool inList = false;
-    
+
     for (int i = 0; i < document.nodes.length; i++) {
       final node = document.nodes[i];
-      
+
       // Handle closing list if we were in one and current node is not a list
       if (inList && node is! DocList) {
         buffer.writeln('</ul>');
         inList = false;
       }
-      
+
       node.map(
         paragraph: (p) {
           buffer.writeln('<p>${_spansToHtml(p.spans)}</p>');
@@ -50,24 +51,28 @@ class HtmlExporter implements ExportRepository {
           }
           String prefix = '';
           if (l.listType == 'checklist') {
-            prefix = '<input type="checkbox" ${l.checked ? 'checked' : ''} disabled> ';
+            prefix =
+                '<input type="checkbox" ${l.checked ? 'checked' : ''} disabled> ';
           }
           buffer.writeln('<li>$prefix${_spansToHtml(l.spans)}</li>');
         },
         image: (img) {
           buffer.writeln('<figure>');
-          buffer.writeln('<img src="${_escapeHtml(img.attachmentId)}" alt="${_escapeHtml(img.caption ?? '')}">');
+          buffer.writeln(
+              '<img src="${_escapeHtml(img.attachmentId)}" alt="${_escapeHtml(img.caption ?? '')}">');
           if (img.caption != null && img.caption!.isNotEmpty) {
-            buffer.writeln('<figcaption>${_escapeHtml(img.caption!)}</figcaption>');
+            buffer.writeln(
+                '<figcaption>${_escapeHtml(img.caption!)}</figcaption>');
           }
           buffer.writeln('</figure>');
         },
         file: (f) {
-          buffer.writeln('<p><a href="${_escapeHtml(f.attachmentId)}">${_escapeHtml(f.caption ?? 'File')}</a></p>');
+          buffer.writeln(
+              '<p><a href="${_escapeHtml(f.attachmentId)}">${_escapeHtml(f.caption ?? 'File')}</a></p>');
         },
       );
     }
-    
+
     if (inList) {
       buffer.writeln('</ul>');
     }
@@ -86,14 +91,15 @@ class HtmlExporter implements ExportRepository {
       if (span.strikethrough) text = '<del>$text</del>';
       if (span.code) text = '<code>$text</code>';
       if (span.pageLink != null) {
-        text = '<a href="#">[[${_escapeHtml(span.text)}]]</a>'; // Or link to ketion://
+        text =
+            '<a href="#">[[${_escapeHtml(span.text)}]]</a>'; // Or link to ketion://
       } else if (span.link != null) {
         text = '<a href="${_escapeHtml(span.link!)}">$text</a>';
       }
       return text;
     }).join('');
   }
-  
+
   String _escapeHtml(String text) {
     return text
         .replaceAll('&', '&amp;')

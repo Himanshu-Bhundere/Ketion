@@ -37,15 +37,18 @@ class SyncSettingsSection extends ConsumerWidget {
               ),
               if (syncState.errorMessage != null)
                 Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+                  padding: const EdgeInsets.only(
+                      left: 16.0, right: 16.0, bottom: 16.0),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: theme.colorScheme.error, size: 16),
+                      Icon(Icons.error_outline,
+                          color: theme.colorScheme.error, size: 16),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           syncState.errorMessage!,
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error),
                         ),
                       ),
                     ],
@@ -77,14 +80,15 @@ class SyncSettingsSection extends ConsumerWidget {
     }
   }
 
-  Widget _buildTrailing(BuildContext context, WidgetRef ref, SyncUiState syncState) {
+  Widget _buildTrailing(
+      BuildContext context, WidgetRef ref, SyncUiState syncState) {
     if (syncState.status == SyncUiStatus.authenticationRequired) {
       return ElevatedButton(
         onPressed: () => _signIn(ref),
         child: const Text('Sign In'),
       );
     }
-    
+
     if (syncState.status == SyncUiStatus.syncing) {
       return const SizedBox(
         width: 24,
@@ -103,9 +107,12 @@ class SyncSettingsSection extends ConsumerWidget {
 
   Future<void> _signIn(WidgetRef ref) async {
     final authService = ref.read(authServiceProvider);
-    final result = await authService.signIn(['https://www.googleapis.com/auth/drive.file']);
+    final result = await authService
+        .signIn(['https://www.googleapis.com/auth/drive.file']);
     if (result is Success) {
-      await ref.read(syncControllerProvider.notifier).syncNow(); // Also re-initializes
+      await ref
+          .read(syncControllerProvider.notifier)
+          .syncNow(); // Also re-initializes
     }
   }
 }

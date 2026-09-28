@@ -25,14 +25,19 @@ class CollectionRepositoryImpl implements CollectionRepository {
           collection.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
       await _db.transaction(() async {
         await _db.into(_db.collections).insert(newCollection.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'collections',
-          entityId: newCollection.id,
-          operation: 'create',
-          payload: jsonEncode(newCollection.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'collections',
+            entityId: newCollection.id,
+            operation: 'create',
+            payload: jsonEncode(newCollection.toJson()),
+            batchId: null,
+            version: newCollection.version,
+            updatedAt: newCollection.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -60,23 +65,37 @@ class CollectionRepositoryImpl implements CollectionRepository {
   @override
   Future<Result<void>> updateCollection(domain.Collection collection) async {
     try {
-      final newCollection = collection.copyWith(
-        version: collection.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.collections)
+              ..where((t) => t.id.equals(collection.id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          throw Exception('Collection not found');
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newCollection = collection.copyWith(
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.collections)
               ..where((t) => t.id.equals(newCollection.id)))
             .write(newCollection.toCompanion());
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'collections',
-            entityId: newCollection.id,
-            operation: 'update',
-            payload: jsonEncode(newCollection.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'collections',
+              entityId: newCollection.id,
+              operation: 'update',
+              payload: jsonEncode(newCollection.toJson()),
+              batchId: null,
+              version: newCollection.version,
+              updatedAt: newCollection.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);
@@ -95,26 +114,39 @@ class CollectionRepositoryImpl implements CollectionRepository {
       }
       final collection = (collectionRecord as Success<domain.Collection>).value;
 
-      final newCollection = collection.copyWith(
-        deleted: true,
-        version: collection.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
-
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.collections)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          return;
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newCollection = collection.copyWith(
+          deleted: true,
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.collections)
               ..where((t) => t.id.equals(id)))
             .write(newCollection.toCompanion());
 
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'collections',
-            entityId: id,
-            operation: 'delete',
-            payload: jsonEncode(newCollection.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'collections',
+              entityId: id,
+              operation: 'delete',
+              payload: jsonEncode(newCollection.toJson()),
+              batchId: null,
+              version: newCollection.version,
+              updatedAt: newCollection.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);

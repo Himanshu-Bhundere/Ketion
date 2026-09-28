@@ -25,14 +25,19 @@ class TagRepositoryImpl implements TagRepository {
           tag.copyWith(version: 1, updatedAt: DateTime.now().toUtc());
       await _db.transaction(() async {
         await _db.into(_db.tags).insert(newTag.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'tags',
-          entityId: newTag.id,
-          operation: 'create',
-          payload: jsonEncode(newTag.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'tags',
+            entityId: newTag.id,
+            operation: 'create',
+            payload: jsonEncode(newTag.toJson()),
+            batchId: null,
+            version: newTag.version,
+            updatedAt: newTag.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -60,23 +65,37 @@ class TagRepositoryImpl implements TagRepository {
   @override
   Future<Result<void>> updateTag(domain.Tag tag) async {
     try {
-      final newTag = tag.copyWith(
-        version: tag.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.tags)
+              ..where((t) => t.id.equals(tag.id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          throw Exception('Tag not found');
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newTag = tag.copyWith(
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.tags)
               ..where((t) => t.id.equals(newTag.id)))
             .write(newTag.toCompanion());
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'tags',
-            entityId: newTag.id,
-            operation: 'update',
-            payload: jsonEncode(newTag.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'tags',
+              entityId: newTag.id,
+              operation: 'update',
+              payload: jsonEncode(newTag.toJson()),
+              batchId: null,
+              version: newTag.version,
+              updatedAt: newTag.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);
@@ -95,26 +114,39 @@ class TagRepositoryImpl implements TagRepository {
       }
       final tag = (tagRecord as Success<domain.Tag>).value;
 
-      final newTag = tag.copyWith(
-        deleted: true,
-        version: tag.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
-
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.tags)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          return;
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newTag = tag.copyWith(
+          deleted: true,
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.tags)
               ..where((t) => t.id.equals(id)))
             .write(newTag.toCompanion());
 
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'tags',
-            entityId: id,
-            operation: 'delete',
-            payload: jsonEncode(newTag.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'tags',
+              entityId: id,
+              operation: 'delete',
+              payload: jsonEncode(newTag.toJson()),
+              batchId: null,
+              version: newTag.version,
+              updatedAt: newTag.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);

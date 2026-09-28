@@ -13,7 +13,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
   Future<void> updateThemeMode(String mode) async {
     final current = state.value;
     if (current == null) return;
-    
+
     final updated = current.copyWith(themeMode: mode);
     state = AsyncData(updated);
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
@@ -22,24 +22,26 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
   Future<void> updateSyncFrequency(String frequency) async {
     final current = state.value;
     if (current == null) return;
-    
+
     final updated = current.copyWith(syncFrequency: frequency);
     state = AsyncData(updated);
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
-    
+
     // Update Workmanager
     await Workmanager().cancelAll();
-    
+
     if (frequency == 'Manual') return;
-    
+
     Duration syncDuration = const Duration(minutes: 15);
     if (frequency == '30 minutes') {
       syncDuration = const Duration(minutes: 30);
     } else if (frequency == '1 hour') {
       syncDuration = const Duration(hours: 1);
     }
-    
-    if (frequency == '15 minutes' || frequency == '30 minutes' || frequency == '1 hour') {
+
+    if (frequency == '15 minutes' ||
+        frequency == '30 minutes' ||
+        frequency == '1 hour') {
       await Workmanager().registerPeriodicTask(
         'syncTask',
         'sync_now',
@@ -54,7 +56,7 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
   Future<void> clearCache() async {
     final current = state.value;
     if (current == null) return;
-    
+
     try {
       final tempDir = await getTemporaryDirectory();
       if (tempDir.existsSync()) {

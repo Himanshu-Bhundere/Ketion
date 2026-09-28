@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -26,7 +27,8 @@ class PdfExporter implements ExportRepository {
               level: 0,
               child: pw.Text(
                 document.title,
-                style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                style:
+                    pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
               ),
             ),
           );
@@ -96,39 +98,47 @@ class PdfExporter implements ExportRepository {
                 // If the attachmentId is a local file path, we can load it.
                 // In our app, attachments might be local paths. We'll try to load it.
                 try {
-                  final file = File(img.attachmentId);
-                  if (file.existsSync()) {
-                    final imageBytes = file.readAsBytesSync();
-                    final provider = pw.MemoryImage(imageBytes);
+                  if (kIsWeb) {
                     widgets.add(
-                      pw.Center(
-                        child: pw.Image(provider),
-                      ),
-                    );
-                    if (img.caption != null && img.caption!.isNotEmpty) {
+                        pw.Text('[Image: ${img.caption ?? img.attachmentId}]'));
+                  } else {
+                    final file = io.File(img.attachmentId);
+                    if (file.existsSync()) {
+                      final imageBytes = file.readAsBytesSync();
+                      final provider = pw.MemoryImage(imageBytes);
                       widgets.add(
                         pw.Center(
-                          child: pw.Text(
-                            img.caption!,
-                            style: const pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.grey,
-                            ),
-                          ),
+                          child: pw.Image(provider),
                         ),
                       );
+                      if (img.caption != null && img.caption!.isNotEmpty) {
+                        widgets.add(
+                          pw.Center(
+                            child: pw.Text(
+                              img.caption!,
+                              style: const pw.TextStyle(
+                                fontSize: 10,
+                                color: PdfColors.grey,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      widgets.add(pw.SizedBox(height: 16));
+                    } else {
+                      widgets.add(pw.Text(
+                          '[Image: ${img.caption ?? img.attachmentId}]'));
                     }
-                    widgets.add(pw.SizedBox(height: 16));
-                  } else {
-                    widgets.add(pw.Text('[Image: ${img.caption ?? img.attachmentId}]'));
                   }
                 } catch (e) {
-                  widgets.add(pw.Text('[Image error: ${img.caption ?? img.attachmentId}]'));
+                  widgets.add(pw.Text(
+                      '[Image error: ${img.caption ?? img.attachmentId}]'));
                 }
               },
               file: (f) {
                 widgets.add(
-                  pw.Text('[File: ${f.caption ?? f.attachmentId}]', style: const pw.TextStyle(color: PdfColors.blue)),
+                  pw.Text('[File: ${f.caption ?? f.attachmentId}]',
+                      style: const pw.TextStyle(color: PdfColors.blue)),
                 );
                 widgets.add(pw.SizedBox(height: 8));
               },
@@ -143,8 +153,8 @@ class PdfExporter implements ExportRepository {
     return pdf.save();
   }
 
-  // A simplified extraction since standard pdf package doesn't support complex RichText 
-  // as easily across paragraphs without building nested trees. For MVP, we'll extract plain text 
+  // A simplified extraction since standard pdf package doesn't support complex RichText
+  // as easily across paragraphs without building nested trees. For MVP, we'll extract plain text
   // or use basic RichText. For simplicity, let's use plain text first.
   String _extractPlainText(List<DocumentTextSpan> spans) {
     return spans.map((e) => e.text).join('');

@@ -9,6 +9,7 @@ import 'package:ketion/core/theme/breakpoints.dart';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 
 enum NoteSortOption { dateCreated, dateUpdated, alphabetical }
+
 enum NoteViewType { list, grid }
 
 class NotesPage extends ConsumerStatefulWidget {
@@ -31,10 +32,14 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         title: const Text('All Notes'),
         actions: [
           IconButton(
-            icon: Icon(_viewType == NoteViewType.list ? Icons.grid_view : Icons.view_list),
+            icon: Icon(_viewType == NoteViewType.list
+                ? Icons.grid_view
+                : Icons.view_list),
             onPressed: () {
               setState(() {
-                _viewType = _viewType == NoteViewType.list ? NoteViewType.grid : NoteViewType.list;
+                _viewType = _viewType == NoteViewType.list
+                    ? NoteViewType.grid
+                    : NoteViewType.list;
               });
             },
           ),
@@ -42,9 +47,15 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             icon: const Icon(Icons.sort),
             onSelected: (option) => setState(() => _sortOption = option),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: NoteSortOption.dateUpdated, child: Text('Date Updated')),
-              const PopupMenuItem(value: NoteSortOption.dateCreated, child: Text('Date Created')),
-              const PopupMenuItem(value: NoteSortOption.alphabetical, child: Text('Alphabetical')),
+              const PopupMenuItem(
+                  value: NoteSortOption.dateUpdated,
+                  child: Text('Date Updated')),
+              const PopupMenuItem(
+                  value: NoteSortOption.dateCreated,
+                  child: Text('Date Created')),
+              const PopupMenuItem(
+                  value: NoteSortOption.alphabetical,
+                  child: Text('Alphabetical')),
             ],
           ),
         ],
@@ -56,11 +67,13 @@ class _NotesPageState extends ConsumerState<NotesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.description_outlined, size: 48, color: Theme.of(context).colorScheme.outline),
+                  Icon(Icons.description_outlined,
+                      size: 48, color: Theme.of(context).colorScheme.outline),
                   const SizedBox(height: AppSpacing.md),
                   const Text('No notes yet', style: AppTypography.title),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Capture your thoughts and ideas here.', style: AppTypography.body, textAlign: TextAlign.center),
+                  const Text('Capture your thoughts and ideas here.',
+                      style: AppTypography.body, textAlign: TextAlign.center),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () {
@@ -97,15 +110,18 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                 childAspectRatio: 0.8,
               ),
               itemCount: sortedPages.length,
-              itemBuilder: (context, index) => _buildGridItem(context, sortedPages[index]),
+              itemBuilder: (context, index) =>
+                  _buildGridItem(context, sortedPages[index]),
             );
           }
 
           return ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.lg),
             itemCount: sortedPages.length,
-            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) => _buildListItem(context, sortedPages[index]),
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) =>
+                _buildListItem(context, sortedPages[index]),
           );
         },
         loading: () {
@@ -129,7 +145,8 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           return ListView.separated(
             padding: const EdgeInsets.all(AppSpacing.lg),
             itemCount: 6,
-            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+            separatorBuilder: (context, index) =>
+                const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) => SkeletonLoader(
               width: double.infinity,
               height: 72,
@@ -141,7 +158,8 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(Icons.error_outline,
+                  size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: AppSpacing.md),
               const Text('Something went wrong', style: AppTypography.title),
               const SizedBox(height: AppSpacing.sm),
@@ -167,11 +185,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       ),
       child: ListTile(
         leading: Icon(
-          page.isFavorite ? Icons.star : Icons.description, 
+          page.isFavorite ? Icons.star : Icons.description,
           color: Theme.of(context).colorScheme.primary,
         ),
         title: Text(page.title.isEmpty ? 'Untitled' : page.title),
-        subtitle: Text('Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}'),
+        subtitle: Text(
+            'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}'),
         onTap: () => _openNote(context, page),
       ),
     );
@@ -193,7 +212,7 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
-                page.isFavorite ? Icons.star : Icons.description, 
+                page.isFavorite ? Icons.star : Icons.description,
                 color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: AppSpacing.sm),

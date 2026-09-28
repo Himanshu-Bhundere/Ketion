@@ -7,7 +7,8 @@ class SearchNotesUseCase {
 
   SearchNotesUseCase(this._repository);
 
-  Future<Result<List<SearchResult>>> call(String query, {String? typeFilter}) async {
+  Future<Result<List<SearchResult>>> call(String query,
+      {String? typeFilter}) async {
     if (query.trim().isEmpty) {
       return const Success([]);
     }

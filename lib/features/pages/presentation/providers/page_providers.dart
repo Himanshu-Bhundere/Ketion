@@ -41,7 +41,8 @@ final deletePageUseCaseProvider = Provider<DeletePageUseCase>((ref) {
   return DeletePageUseCase(repository, updateWidgetsUseCase);
 });
 
-final pageProvider = FutureProvider.family<entity.Page?, String>((ref, id) async {
+final pageProvider =
+    FutureProvider.family<entity.Page?, String>((ref, id) async {
   final usecase = ref.watch(getPageUseCaseProvider);
   final result = await usecase(id);
   return result.fold(

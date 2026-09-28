@@ -25,9 +25,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), () {
       ref.read(searchNotifierProvider.notifier).search(
-        _controller.text, 
-        typeFilter: _selectedFilter,
-      );
+            _controller.text,
+            typeFilter: _selectedFilter,
+          );
     });
   }
 
@@ -107,11 +107,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_off, size: 48, color: Theme.of(context).colorScheme.outline),
+                  Icon(Icons.search_off,
+                      size: 48, color: Theme.of(context).colorScheme.outline),
                   const SizedBox(height: AppSpacing.md),
                   const Text('No results found', style: AppTypography.title),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Try adjusting your search terms or filters.', style: AppTypography.body),
+                  const Text('Try adjusting your search terms or filters.',
+                      style: AppTypography.body),
                 ],
               ),
             );
@@ -144,7 +146,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         loading: () => ListView.separated(
           padding: const EdgeInsets.all(AppSpacing.md),
           itemCount: 5,
-          separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) => SkeletonLoader(
             width: double.infinity,
             height: 80,
@@ -155,7 +158,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(Icons.error_outline,
+                  size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: AppSpacing.md),
               const Text('Search Failed', style: AppTypography.title),
               const SizedBox(height: AppSpacing.sm),

@@ -32,17 +32,17 @@ void main() {
 
     // Rebuild index just in case the trigger didn't fire due to testing setup
     // But triggers should fire since it's a real DB.
-    
+
     // Search with special characters
     final result = await searchRepository.searchNotes('World" *test');
-    
+
     expect(result, isA<Success<List<SearchResult>>>());
     final searchResults = (result as Success<List<SearchResult>>).value;
     expect(searchResults.length, 1);
     expect(searchResults.first.entityId, 'page1');
     expect(searchResults.first.entityType, 'page');
   });
-  
+
   test('soft deleted records do not appear in search results', () async {
     // Insert a page
     await database.into(database.pages).insert(
@@ -53,15 +53,16 @@ void main() {
             updatedAt: DateTime.now(),
           ),
         );
-        
+
     // Verify it exists in search
     var result = await searchRepository.searchNotes('Secret');
     expect((result as Success<List<SearchResult>>).value.length, 1);
-    
+
     // Soft delete it
-    await (database.update(database.pages)..where((tbl) => tbl.id.equals('page2')))
+    await (database.update(database.pages)
+          ..where((tbl) => tbl.id.equals('page2')))
         .write(const PagesCompanion(deleted: drift.Value(true)));
-        
+
     // Verify it no longer exists in search
     result = await searchRepository.searchNotes('Secret');
     expect((result as Success<List<SearchResult>>).value.length, 0);

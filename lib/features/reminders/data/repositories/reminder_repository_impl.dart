@@ -50,35 +50,54 @@ class ReminderRepositoryImpl implements ReminderRepository {
             ReminderMapper.toDbCompanion(newReminder),
             mode: InsertMode.replace,
           );
-      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-        id: const Uuid().v7(),
-        entityTable: 'reminders',
-        entityId: newReminder.id,
-        operation: 'create',
-        payload: jsonEncode(newReminder.toJson()),
-        createdAt: DateTime.now().toUtc(),
-      ),);
+      await _syncQueue.enqueueOrCoalesce(
+        SyncQueueItem(
+          id: const Uuid().v7(),
+          entityTable: 'reminders',
+          entityId: newReminder.id,
+          operation: 'create',
+          payload: jsonEncode(newReminder.toJson()),
+          batchId: null,
+          version: newReminder.version,
+          updatedAt: newReminder.updatedAt,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
     });
   }
 
   @override
   Future<void> updateReminder(ReminderEntity reminder) async {
-    final updated = reminder.copyWith(
-      updatedAt: DateTime.now().toUtc(),
-      version: reminder.version + 1,
-    );
     await _db.transaction(() async {
+      final existingRecord = await (_db.select(_db.reminders)
+            ..where((t) => t.id.equals(reminder.id)))
+          .getSingleOrNull();
+      if (existingRecord == null) {
+        throw Exception('Reminder not found');
+      }
+
+      final newVersion = existingRecord.version + 1;
+      final updated = reminder.copyWith(
+        updatedAt: DateTime.now().toUtc(),
+        version: newVersion,
+      );
+
       await _db
           .update(_db.reminders)
           .replace(ReminderMapper.toDbCompanion(updated));
-      await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-        id: const Uuid().v7(),
-        entityTable: 'reminders',
-        entityId: updated.id,
-        operation: 'update',
-        payload: jsonEncode(updated.toJson()),
-        createdAt: DateTime.now().toUtc(),
-      ),);
+      await _syncQueue.enqueueOrCoalesce(
+        SyncQueueItem(
+          id: const Uuid().v7(),
+          entityTable: 'reminders',
+          entityId: updated.id,
+          operation: 'update',
+          payload: jsonEncode(updated.toJson()),
+          batchId: null,
+          version: updated.version,
+          updatedAt: updated.updatedAt,
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
     });
   }
 
@@ -86,24 +105,37 @@ class ReminderRepositoryImpl implements ReminderRepository {
   Future<void> deleteReminder(String id) async {
     final reminder = await getReminder(id);
     if (reminder != null) {
-      final deleted = reminder.copyWith(
-        deleted: true,
-        updatedAt: DateTime.now().toUtc(),
-        version: reminder.version + 1,
-      );
-
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.reminders)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          return;
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final deleted = reminder.copyWith(
+          deleted: true,
+          updatedAt: DateTime.now().toUtc(),
+          version: newVersion,
+        );
+
         await _db
             .update(_db.reminders)
             .replace(ReminderMapper.toDbCompanion(deleted));
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'reminders',
-          entityId: id,
-          operation: 'delete',
-          payload: jsonEncode(deleted.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'reminders',
+            entityId: id,
+            operation: 'delete',
+            payload: jsonEncode(deleted.toJson()),
+            batchId: null,
+            version: deleted.version,
+            updatedAt: deleted.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
     }
   }

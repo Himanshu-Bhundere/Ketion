@@ -15,6 +15,7 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return SettingsRepositoryImpl(db);
 });
 
-final appSettingsProvider = AsyncNotifierProvider<SettingsNotifier, AppSettingsModel>(() {
+final appSettingsProvider =
+    AsyncNotifierProvider<SettingsNotifier, AppSettingsModel>(() {
   return SettingsNotifier();
 });

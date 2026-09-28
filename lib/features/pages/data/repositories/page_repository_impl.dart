@@ -25,14 +25,19 @@ class PageRepositoryImpl implements PageRepository {
       final newPage = page.copyWith(version: 1, updatedAt: DateTime.now());
       await _db.transaction(() async {
         await _db.into(_db.pages).insert(newPage.toCompanion());
-        await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-          id: const Uuid().v7(),
-          entityTable: 'pages',
-          entityId: newPage.id,
-          operation: 'create',
-          payload: jsonEncode(newPage.toJson()),
-          createdAt: DateTime.now().toUtc(),
-        ),);
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'pages',
+            entityId: newPage.id,
+            operation: 'create',
+            payload: jsonEncode(newPage.toJson()),
+            batchId: null,
+            version: newPage.version,
+            updatedAt: newPage.updatedAt,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -60,23 +65,38 @@ class PageRepositoryImpl implements PageRepository {
   @override
   Future<Result<void>> updatePage(domain.Page page) async {
     try {
-      final newPage = page.copyWith(
-        version: page.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.pages)
+              ..where((t) => t.id.equals(page.id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          throw Exception('Page not found');
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newPage = page.copyWith(
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.pages)
               ..where((t) => t.id.equals(newPage.id)))
             .write(newPage.toCompanion());
+
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'pages',
-            entityId: newPage.id,
-            operation: 'update',
-            payload: jsonEncode(newPage.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'pages',
+              entityId: newPage.id,
+              operation: 'update',
+              payload: jsonEncode(newPage.toJson()),
+              batchId: null,
+              version: newPage.version,
+              updatedAt: newPage.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);
@@ -95,26 +115,39 @@ class PageRepositoryImpl implements PageRepository {
       }
       final page = (pageRecord as Success<domain.Page>).value;
 
-      final newPage = page.copyWith(
-        deleted: true,
-        version: page.version + 1,
-        updatedAt: DateTime.now().toUtc(),
-      );
-
       await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.pages)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          return;
+        }
+
+        final newVersion = existingRecord.version + 1;
+        final newPage = page.copyWith(
+          deleted: true,
+          version: newVersion,
+          updatedAt: DateTime.now().toUtc(),
+        );
+
         final updatedRows = await (_db.update(_db.pages)
               ..where((t) => t.id.equals(id)))
             .write(newPage.toCompanion());
-        
+
         if (updatedRows > 0) {
-          await _syncQueue.enqueueOrCoalesce(SyncQueueItem(
-            id: const Uuid().v7(),
-            entityTable: 'pages',
-            entityId: id,
-            operation: 'delete',
-            payload: jsonEncode(newPage.toJson()),
-            createdAt: DateTime.now().toUtc(),
-          ),);
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'pages',
+              entityId: id,
+              operation: 'delete',
+              payload: jsonEncode(newPage.toJson()),
+              batchId: null,
+              version: newPage.version,
+              updatedAt: newPage.updatedAt,
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
         }
       });
       return const Success(null);

@@ -45,7 +45,7 @@ class GoogleSignInService implements AuthService {
         // For now, return the stored token if google_sign_in thinks we're signed in.
         final isSignedIn = await this.isSignedIn();
         if (isSignedIn) {
-           return Success(storedToken);
+          return Success(storedToken);
         }
       }
 
@@ -87,10 +87,11 @@ class GoogleSignInService implements AuthService {
   @override
   Future<bool> isSignedIn() async {
     final storedTokenResult = await _authRepository.getAccessToken();
-    final hasStoredToken = storedTokenResult is Success<String?> && 
-                           (storedTokenResult).value != null;
-                           
-    return hasStoredToken || _googleSignIn.currentUser != null ||
+    final hasStoredToken = storedTokenResult is Success<String?> &&
+        (storedTokenResult).value != null;
+
+    return hasStoredToken ||
+        _googleSignIn.currentUser != null ||
         await _googleSignIn.signInSilently() != null;
   }
 }

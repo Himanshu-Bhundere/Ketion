@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration {
@@ -62,58 +62,58 @@ class AppDatabase extends _$AppDatabase {
         // Pages Triggers
         await customStatement('''
           CREATE TRIGGER pages_ai AFTER INSERT ON pages WHEN new.deleted = 0 BEGIN
-            INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              VALUES (new.id, new.id, 'page', new.title);
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 1, new.id, new.id, 'page', new.title);
           END;
         ''');
 
         await customStatement('''
           CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
-            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 1;
           END;
         ''');
 
         await customStatement('''
           CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
-            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'page';
-            INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              SELECT new.id, new.id, 'page', new.title WHERE new.deleted = 0;
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 1;
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              SELECT new.rowid * 10 + 1, new.id, new.id, 'page', new.title WHERE new.deleted = 0;
           END;
         ''');
 
         // Blocks Triggers
         await customStatement('''
           CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
-            INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              VALUES (new.id, new.page_id, 'block', new.searchable_text);
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 2, new.id, new.page_id, 'block', new.searchable_text);
           END;
         ''');
 
         await customStatement('''
           CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
-            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 2;
           END;
         ''');
 
         await customStatement('''
           CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
-            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'block';
-            INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 2;
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              SELECT new.rowid * 10 + 2, new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
           END;
         ''');
 
         // Tags Triggers
         await customStatement('''
           CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
-            INSERT INTO search_fts(entityId, pageId, entityType, content) 
-              VALUES (new.id, NULL, 'tag', new.name);
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 3, new.id, NULL, 'tag', new.name);
           END;
         ''');
 
         await customStatement('''
           CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
-            DELETE FROM search_fts WHERE entityId = old.id AND entityType = 'tag';
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 3;
           END;
         ''');
 
@@ -121,7 +121,7 @@ class AppDatabase extends _$AppDatabase {
           CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
             UPDATE search_fts 
             SET content = new.name 
-            WHERE entityId = old.id AND entityType = 'tag';
+            WHERE rowid = old.rowid * 10 + 3;
           END;
         ''');
       },
@@ -392,7 +392,8 @@ class AppDatabase extends _$AppDatabase {
         if (from < 14) {
           await m.addColumn(appSettingsTable, appSettingsTable.accentColor);
           await m.addColumn(appSettingsTable, appSettingsTable.fontSize);
-          await m.addColumn(appSettingsTable, appSettingsTable.editorAppearance);
+          await m.addColumn(
+              appSettingsTable, appSettingsTable.editorAppearance,);
           await m.addColumn(appSettingsTable, appSettingsTable.highContrast);
           await m.addColumn(appSettingsTable, appSettingsTable.reducedMotion);
         }
@@ -424,8 +425,105 @@ class AppDatabase extends _$AppDatabase {
               SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
             END;
           ''');
-          
-          await customStatement('DELETE FROM search_fts WHERE entityType = "block"');
+
+          await customStatement(
+              'DELETE FROM search_fts WHERE entityType = "block"',);
+        }
+        if (from < 16) {
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_blocks_parent_pos ON blocks (parent_block_id, position);',);
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_blocks_page ON blocks (page_id);',);
+        }
+        if (from < 17) {
+          // v15 introduced searchable_text but left existing serialized editor
+          // blocks unindexed. Extract legacy and canonical span text, then
+          // rebuild FTS so old notes become searchable without a resave.
+          await customStatement('''
+            UPDATE blocks
+            SET searchable_text = (
+              SELECT group_concat(json_extract(value, '\$.text'), ' ')
+              FROM json_each(blocks.data, '\$.spans')
+            )
+            WHERE json_valid(data) AND json_type(data, '\$.spans') = 'array';
+          ''');
+          await rebuildSearchIndex();
+        }
+        if (from < 18) {
+          await customStatement('DROP TRIGGER IF EXISTS pages_ai');
+          await customStatement('DROP TRIGGER IF EXISTS pages_ad');
+          await customStatement('DROP TRIGGER IF EXISTS pages_au');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ai');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_ad');
+          await customStatement('DROP TRIGGER IF EXISTS blocks_au');
+          await customStatement('DROP TRIGGER IF EXISTS tags_ai');
+          await customStatement('DROP TRIGGER IF EXISTS tags_ad');
+          await customStatement('DROP TRIGGER IF EXISTS tags_au');
+
+          await customStatement('''
+            CREATE TRIGGER pages_ai AFTER INSERT ON pages WHEN new.deleted = 0 BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 1, new.id, new.id, 'page', new.title);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER pages_ad AFTER DELETE ON pages BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 1;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER pages_au AFTER UPDATE ON pages BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 1;
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              SELECT new.rowid * 10 + 1, new.id, new.id, 'page', new.title WHERE new.deleted = 0;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_ai AFTER INSERT ON blocks WHEN new.deleted = 0 BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 2, new.id, new.page_id, 'block', new.searchable_text);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_ad AFTER DELETE ON blocks BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 2;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER blocks_au AFTER UPDATE ON blocks BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 2;
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              SELECT new.rowid * 10 + 2, new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER tags_ai AFTER INSERT ON tags BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 3, new.id, NULL, 'tag', new.name);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER tags_ad AFTER DELETE ON tags BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 3;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER tags_au AFTER UPDATE ON tags BEGIN
+              UPDATE search_fts 
+              SET content = new.name 
+              WHERE rowid = old.rowid * 10 + 3;
+            END;
+          ''');
+
+          await rebuildSearchIndex();
         }
       },
       beforeOpen: (details) async {
@@ -441,13 +539,18 @@ class AppDatabase extends _$AppDatabase {
     await customStatement('DELETE FROM search_fts');
 
     await customStatement('''
-      INSERT INTO search_fts(entityId, pageId, entityType, content)
-            SELECT id, id, 'page', title FROM pages WHERE deleted = 0;
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid * 10 + 1, id, id, 'page', title FROM pages WHERE deleted = 0;
     ''');
 
     await customStatement('''
-      INSERT INTO search_fts(entityId, pageId, entityType, content)
-            SELECT id, page_id, 'block', searchable_text FROM blocks WHERE deleted = 0;
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid * 10 + 2, id, page_id, 'block', searchable_text FROM blocks WHERE deleted = 0;
+    ''');
+
+    await customStatement('''
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid * 10 + 3, id, NULL, 'tag', name FROM tags;
     ''');
   }
 

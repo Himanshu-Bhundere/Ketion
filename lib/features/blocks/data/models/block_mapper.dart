@@ -28,9 +28,8 @@ extension DomainBlockMapper on domain.Block {
       final json = jsonDecode(data) as Map<String, dynamic>;
       final model = BlockDataModel.fromJson(json);
       searchableText = model.searchableText;
-    } catch (e) {
-      // Fallback if parsing fails
-      searchableText = null;
+    } catch (_) {
+      searchableText = _legacySearchableText(data);
     }
 
     return db.BlocksCompanion.insert(
@@ -46,5 +45,20 @@ extension DomainBlockMapper on domain.Block {
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
+  }
+}
+
+String? _legacySearchableText(String data) {
+  try {
+    final json = jsonDecode(data) as Map<String, dynamic>;
+    final spans = json['spans'];
+    if (spans is! List) return null;
+    return spans
+        .whereType<Map<String, dynamic>>()
+        .map((span) => span['text'])
+        .whereType<String>()
+        .join(' ');
+  } catch (_) {
+    return null;
   }
 }

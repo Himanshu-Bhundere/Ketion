@@ -13,10 +13,12 @@ import 'package:ketion/features/reminders/domain/entities/reminder.dart';
 import 'package:ketion/features/sync/presentation/providers/sync_providers.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
+
 // Provides the FlutterLocalNotificationsPlugin instance
 final flutterLocalNotificationsPluginProvider =
     Provider<FlutterLocalNotificationsPlugin>((ref) {
-  return FlutterLocalNotificationsPlugin();
+  return NotificationBootstrap.plugin;
 });
 
 // Provides the ReminderScheduler

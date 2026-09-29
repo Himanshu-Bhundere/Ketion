@@ -18,7 +18,7 @@ class CreateBlockUseCase {
     required double position,
     required String data,
   }) async {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final block = Block(
       id: _uuid.v7(),
       pageId: pageId,
@@ -26,6 +26,7 @@ class CreateBlockUseCase {
       type: type,
       position: position,
       data: data,
+      version: 1,
       createdAt: now,
       updatedAt: now,
     );

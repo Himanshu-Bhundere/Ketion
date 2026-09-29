@@ -10,13 +10,14 @@ import '../../../../blocks/domain/entities/block.dart';
 import '../../../domain/models/block_data_models.dart';
 import '../../../../media/presentation/providers/media_picker_provider.dart';
 import '../slash_command_menu.dart';
+import '../slash_command_controller.dart';
 import '../../providers/editor_state_provider.dart';
 
 class TextBlockWidget extends ConsumerStatefulWidget {
   final Block block;
   final ValueChanged<Block> onUpdate;
   final Future<void> Function(String before, String after) onSplit;
-  final Future<void> Function() onMergePrevious;
+  final Future<void> Function(String textToMerge) onMergePrevious;
 
   const TextBlockWidget({
     super.key,
@@ -36,6 +37,10 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
   late TextBlockData _blockData;
   Timer? _debounce;
   final Map<String, String> _pageLinks = {}; // Title -> PageId
+  
+  final LayerLink _layerLink = LayerLink();
+  final GlobalKey _anchorKey = GlobalKey();
+  late SlashCommandController _slashController;
 
   @override
   void initState() {
@@ -43,13 +48,28 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     _parseData();
     _controller = TextEditingController(text: _getPlainText());
     _focusNode = FocusNode();
+    _slashController = SlashCommandController(
+      textController: _controller,
+      layerLink: _layerLink,
+      anchorKey: _anchorKey,
+      context: () => context,
+      optionsBuilder: (query) => _slashOptionsFor(query),
+    );
 
     _focusNode.addListener(_onFocusChange);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final pending = ref.read(pendingBlockFocusProvider);
-      if (pending == widget.block.id) {
+      if (pending != null && pending.id == widget.block.id) {
         _focusNode.requestFocus();
+        if (pending.action == 'start') {
+          _controller.selection = const TextSelection.collapsed(offset: 0);
+        } else if (pending.action == 'end') {
+          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+        } else if (pending.action.startsWith('offset:')) {
+          final offset = int.tryParse(pending.action.substring(7)) ?? 0;
+          _controller.selection = TextSelection.collapsed(offset: offset.clamp(0, _controller.text.length));
+        }
         ref.read(pendingBlockFocusProvider.notifier).state = null;
       }
     });
@@ -86,6 +106,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     if (_focusNode.hasFocus) {
       ref.read(focusedBlockIdProvider.notifier).state = widget.block.id;
     } else {
+      _slashController.close();
       _debounce?.cancel();
       _saveChanges();
     }
@@ -134,27 +155,154 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     widget.onUpdate(updatedBlock);
   }
 
+  List<SlashCommandOption> _slashOptionsFor(String query) {
+    final allOptions = [
+      SlashCommandOption(
+        title: 'Heading 1',
+        subtitle: 'Large section heading',
+        icon: Icons.title,
+        category: SlashCommandCategory.basic,
+        onSelected: (_) => _convertToHeading(1),
+      ),
+      SlashCommandOption(
+        title: 'Heading 2',
+        subtitle: 'Medium section heading',
+        icon: Icons.title,
+        category: SlashCommandCategory.basic,
+        onSelected: (_) => _convertToHeading(2),
+      ),
+      SlashCommandOption(
+        title: 'Heading 3',
+        subtitle: 'Small section heading',
+        icon: Icons.title,
+        category: SlashCommandCategory.basic,
+        onSelected: (_) => _convertToHeading(3),
+      ),
+      SlashCommandOption(
+        title: 'Checklist',
+        subtitle: 'Track tasks with a to-do list',
+        icon: Icons.check_box_outlined,
+        category: SlashCommandCategory.list,
+        onSelected: (_) => _convertToList('checklist'),
+      ),
+      SlashCommandOption(
+        title: 'Bulleted List',
+        subtitle: 'Create a simple bulleted list',
+        icon: Icons.format_list_bulleted,
+        category: SlashCommandCategory.list,
+        onSelected: (_) => _convertToList('bullet'),
+      ),
+      SlashCommandOption(
+        title: 'Numbered List',
+        subtitle: 'Create a list with numbering',
+        icon: Icons.format_list_numbered,
+        category: SlashCommandCategory.list,
+        onSelected: (_) => _convertToList('numbered'),
+      ),
+      SlashCommandOption(
+        title: 'Image',
+        subtitle: 'Upload an image',
+        icon: Icons.image,
+        category: SlashCommandCategory.media,
+        onSelected: (_) async {
+          _slashController.close();
+          await _pickImage();
+        },
+      ),
+      SlashCommandOption(
+        title: 'File',
+        subtitle: 'Upload a file',
+        icon: Icons.insert_drive_file,
+        category: SlashCommandCategory.media,
+        onSelected: (_) async {
+          _slashController.close();
+          await _pickFile();
+        },
+      ),
+    ];
+    
+    final normalizedQuery = query.toLowerCase();
+    return allOptions.where((option) {
+      return normalizedQuery.isEmpty ||
+          option.title.toLowerCase().contains(normalizedQuery) ||
+          option.subtitle.toLowerCase().contains(normalizedQuery);
+    }).toList();
+  }
+
+  void _handleEnter() {
+    final selection = _controller.selection;
+    final cursor = selection.isValid ? selection.start : _controller.text.length;
+    final before = _controller.text.substring(0, cursor);
+    final after = _controller.text.substring(selection.end);
+    _controller.value = TextEditingValue(
+      text: before,
+      selection: TextSelection.collapsed(offset: before.length),
+    );
+    unawaited(widget.onSplit(before, after));
+  }
+
+  /// Android IMEs can insert a newline without dispatching a KeyDownEvent.
+  bool _handleImeNewline(String value) {
+    final newline = value.indexOf('\n');
+    if (newline == -1) return false;
+    if (_slashController.isOpen) {
+      _slashController.selectCurrent();
+      return true;
+    }
+    final before = value.substring(0, newline);
+    final after = value.substring(newline + 1);
+    _controller.value = TextEditingValue(
+      text: before,
+      selection: TextSelection.collapsed(offset: before.length),
+    );
+    unawaited(widget.onSplit(before, after));
+    return true;
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode _, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (_slashController.handleKeyEvent(event)) return KeyEventResult.handled;
+    if (!_slashController.isOpen) {
+      if (event.logicalKey == LogicalKeyboardKey.escape) {
+        _focusNode.unfocus();
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        final selection = _controller.selection;
+        if (selection.isValid && selection.start == 0 && selection.end == 0) {
+          final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+          editor.focusPreviousBlock(widget.block.id);
+          return KeyEventResult.handled;
+        }
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        final selection = _controller.selection;
+        final len = _controller.text.length;
+        if (selection.isValid && selection.start == len && selection.end == len) {
+          final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
+          editor.focusNextBlock(widget.block.id);
+          return KeyEventResult.handled;
+        }
+      }
+    }
+
     if (event.logicalKey == LogicalKeyboardKey.enter) {
-      final selection = _controller.selection;
-      final cursor = selection.isValid ? selection.start : _controller.text.length;
-      final before = _controller.text.substring(0, cursor);
-      final after = _controller.text.substring(selection.end);
-      _controller.value = TextEditingValue(
-        text: before,
-        selection: TextSelection.collapsed(offset: before.length),
-      );
-      unawaited(widget.onSplit(before, after));
+      _handleEnter();
       return KeyEventResult.handled;
     }
-    if (event.logicalKey == LogicalKeyboardKey.backspace && _controller.text.isEmpty) {
-      unawaited(widget.onMergePrevious());
-      return KeyEventResult.handled;
+    if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (_controller.selection.isCollapsed) {
+        final offset = _controller.selection.baseOffset;
+        if (_controller.text.isEmpty || offset == 0) {
+          unawaited(widget.onMergePrevious(_controller.text));
+          return KeyEventResult.handled;
+        }
+      }
     }
     if (event.logicalKey == LogicalKeyboardKey.tab) {
       final editor = ref.read(editorStateProvider(widget.block.pageId).notifier);
-      if (HardwareKeyboard.instance.isShiftPressed) {
+      final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+      if (isShiftPressed) {
         unawaited(editor.outdentBlock(widget.block.id));
       } else {
         unawaited(editor.indentBlock(widget.block.id));
@@ -178,6 +326,7 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
   @override
   void dispose() {
+    _slashController.dispose();
     _debounce?.cancel();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
@@ -187,6 +336,21 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<BlockFocusIntent?>(pendingBlockFocusProvider, (previous, pending) {
+      if (pending != null && pending.id == widget.block.id) {
+        _focusNode.requestFocus();
+        if (pending.action == 'start') {
+          _controller.selection = const TextSelection.collapsed(offset: 0);
+        } else if (pending.action == 'end') {
+          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+        } else if (pending.action.startsWith('offset:')) {
+          final offset = int.tryParse(pending.action.substring(7)) ?? 0;
+          _controller.selection = TextSelection.collapsed(offset: offset.clamp(0, _controller.text.length));
+        }
+        Future.microtask(() => ref.read(pendingBlockFocusProvider.notifier).state = null);
+      }
+    });
+
     double fontSize = 16.0;
     FontWeight fontWeight = FontWeight.normal;
 
@@ -203,45 +367,50 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
 
     return Focus(
       onKeyEvent: _handleKeyEvent,
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        maxLines: null,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-          isDense: true,
+      child: CompositedTransformTarget(
+        key: _anchorKey,
+        link: _layerLink,
+        child: TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          maxLines: null,
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+            isDense: true,
+          ),
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+          ),
+          textInputAction: TextInputAction.newline,
+          keyboardType: TextInputType.multiline,
+          onChanged: (value) {
+            if (_handleImeNewline(value)) return;
+            _slashController.check(value);
+            
+            if (value.endsWith('[[')) {
+              _showPagePicker();
+            } else if (value.startsWith('# ')) {
+              _convertToHeading(1);
+            } else if (value.startsWith('## ')) {
+              _convertToHeading(2);
+            } else if (value.startsWith('### ')) {
+              _convertToHeading(3);
+            } else if (value.startsWith('- ') || value.startsWith('* ')) {
+              _convertToList('bullet');
+            } else if (value.startsWith('[] ')) {
+              _convertToList('checklist');
+            } else if (RegExp(r'^\d+\.\s').hasMatch(value)) {
+              _convertToList('numbered');
+            } else {
+              if (_debounce?.isActive ?? false) _debounce!.cancel();
+              _debounce = Timer(const Duration(milliseconds: 500), () {
+                _saveChanges();
+              });
+            }
+          },
         ),
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: fontWeight,
-        ),
-        textInputAction: TextInputAction.newline,
-        keyboardType: TextInputType.multiline,
-        onChanged: (value) {
-        if (value.trim() == '/') {
-          _showSlashMenu();
-        } else if (value.endsWith('[[')) {
-          _showPagePicker();
-        } else if (value.startsWith('# ')) {
-          _convertToHeading(1);
-        } else if (value.startsWith('## ')) {
-          _convertToHeading(2);
-        } else if (value.startsWith('### ')) {
-          _convertToHeading(3);
-        } else if (value.startsWith('- ') || value.startsWith('* ')) {
-          _convertToList('bullet');
-        } else if (value.startsWith('[] ')) {
-          _convertToList('checklist');
-        } else if (RegExp(r'^\d+\.\s').hasMatch(value)) {
-          _convertToList('numbered');
-        } else {
-          if (_debounce?.isActive ?? false) _debounce!.cancel();
-          _debounce = Timer(const Duration(milliseconds: 500), () {
-            _saveChanges();
-          });
-        }
-        },
       ),
     );
   }
@@ -273,98 +442,6 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     });
   }
 
-  void _showSlashMenu() {
-    // Hide keyboard
-    _focusNode.unfocus();
-
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (context) {
-        return SlashCommandMenu(
-          options: [
-            SlashCommandOption(
-              title: 'Heading 1',
-              subtitle: 'Large section heading',
-              icon: Icons.title,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToHeading(1);
-              },
-            ),
-            SlashCommandOption(
-              title: 'Heading 2',
-              subtitle: 'Medium section heading',
-              icon: Icons.title,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToHeading(2);
-              },
-            ),
-            SlashCommandOption(
-              title: 'Heading 3',
-              subtitle: 'Small section heading',
-              icon: Icons.title,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToHeading(3);
-              },
-            ),
-            SlashCommandOption(
-              title: 'Checklist',
-              subtitle: 'Track tasks with a to-do list',
-              icon: Icons.check_box_outlined,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToList('checklist');
-              },
-            ),
-            SlashCommandOption(
-              title: 'Bulleted List',
-              subtitle: 'Create a simple bulleted list',
-              icon: Icons.format_list_bulleted,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToList('bullet');
-              },
-            ),
-            SlashCommandOption(
-              title: 'Numbered List',
-              subtitle: 'Create a list with numbering',
-              icon: Icons.format_list_numbered,
-              onSelected: () {
-                Navigator.pop(context);
-                _convertToList('numbered');
-              },
-            ),
-            SlashCommandOption(
-              title: 'Image',
-              subtitle: 'Upload an image',
-              icon: Icons.image,
-              onSelected: () {
-                Navigator.pop(context);
-                _pickImage();
-              },
-            ),
-            SlashCommandOption(
-              title: 'File',
-              subtitle: 'Upload a file',
-              icon: Icons.insert_drive_file,
-              onSelected: () {
-                Navigator.pop(context);
-                _pickFile();
-              },
-            ),
-          ],
-        );
-      },
-    ).then((_) {
-      // Re-focus and clear '/' if they didn't pick anything
-      if (_controller.text.trim() == '/') {
-        _controller.text = '';
-        _focusNode.requestFocus();
-      }
-    });
-  }
 
   Future<void> _pickImage() async {
     final mediaPicker = ref.read(mediaPickerProvider);

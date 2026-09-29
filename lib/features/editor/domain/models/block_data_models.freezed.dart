@@ -324,6 +324,332 @@ abstract class _TextSpanData implements TextSpanData {
       throw _privateConstructorUsedError;
 }
 
+TableCellData _$TableCellDataFromJson(Map<String, dynamic> json) {
+  return _TableCellData.fromJson(json);
+}
+
+/// @nodoc
+mixin _$TableCellData {
+  String get id => throw _privateConstructorUsedError;
+  List<TextSpanData> get spans => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $TableCellDataCopyWith<TableCellData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $TableCellDataCopyWith<$Res> {
+  factory $TableCellDataCopyWith(
+          TableCellData value, $Res Function(TableCellData) then) =
+      _$TableCellDataCopyWithImpl<$Res, TableCellData>;
+  @useResult
+  $Res call({String id, List<TextSpanData> spans});
+}
+
+/// @nodoc
+class _$TableCellDataCopyWithImpl<$Res, $Val extends TableCellData>
+    implements $TableCellDataCopyWith<$Res> {
+  _$TableCellDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? spans = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      spans: null == spans
+          ? _value.spans
+          : spans // ignore: cast_nullable_to_non_nullable
+              as List<TextSpanData>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$TableCellDataImplCopyWith<$Res>
+    implements $TableCellDataCopyWith<$Res> {
+  factory _$$TableCellDataImplCopyWith(
+          _$TableCellDataImpl value, $Res Function(_$TableCellDataImpl) then) =
+      __$$TableCellDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String id, List<TextSpanData> spans});
+}
+
+/// @nodoc
+class __$$TableCellDataImplCopyWithImpl<$Res>
+    extends _$TableCellDataCopyWithImpl<$Res, _$TableCellDataImpl>
+    implements _$$TableCellDataImplCopyWith<$Res> {
+  __$$TableCellDataImplCopyWithImpl(
+      _$TableCellDataImpl _value, $Res Function(_$TableCellDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? spans = null,
+  }) {
+    return _then(_$TableCellDataImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      spans: null == spans
+          ? _value._spans
+          : spans // ignore: cast_nullable_to_non_nullable
+              as List<TextSpanData>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$TableCellDataImpl implements _TableCellData {
+  const _$TableCellDataImpl(
+      {required this.id, final List<TextSpanData> spans = const []})
+      : _spans = spans;
+
+  factory _$TableCellDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$TableCellDataImplFromJson(json);
+
+  @override
+  final String id;
+  final List<TextSpanData> _spans;
+  @override
+  @JsonKey()
+  List<TextSpanData> get spans {
+    if (_spans is EqualUnmodifiableListView) return _spans;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_spans);
+  }
+
+  @override
+  String toString() {
+    return 'TableCellData(id: $id, spans: $spans)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TableCellDataImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            const DeepCollectionEquality().equals(other._spans, _spans));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, id, const DeepCollectionEquality().hash(_spans));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TableCellDataImplCopyWith<_$TableCellDataImpl> get copyWith =>
+      __$$TableCellDataImplCopyWithImpl<_$TableCellDataImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$TableCellDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _TableCellData implements TableCellData {
+  const factory _TableCellData(
+      {required final String id,
+      final List<TextSpanData> spans}) = _$TableCellDataImpl;
+
+  factory _TableCellData.fromJson(Map<String, dynamic> json) =
+      _$TableCellDataImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  List<TextSpanData> get spans;
+  @override
+  @JsonKey(ignore: true)
+  _$$TableCellDataImplCopyWith<_$TableCellDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+TableRowData _$TableRowDataFromJson(Map<String, dynamic> json) {
+  return _TableRowData.fromJson(json);
+}
+
+/// @nodoc
+mixin _$TableRowData {
+  String get id => throw _privateConstructorUsedError;
+  List<TableCellData> get cells => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $TableRowDataCopyWith<TableRowData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $TableRowDataCopyWith<$Res> {
+  factory $TableRowDataCopyWith(
+          TableRowData value, $Res Function(TableRowData) then) =
+      _$TableRowDataCopyWithImpl<$Res, TableRowData>;
+  @useResult
+  $Res call({String id, List<TableCellData> cells});
+}
+
+/// @nodoc
+class _$TableRowDataCopyWithImpl<$Res, $Val extends TableRowData>
+    implements $TableRowDataCopyWith<$Res> {
+  _$TableRowDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? cells = null,
+  }) {
+    return _then(_value.copyWith(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      cells: null == cells
+          ? _value.cells
+          : cells // ignore: cast_nullable_to_non_nullable
+              as List<TableCellData>,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$TableRowDataImplCopyWith<$Res>
+    implements $TableRowDataCopyWith<$Res> {
+  factory _$$TableRowDataImplCopyWith(
+          _$TableRowDataImpl value, $Res Function(_$TableRowDataImpl) then) =
+      __$$TableRowDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String id, List<TableCellData> cells});
+}
+
+/// @nodoc
+class __$$TableRowDataImplCopyWithImpl<$Res>
+    extends _$TableRowDataCopyWithImpl<$Res, _$TableRowDataImpl>
+    implements _$$TableRowDataImplCopyWith<$Res> {
+  __$$TableRowDataImplCopyWithImpl(
+      _$TableRowDataImpl _value, $Res Function(_$TableRowDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? cells = null,
+  }) {
+    return _then(_$TableRowDataImpl(
+      id: null == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      cells: null == cells
+          ? _value._cells
+          : cells // ignore: cast_nullable_to_non_nullable
+              as List<TableCellData>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$TableRowDataImpl implements _TableRowData {
+  const _$TableRowDataImpl(
+      {required this.id, final List<TableCellData> cells = const []})
+      : _cells = cells;
+
+  factory _$TableRowDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$TableRowDataImplFromJson(json);
+
+  @override
+  final String id;
+  final List<TableCellData> _cells;
+  @override
+  @JsonKey()
+  List<TableCellData> get cells {
+    if (_cells is EqualUnmodifiableListView) return _cells;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_cells);
+  }
+
+  @override
+  String toString() {
+    return 'TableRowData(id: $id, cells: $cells)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TableRowDataImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            const DeepCollectionEquality().equals(other._cells, _cells));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, id, const DeepCollectionEquality().hash(_cells));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TableRowDataImplCopyWith<_$TableRowDataImpl> get copyWith =>
+      __$$TableRowDataImplCopyWithImpl<_$TableRowDataImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$TableRowDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _TableRowData implements TableRowData {
+  const factory _TableRowData(
+      {required final String id,
+      final List<TableCellData> cells}) = _$TableRowDataImpl;
+
+  factory _TableRowData.fromJson(Map<String, dynamic> json) =
+      _$TableRowDataImpl.fromJson;
+
+  @override
+  String get id;
+  @override
+  List<TableCellData> get cells;
+  @override
+  @JsonKey(ignore: true)
+  _$$TableRowDataImplCopyWith<_$TableRowDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
 BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
   switch (json['runtimeType']) {
     case 'text':
@@ -332,6 +658,8 @@ BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
       return ListBlockData.fromJson(json);
     case 'unknown':
       return UnknownBlockData.fromJson(json);
+    case 'callout':
+      return CalloutBlockData.fromJson(json);
     case 'image':
       return ImageBlockData.fromJson(json);
     case 'video':
@@ -342,6 +670,20 @@ BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
       return PdfBlockData.fromJson(json);
     case 'file':
       return FileBlockData.fromJson(json);
+    case 'bookmark':
+      return BookmarkBlockData.fromJson(json);
+    case 'table':
+      return TableBlockData.fromJson(json);
+    case 'pageLink':
+      return PageLinkBlockData.fromJson(json);
+    case 'webLink':
+      return WebLinkBlockData.fromJson(json);
+    case 'reminder':
+      return ReminderBlockData.fromJson(json);
+    case 'divider':
+      return DividerBlockData.fromJson(json);
+    case 'code':
+      return CodeBlockData.fromJson(json);
 
     default:
       throw CheckedFromJsonException(json, 'runtimeType', 'BlockDataModel',
@@ -353,42 +695,94 @@ BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
 mixin _$BlockDataModel {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -397,11 +791,19 @@ mixin _$BlockDataModel {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -409,11 +811,19 @@ mixin _$BlockDataModel {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -421,11 +831,19 @@ mixin _$BlockDataModel {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -456,7 +874,7 @@ abstract class _$$TextBlockDataImplCopyWith<$Res> {
           _$TextBlockDataImpl value, $Res Function(_$TextBlockDataImpl) then) =
       __$$TextBlockDataImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({List<TextSpanData> spans, int headingLevel});
+  $Res call({List<TextSpanData> spans, int headingLevel, bool quote});
 }
 
 /// @nodoc
@@ -472,6 +890,7 @@ class __$$TextBlockDataImplCopyWithImpl<$Res>
   $Res call({
     Object? spans = null,
     Object? headingLevel = null,
+    Object? quote = null,
   }) {
     return _then(_$TextBlockDataImpl(
       spans: null == spans
@@ -482,6 +901,10 @@ class __$$TextBlockDataImplCopyWithImpl<$Res>
           ? _value.headingLevel
           : headingLevel // ignore: cast_nullable_to_non_nullable
               as int,
+      quote: null == quote
+          ? _value.quote
+          : quote // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -492,6 +915,7 @@ class _$TextBlockDataImpl extends TextBlockData {
   const _$TextBlockDataImpl(
       {final List<TextSpanData> spans = const [],
       this.headingLevel = 0,
+      this.quote = false,
       final String? $type})
       : _spans = spans,
         $type = $type ?? 'text',
@@ -512,13 +936,17 @@ class _$TextBlockDataImpl extends TextBlockData {
   @override
   @JsonKey()
   final int headingLevel;
+// 0 for paragraph, 1, 2, 3 for H1, H2, H3
+  @override
+  @JsonKey()
+  final bool quote;
 
   @JsonKey(name: 'runtimeType')
   final String $type;
 
   @override
   String toString() {
-    return 'BlockDataModel.text(spans: $spans, headingLevel: $headingLevel)';
+    return 'BlockDataModel.text(spans: $spans, headingLevel: $headingLevel, quote: $quote)';
   }
 
   @override
@@ -528,13 +956,14 @@ class _$TextBlockDataImpl extends TextBlockData {
             other is _$TextBlockDataImpl &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
             (identical(other.headingLevel, headingLevel) ||
-                other.headingLevel == headingLevel));
+                other.headingLevel == headingLevel) &&
+            (identical(other.quote, quote) || other.quote == quote));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, const DeepCollectionEquality().hash(_spans), headingLevel);
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(_spans), headingLevel, quote);
 
   @JsonKey(ignore: true)
   @override
@@ -545,52 +974,104 @@ class _$TextBlockDataImpl extends TextBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
-    return text(spans, headingLevel);
+    return text(spans, headingLevel, quote);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
-    return text?.call(spans, headingLevel);
+    return text?.call(spans, headingLevel, quote);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (text != null) {
-      return text(spans, headingLevel);
+      return text(spans, headingLevel, quote);
     }
     return orElse();
   }
@@ -601,11 +1082,19 @@ class _$TextBlockDataImpl extends TextBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return text(this);
   }
@@ -616,11 +1105,19 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return text?.call(this);
   }
@@ -631,11 +1128,19 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (text != null) {
@@ -655,14 +1160,16 @@ class _$TextBlockDataImpl extends TextBlockData {
 abstract class TextBlockData extends BlockDataModel {
   const factory TextBlockData(
       {final List<TextSpanData> spans,
-      final int headingLevel}) = _$TextBlockDataImpl;
+      final int headingLevel,
+      final bool quote}) = _$TextBlockDataImpl;
   const TextBlockData._() : super._();
 
   factory TextBlockData.fromJson(Map<String, dynamic> json) =
       _$TextBlockDataImpl.fromJson;
 
   List<TextSpanData> get spans;
-  int get headingLevel;
+  int get headingLevel; // 0 for paragraph, 1, 2, 3 for H1, H2, H3
+  bool get quote;
   @JsonKey(ignore: true)
   _$$TextBlockDataImplCopyWith<_$TextBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -674,7 +1181,11 @@ abstract class _$$ListBlockDataImplCopyWith<$Res> {
           _$ListBlockDataImpl value, $Res Function(_$ListBlockDataImpl) then) =
       __$$ListBlockDataImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({List<TextSpanData> spans, bool checked, String listType});
+  $Res call(
+      {List<TextSpanData> spans,
+      bool checked,
+      bool isExpanded,
+      String listType});
 }
 
 /// @nodoc
@@ -690,6 +1201,7 @@ class __$$ListBlockDataImplCopyWithImpl<$Res>
   $Res call({
     Object? spans = null,
     Object? checked = null,
+    Object? isExpanded = null,
     Object? listType = null,
   }) {
     return _then(_$ListBlockDataImpl(
@@ -700,6 +1212,10 @@ class __$$ListBlockDataImplCopyWithImpl<$Res>
       checked: null == checked
           ? _value.checked
           : checked // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isExpanded: null == isExpanded
+          ? _value.isExpanded
+          : isExpanded // ignore: cast_nullable_to_non_nullable
               as bool,
       listType: null == listType
           ? _value.listType
@@ -715,6 +1231,7 @@ class _$ListBlockDataImpl extends ListBlockData {
   const _$ListBlockDataImpl(
       {final List<TextSpanData> spans = const [],
       this.checked = false,
+      this.isExpanded = false,
       this.listType = 'bullet',
       final String? $type})
       : _spans = spans,
@@ -738,6 +1255,9 @@ class _$ListBlockDataImpl extends ListBlockData {
   final bool checked;
   @override
   @JsonKey()
+  final bool isExpanded;
+  @override
+  @JsonKey()
   final String listType;
 
   @JsonKey(name: 'runtimeType')
@@ -745,7 +1265,7 @@ class _$ListBlockDataImpl extends ListBlockData {
 
   @override
   String toString() {
-    return 'BlockDataModel.list(spans: $spans, checked: $checked, listType: $listType)';
+    return 'BlockDataModel.list(spans: $spans, checked: $checked, isExpanded: $isExpanded, listType: $listType)';
   }
 
   @override
@@ -755,14 +1275,20 @@ class _$ListBlockDataImpl extends ListBlockData {
             other is _$ListBlockDataImpl &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
             (identical(other.checked, checked) || other.checked == checked) &&
+            (identical(other.isExpanded, isExpanded) ||
+                other.isExpanded == isExpanded) &&
             (identical(other.listType, listType) ||
                 other.listType == listType));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType,
-      const DeepCollectionEquality().hash(_spans), checked, listType);
+  int get hashCode => Object.hash(
+      runtimeType,
+      const DeepCollectionEquality().hash(_spans),
+      checked,
+      isExpanded,
+      listType);
 
   @JsonKey(ignore: true)
   @override
@@ -773,52 +1299,104 @@ class _$ListBlockDataImpl extends ListBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
-    return list(spans, checked, listType);
+    return list(spans, checked, isExpanded, listType);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
-    return list?.call(spans, checked, listType);
+    return list?.call(spans, checked, isExpanded, listType);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (list != null) {
-      return list(spans, checked, listType);
+      return list(spans, checked, isExpanded, listType);
     }
     return orElse();
   }
@@ -829,11 +1407,19 @@ class _$ListBlockDataImpl extends ListBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return list(this);
   }
@@ -844,11 +1430,19 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return list?.call(this);
   }
@@ -859,11 +1453,19 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (list != null) {
@@ -884,6 +1486,7 @@ abstract class ListBlockData extends BlockDataModel {
   const factory ListBlockData(
       {final List<TextSpanData> spans,
       final bool checked,
+      final bool isExpanded,
       final String listType}) = _$ListBlockDataImpl;
   const ListBlockData._() : super._();
 
@@ -892,6 +1495,7 @@ abstract class ListBlockData extends BlockDataModel {
 
   List<TextSpanData> get spans;
   bool get checked;
+  bool get isExpanded;
   String get listType;
   @JsonKey(ignore: true)
   _$$ListBlockDataImplCopyWith<_$ListBlockDataImpl> get copyWith =>
@@ -981,16 +1585,34 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return unknown(rawData);
   }
@@ -998,15 +1620,32 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return unknown?.call(rawData);
   }
@@ -1014,15 +1653,32 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (unknown != null) {
@@ -1037,11 +1693,19 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return unknown(this);
   }
@@ -1052,11 +1716,19 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return unknown?.call(this);
   }
@@ -1067,11 +1739,19 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (unknown != null) {
@@ -1099,6 +1779,312 @@ abstract class UnknownBlockData extends BlockDataModel {
   Map<String, dynamic> get rawData;
   @JsonKey(ignore: true)
   _$$UnknownBlockDataImplCopyWith<_$UnknownBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$CalloutBlockDataImplCopyWith<$Res> {
+  factory _$$CalloutBlockDataImplCopyWith(_$CalloutBlockDataImpl value,
+          $Res Function(_$CalloutBlockDataImpl) then) =
+      __$$CalloutBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({List<TextSpanData> spans, String icon, String color});
+}
+
+/// @nodoc
+class __$$CalloutBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$CalloutBlockDataImpl>
+    implements _$$CalloutBlockDataImplCopyWith<$Res> {
+  __$$CalloutBlockDataImplCopyWithImpl(_$CalloutBlockDataImpl _value,
+      $Res Function(_$CalloutBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? spans = null,
+    Object? icon = null,
+    Object? color = null,
+  }) {
+    return _then(_$CalloutBlockDataImpl(
+      spans: null == spans
+          ? _value._spans
+          : spans // ignore: cast_nullable_to_non_nullable
+              as List<TextSpanData>,
+      icon: null == icon
+          ? _value.icon
+          : icon // ignore: cast_nullable_to_non_nullable
+              as String,
+      color: null == color
+          ? _value.color
+          : color // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$CalloutBlockDataImpl extends CalloutBlockData {
+  const _$CalloutBlockDataImpl(
+      {final List<TextSpanData> spans = const [],
+      this.icon = '💡',
+      this.color = 'grey',
+      final String? $type})
+      : _spans = spans,
+        $type = $type ?? 'callout',
+        super._();
+
+  factory _$CalloutBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$CalloutBlockDataImplFromJson(json);
+
+  final List<TextSpanData> _spans;
+  @override
+  @JsonKey()
+  List<TextSpanData> get spans {
+    if (_spans is EqualUnmodifiableListView) return _spans;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_spans);
+  }
+
+  @override
+  @JsonKey()
+  final String icon;
+  @override
+  @JsonKey()
+  final String color;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.callout(spans: $spans, icon: $icon, color: $color)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CalloutBlockDataImpl &&
+            const DeepCollectionEquality().equals(other._spans, _spans) &&
+            (identical(other.icon, icon) || other.icon == icon) &&
+            (identical(other.color, color) || other.color == color));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, const DeepCollectionEquality().hash(_spans), icon, color);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CalloutBlockDataImplCopyWith<_$CalloutBlockDataImpl> get copyWith =>
+      __$$CalloutBlockDataImplCopyWithImpl<_$CalloutBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return callout(spans, icon, color);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return callout?.call(spans, icon, color);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (callout != null) {
+      return callout(spans, icon, color);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return callout(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return callout?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (callout != null) {
+      return callout(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$CalloutBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class CalloutBlockData extends BlockDataModel {
+  const factory CalloutBlockData(
+      {final List<TextSpanData> spans,
+      final String icon,
+      final String color}) = _$CalloutBlockDataImpl;
+  const CalloutBlockData._() : super._();
+
+  factory CalloutBlockData.fromJson(Map<String, dynamic> json) =
+      _$CalloutBlockDataImpl.fromJson;
+
+  List<TextSpanData> get spans;
+  String get icon;
+  String get color;
+  @JsonKey(ignore: true)
+  _$$CalloutBlockDataImplCopyWith<_$CalloutBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -1186,16 +2172,34 @@ class _$ImageBlockDataImpl extends ImageBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return image(attachmentId, caption);
   }
@@ -1203,15 +2207,32 @@ class _$ImageBlockDataImpl extends ImageBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return image?.call(attachmentId, caption);
   }
@@ -1219,15 +2240,32 @@ class _$ImageBlockDataImpl extends ImageBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -1242,11 +2280,19 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return image(this);
   }
@@ -1257,11 +2303,19 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return image?.call(this);
   }
@@ -1272,11 +2326,19 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -1393,16 +2455,34 @@ class _$VideoBlockDataImpl extends VideoBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return video(attachmentId, caption);
   }
@@ -1410,15 +2490,32 @@ class _$VideoBlockDataImpl extends VideoBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return video?.call(attachmentId, caption);
   }
@@ -1426,15 +2523,32 @@ class _$VideoBlockDataImpl extends VideoBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (video != null) {
@@ -1449,11 +2563,19 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return video(this);
   }
@@ -1464,11 +2586,19 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return video?.call(this);
   }
@@ -1479,11 +2609,19 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (video != null) {
@@ -1600,16 +2738,34 @@ class _$AudioBlockDataImpl extends AudioBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return audio(attachmentId, caption);
   }
@@ -1617,15 +2773,32 @@ class _$AudioBlockDataImpl extends AudioBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return audio?.call(attachmentId, caption);
   }
@@ -1633,15 +2806,32 @@ class _$AudioBlockDataImpl extends AudioBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (audio != null) {
@@ -1656,11 +2846,19 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return audio(this);
   }
@@ -1671,11 +2869,19 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return audio?.call(this);
   }
@@ -1686,11 +2892,19 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (audio != null) {
@@ -1806,16 +3020,34 @@ class _$PdfBlockDataImpl extends PdfBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return pdf(attachmentId, caption);
   }
@@ -1823,15 +3055,32 @@ class _$PdfBlockDataImpl extends PdfBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return pdf?.call(attachmentId, caption);
   }
@@ -1839,15 +3088,32 @@ class _$PdfBlockDataImpl extends PdfBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (pdf != null) {
@@ -1862,11 +3128,19 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return pdf(this);
   }
@@ -1877,11 +3151,19 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return pdf?.call(this);
   }
@@ -1892,11 +3174,19 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (pdf != null) {
@@ -2012,16 +3302,34 @@ class _$FileBlockDataImpl extends FileBlockData {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
     required TResult Function(
-            List<TextSpanData> spans, bool checked, String listType)
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
         list,
     required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) video,
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return file(attachmentId, caption);
   }
@@ -2029,15 +3337,32 @@ class _$FileBlockDataImpl extends FileBlockData {
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? video,
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return file?.call(attachmentId, caption);
   }
@@ -2045,15 +3370,32 @@ class _$FileBlockDataImpl extends FileBlockData {
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
-    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
         list,
     TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? video,
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -2068,11 +3410,19 @@ class _$FileBlockDataImpl extends FileBlockData {
     required TResult Function(TextBlockData value) text,
     required TResult Function(ListBlockData value) list,
     required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
     required TResult Function(ImageBlockData value) image,
     required TResult Function(VideoBlockData value) video,
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return file(this);
   }
@@ -2083,11 +3433,19 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult? Function(TextBlockData value)? text,
     TResult? Function(ListBlockData value)? list,
     TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
     TResult? Function(ImageBlockData value)? image,
     TResult? Function(VideoBlockData value)? video,
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return file?.call(this);
   }
@@ -2098,11 +3456,19 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult Function(TextBlockData value)? text,
     TResult Function(ListBlockData value)? list,
     TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
     TResult Function(ImageBlockData value)? image,
     TResult Function(VideoBlockData value)? video,
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -2132,5 +3498,2031 @@ abstract class FileBlockData extends BlockDataModel {
   String? get caption;
   @JsonKey(ignore: true)
   _$$FileBlockDataImplCopyWith<_$FileBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$BookmarkBlockDataImplCopyWith<$Res> {
+  factory _$$BookmarkBlockDataImplCopyWith(_$BookmarkBlockDataImpl value,
+          $Res Function(_$BookmarkBlockDataImpl) then) =
+      __$$BookmarkBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String url, String? title, String? description, String? imageUrl});
+}
+
+/// @nodoc
+class __$$BookmarkBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$BookmarkBlockDataImpl>
+    implements _$$BookmarkBlockDataImplCopyWith<$Res> {
+  __$$BookmarkBlockDataImplCopyWithImpl(_$BookmarkBlockDataImpl _value,
+      $Res Function(_$BookmarkBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? url = null,
+    Object? title = freezed,
+    Object? description = freezed,
+    Object? imageUrl = freezed,
+  }) {
+    return _then(_$BookmarkBlockDataImpl(
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+      title: freezed == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String?,
+      description: freezed == description
+          ? _value.description
+          : description // ignore: cast_nullable_to_non_nullable
+              as String?,
+      imageUrl: freezed == imageUrl
+          ? _value.imageUrl
+          : imageUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$BookmarkBlockDataImpl extends BookmarkBlockData {
+  const _$BookmarkBlockDataImpl(
+      {required this.url,
+      this.title,
+      this.description,
+      this.imageUrl,
+      final String? $type})
+      : $type = $type ?? 'bookmark',
+        super._();
+
+  factory _$BookmarkBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$BookmarkBlockDataImplFromJson(json);
+
+  @override
+  final String url;
+  @override
+  final String? title;
+  @override
+  final String? description;
+  @override
+  final String? imageUrl;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.bookmark(url: $url, title: $title, description: $description, imageUrl: $imageUrl)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$BookmarkBlockDataImpl &&
+            (identical(other.url, url) || other.url == url) &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, url, title, description, imageUrl);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$BookmarkBlockDataImplCopyWith<_$BookmarkBlockDataImpl> get copyWith =>
+      __$$BookmarkBlockDataImplCopyWithImpl<_$BookmarkBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return bookmark(url, title, description, imageUrl);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return bookmark?.call(url, title, description, imageUrl);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (bookmark != null) {
+      return bookmark(url, title, description, imageUrl);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return bookmark(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return bookmark?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (bookmark != null) {
+      return bookmark(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$BookmarkBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class BookmarkBlockData extends BlockDataModel {
+  const factory BookmarkBlockData(
+      {required final String url,
+      final String? title,
+      final String? description,
+      final String? imageUrl}) = _$BookmarkBlockDataImpl;
+  const BookmarkBlockData._() : super._();
+
+  factory BookmarkBlockData.fromJson(Map<String, dynamic> json) =
+      _$BookmarkBlockDataImpl.fromJson;
+
+  String get url;
+  String? get title;
+  String? get description;
+  String? get imageUrl;
+  @JsonKey(ignore: true)
+  _$$BookmarkBlockDataImplCopyWith<_$BookmarkBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$TableBlockDataImplCopyWith<$Res> {
+  factory _$$TableBlockDataImplCopyWith(_$TableBlockDataImpl value,
+          $Res Function(_$TableBlockDataImpl) then) =
+      __$$TableBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({int columnCount, List<TableRowData> rows});
+}
+
+/// @nodoc
+class __$$TableBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$TableBlockDataImpl>
+    implements _$$TableBlockDataImplCopyWith<$Res> {
+  __$$TableBlockDataImplCopyWithImpl(
+      _$TableBlockDataImpl _value, $Res Function(_$TableBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? columnCount = null,
+    Object? rows = null,
+  }) {
+    return _then(_$TableBlockDataImpl(
+      columnCount: null == columnCount
+          ? _value.columnCount
+          : columnCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      rows: null == rows
+          ? _value._rows
+          : rows // ignore: cast_nullable_to_non_nullable
+              as List<TableRowData>,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$TableBlockDataImpl extends TableBlockData {
+  const _$TableBlockDataImpl(
+      {this.columnCount = 0,
+      final List<TableRowData> rows = const [],
+      final String? $type})
+      : _rows = rows,
+        $type = $type ?? 'table',
+        super._();
+
+  factory _$TableBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$TableBlockDataImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final int columnCount;
+  final List<TableRowData> _rows;
+  @override
+  @JsonKey()
+  List<TableRowData> get rows {
+    if (_rows is EqualUnmodifiableListView) return _rows;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_rows);
+  }
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.table(columnCount: $columnCount, rows: $rows)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TableBlockDataImpl &&
+            (identical(other.columnCount, columnCount) ||
+                other.columnCount == columnCount) &&
+            const DeepCollectionEquality().equals(other._rows, _rows));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, columnCount, const DeepCollectionEquality().hash(_rows));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TableBlockDataImplCopyWith<_$TableBlockDataImpl> get copyWith =>
+      __$$TableBlockDataImplCopyWithImpl<_$TableBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return table(columnCount, rows);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return table?.call(columnCount, rows);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(columnCount, rows);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return table(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return table?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$TableBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class TableBlockData extends BlockDataModel {
+  const factory TableBlockData(
+      {final int columnCount,
+      final List<TableRowData> rows}) = _$TableBlockDataImpl;
+  const TableBlockData._() : super._();
+
+  factory TableBlockData.fromJson(Map<String, dynamic> json) =
+      _$TableBlockDataImpl.fromJson;
+
+  int get columnCount;
+  List<TableRowData> get rows;
+  @JsonKey(ignore: true)
+  _$$TableBlockDataImplCopyWith<_$TableBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$PageLinkBlockDataImplCopyWith<$Res> {
+  factory _$$PageLinkBlockDataImplCopyWith(_$PageLinkBlockDataImpl value,
+          $Res Function(_$PageLinkBlockDataImpl) then) =
+      __$$PageLinkBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String pageId});
+}
+
+/// @nodoc
+class __$$PageLinkBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$PageLinkBlockDataImpl>
+    implements _$$PageLinkBlockDataImplCopyWith<$Res> {
+  __$$PageLinkBlockDataImplCopyWithImpl(_$PageLinkBlockDataImpl _value,
+      $Res Function(_$PageLinkBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? pageId = null,
+  }) {
+    return _then(_$PageLinkBlockDataImpl(
+      pageId: null == pageId
+          ? _value.pageId
+          : pageId // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$PageLinkBlockDataImpl extends PageLinkBlockData {
+  const _$PageLinkBlockDataImpl({required this.pageId, final String? $type})
+      : $type = $type ?? 'pageLink',
+        super._();
+
+  factory _$PageLinkBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$PageLinkBlockDataImplFromJson(json);
+
+  @override
+  final String pageId;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.pageLink(pageId: $pageId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$PageLinkBlockDataImpl &&
+            (identical(other.pageId, pageId) || other.pageId == pageId));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, pageId);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$PageLinkBlockDataImplCopyWith<_$PageLinkBlockDataImpl> get copyWith =>
+      __$$PageLinkBlockDataImplCopyWithImpl<_$PageLinkBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return pageLink(pageId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return pageLink?.call(pageId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (pageLink != null) {
+      return pageLink(pageId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return pageLink(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return pageLink?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (pageLink != null) {
+      return pageLink(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$PageLinkBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class PageLinkBlockData extends BlockDataModel {
+  const factory PageLinkBlockData({required final String pageId}) =
+      _$PageLinkBlockDataImpl;
+  const PageLinkBlockData._() : super._();
+
+  factory PageLinkBlockData.fromJson(Map<String, dynamic> json) =
+      _$PageLinkBlockDataImpl.fromJson;
+
+  String get pageId;
+  @JsonKey(ignore: true)
+  _$$PageLinkBlockDataImplCopyWith<_$PageLinkBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$WebLinkBlockDataImplCopyWith<$Res> {
+  factory _$$WebLinkBlockDataImplCopyWith(_$WebLinkBlockDataImpl value,
+          $Res Function(_$WebLinkBlockDataImpl) then) =
+      __$$WebLinkBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String url});
+}
+
+/// @nodoc
+class __$$WebLinkBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$WebLinkBlockDataImpl>
+    implements _$$WebLinkBlockDataImplCopyWith<$Res> {
+  __$$WebLinkBlockDataImplCopyWithImpl(_$WebLinkBlockDataImpl _value,
+      $Res Function(_$WebLinkBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? url = null,
+  }) {
+    return _then(_$WebLinkBlockDataImpl(
+      url: null == url
+          ? _value.url
+          : url // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$WebLinkBlockDataImpl extends WebLinkBlockData {
+  const _$WebLinkBlockDataImpl({required this.url, final String? $type})
+      : $type = $type ?? 'webLink',
+        super._();
+
+  factory _$WebLinkBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WebLinkBlockDataImplFromJson(json);
+
+  @override
+  final String url;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.webLink(url: $url)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WebLinkBlockDataImpl &&
+            (identical(other.url, url) || other.url == url));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, url);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WebLinkBlockDataImplCopyWith<_$WebLinkBlockDataImpl> get copyWith =>
+      __$$WebLinkBlockDataImplCopyWithImpl<_$WebLinkBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return webLink(url);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return webLink?.call(url);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (webLink != null) {
+      return webLink(url);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return webLink(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return webLink?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (webLink != null) {
+      return webLink(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WebLinkBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class WebLinkBlockData extends BlockDataModel {
+  const factory WebLinkBlockData({required final String url}) =
+      _$WebLinkBlockDataImpl;
+  const WebLinkBlockData._() : super._();
+
+  factory WebLinkBlockData.fromJson(Map<String, dynamic> json) =
+      _$WebLinkBlockDataImpl.fromJson;
+
+  String get url;
+  @JsonKey(ignore: true)
+  _$$WebLinkBlockDataImplCopyWith<_$WebLinkBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$ReminderBlockDataImplCopyWith<$Res> {
+  factory _$$ReminderBlockDataImplCopyWith(_$ReminderBlockDataImpl value,
+          $Res Function(_$ReminderBlockDataImpl) then) =
+      __$$ReminderBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call(
+      {String title,
+      String dueAt,
+      String timezone,
+      String? recurrenceRule,
+      bool completed});
+}
+
+/// @nodoc
+class __$$ReminderBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$ReminderBlockDataImpl>
+    implements _$$ReminderBlockDataImplCopyWith<$Res> {
+  __$$ReminderBlockDataImplCopyWithImpl(_$ReminderBlockDataImpl _value,
+      $Res Function(_$ReminderBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? title = null,
+    Object? dueAt = null,
+    Object? timezone = null,
+    Object? recurrenceRule = freezed,
+    Object? completed = null,
+  }) {
+    return _then(_$ReminderBlockDataImpl(
+      title: null == title
+          ? _value.title
+          : title // ignore: cast_nullable_to_non_nullable
+              as String,
+      dueAt: null == dueAt
+          ? _value.dueAt
+          : dueAt // ignore: cast_nullable_to_non_nullable
+              as String,
+      timezone: null == timezone
+          ? _value.timezone
+          : timezone // ignore: cast_nullable_to_non_nullable
+              as String,
+      recurrenceRule: freezed == recurrenceRule
+          ? _value.recurrenceRule
+          : recurrenceRule // ignore: cast_nullable_to_non_nullable
+              as String?,
+      completed: null == completed
+          ? _value.completed
+          : completed // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$ReminderBlockDataImpl extends ReminderBlockData {
+  const _$ReminderBlockDataImpl(
+      {this.title = '',
+      required this.dueAt,
+      this.timezone = 'UTC',
+      this.recurrenceRule,
+      this.completed = false,
+      final String? $type})
+      : $type = $type ?? 'reminder',
+        super._();
+
+  factory _$ReminderBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$ReminderBlockDataImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String title;
+  @override
+  final String dueAt;
+  @override
+  @JsonKey()
+  final String timezone;
+  @override
+  final String? recurrenceRule;
+  @override
+  @JsonKey()
+  final bool completed;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.reminder(title: $title, dueAt: $dueAt, timezone: $timezone, recurrenceRule: $recurrenceRule, completed: $completed)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ReminderBlockDataImpl &&
+            (identical(other.title, title) || other.title == title) &&
+            (identical(other.dueAt, dueAt) || other.dueAt == dueAt) &&
+            (identical(other.timezone, timezone) ||
+                other.timezone == timezone) &&
+            (identical(other.recurrenceRule, recurrenceRule) ||
+                other.recurrenceRule == recurrenceRule) &&
+            (identical(other.completed, completed) ||
+                other.completed == completed));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, title, dueAt, timezone, recurrenceRule, completed);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ReminderBlockDataImplCopyWith<_$ReminderBlockDataImpl> get copyWith =>
+      __$$ReminderBlockDataImplCopyWithImpl<_$ReminderBlockDataImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return reminder(title, dueAt, timezone, recurrenceRule, completed);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return reminder?.call(title, dueAt, timezone, recurrenceRule, completed);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (reminder != null) {
+      return reminder(title, dueAt, timezone, recurrenceRule, completed);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return reminder(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return reminder?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (reminder != null) {
+      return reminder(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$ReminderBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class ReminderBlockData extends BlockDataModel {
+  const factory ReminderBlockData(
+      {final String title,
+      required final String dueAt,
+      final String timezone,
+      final String? recurrenceRule,
+      final bool completed}) = _$ReminderBlockDataImpl;
+  const ReminderBlockData._() : super._();
+
+  factory ReminderBlockData.fromJson(Map<String, dynamic> json) =
+      _$ReminderBlockDataImpl.fromJson;
+
+  String get title;
+  String get dueAt;
+  String get timezone;
+  String? get recurrenceRule;
+  bool get completed;
+  @JsonKey(ignore: true)
+  _$$ReminderBlockDataImplCopyWith<_$ReminderBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DividerBlockDataImplCopyWith<$Res> {
+  factory _$$DividerBlockDataImplCopyWith(_$DividerBlockDataImpl value,
+          $Res Function(_$DividerBlockDataImpl) then) =
+      __$$DividerBlockDataImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$DividerBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$DividerBlockDataImpl>
+    implements _$$DividerBlockDataImplCopyWith<$Res> {
+  __$$DividerBlockDataImplCopyWithImpl(_$DividerBlockDataImpl _value,
+      $Res Function(_$DividerBlockDataImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DividerBlockDataImpl extends DividerBlockData {
+  const _$DividerBlockDataImpl({final String? $type})
+      : $type = $type ?? 'divider',
+        super._();
+
+  factory _$DividerBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DividerBlockDataImplFromJson(json);
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.divider()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$DividerBlockDataImpl);
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return divider();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return divider?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return divider(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return divider?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DividerBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class DividerBlockData extends BlockDataModel {
+  const factory DividerBlockData() = _$DividerBlockDataImpl;
+  const DividerBlockData._() : super._();
+
+  factory DividerBlockData.fromJson(Map<String, dynamic> json) =
+      _$DividerBlockDataImpl.fromJson;
+}
+
+/// @nodoc
+abstract class _$$CodeBlockDataImplCopyWith<$Res> {
+  factory _$$CodeBlockDataImplCopyWith(
+          _$CodeBlockDataImpl value, $Res Function(_$CodeBlockDataImpl) then) =
+      __$$CodeBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call(
+      {String code, String language, bool showLineNumbers, bool wrapLines});
+}
+
+/// @nodoc
+class __$$CodeBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$CodeBlockDataImpl>
+    implements _$$CodeBlockDataImplCopyWith<$Res> {
+  __$$CodeBlockDataImplCopyWithImpl(
+      _$CodeBlockDataImpl _value, $Res Function(_$CodeBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? code = null,
+    Object? language = null,
+    Object? showLineNumbers = null,
+    Object? wrapLines = null,
+  }) {
+    return _then(_$CodeBlockDataImpl(
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
+              as String,
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      showLineNumbers: null == showLineNumbers
+          ? _value.showLineNumbers
+          : showLineNumbers // ignore: cast_nullable_to_non_nullable
+              as bool,
+      wrapLines: null == wrapLines
+          ? _value.wrapLines
+          : wrapLines // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$CodeBlockDataImpl extends CodeBlockData {
+  const _$CodeBlockDataImpl(
+      {this.code = '',
+      this.language = 'plaintext',
+      this.showLineNumbers = false,
+      this.wrapLines = true,
+      final String? $type})
+      : $type = $type ?? 'code',
+        super._();
+
+  factory _$CodeBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$CodeBlockDataImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String code;
+  @override
+  @JsonKey()
+  final String language;
+  @override
+  @JsonKey()
+  final bool showLineNumbers;
+  @override
+  @JsonKey()
+  final bool wrapLines;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.code(code: $code, language: $language, showLineNumbers: $showLineNumbers, wrapLines: $wrapLines)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CodeBlockDataImpl &&
+            (identical(other.code, code) || other.code == code) &&
+            (identical(other.language, language) ||
+                other.language == language) &&
+            (identical(other.showLineNumbers, showLineNumbers) ||
+                other.showLineNumbers == showLineNumbers) &&
+            (identical(other.wrapLines, wrapLines) ||
+                other.wrapLines == wrapLines));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, code, language, showLineNumbers, wrapLines);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
+      __$$CodeBlockDataImplCopyWithImpl<_$CodeBlockDataImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(
+            List<TextSpanData> spans, int headingLevel, bool quote)
+        text,
+    required TResult Function(List<TextSpanData> spans, bool checked,
+            bool isExpanded, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(
+            List<TextSpanData> spans, String icon, String color)
+        callout,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(
+            String url, String? title, String? description, String? imageUrl)
+        bookmark,
+    required TResult Function(int columnCount, List<TableRowData> rows) table,
+    required TResult Function(String pageId) pageLink,
+    required TResult Function(String url) webLink,
+    required TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)
+        reminder,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return code(this.code, language, showLineNumbers, wrapLines);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult? Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult? Function(int columnCount, List<TableRowData> rows)? table,
+    TResult? Function(String pageId)? pageLink,
+    TResult? Function(String url)? webLink,
+    TResult? Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return code?.call(this.code, language, showLineNumbers, wrapLines);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel, bool quote)?
+        text,
+    TResult Function(List<TextSpanData> spans, bool checked, bool isExpanded,
+            String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(List<TextSpanData> spans, String icon, String color)?
+        callout,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(
+            String url, String? title, String? description, String? imageUrl)?
+        bookmark,
+    TResult Function(int columnCount, List<TableRowData> rows)? table,
+    TResult Function(String pageId)? pageLink,
+    TResult Function(String url)? webLink,
+    TResult Function(String title, String dueAt, String timezone,
+            String? recurrenceRule, bool completed)?
+        reminder,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this.code, language, showLineNumbers, wrapLines);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(CalloutBlockData value) callout,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(BookmarkBlockData value) bookmark,
+    required TResult Function(TableBlockData value) table,
+    required TResult Function(PageLinkBlockData value) pageLink,
+    required TResult Function(WebLinkBlockData value) webLink,
+    required TResult Function(ReminderBlockData value) reminder,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return code(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(CalloutBlockData value)? callout,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(BookmarkBlockData value)? bookmark,
+    TResult? Function(TableBlockData value)? table,
+    TResult? Function(PageLinkBlockData value)? pageLink,
+    TResult? Function(WebLinkBlockData value)? webLink,
+    TResult? Function(ReminderBlockData value)? reminder,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return code?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(CalloutBlockData value)? callout,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(BookmarkBlockData value)? bookmark,
+    TResult Function(TableBlockData value)? table,
+    TResult Function(PageLinkBlockData value)? pageLink,
+    TResult Function(WebLinkBlockData value)? webLink,
+    TResult Function(ReminderBlockData value)? reminder,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$CodeBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class CodeBlockData extends BlockDataModel {
+  const factory CodeBlockData(
+      {final String code,
+      final String language,
+      final bool showLineNumbers,
+      final bool wrapLines}) = _$CodeBlockDataImpl;
+  const CodeBlockData._() : super._();
+
+  factory CodeBlockData.fromJson(Map<String, dynamic> json) =
+      _$CodeBlockDataImpl.fromJson;
+
+  String get code;
+  String get language;
+  bool get showLineNumbers;
+  bool get wrapLines;
+  @JsonKey(ignore: true)
+  _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

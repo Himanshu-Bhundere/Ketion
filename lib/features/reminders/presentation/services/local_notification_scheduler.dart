@@ -19,8 +19,10 @@ class LocalNotificationScheduler implements ReminderScheduler {
       'reminders_channel_id',
       'Reminders',
       channelDescription: 'Notifications for your reminders',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
 
     const iOSDetails = DarwinNotificationDetails();
@@ -36,7 +38,7 @@ class LocalNotificationScheduler implements ReminderScheduler {
       body: 'You have a reminder scheduled.',
       scheduledDate: tz.TZDateTime.from(reminder.reminderTime, tz.local),
       notificationDetails: notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 

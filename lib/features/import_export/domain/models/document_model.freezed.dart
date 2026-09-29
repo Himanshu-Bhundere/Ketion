@@ -217,6 +217,8 @@ mixin _$DocumentNode {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -228,6 +230,8 @@ mixin _$DocumentNode {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -239,6 +243,8 @@ mixin _$DocumentNode {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -249,6 +255,8 @@ mixin _$DocumentNode {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -258,6 +266,8 @@ mixin _$DocumentNode {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -267,6 +277,8 @@ mixin _$DocumentNode {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -368,6 +380,8 @@ class _$DocParagraphImpl implements DocParagraph {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) {
     return paragraph(spans);
   }
@@ -382,6 +396,8 @@ class _$DocParagraphImpl implements DocParagraph {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) {
     return paragraph?.call(spans);
   }
@@ -396,6 +412,8 @@ class _$DocParagraphImpl implements DocParagraph {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (paragraph != null) {
@@ -412,6 +430,8 @@ class _$DocParagraphImpl implements DocParagraph {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) {
     return paragraph(this);
   }
@@ -424,6 +444,8 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) {
     return paragraph?.call(this);
   }
@@ -436,6 +458,8 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) {
     if (paragraph != null) {
@@ -542,6 +566,8 @@ class _$DocHeadingImpl implements DocHeading {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) {
     return heading(level, spans);
   }
@@ -556,6 +582,8 @@ class _$DocHeadingImpl implements DocHeading {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) {
     return heading?.call(level, spans);
   }
@@ -570,6 +598,8 @@ class _$DocHeadingImpl implements DocHeading {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (heading != null) {
@@ -586,6 +616,8 @@ class _$DocHeadingImpl implements DocHeading {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) {
     return heading(this);
   }
@@ -598,6 +630,8 @@ class _$DocHeadingImpl implements DocHeading {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) {
     return heading?.call(this);
   }
@@ -610,6 +644,8 @@ class _$DocHeadingImpl implements DocHeading {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) {
     if (heading != null) {
@@ -730,6 +766,8 @@ class _$DocListImpl implements DocList {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) {
     return list(listType, checked, spans);
   }
@@ -744,6 +782,8 @@ class _$DocListImpl implements DocList {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) {
     return list?.call(listType, checked, spans);
   }
@@ -758,6 +798,8 @@ class _$DocListImpl implements DocList {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (list != null) {
@@ -774,6 +816,8 @@ class _$DocListImpl implements DocList {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) {
     return list(this);
   }
@@ -786,6 +830,8 @@ class _$DocListImpl implements DocList {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) {
     return list?.call(this);
   }
@@ -798,6 +844,8 @@ class _$DocListImpl implements DocList {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) {
     if (list != null) {
@@ -901,6 +949,8 @@ class _$DocImageImpl implements DocImage {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) {
     return image(attachmentId, caption);
   }
@@ -915,6 +965,8 @@ class _$DocImageImpl implements DocImage {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) {
     return image?.call(attachmentId, caption);
   }
@@ -929,6 +981,8 @@ class _$DocImageImpl implements DocImage {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -945,6 +999,8 @@ class _$DocImageImpl implements DocImage {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) {
     return image(this);
   }
@@ -957,6 +1013,8 @@ class _$DocImageImpl implements DocImage {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) {
     return image?.call(this);
   }
@@ -969,6 +1027,8 @@ class _$DocImageImpl implements DocImage {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -1070,6 +1130,8 @@ class _$DocFileImpl implements DocFile {
         list,
     required TResult Function(String attachmentId, String? caption) image,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
   }) {
     return file(attachmentId, caption);
   }
@@ -1084,6 +1146,8 @@ class _$DocFileImpl implements DocFile {
         list,
     TResult? Function(String attachmentId, String? caption)? image,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
   }) {
     return file?.call(attachmentId, caption);
   }
@@ -1098,6 +1162,8 @@ class _$DocFileImpl implements DocFile {
         list,
     TResult Function(String attachmentId, String? caption)? image,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -1114,6 +1180,8 @@ class _$DocFileImpl implements DocFile {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
   }) {
     return file(this);
   }
@@ -1126,6 +1194,8 @@ class _$DocFileImpl implements DocFile {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
   }) {
     return file?.call(this);
   }
@@ -1138,6 +1208,8 @@ class _$DocFileImpl implements DocFile {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -1156,6 +1228,325 @@ abstract class DocFile implements DocumentNode {
   String? get caption;
   @JsonKey(ignore: true)
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DocDividerImplCopyWith<$Res> {
+  factory _$$DocDividerImplCopyWith(
+          _$DocDividerImpl value, $Res Function(_$DocDividerImpl) then) =
+      __$$DocDividerImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$DocDividerImplCopyWithImpl<$Res>
+    extends _$DocumentNodeCopyWithImpl<$Res, _$DocDividerImpl>
+    implements _$$DocDividerImplCopyWith<$Res> {
+  __$$DocDividerImplCopyWithImpl(
+      _$DocDividerImpl _value, $Res Function(_$DocDividerImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+
+class _$DocDividerImpl implements DocDivider {
+  const _$DocDividerImpl();
+
+  @override
+  String toString() {
+    return 'DocumentNode.divider()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$DocDividerImpl);
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<DocumentTextSpan> spans) paragraph,
+    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)
+        list,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
+  }) {
+    return divider();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult? Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
+  }) {
+    return divider?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(DocParagraph value) paragraph,
+    required TResult Function(DocHeading value) heading,
+    required TResult Function(DocList value) list,
+    required TResult Function(DocImage value) image,
+    required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
+  }) {
+    return divider(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(DocParagraph value)? paragraph,
+    TResult? Function(DocHeading value)? heading,
+    TResult? Function(DocList value)? list,
+    TResult? Function(DocImage value)? image,
+    TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
+  }) {
+    return divider?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(DocParagraph value)? paragraph,
+    TResult Function(DocHeading value)? heading,
+    TResult Function(DocList value)? list,
+    TResult Function(DocImage value)? image,
+    TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class DocDivider implements DocumentNode {
+  const factory DocDivider() = _$DocDividerImpl;
+}
+
+/// @nodoc
+abstract class _$$DocCodeImplCopyWith<$Res> {
+  factory _$$DocCodeImplCopyWith(
+          _$DocCodeImpl value, $Res Function(_$DocCodeImpl) then) =
+      __$$DocCodeImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String code, String language});
+}
+
+/// @nodoc
+class __$$DocCodeImplCopyWithImpl<$Res>
+    extends _$DocumentNodeCopyWithImpl<$Res, _$DocCodeImpl>
+    implements _$$DocCodeImplCopyWith<$Res> {
+  __$$DocCodeImplCopyWithImpl(
+      _$DocCodeImpl _value, $Res Function(_$DocCodeImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? code = null,
+    Object? language = null,
+  }) {
+    return _then(_$DocCodeImpl(
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
+              as String,
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DocCodeImpl implements DocCode {
+  const _$DocCodeImpl({required this.code, required this.language});
+
+  @override
+  final String code;
+  @override
+  final String language;
+
+  @override
+  String toString() {
+    return 'DocumentNode.code(code: $code, language: $language)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocCodeImpl &&
+            (identical(other.code, code) || other.code == code) &&
+            (identical(other.language, language) ||
+                other.language == language));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, code, language);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>
+      __$$DocCodeImplCopyWithImpl<_$DocCodeImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<DocumentTextSpan> spans) paragraph,
+    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)
+        list,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
+  }) {
+    return code(this.code, language);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult? Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
+  }) {
+    return code?.call(this.code, language);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this.code, language);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(DocParagraph value) paragraph,
+    required TResult Function(DocHeading value) heading,
+    required TResult Function(DocList value) list,
+    required TResult Function(DocImage value) image,
+    required TResult Function(DocFile value) file,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
+  }) {
+    return code(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(DocParagraph value)? paragraph,
+    TResult? Function(DocHeading value)? heading,
+    TResult? Function(DocList value)? list,
+    TResult? Function(DocImage value)? image,
+    TResult? Function(DocFile value)? file,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
+  }) {
+    return code?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(DocParagraph value)? paragraph,
+    TResult Function(DocHeading value)? heading,
+    TResult Function(DocList value)? list,
+    TResult Function(DocImage value)? image,
+    TResult Function(DocFile value)? file,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class DocCode implements DocumentNode {
+  const factory DocCode(
+      {required final String code,
+      required final String language}) = _$DocCodeImpl;
+
+  String get code;
+  String get language;
+  @JsonKey(ignore: true)
+  _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

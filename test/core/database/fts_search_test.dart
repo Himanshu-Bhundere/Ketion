@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:ketion/features/blocks/data/models/block_mapper.dart';
+import 'package:ketion/features/blocks/domain/entities/block.dart' as domain;
 
 void main() {
   late AppDatabase database;
@@ -80,5 +82,35 @@ void main() {
       variables: [drift.Variable.withString('important')],
     ).get();
     expect(results.length, 0);
+  });
+
+  test('canonical block serialization reaches FTS through the block mapper',
+      () async {
+    await database.into(database.pages).insert(
+          PagesCompanion.insert(
+            id: 'page2',
+            title: const drift.Value('Travel'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+    final block = domain.Block(
+      id: 'block2',
+      pageId: 'page2',
+      type: 'text',
+      position: 0,
+      data:
+          '{"spans":[{"text":"Book hotel in Mumbai"}],"headingLevel":0,"runtimeType":"text"}',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    await database.into(database.blocks).insert(block.toCompanion());
+    final rows = await database.customSelect(
+      'SELECT * FROM search_fts WHERE content MATCH ?',
+      variables: [drift.Variable.withString('Mumbai')],
+    ).get();
+
+    expect(rows.map((row) => row.read<String>('entityId')), contains('block2'));
   });
 }

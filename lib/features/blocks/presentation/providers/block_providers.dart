@@ -9,6 +9,9 @@ import '../../domain/usecases/delete_block_usecase.dart';
 import '../../domain/usecases/get_block_usecase.dart';
 import '../../domain/usecases/get_page_blocks_usecase.dart';
 import '../../domain/usecases/update_block_usecase.dart';
+import '../../domain/usecases/split_block_usecase.dart';
+import '../../domain/usecases/merge_blocks_usecase.dart';
+import '../../domain/usecases/restore_block_usecase.dart';
 import '../../../sync/presentation/providers/sync_providers.dart';
 
 final blockRepositoryProvider = Provider<BlockRepository>((ref) {
@@ -40,4 +43,19 @@ final updateBlockUseCaseProvider = Provider<UpdateBlockUseCase>((ref) {
 final deleteBlockUseCaseProvider = Provider<DeleteBlockUseCase>((ref) {
   final repository = ref.watch(blockRepositoryProvider);
   return DeleteBlockUseCase(repository);
+});
+
+final splitBlockUseCaseProvider = Provider<SplitBlockUseCase>((ref) {
+  final repository = ref.watch(blockRepositoryProvider);
+  return SplitBlockUseCase(repository);
+});
+
+final mergeBlocksUseCaseProvider = Provider<MergeBlocksUseCase>((ref) {
+  final repository = ref.watch(blockRepositoryProvider);
+  return MergeBlocksUseCase(repository);
+});
+
+final restoreBlockUseCaseProvider = Provider<RestoreBlockUseCase>((ref) {
+  final repository = ref.watch(blockRepositoryProvider);
+  return RestoreBlockUseCase(repository);
 });

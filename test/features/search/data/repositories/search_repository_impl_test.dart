@@ -68,4 +68,42 @@ void main() {
     result = await searchRepository.searchNotes('Secret');
     expect((result as Success<List<SearchResult>>).value.length, 0);
   });
+
+  test('searchNotes returns a body match with the page title and snippet',
+      () async {
+    await database.into(database.pages).insert(
+          PagesCompanion.insert(
+            id: 'page3',
+            title: const drift.Value('Travel'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+    await database.into(database.blocks).insert(
+          BlocksCompanion.insert(
+            id: 'block3',
+            pageId: 'page3',
+            type: 'text',
+            data: '{}',
+            searchableText: const drift.Value('Book hotel in Mumbai'),
+            position: 0,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+    final result = await searchRepository.searchNotes('Mumbai');
+    final matches = (result as Success<List<SearchResult>>).value;
+
+    expect(matches, hasLength(1));
+    expect(matches.single.entityType, 'block');
+    expect(matches.single.pageTitle, 'Travel');
+    expect(matches.single.snippet, contains('Mumbai'));
+
+    final pageOnly = await searchRepository.searchNotes(
+      'Mumbai',
+      typeFilter: 'page',
+    );
+    expect((pageOnly as Success<List<SearchResult>>).value, isEmpty);
+  });
 }

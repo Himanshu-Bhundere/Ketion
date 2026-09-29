@@ -56,7 +56,7 @@ class ExportUseCase {
       final blockDataModel = BlockDataModel.fromJson(
         jsonDecode(block.data) as Map<String, dynamic>,
       );
-      blockDataModel.map(
+      blockDataModel.maybeMap(
         text: (TextBlockData textBlock) {
           if (textBlock.headingLevel > 0) {
             nodes.add(
@@ -81,6 +81,15 @@ class ExportUseCase {
               spans: _mapSpans(listBlock.spans),
             ),
           );
+        },
+        divider: (DividerBlockData dividerBlock) {
+          nodes.add(const DocumentNode.divider());
+        },
+        code: (CodeBlockData codeBlock) {
+          nodes.add(DocumentNode.code(
+            language: codeBlock.language,
+            code: codeBlock.code,
+          ),);
         },
         image: (ImageBlockData imgBlock) {
           nodes.add(
@@ -125,6 +134,7 @@ class ExportUseCase {
         unknown: (UnknownBlockData _) {
           // Skip or handle unknown
         },
+        orElse: () {},
       );
     }
 

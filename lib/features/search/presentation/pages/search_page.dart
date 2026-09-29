@@ -8,6 +8,7 @@ import '../widgets/search_result_item.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
+import '../../../editor/domain/models/editor_open_target.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -130,19 +131,24 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               return SearchResultItem(
                 result: result,
                 onTap: () {
-                  if (result.entityType == 'tag') {
+                  if (result.strongestMatch.entityType == 'tag') {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Tag filtering coming soon: ${result.snippet}',
+                          'Tag filtering coming soon: ${result.strongestMatch.snippet}',
                         ),
                       ),
                     );
                     return;
                   }
 
-                  final targetPageId = result.pageId ?? result.entityId;
-                  context.push('/editor/$targetPageId');
+                  final targetPageId = result.strongestMatch.pageId ?? result.strongestMatch.entityId;
+                  context.push('/editor/$targetPageId', extra: {
+                    'openTarget': EditorOpenTarget(
+                      pageId: targetPageId,
+                      targetBlockId: result.strongestMatch.entityType == 'block' ? result.strongestMatch.entityId : null,
+                    ),
+                  },);
                 },
               );
             },

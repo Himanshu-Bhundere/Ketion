@@ -9,6 +9,7 @@ import 'package:ketion/features/home/presentation/providers/home_providers.dart'
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/theme/breakpoints.dart';
+import 'dart:async';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 
 enum NoteSortOption { dateCreated, dateUpdated, alphabetical }
@@ -90,8 +91,17 @@ class _NotesPageState extends ConsumerState<NotesPage> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
-                    onPressed: () {
-                      CreateActionSheet.show(context);
+                    onPressed: () async {
+                      final page = await CreateActionSheet.show(context);
+                      if (page != null && context.mounted) {
+                        unawaited(
+                          context.pushNamed(
+                            Routes.editorName,
+                            pathParameters: {'pageId': page.id},
+                            extra: const {'focusTitle': true},
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('New Note'),

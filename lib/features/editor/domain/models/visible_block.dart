@@ -12,3 +12,13 @@ class VisibleBlock with _$VisibleBlock {
     @Default(true) bool isExpanded,
   }) = _VisibleBlock;
 }
+
+@freezed
+class ProjectedBlock with _$ProjectedBlock {
+  const factory ProjectedBlock({
+    required Block block,
+    required int depth,
+    @Default(false) bool hasChildren,
+    String? hiddenByAncestorId,
+  }) = _ProjectedBlock;
+}

@@ -150,6 +150,28 @@ class PdfExporter implements ExportRepository {
                 );
                 widgets.add(pw.SizedBox(height: 8));
               },
+              code: (c) {
+                widgets.add(
+                  pw.Container(
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey300,
+                      borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                    ),
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      c.code,
+                      style: const pw.TextStyle(
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                );
+                widgets.add(pw.SizedBox(height: 8));
+              },
+              divider: (d) {
+                widgets.add(pw.Divider());
+                widgets.add(pw.SizedBox(height: 8));
+              },
             );
           }
 

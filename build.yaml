@@ -5,6 +5,8 @@ targets:
         generate_for:
           - lib/core/database/**
       json_serializable:
+        options:
+          explicit_to_json: true
         generate_for:
           exclude:
             - test/**

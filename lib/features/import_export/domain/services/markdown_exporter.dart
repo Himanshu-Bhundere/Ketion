@@ -38,6 +38,16 @@ class MarkdownExporter implements ExportRepository {
           buffer.writeln('[${f.caption ?? 'File'}](${f.attachmentId})');
           buffer.writeln();
         },
+        code: (c) {
+          buffer.writeln('```${c.language}');
+          buffer.writeln(c.code);
+          buffer.writeln('```');
+          buffer.writeln();
+        },
+        divider: (d) {
+          buffer.writeln('---');
+          buffer.writeln();
+        },
       );
     }
 

@@ -3,6 +3,7 @@ import 'package:ketion/core/config/env_config.dart';
 import 'package:ketion/core/utils/logger.dart';
 import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
 import 'package:ketion/core/bootstrap/background_bootstrap.dart';
+import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 
 class AppBootstrap {
   static Future<void> initialize() async {
@@ -15,5 +16,6 @@ class AppBootstrap {
 
     await WidgetBootstrap.initialize();
     await BackgroundBootstrap.initialize();
+    await NotificationBootstrap.initialize();
   }
 }

@@ -2,15 +2,16 @@ name: Build All Platforms
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   analyze_and_test:
     name: Analyze & Test
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,20 +19,20 @@ jobs:
       - name: Set up Java JDK
         uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: zulu
+          java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Run Build Runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze Code
         run: flutter analyze
@@ -43,6 +44,7 @@ jobs:
     name: Build Android APK
     needs: analyze_and_test
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,34 +52,36 @@ jobs:
       - name: Set up Java JDK
         uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: zulu
+          java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Run Build Runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build Debug APK
-        run: flutter build apk --debug
+      - name: Build Android APK
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ketion-android-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
 
   build_web:
     name: Build Web
     needs: analyze_and_test
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -85,14 +89,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Run Build Runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build Web
         run: flutter build web --release
@@ -107,6 +111,7 @@ jobs:
     name: Build Windows Desktop
     needs: analyze_and_test
     runs-on: windows-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -114,14 +119,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Run Build Runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build Windows
         run: flutter build windows --release
@@ -136,6 +141,7 @@ jobs:
     name: Build iOS (No Codesign)
     needs: analyze_and_test
     runs-on: macos-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -143,14 +149,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Run Build Runner
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build iOS App
         run: flutter build ios --release --no-codesign

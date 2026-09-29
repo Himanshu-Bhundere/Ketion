@@ -204,3 +204,196 @@ abstract class _VisibleBlock implements VisibleBlock {
   _$$VisibleBlockImplCopyWith<_$VisibleBlockImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+
+/// @nodoc
+mixin _$ProjectedBlock {
+  Block get block => throw _privateConstructorUsedError;
+  int get depth => throw _privateConstructorUsedError;
+  bool get hasChildren => throw _privateConstructorUsedError;
+  String? get hiddenByAncestorId => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $ProjectedBlockCopyWith<ProjectedBlock> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $ProjectedBlockCopyWith<$Res> {
+  factory $ProjectedBlockCopyWith(
+          ProjectedBlock value, $Res Function(ProjectedBlock) then) =
+      _$ProjectedBlockCopyWithImpl<$Res, ProjectedBlock>;
+  @useResult
+  $Res call(
+      {Block block, int depth, bool hasChildren, String? hiddenByAncestorId});
+
+  $BlockCopyWith<$Res> get block;
+}
+
+/// @nodoc
+class _$ProjectedBlockCopyWithImpl<$Res, $Val extends ProjectedBlock>
+    implements $ProjectedBlockCopyWith<$Res> {
+  _$ProjectedBlockCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? block = null,
+    Object? depth = null,
+    Object? hasChildren = null,
+    Object? hiddenByAncestorId = freezed,
+  }) {
+    return _then(_value.copyWith(
+      block: null == block
+          ? _value.block
+          : block // ignore: cast_nullable_to_non_nullable
+              as Block,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
+      hasChildren: null == hasChildren
+          ? _value.hasChildren
+          : hasChildren // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hiddenByAncestorId: freezed == hiddenByAncestorId
+          ? _value.hiddenByAncestorId
+          : hiddenByAncestorId // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+  }
+
+  @override
+  @pragma('vm:prefer-inline')
+  $BlockCopyWith<$Res> get block {
+    return $BlockCopyWith<$Res>(_value.block, (value) {
+      return _then(_value.copyWith(block: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$ProjectedBlockImplCopyWith<$Res>
+    implements $ProjectedBlockCopyWith<$Res> {
+  factory _$$ProjectedBlockImplCopyWith(_$ProjectedBlockImpl value,
+          $Res Function(_$ProjectedBlockImpl) then) =
+      __$$ProjectedBlockImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {Block block, int depth, bool hasChildren, String? hiddenByAncestorId});
+
+  @override
+  $BlockCopyWith<$Res> get block;
+}
+
+/// @nodoc
+class __$$ProjectedBlockImplCopyWithImpl<$Res>
+    extends _$ProjectedBlockCopyWithImpl<$Res, _$ProjectedBlockImpl>
+    implements _$$ProjectedBlockImplCopyWith<$Res> {
+  __$$ProjectedBlockImplCopyWithImpl(
+      _$ProjectedBlockImpl _value, $Res Function(_$ProjectedBlockImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? block = null,
+    Object? depth = null,
+    Object? hasChildren = null,
+    Object? hiddenByAncestorId = freezed,
+  }) {
+    return _then(_$ProjectedBlockImpl(
+      block: null == block
+          ? _value.block
+          : block // ignore: cast_nullable_to_non_nullable
+              as Block,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
+      hasChildren: null == hasChildren
+          ? _value.hasChildren
+          : hasChildren // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hiddenByAncestorId: freezed == hiddenByAncestorId
+          ? _value.hiddenByAncestorId
+          : hiddenByAncestorId // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$ProjectedBlockImpl implements _ProjectedBlock {
+  const _$ProjectedBlockImpl(
+      {required this.block,
+      required this.depth,
+      this.hasChildren = false,
+      this.hiddenByAncestorId});
+
+  @override
+  final Block block;
+  @override
+  final int depth;
+  @override
+  @JsonKey()
+  final bool hasChildren;
+  @override
+  final String? hiddenByAncestorId;
+
+  @override
+  String toString() {
+    return 'ProjectedBlock(block: $block, depth: $depth, hasChildren: $hasChildren, hiddenByAncestorId: $hiddenByAncestorId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$ProjectedBlockImpl &&
+            (identical(other.block, block) || other.block == block) &&
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.hasChildren, hasChildren) ||
+                other.hasChildren == hasChildren) &&
+            (identical(other.hiddenByAncestorId, hiddenByAncestorId) ||
+                other.hiddenByAncestorId == hiddenByAncestorId));
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, block, depth, hasChildren, hiddenByAncestorId);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$ProjectedBlockImplCopyWith<_$ProjectedBlockImpl> get copyWith =>
+      __$$ProjectedBlockImplCopyWithImpl<_$ProjectedBlockImpl>(
+          this, _$identity);
+}
+
+abstract class _ProjectedBlock implements ProjectedBlock {
+  const factory _ProjectedBlock(
+      {required final Block block,
+      required final int depth,
+      final bool hasChildren,
+      final String? hiddenByAncestorId}) = _$ProjectedBlockImpl;
+
+  @override
+  Block get block;
+  @override
+  int get depth;
+  @override
+  bool get hasChildren;
+  @override
+  String? get hiddenByAncestorId;
+  @override
+  @JsonKey(ignore: true)
+  _$$ProjectedBlockImplCopyWith<_$ProjectedBlockImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}

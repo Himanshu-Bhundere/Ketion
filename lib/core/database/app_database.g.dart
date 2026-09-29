@@ -6121,6 +6121,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AppSettingsTableTable(this);
   late final $ProcessedBatchesTable processedBatches =
       $ProcessedBatchesTable(this);
+  late final Index idxBlocksParentPos = Index('idx_blocks_parent_pos',
+      'CREATE INDEX idx_blocks_parent_pos ON blocks (parent_block_id, position)');
+  late final Index idxBlocksPage = Index(
+      'idx_blocks_page', 'CREATE INDEX idx_blocks_page ON blocks (page_id)');
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6138,7 +6142,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         syncQueue,
         syncStates,
         appSettingsTable,
-        processedBatches
+        processedBatches,
+        idxBlocksParentPos,
+        idxBlocksPage
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(

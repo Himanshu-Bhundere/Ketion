@@ -3,17 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
-import '../widgets/block_editor_widget.dart';
+import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
+import '../../domain/models/editor_open_target.dart';
 
 class EditorPage extends ConsumerWidget {
   final String pageId;
   final bool focusTitle;
+  final EditorOpenTarget? openTarget;
 
   const EditorPage({
     super.key,
     required this.pageId,
     this.focusTitle = false,
+    this.openTarget,
   });
 
   Future<Result<void>> _updatePage(
@@ -28,7 +31,11 @@ class EditorPage extends ConsumerWidget {
 
     final updatedPage = page.copyWith(title: title ?? page.title, icon: icon ?? page.icon);
     final result = await ref.read(updatePageUseCaseProvider)(updatedPage);
-    if (result is Success<void>) ref.invalidate(pageProvider(pageId));
+    if (result is Success<void>) {
+      ref.invalidate(pageProvider(pageId));
+      ref.invalidate(recentPagesProvider);
+      ref.invalidate(favoritePagesProvider);
+    }
     return result;
   }
 
@@ -36,9 +43,10 @@ class EditorPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: EditorTopBar(pageId: pageId),
-      body: BlockEditorWidget(
+      body: KetionEditorHost(
         pageId: pageId,
         focusTitle: focusTitle,
+        openTarget: openTarget,
         onTitleChanged: (title) => _updatePage(ref, title: title),
         onIconChanged: (icon) => _updatePage(ref, icon: icon),
       ),

@@ -10,6 +10,7 @@ import 'package:ketion/features/home/presentation/providers/home_providers.dart'
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
+import 'dart:async';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 
 class HomePage extends ConsumerWidget {
@@ -46,8 +47,17 @@ class HomePage extends ConsumerWidget {
       floatingActionButton:
           MediaQuery.of(context).size.width < AppBreakpoints.medium
               ? FloatingActionButton(
-                  onPressed: () {
-                    CreateActionSheet.show(context);
+                  onPressed: () async {
+                    final page = await CreateActionSheet.show(context);
+                    if (page != null && context.mounted) {
+                      unawaited(
+                        context.pushNamed(
+                          Routes.editorName,
+                          pathParameters: {'pageId': page.id},
+                          extra: const {'focusTitle': true},
+                        ),
+                      );
+                    }
                   },
                   child: const Icon(Icons.add),
                 )

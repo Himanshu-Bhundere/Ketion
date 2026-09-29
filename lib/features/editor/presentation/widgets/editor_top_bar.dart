@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../providers/editor_state_provider.dart';
+import 'package:ketion/features/editor/presentation/widgets/editor_history_controller.dart';
 import 'package:ketion/features/tags/presentation/widgets/tag_picker_sheet.dart';
 import 'package:ketion/features/collections/presentation/widgets/collection_picker_sheet.dart';
 import 'package:ketion/features/reminders/presentation/widgets/reminder_picker_sheet.dart';
@@ -32,19 +33,43 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         tooltip: 'Back',
-        onPressed: () => context.pop(),
+        onPressed: () => Navigator.maybePop(context),
       ),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.undo),
-          onPressed: () {
-            ref.read(editorStateProvider(pageId).notifier).undo();
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.redo),
-          onPressed: () {
-            ref.read(editorStateProvider(pageId).notifier).redo();
+        Consumer(
+          builder: (context, ref, child) {
+            final historyController = ref.watch(editorHistoryControllerProvider(pageId));
+            if (historyController == null) {
+              return const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(icon: Icon(Icons.undo), onPressed: null),
+                  IconButton(icon: Icon(Icons.redo), onPressed: null),
+                ],
+              );
+            }
+            return ListenableBuilder(
+              listenable: historyController,
+              builder: (context, _) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      onPressed: historyController.canUndo
+                          ? () => historyController.undo()
+                          : null,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.redo),
+                      onPressed: historyController.canRedo
+                          ? () => historyController.redo()
+                          : null,
+                    ),
+                  ],
+                );
+              },
+            );
           },
         ),
         pageAsync.when(

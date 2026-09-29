@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
 import 'package:ketion/features/reminders/presentation/services/reminder_scheduler.dart';
@@ -15,12 +16,32 @@ class LocalNotificationScheduler implements ReminderScheduler {
       return;
     }
 
+    if (Platform.isAndroid) {
+      final androidPlugin = flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        // Request permissions for Android 13+
+        await androidPlugin.requestNotificationsPermission();
+        await androidPlugin.requestExactAlarmsPermission();
+      }
+    } else if (Platform.isIOS) {
+      final iosPlugin = flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    }
+
     const androidDetails = AndroidNotificationDetails(
       'reminders_channel_id',
       'Reminders',
       channelDescription: 'Notifications for your reminders',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
 
     const iOSDetails = DarwinNotificationDetails();
@@ -36,9 +57,10 @@ class LocalNotificationScheduler implements ReminderScheduler {
       body: 'You have a reminder scheduled.',
       scheduledDate: tz.TZDateTime.from(reminder.reminderTime, tz.local),
       notificationDetails: notificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
+
 
   @override
   Future<void> cancelReminder(String id) async {

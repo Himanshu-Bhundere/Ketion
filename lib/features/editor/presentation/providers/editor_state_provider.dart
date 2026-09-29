@@ -127,7 +127,8 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final currentBlocks = state.valueOrNull ?? [];
     final oldBlock = currentBlocks.firstWhere((b) => b.id == block.id);
     await executeCommand(
-        UpdateBlockCommand(oldBlock: oldBlock, newBlock: block));
+      UpdateBlockCommand(oldBlock: oldBlock, newBlock: block),
+    );
   }
 
   Future<void> insertBlockAfter(Block existingBlock) async {
@@ -156,7 +157,8 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     if (index == -1) return;
 
     await executeCommand(
-        DeleteBlockCommand(block: currentBlocks[index], index: index));
+      DeleteBlockCommand(block: currentBlocks[index], index: index),
+    );
   }
 
   Future<void> indentBlock(String blockId) async {
@@ -164,8 +166,12 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final oldBlock = currentBlocks.firstWhere((b) => b.id == blockId);
     final updatedBlocks = BlockTreeService.indentBlock(blockId, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(
-          oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(
+        UpdateBlockCommand(
+          oldBlock: oldBlock,
+          newBlock: updatedBlocks.first,
+        ),
+      );
     }
   }
 
@@ -174,20 +180,30 @@ class EditorStateNotifier extends FamilyAsyncNotifier<List<Block>, String> {
     final oldBlock = currentBlocks.firstWhere((b) => b.id == blockId);
     final updatedBlocks = BlockTreeService.outdentBlock(blockId, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(
-          oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(
+        UpdateBlockCommand(
+          oldBlock: oldBlock,
+          newBlock: updatedBlocks.first,
+        ),
+      );
     }
   }
 
   Future<void> handleDropIntent(
-      String draggedBlockId, DropIntent intent) async {
+    String draggedBlockId,
+    DropIntent intent,
+  ) async {
     final currentBlocks = state.valueOrNull ?? [];
     final oldBlock = currentBlocks.firstWhere((b) => b.id == draggedBlockId);
     final updatedBlocks =
         BlockTreeService.moveBlock(draggedBlockId, intent, currentBlocks);
     if (updatedBlocks.isNotEmpty) {
-      await executeCommand(UpdateBlockCommand(
-          oldBlock: oldBlock, newBlock: updatedBlocks.first));
+      await executeCommand(
+        UpdateBlockCommand(
+          oldBlock: oldBlock,
+          newBlock: updatedBlocks.first,
+        ),
+      );
     }
   }
 }

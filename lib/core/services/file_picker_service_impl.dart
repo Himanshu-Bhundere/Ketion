@@ -7,8 +7,10 @@ class FilePickerServiceImpl implements FilePickerService {
   final ip.ImagePicker _imagePicker = ip.ImagePicker();
 
   @override
-  Future<List<PickedFile>> pickFiles(
-      {bool allowMultiple = false, List<String>? allowedExtensions}) async {
+  Future<List<PickedFile>> pickFiles({
+    bool allowMultiple = false,
+    List<String>? allowedExtensions,
+  }) async {
     final result = await fp.FilePicker.platform.pickFiles(
       allowMultiple: allowMultiple,
       type: allowedExtensions != null ? fp.FileType.custom : fp.FileType.any,

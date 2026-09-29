@@ -6,8 +6,11 @@ import 'package:ketion/features/editor/domain/services/block_tree_service.dart';
 void main() {
   final now = DateTime.now();
 
-  Block createBlock(
-      {required String id, String? parentId, required double position}) {
+  Block createBlock({
+    required String id,
+    String? parentId,
+    required double position,
+  }) {
     return Block(
       id: id,
       pageId: 'page_1',
@@ -58,8 +61,10 @@ void main() {
       final updated = BlockTreeService.indentBlock('root2', blocks);
       expect(updated.length, 1);
       expect(updated[0].parentBlockId, 'root1');
-      expect(updated[0].position,
-          0.0); // Assuming SiblingPositionManager gives 0.0 for first child
+      expect(
+        updated[0].position,
+        0.0,
+      ); // Assuming SiblingPositionManager gives 0.0 for first child
     });
 
     test('outdentBlock moves block after its parent', () {
@@ -72,8 +77,10 @@ void main() {
       final updated = BlockTreeService.outdentBlock('child', blocks);
       expect(updated.length, 1);
       expect(updated[0].parentBlockId, isNull);
-      expect(updated[0].position,
-          5.0); // SiblingPositionManager should give middle of 0 and 10
+      expect(
+        updated[0].position,
+        5.0,
+      ); // SiblingPositionManager should give middle of 0 and 10
     });
 
     test('moveBlock handles DropIntent.after correctly', () {
@@ -99,7 +106,10 @@ void main() {
 
       // Attempt to move parent into child
       final updated = BlockTreeService.moveBlock(
-          'parent', const DropIntent.child('child'), blocks);
+        'parent',
+        const DropIntent.child('child'),
+        blocks,
+      );
       expect(updated, isEmpty);
     });
   });

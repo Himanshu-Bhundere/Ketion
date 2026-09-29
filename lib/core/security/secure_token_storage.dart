@@ -67,7 +67,8 @@ class SecureTokenStorage {
       return const Success(null);
     } catch (e) {
       return Error(
-          UnknownFailure('Failed to clear securely stored tokens: $e'));
+        UnknownFailure('Failed to clear securely stored tokens: $e'),
+      );
     }
   }
 }

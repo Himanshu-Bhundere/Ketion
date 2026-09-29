@@ -38,11 +38,17 @@ class SyncSettingsSection extends ConsumerWidget {
               if (syncState.errorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(
-                      left: 16.0, right: 16.0, bottom: 16.0),
+                    left: 16.0,
+                    right: 16.0,
+                    bottom: 16.0,
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline,
-                          color: theme.colorScheme.error, size: 16),
+                      Icon(
+                        Icons.error_outline,
+                        color: theme.colorScheme.error,
+                        size: 16,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -81,7 +87,10 @@ class SyncSettingsSection extends ConsumerWidget {
   }
 
   Widget _buildTrailing(
-      BuildContext context, WidgetRef ref, SyncUiState syncState) {
+    BuildContext context,
+    WidgetRef ref,
+    SyncUiState syncState,
+  ) {
     if (syncState.status == SyncUiStatus.authenticationRequired) {
       return ElevatedButton(
         onPressed: () => _signIn(ref),

@@ -94,9 +94,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -104,9 +105,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -126,9 +128,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -136,9 +139,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -163,9 +167,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -173,9 +178,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-2',
         sourceFile: PlatformFile(
-            name: p.basename(otherFile.path),
-            path: otherFile.path,
-            size: otherFile.lengthSync()),
+          name: p.basename(otherFile.path),
+          path: otherFile.path,
+          size: otherFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -188,9 +194,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 
@@ -203,9 +210,10 @@ void main() {
         pageId: 'page-dedup',
         blockId: 'block-dedup-1',
         sourceFile: PlatformFile(
-            name: p.basename(testFile.path),
-            path: testFile.path,
-            size: testFile.lengthSync()),
+          name: p.basename(testFile.path),
+          path: testFile.path,
+          size: testFile.lengthSync(),
+        ),
         mimeType: 'image/png',
       );
 

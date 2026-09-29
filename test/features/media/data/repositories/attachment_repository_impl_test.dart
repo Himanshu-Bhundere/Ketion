@@ -96,9 +96,10 @@ void main() {
       pageId: 'page-1',
       blockId: 'block-1',
       sourceFile: PlatformFile(
-          name: p.basename(testFile.path),
-          path: testFile.path,
-          size: testFile.lengthSync()),
+        name: p.basename(testFile.path),
+        path: testFile.path,
+        size: testFile.lengthSync(),
+      ),
       mimeType: 'image/png',
     );
 
@@ -123,9 +124,10 @@ void main() {
       pageId: 'page-1',
       blockId: 'block-1',
       sourceFile: PlatformFile(
-          name: p.basename(testFile.path),
-          path: testFile.path,
-          size: testFile.lengthSync()),
+        name: p.basename(testFile.path),
+        path: testFile.path,
+        size: testFile.lengthSync(),
+      ),
       mimeType: 'image/png',
     );
 
@@ -133,9 +135,10 @@ void main() {
       pageId: 'page-1',
       blockId: 'block-2',
       sourceFile: PlatformFile(
-          name: p.basename(testFile.path),
-          path: testFile.path,
-          size: testFile.lengthSync()),
+        name: p.basename(testFile.path),
+        path: testFile.path,
+        size: testFile.lengthSync(),
+      ),
       mimeType: 'image/png',
     );
 
@@ -155,9 +158,10 @@ void main() {
       pageId: 'page-1',
       blockId: 'block-1',
       sourceFile: PlatformFile(
-          name: p.basename(testFile.path),
-          path: testFile.path,
-          size: testFile.lengthSync()),
+        name: p.basename(testFile.path),
+        path: testFile.path,
+        size: testFile.lengthSync(),
+      ),
       mimeType: 'image/png',
     );
 

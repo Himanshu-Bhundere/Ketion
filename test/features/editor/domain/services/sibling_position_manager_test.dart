@@ -19,30 +19,38 @@ void main() {
 
   group('SiblingPositionManager', () {
     test('calculatePositionBetweenBlocks with nulls returns 0.0', () {
-      expect(SiblingPositionManager.calculatePositionBetweenBlocks(null, null),
-          0.0);
+      expect(
+        SiblingPositionManager.calculatePositionBetweenBlocks(null, null),
+        0.0,
+      );
     });
 
     test('calculatePositionBetweenBlocks with both blocks returns midpoint',
         () {
       final prev = createBlock(10.0);
       final next = createBlock(20.0);
-      expect(SiblingPositionManager.calculatePositionBetweenBlocks(prev, next),
-          15.0);
+      expect(
+        SiblingPositionManager.calculatePositionBetweenBlocks(prev, next),
+        15.0,
+      );
     });
 
     test('calculatePositionBetweenBlocks with only prev returns prev + gap',
         () {
       final prev = createBlock(10.0);
-      expect(SiblingPositionManager.calculatePositionBetweenBlocks(prev, null),
-          10.0 + 1000.0);
+      expect(
+        SiblingPositionManager.calculatePositionBetweenBlocks(prev, null),
+        10.0 + 1000.0,
+      );
     });
 
     test('calculatePositionBetweenBlocks with only next returns next - gap',
         () {
       final next = createBlock(10.0);
-      expect(SiblingPositionManager.calculatePositionBetweenBlocks(null, next),
-          10.0 - 1000.0);
+      expect(
+        SiblingPositionManager.calculatePositionBetweenBlocks(null, next),
+        10.0 - 1000.0,
+      );
     });
   });
 }

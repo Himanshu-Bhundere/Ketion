@@ -18,8 +18,11 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  Future<void> showNotification(
-      {required int id, required String title, required String body}) async {
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'ketion_sync',
       'Synchronization',

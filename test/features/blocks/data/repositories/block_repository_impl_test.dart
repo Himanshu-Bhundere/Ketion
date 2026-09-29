@@ -130,7 +130,9 @@ void main() {
             ..where((t) => t.entityId.equals('block1')))
           .get();
       expect(
-          queueItems.length, 0); // 1 create + 1 delete = coalesced and removed
+        queueItems.length,
+        0,
+      ); // 1 create + 1 delete = coalesced and removed
     });
   });
 }

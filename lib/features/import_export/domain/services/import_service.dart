@@ -9,8 +9,11 @@ class ImportService {
   final CreateBlockUseCase _createBlockUseCase;
   final FilePickerService _filePickerService;
 
-  ImportService(this._createPageUseCase, this._createBlockUseCase,
-      this._filePickerService);
+  ImportService(
+    this._createPageUseCase,
+    this._createBlockUseCase,
+    this._filePickerService,
+  );
 
   Future<void> importMarkdownFile() async {
     final result = await _filePickerService.pickFiles(

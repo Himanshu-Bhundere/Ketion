@@ -74,10 +74,12 @@ class MediaPickerService {
       String mimeType = 'application/octet-stream';
       final extension = platformFile.extension ??
           platformFile.name.split('.').last.toLowerCase();
-      if (['mp4', 'mov', 'avi'].contains(extension))
+      if (['mp4', 'mov', 'avi'].contains(extension)) {
         mimeType = 'video/$extension';
-      if (['mp3', 'wav', 'm4a'].contains(extension))
+      }
+      if (['mp3', 'wav', 'm4a'].contains(extension)) {
         mimeType = 'audio/$extension';
+      }
       if (extension == 'pdf') mimeType = 'application/pdf';
 
       final attachment = await _repository.saveAttachment(

@@ -19,8 +19,9 @@ class RichTextController extends TextEditingController {
   }
 
   void toggleFormat(String type, {String? value}) {
-    if (selection.isCollapsed)
+    if (selection.isCollapsed) {
       return; // Cannot toggle format without selection for now
+    }
 
     _spans = SpanNormalizer.toggleFormat(
       _spans,
@@ -79,7 +80,10 @@ class RichTextController extends TextEditingController {
   }
 
   TextStyle _applySpanStyle(
-      TextStyle baseStyle, InlineSpanModel span, BuildContext context) {
+    TextStyle baseStyle,
+    InlineSpanModel span,
+    BuildContext context,
+  ) {
     switch (span.type) {
       case 'bold':
         return baseStyle.copyWith(fontWeight: FontWeight.bold);

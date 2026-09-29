@@ -13,7 +13,8 @@ DatabaseConnection connect() {
 
       if (result.missingFeatures.isNotEmpty) {
         debugPrint(
-            'Warning: Using ${result.chosenImplementation} due to missing features: ${result.missingFeatures}');
+          'Warning: Using ${result.chosenImplementation} due to missing features: ${result.missingFeatures}',
+        );
       }
 
       return result.resolvedExecutor;

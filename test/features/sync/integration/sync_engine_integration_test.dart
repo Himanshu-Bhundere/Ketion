@@ -53,7 +53,9 @@ class FakeSyncStateRepository implements SyncStateRepository {
 
   @override
   Future<Result<SyncStateEntity?>> getSyncState(
-      String deviceId, String provider) async {
+    String deviceId,
+    String provider,
+  ) async {
     if (returnError) return const Error(StorageFailure('error'));
     _state ??= SyncStateEntity(
       deviceId: deviceId,
@@ -90,17 +92,17 @@ class FakeSyncProvider implements SyncProvider {
     if (crashOnListChanges) {
       throw Exception('Simulated crash during listChanges');
     }
-    
+
     if (cursor == 'next_cursor') {
-       return Success(
-         SyncDownloadResult(
-           changes: [],
-           nextCursor: null,
-           hasMore: false,
-         ),
-       );
+      return Success(
+        SyncDownloadResult(
+          changes: [],
+          nextCursor: null,
+          hasMore: false,
+        ),
+      );
     }
-    
+
     return Success(
       SyncDownloadResult(
         changes: returnChanges,
@@ -117,13 +119,16 @@ class FakeSyncProvider implements SyncProvider {
 
   @override
   Future<Result<SyncDownloadResult>> downloadHistoricalBatches(
-      String? cursor) async {
+    String? cursor,
+  ) async {
     return downloadChanges(cursor);
   }
 
   @override
   Future<Result<void>> uploadChanges(
-      String batchId, Map<String, dynamic> payload) async {
+    String batchId,
+    Map<String, dynamic> payload,
+  ) async {
     pushBatchCallCount++;
     if (crashOnPushBatch) {
       throw Exception('Simulated crash during uploadChanges');
@@ -133,13 +138,18 @@ class FakeSyncProvider implements SyncProvider {
 
   @override
   Future<Result<String>> uploadAttachment(
-      String localPath, String mimeType, String checksum) async {
+    String localPath,
+    String mimeType,
+    String checksum,
+  ) async {
     return const Success('uploaded_id');
   }
 
   @override
   Future<Result<void>> downloadAttachment(
-      String remoteFileId, String destinationPath) async {
+    String remoteFileId,
+    String destinationPath,
+  ) async {
     return const Success(null);
   }
 
@@ -318,7 +328,7 @@ void main() {
           'operation': 'upsert',
           'version': 3,
           'updatedAt':
-                now.subtract(const Duration(minutes: 5)).toIso8601String(),
+              now.subtract(const Duration(minutes: 5)).toIso8601String(),
           'payload': {
             'id': 'page-skew',
             'title': 'Remote Skew Title',
@@ -336,8 +346,10 @@ void main() {
       // Remote should win because remote version is higher, despite local updatedAt being newer.
       final pages = await database.select(database.pages).get();
       expect(pages.length, 1);
-      expect(pages.first.title,
-          'Remote Skew Title'); // Kept remote due to higher version
+      expect(
+        pages.first.title,
+        'Remote Skew Title',
+      ); // Kept remote due to higher version
     });
     test('Multi-entity batch is atomic on error', () async {
       // If a batch contains 2 changes, and the 2nd change crashes (e.g., malformed),
@@ -558,7 +570,9 @@ void main() {
     });
 
     // Validation Tests (7-21)
-    test('Validation: Missing required protocol fields in change throws exception', () async {
+    test(
+        'Validation: Missing required protocol fields in change throws exception',
+        () async {
       final invalidChanges = [
         // missing operation
         {
@@ -649,6 +663,5 @@ void main() {
       final result = await syncEngine.syncNow();
       expect(result.isError, isTrue);
     });
-
   });
 }

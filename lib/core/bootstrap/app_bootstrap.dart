@@ -10,7 +10,8 @@ class AppBootstrap {
 
     EnvConfig.init(environment: 'dev', isProduction: false);
     appLogger.i(
-        'Starting Ketion App in ${EnvConfig.instance.environment} environment.');
+      'Starting Ketion App in ${EnvConfig.instance.environment} environment.',
+    );
 
     await WidgetBootstrap.initialize();
     await BackgroundBootstrap.initialize();

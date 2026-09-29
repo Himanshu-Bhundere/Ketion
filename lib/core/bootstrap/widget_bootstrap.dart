@@ -11,7 +11,8 @@ class WidgetBootstrap {
   static void listenToDeepLinks() {
     HomeWidget.widgetClicked.listen(_launchedFromWidget);
     unawaited(
-        HomeWidget.initiallyLaunchedFromHomeWidget().then(_launchedFromWidget));
+      HomeWidget.initiallyLaunchedFromHomeWidget().then(_launchedFromWidget),
+    );
   }
 
   static void _launchedFromWidget(Uri? uri) {

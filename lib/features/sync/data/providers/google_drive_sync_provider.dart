@@ -148,7 +148,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
 
       if (kIsWeb) {
         throw UnsupportedError(
-            'Local file download is not supported on the web');
+          'Local file download is not supported on the web',
+        );
       }
 
       final file = io.File(destinationPath);
@@ -217,7 +218,8 @@ class GoogleDriveSyncProvider implements SyncProvider {
 
   @override
   Future<Result<SyncDownloadResult>> downloadHistoricalBatches(
-      String? cursor) async {
+    String? cursor,
+  ) async {
     if (_driveApi == null || _syncFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
@@ -267,8 +269,13 @@ class GoogleDriveSyncProvider implements SyncProvider {
       String? nextCursor = fileList.nextPageToken;
       bool hasMore = fileList.nextPageToken != null;
 
-      return Success(SyncDownloadResult(
-          changes: results, nextCursor: nextCursor, hasMore: hasMore));
+      return Success(
+        SyncDownloadResult(
+          changes: results,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+        ),
+      );
     } catch (e) {
       return Error(SyncFailure('Failed to download historical batches: $e'));
     }
@@ -346,8 +353,13 @@ class GoogleDriveSyncProvider implements SyncProvider {
           changeList.nextPageToken ?? changeList.newStartPageToken;
       bool hasMore = changeList.nextPageToken != null;
 
-      return Success(SyncDownloadResult(
-          changes: results, nextCursor: nextCursor, hasMore: hasMore));
+      return Success(
+        SyncDownloadResult(
+          changes: results,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+        ),
+      );
     } catch (e) {
       return Error(SyncFailure('Failed to download changes: $e'));
     }

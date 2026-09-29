@@ -32,9 +32,11 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         title: const Text('All Notes'),
         actions: [
           IconButton(
-            icon: Icon(_viewType == NoteViewType.list
-                ? Icons.grid_view
-                : Icons.view_list),
+            icon: Icon(
+              _viewType == NoteViewType.list
+                  ? Icons.grid_view
+                  : Icons.view_list,
+            ),
             onPressed: () {
               setState(() {
                 _viewType = _viewType == NoteViewType.list
@@ -48,14 +50,17 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             onSelected: (option) => setState(() => _sortOption = option),
             itemBuilder: (context) => [
               const PopupMenuItem(
-                  value: NoteSortOption.dateUpdated,
-                  child: Text('Date Updated')),
+                value: NoteSortOption.dateUpdated,
+                child: Text('Date Updated'),
+              ),
               const PopupMenuItem(
-                  value: NoteSortOption.dateCreated,
-                  child: Text('Date Created')),
+                value: NoteSortOption.dateCreated,
+                child: Text('Date Created'),
+              ),
               const PopupMenuItem(
-                  value: NoteSortOption.alphabetical,
-                  child: Text('Alphabetical')),
+                value: NoteSortOption.alphabetical,
+                child: Text('Alphabetical'),
+              ),
             ],
           ),
         ],
@@ -67,13 +72,19 @@ class _NotesPageState extends ConsumerState<NotesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.description_outlined,
-                      size: 48, color: Theme.of(context).colorScheme.outline),
+                  Icon(
+                    Icons.description_outlined,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   const Text('No notes yet', style: AppTypography.title),
                   const SizedBox(height: AppSpacing.sm),
-                  const Text('Capture your thoughts and ideas here.',
-                      style: AppTypography.body, textAlign: TextAlign.center),
+                  const Text(
+                    'Capture your thoughts and ideas here.',
+                    style: AppTypography.body,
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   FilledButton.icon(
                     onPressed: () {
@@ -158,8 +169,11 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48, color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: AppSpacing.md),
               const Text('Something went wrong', style: AppTypography.title),
               const SizedBox(height: AppSpacing.sm),
@@ -190,7 +204,8 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         ),
         title: Text(page.title.isEmpty ? 'Untitled' : page.title),
         subtitle: Text(
-            'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}'),
+          'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
+        ),
         onTap: () => _openNote(context, page),
       ),
     );

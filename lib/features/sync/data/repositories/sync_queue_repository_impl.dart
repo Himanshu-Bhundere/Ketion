@@ -69,8 +69,10 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
   }
 
   @override
-  Future<Result<List<SyncQueueItem>>> claimNextBatch(
-      {int limit = 50, required Duration leaseDuration}) async {
+  Future<Result<List<SyncQueueItem>>> claimNextBatch({
+    int limit = 50,
+    required Duration leaseDuration,
+  }) async {
     try {
       return await _db.transaction(() async {
         final now = DateTime.now().toUtc();
@@ -92,11 +94,17 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
 
         // Try to find an existing batch that is waiting to be retried
         final waitingQuery = _db.select(_db.syncQueue)
-          ..where((tbl) =>
-              tbl.status.equals(SyncQueueItemStatus.waiting.name) &
-              tbl.batchId.isNotNull() &
-              (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)))
-          ..orderBy([(tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)])
+          ..where(
+            (tbl) =>
+                tbl.status.equals(SyncQueueItemStatus.waiting.name) &
+                tbl.batchId.isNotNull() &
+                (tbl.nextRetryAt.isNull() |
+                    tbl.nextRetryAt.isSmallerOrEqualValue(now)),
+          )
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)
+          ])
           ..limit(1);
 
         final firstWaiting = await waitingQuery.getSingleOrNull();
@@ -113,13 +121,19 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         } else {
           // No existing waiting batch, form a new one from pending items
           final pendingQuery = _db.select(_db.syncQueue)
-            ..where((tbl) =>
-                tbl.status.equals(SyncQueueItemStatus.pending.name) &
-                tbl.batchId.isNull() &
-                (tbl.nextRetryAt.isNull() | tbl.nextRetryAt.isSmallerOrEqualValue(now)))
-            ..orderBy([(tbl) => OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)])
+            ..where(
+              (tbl) =>
+                  tbl.status.equals(SyncQueueItemStatus.pending.name) &
+                  tbl.batchId.isNull() &
+                  (tbl.nextRetryAt.isNull() |
+                      tbl.nextRetryAt.isSmallerOrEqualValue(now)),
+            )
+            ..orderBy([
+              (tbl) => OrderingTerm(
+                  expression: tbl.createdAt, mode: OrderingMode.asc)
+            ])
             ..limit(limit);
-          
+
           items = await pendingQuery.get();
           targetBatchId = const Uuid().v7();
         }
@@ -130,7 +144,8 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
 
         final ids = items.map((e) => e.id).toList();
 
-        final statement = _db.update(_db.syncQueue)..where((tbl) => tbl.id.isIn(ids));
+        final statement = _db.update(_db.syncQueue)
+          ..where((tbl) => tbl.id.isIn(ids));
         await statement.write(
           SyncQueueCompanion.custom(
             status: const Variable('processing'),
@@ -153,7 +168,9 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
 
   @override
   Future<Result<SyncQueueItem?>> findPendingItem(
-      String table, String entityId) async {
+    String table,
+    String entityId,
+  ) async {
     try {
       final query = _db.select(_db.syncQueue)
         ..where(

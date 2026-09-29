@@ -5,8 +5,11 @@ class SyncDownloadResult {
   final String? nextCursor;
   final bool hasMore;
 
-  SyncDownloadResult(
-      {required this.changes, this.nextCursor, this.hasMore = false});
+  SyncDownloadResult({
+    required this.changes,
+    this.nextCursor,
+    this.hasMore = false,
+  });
 }
 
 abstract class SyncProvider {

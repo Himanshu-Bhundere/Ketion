@@ -9,8 +9,10 @@ abstract class SyncQueueRepository {
   Future<Result<void>> enqueueOrCoalesce(SyncQueueItem item);
 
   /// Atomically claim a batch of items for processing and assign them a batchId
-  Future<Result<List<SyncQueueItem>>> claimNextBatch(
-      {int limit = 50, required Duration leaseDuration});
+  Future<Result<List<SyncQueueItem>>> claimNextBatch({
+    int limit = 50,
+    required Duration leaseDuration,
+  });
 
   /// Find an existing pending item for an entity
   Future<Result<SyncQueueItem?>> findPendingItem(String table, String entityId);

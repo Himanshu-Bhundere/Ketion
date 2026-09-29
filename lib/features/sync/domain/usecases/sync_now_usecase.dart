@@ -9,7 +9,10 @@ class SyncNowUseCase {
   final AttachmentSyncService attachmentSyncService;
 
   SyncNowUseCase(
-      this.repository, this.widgetService, this.attachmentSyncService);
+    this.repository,
+    this.widgetService,
+    this.attachmentSyncService,
+  );
 
   Future<Result<void>> call() async {
     final result = await repository.syncNow();

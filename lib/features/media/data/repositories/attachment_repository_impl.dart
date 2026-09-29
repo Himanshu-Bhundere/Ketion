@@ -191,8 +191,12 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
   }
 
   @override
-  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus,
-      {String? driveFileId, String? localPath}) async {
+  Future<void> updateAttachmentSyncStatus(
+    String id,
+    String uploadStatus, {
+    String? driveFileId,
+    String? localPath,
+  }) async {
     await _db.transaction(() async {
       final companion = AttachmentsCompanion(
         uploadStatus: Value(uploadStatus),

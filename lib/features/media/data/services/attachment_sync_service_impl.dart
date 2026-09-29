@@ -18,12 +18,16 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
   final AttachmentStorageService _storageService;
 
   AttachmentSyncServiceImpl(
-      this._repository, this._syncProvider, this._storageService);
+    this._repository,
+    this._syncProvider,
+    this._storageService,
+  );
 
   @override
   Future<void> uploadAttachment(Attachment attachment) async {
-    if (attachment.localPath == null || attachment.checksumSha256 == null)
+    if (attachment.localPath == null || attachment.checksumSha256 == null) {
       return;
+    }
 
     // Resolve absolute path
     final absolutePath = await _repository.resolveAttachmentPath(attachment);
@@ -57,7 +61,8 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
 
     if (kIsWeb) {
       throw UnsupportedError(
-          'Local attachment download is not supported on the web');
+        'Local attachment download is not supported on the web',
+      );
     }
 
     // We need a temp directory

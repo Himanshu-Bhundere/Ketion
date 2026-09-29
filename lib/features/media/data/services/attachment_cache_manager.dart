@@ -27,12 +27,14 @@ class AttachmentCacheManager {
     final rows = await (_db.select(_db.attachments)
           ..where((t) => t.isPinnedOffline.equals(false))
           ..where((t) => t.localPath.isNotNull())
-          ..where((t) =>
-              t.uploadStatus.equals('uploaded')) // Only evict if backed up
+          ..where(
+            (t) => t.uploadStatus.equals('uploaded'),
+          ) // Only evict if backed up
           ..where((t) => t.deleted.equals(false))
           // Order by oldest first
           ..orderBy([
-            (t) => OrderingTerm(expression: t.updatedAt, mode: OrderingMode.asc)
+            (t) =>
+                OrderingTerm(expression: t.updatedAt, mode: OrderingMode.asc),
           ]))
         .get();
 

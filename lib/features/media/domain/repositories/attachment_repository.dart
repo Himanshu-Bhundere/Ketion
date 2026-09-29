@@ -28,8 +28,12 @@ abstract class AttachmentRepository {
   Future<void> garbageCollectOrphanedFiles();
 
   /// Updates the sync status and drive file ID for an attachment.
-  Future<void> updateAttachmentSyncStatus(String id, String uploadStatus,
-      {String? driveFileId, String? localPath});
+  Future<void> updateAttachmentSyncStatus(
+    String id,
+    String uploadStatus, {
+    String? driveFileId,
+    String? localPath,
+  });
 
   /// Retrieves all attachments that are pending upload or failed.
   Future<List<Attachment>> getPendingUploads();

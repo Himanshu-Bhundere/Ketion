@@ -23,7 +23,10 @@ class SyncEntityApplier {
 
   /// Applies a resolved entity (create, update, or tombstone delete) using the generated Data Classes / Companions.
   Future<void> applyResolvedEntity(
-      String table, String entityId, Map<String, dynamic> payload) async {
+    String table,
+    String entityId,
+    Map<String, dynamic> payload,
+  ) async {
     switch (table) {
       case 'pages':
         final page = domain_page.Page.fromJson(payload);

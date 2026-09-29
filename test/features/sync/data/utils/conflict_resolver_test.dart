@@ -14,12 +14,12 @@ void main() {
       final remoteData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'remote-1'
+        'deviceId': 'remote-1',
       };
       final localData = {
         'version': 1,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(2000, isUtc: true),
-        'deviceId': 'local-1'
+        'deviceId': 'local-1',
       };
 
       final resolution = ConflictResolver.resolveConflictSync(
@@ -41,12 +41,12 @@ void main() {
       final remoteData = {
         'version': 1,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(2000, isUtc: true),
-        'deviceId': 'remote-1'
+        'deviceId': 'remote-1',
       };
       final localData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'local-1'
+        'deviceId': 'local-1',
       };
 
       final resolution = ConflictResolver.resolveConflictSync(
@@ -65,12 +65,12 @@ void main() {
       final remoteData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(2000, isUtc: true),
-        'deviceId': 'a'
+        'deviceId': 'a',
       };
       final localData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'a'
+        'deviceId': 'a',
       };
 
       final resolution = ConflictResolver.resolveConflictSync(
@@ -94,12 +94,12 @@ void main() {
       final remoteData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'b'
+        'deviceId': 'b',
       };
       final localData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'a'
+        'deviceId': 'a',
       };
 
       final resolution = ConflictResolver.resolveConflictSync(
@@ -123,12 +123,12 @@ void main() {
       final remoteData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'a'
+        'deviceId': 'a',
       };
       final localData = {
         'version': 2,
         'updatedAt': DateTime.fromMillisecondsSinceEpoch(1000, isUtc: true),
-        'deviceId': 'b'
+        'deviceId': 'b',
       };
 
       final resolution = ConflictResolver.resolveConflictSync(

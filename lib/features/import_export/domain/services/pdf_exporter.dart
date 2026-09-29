@@ -1,6 +1,5 @@
 import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:ketion/features/import_export/domain/models/document_model.dart';
@@ -100,7 +99,8 @@ class PdfExporter implements ExportRepository {
                 try {
                   if (kIsWeb) {
                     widgets.add(
-                        pw.Text('[Image: ${img.caption ?? img.attachmentId}]'));
+                      pw.Text('[Image: ${img.caption ?? img.attachmentId}]'),
+                    );
                   } else {
                     final file = io.File(img.attachmentId);
                     if (file.existsSync()) {
@@ -126,19 +126,27 @@ class PdfExporter implements ExportRepository {
                       }
                       widgets.add(pw.SizedBox(height: 16));
                     } else {
-                      widgets.add(pw.Text(
-                          '[Image: ${img.caption ?? img.attachmentId}]'));
+                      widgets.add(
+                        pw.Text(
+                          '[Image: ${img.caption ?? img.attachmentId}]',
+                        ),
+                      );
                     }
                   }
                 } catch (e) {
-                  widgets.add(pw.Text(
-                      '[Image error: ${img.caption ?? img.attachmentId}]'));
+                  widgets.add(
+                    pw.Text(
+                      '[Image error: ${img.caption ?? img.attachmentId}]',
+                    ),
+                  );
                 }
               },
               file: (f) {
                 widgets.add(
-                  pw.Text('[File: ${f.caption ?? f.attachmentId}]',
-                      style: const pw.TextStyle(color: PdfColors.blue)),
+                  pw.Text(
+                    '[File: ${f.caption ?? f.attachmentId}]',
+                    style: const pw.TextStyle(color: PdfColors.blue),
+                  ),
                 );
                 widgets.add(pw.SizedBox(height: 8));
               },

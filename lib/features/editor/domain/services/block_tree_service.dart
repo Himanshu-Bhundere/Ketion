@@ -6,8 +6,10 @@ import 'sibling_position_manager.dart';
 class BlockTreeService {
   /// Builds a flattened visible tree representing the hierarchical block structure.
   /// Enforces a safe visual [maxDepth].
-  static List<VisibleBlock> buildVisibleTree(List<Block> blocks,
-      {int maxDepth = 20}) {
+  static List<VisibleBlock> buildVisibleTree(
+    List<Block> blocks, {
+    int maxDepth = 20,
+  }) {
     final Map<String?, List<Block>> childrenMap = {};
     for (final block in blocks) {
       if (!block.deleted) {
@@ -79,8 +81,9 @@ class BlockTreeService {
   /// Outdents a block by making it a sibling of its current parent, placed immediately after the parent.
   static List<Block> outdentBlock(String blockId, List<Block> allBlocks) {
     final block = allBlocks.firstWhere((b) => b.id == blockId);
-    if (block.parentBlockId == null)
+    if (block.parentBlockId == null) {
       return []; // Cannot outdent top-level block
+    }
 
     final parent = allBlocks.firstWhere((b) => b.id == block.parentBlockId);
 
@@ -98,7 +101,9 @@ class BlockTreeService {
     }
 
     final newPosition = SiblingPositionManager.calculatePositionBetweenBlocks(
-        parent, blockAfterParent);
+      parent,
+      blockAfterParent,
+    );
 
     return [
       block.copyWith(
@@ -111,20 +116,26 @@ class BlockTreeService {
 
   /// Moves a block according to a DropIntent.
   static List<Block> moveBlock(
-      String sourceBlockId, DropIntent intent, List<Block> allBlocks) {
+    String sourceBlockId,
+    DropIntent intent,
+    List<Block> allBlocks,
+  ) {
     final sourceBlock = allBlocks.firstWhere((b) => b.id == sourceBlockId);
 
     return intent.when(
       before: (targetId) {
-        if (_isDescendant(sourceBlockId, targetId, allBlocks))
+        if (_isDescendant(sourceBlockId, targetId, allBlocks)) {
           return []; // Prevent cycle
+        }
         final targetBlock = allBlocks.firstWhere((b) => b.id == targetId);
 
         final targetSiblings = allBlocks
-            .where((b) =>
-                b.parentBlockId == targetBlock.parentBlockId &&
-                !b.deleted &&
-                b.id != sourceBlockId)
+            .where(
+              (b) =>
+                  b.parentBlockId == targetBlock.parentBlockId &&
+                  !b.deleted &&
+                  b.id != sourceBlockId,
+            )
             .toList()
           ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -135,7 +146,9 @@ class BlockTreeService {
         }
 
         final newPos = SiblingPositionManager.calculatePositionBetweenBlocks(
-            blockBeforeTarget, targetBlock);
+          blockBeforeTarget,
+          targetBlock,
+        );
 
         return [
           sourceBlock.copyWith(
@@ -150,10 +163,12 @@ class BlockTreeService {
         final targetBlock = allBlocks.firstWhere((b) => b.id == targetId);
 
         final targetSiblings = allBlocks
-            .where((b) =>
-                b.parentBlockId == targetBlock.parentBlockId &&
-                !b.deleted &&
-                b.id != sourceBlockId)
+            .where(
+              (b) =>
+                  b.parentBlockId == targetBlock.parentBlockId &&
+                  !b.deleted &&
+                  b.id != sourceBlockId,
+            )
             .toList()
           ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -164,7 +179,9 @@ class BlockTreeService {
         }
 
         final newPos = SiblingPositionManager.calculatePositionBetweenBlocks(
-            targetBlock, blockAfterTarget);
+          targetBlock,
+          blockAfterTarget,
+        );
 
         return [
           sourceBlock.copyWith(
@@ -178,10 +195,12 @@ class BlockTreeService {
         if (_isDescendant(sourceBlockId, targetId, allBlocks)) return [];
 
         final targetChildren = allBlocks
-            .where((b) =>
-                b.parentBlockId == targetId &&
-                !b.deleted &&
-                b.id != sourceBlockId)
+            .where(
+              (b) =>
+                  b.parentBlockId == targetId &&
+                  !b.deleted &&
+                  b.id != sourceBlockId,
+            )
             .toList()
           ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -203,7 +222,10 @@ class BlockTreeService {
 
   /// Checks if [possibleDescendantId] is a descendant of [ancestorId] to prevent cycles.
   static bool _isDescendant(
-      String ancestorId, String possibleDescendantId, List<Block> allBlocks) {
+    String ancestorId,
+    String possibleDescendantId,
+    List<Block> allBlocks,
+  ) {
     if (ancestorId == possibleDescendantId) return true;
 
     final Map<String, Block> blockMap = {for (var b in allBlocks) b.id: b};

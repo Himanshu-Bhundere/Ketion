@@ -49,7 +49,8 @@ void main() {
         () async {
       final dummyFile = File(p.join(tempDir.path, 'test.mp4'));
       await dummyFile.writeAsBytes(
-          [0, 0, 0, 0]); // Invalid video, but tests ffmpeg fallback
+        [0, 0, 0, 0],
+      ); // Invalid video, but tests ffmpeg fallback
 
       final result = await service.generateThumbnail(
         sourceFile: dummyFile,

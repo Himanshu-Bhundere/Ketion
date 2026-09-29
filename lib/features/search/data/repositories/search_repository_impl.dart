@@ -12,8 +12,10 @@ class SearchRepositoryImpl implements SearchRepository {
   SearchRepositoryImpl(this._database);
 
   @override
-  Future<Result<List<SearchResult>>> searchNotes(String query,
-      {String? typeFilter}) async {
+  Future<Result<List<SearchResult>>> searchNotes(
+    String query, {
+    String? typeFilter,
+  }) async {
     try {
       // Sanitize the query to treat it as pure text, not FTS syntax.
       // Escape double quotes and wrap in quotes for a phrase match.
@@ -27,7 +29,7 @@ class SearchRepositoryImpl implements SearchRepository {
       final variables = typeFilter != null
           ? [
               Variable.withString(sanitizedQuery),
-              Variable.withString(typeFilter)
+              Variable.withString(typeFilter),
             ]
           : [Variable.withString(sanitizedQuery)];
 

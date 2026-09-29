@@ -18,8 +18,10 @@ class BackupService {
 
     // Create a temporary directory for the zip
     final tempDir = await getTemporaryDirectory();
-    final zipPath = p.join(tempDir.path,
-        'ketion_backup_${DateTime.now().millisecondsSinceEpoch}.zip');
+    final zipPath = p.join(
+      tempDir.path,
+      'ketion_backup_${DateTime.now().millisecondsSinceEpoch}.zip',
+    );
 
     final encoder = ZipFileEncoder();
     encoder.create(zipPath);

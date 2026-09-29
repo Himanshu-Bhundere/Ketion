@@ -129,8 +129,10 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     if (focusedId == null) return;
 
     final blocks = ref.read(visibleBlocksProvider(widget.pageId));
-    final visibleBlock = blocks.firstWhere((b) => b.block.id == focusedId,
-        orElse: () => blocks.first);
+    final visibleBlock = blocks.firstWhere(
+      (b) => b.block.id == focusedId,
+      orElse: () => blocks.first,
+    );
     final block = visibleBlock.block;
 
     final mediaPicker = ref.read(mediaPickerProvider);
@@ -143,14 +145,17 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
               builder: (c) => AlertDialog(
                 title: const Text('Very Large File'),
                 content: Text(
-                    'This file is ${sizeMB.toStringAsFixed(1)} MB. Syncing might take a long time and use a lot of storage. Are you sure?'),
+                  'This file is ${sizeMB.toStringAsFixed(1)} MB. Syncing might take a long time and use a lot of storage. Are you sure?',
+                ),
                 actions: [
                   TextButton(
-                      onPressed: () => Navigator.pop(c, false),
-                      child: const Text('Cancel')),
+                    onPressed: () => Navigator.pop(c, false),
+                    child: const Text('Cancel'),
+                  ),
                   TextButton(
-                      onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Import Anyway')),
+                    onPressed: () => Navigator.pop(c, true),
+                    child: const Text('Import Anyway'),
+                  ),
                 ],
               ),
             ) ??
@@ -161,14 +166,17 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
               builder: (c) => AlertDialog(
                 title: const Text('Large File'),
                 content: Text(
-                    'This file is ${sizeMB.toStringAsFixed(1)} MB. Do you want to proceed?'),
+                  'This file is ${sizeMB.toStringAsFixed(1)} MB. Do you want to proceed?',
+                ),
                 actions: [
                   TextButton(
-                      onPressed: () => Navigator.pop(c, false),
-                      child: const Text('Cancel')),
+                    onPressed: () => Navigator.pop(c, false),
+                    child: const Text('Cancel'),
+                  ),
                   TextButton(
-                      onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Proceed')),
+                    onPressed: () => Navigator.pop(c, true),
+                    child: const Text('Proceed'),
+                  ),
                 ],
               ),
             ) ??
@@ -181,11 +189,13 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         ? await mediaPicker.pickImage(
             pageId: block.pageId,
             blockId: block.id,
-            onCheckSize: handleSizeCheck)
+            onCheckSize: handleSizeCheck,
+          )
         : await mediaPicker.pickFile(
             pageId: block.pageId,
             blockId: block.id,
-            onCheckSize: handleSizeCheck);
+            onCheckSize: handleSizeCheck,
+          );
 
     if (attachment != null) {
       // Determine block type from media type
@@ -301,7 +311,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
           } else {
             final tempDir = io.Directory.systemTemp;
             final tempFile = io.File(
-                '${tempDir.path}/paste_${DateTime.now().millisecondsSinceEpoch}$ext');
+              '${tempDir.path}/paste_${DateTime.now().millisecondsSinceEpoch}$ext',
+            );
             final stream = clipFile.getStream();
             final sink = tempFile.openWrite();
             await stream.cast<List<int>>().pipe(sink);
@@ -326,8 +337,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
 
   /// Handle drop of files — import them as media blocks.
   Future<void> _handleDrop(List<String> paths) async {
-    if (kIsWeb)
+    if (kIsWeb) {
       return; // Drop from paths might need web specific handling via bytes
+    }
     for (final path in paths) {
       final file = io.File(path);
       if (!await file.exists()) continue;
@@ -419,7 +431,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         orElse: () => updatedBlocks.last,
       );
       _handleBlockUpdate(
-          newBlock.block.copyWith(type: resolvedType, data: data));
+        newBlock.block.copyWith(type: resolvedType, data: data),
+      );
     } catch (_) {
       // Import failed silently
     }
@@ -438,8 +451,11 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () {
           ref.read(editorStateProvider(widget.pageId).notifier).undo();
         },
-        const SingleActivator(LogicalKeyboardKey.keyZ,
-            control: true, shift: true): () {
+        const SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: true,
+          shift: true,
+        ): () {
           ref.read(editorStateProvider(widget.pageId).notifier).redo();
         },
         const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true):

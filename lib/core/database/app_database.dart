@@ -128,7 +128,8 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
           await customStatement(
-              'ALTER TABLE attachments RENAME TO attachments_v1');
+            'ALTER TABLE attachments RENAME TO attachments_v1',
+          );
           await m.createTable(attachments);
           await customStatement('''
             INSERT INTO attachments (id, mime_type, file_size)
@@ -158,7 +159,8 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 5) {
           await customStatement(
-              'ALTER TABLE attachments RENAME TO attachments_v4');
+            'ALTER TABLE attachments RENAME TO attachments_v4',
+          );
           await m.createTable(attachments);
           await customStatement('''
             INSERT INTO attachments (id, mime_type, file_size)
@@ -345,14 +347,14 @@ class AppDatabase extends _$AppDatabase {
           // In previous versions, sync_queue and sync_states were added in v3 but
           // might have been missed in some environments. Deterministically verify existence:
           final queueExists = await customSelect(
-                  "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_queue';")
-              .get();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_queue';",
+          ).get();
           if (queueExists.isEmpty) {
             await m.createTable(syncQueue);
           }
           final statesExists = await customSelect(
-                  "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_states';")
-              .get();
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='sync_states';",
+          ).get();
           if (statesExists.isEmpty) {
             await m.createTable(syncStates);
           }
@@ -361,7 +363,8 @@ class AppDatabase extends _$AppDatabase {
           // Phase 2: Schema changed significantly for attachments.
           // Create new table, copy data, drop old table to be safe
           await customStatement(
-              'ALTER TABLE attachments RENAME TO attachments_old');
+            'ALTER TABLE attachments RENAME TO attachments_old',
+          );
           await m.createTable(attachments);
 
           // Copy existing data. We explicitly list columns that existed in v10 and map them to v11.

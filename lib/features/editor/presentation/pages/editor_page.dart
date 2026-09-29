@@ -40,8 +40,10 @@ class EditorPage extends ConsumerWidget {
                   if (page.isTemplate)
                     TextButton.icon(
                       icon: const Icon(Icons.file_copy, color: Colors.white),
-                      label: const Text('Use Template',
-                          style: TextStyle(color: Colors.white)),
+                      label: const Text(
+                        'Use Template',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       onPressed: () async {
                         final createUseCase =
                             ref.read(createPageUseCaseProvider);

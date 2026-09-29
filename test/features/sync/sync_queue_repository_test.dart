@@ -36,7 +36,9 @@ void main() {
     expect(enqueueRes, isA<Success<void>>());
 
     final pendingRes = await repository.claimNextBatch(
-        limit: 50, leaseDuration: const Duration(minutes: 5));
+      limit: 50,
+      leaseDuration: const Duration(minutes: 5),
+    );
     expect(pendingRes, isA<Success<List<SyncQueueItem>>>());
     final items = (pendingRes as Success<List<SyncQueueItem>>).value;
     expect(items.length, 1);
@@ -56,21 +58,28 @@ void main() {
 
     // claim the batch first so it has an ID, though updateStatus updates by queue item ID
     final pendingBatch = await repository.claimNextBatch(
-        limit: 50, leaseDuration: const Duration(minutes: 5));
+      limit: 50,
+      leaseDuration: const Duration(minutes: 5),
+    );
     final batchItems = (pendingBatch as Success<List<SyncQueueItem>>).value;
 
     await repository.updateStatus(
-        batchItems.first.id, SyncQueueItemStatus.completed);
+      batchItems.first.id,
+      SyncQueueItemStatus.completed,
+    );
 
     final pendingRes = await repository.claimNextBatch(
-        limit: 50, leaseDuration: const Duration(minutes: 5));
+      limit: 50,
+      leaseDuration: const Duration(minutes: 5),
+    );
     expect(pendingRes, isA<Success<List<SyncQueueItem>>>());
     final items = (pendingRes as Success<List<SyncQueueItem>>).value;
     expect(items.isEmpty, true);
   });
 
   // Tests 25-27: Queue coalescing and concurrency
-  test('Coalescing a pending item replaces payload and preserves status', () async {
+  test('Coalescing a pending item replaces payload and preserves status',
+      () async {
     final item1 = SyncQueueItem(
       id: 'item-1',
       entityTable: 'pages',
@@ -97,7 +106,9 @@ void main() {
     expect(queueItems.first.status, SyncQueueItemStatus.pending.name);
   });
 
-  test('Processing item is not mutated by coalescing (creates new pending item)', () async {
+  test(
+      'Processing item is not mutated by coalescing (creates new pending item)',
+      () async {
     final item1 = SyncQueueItem(
       id: 'item-1',
       entityTable: 'pages',
@@ -107,9 +118,10 @@ void main() {
       createdAt: DateTime.now(),
     );
     await repository.enqueueOrCoalesce(item1);
-    
+
     // claim to set to processing
-    final claimRes = await repository.claimNextBatch(limit: 50, leaseDuration: const Duration(minutes: 5));
+    final claimRes = await repository.claimNextBatch(
+        limit: 50, leaseDuration: const Duration(minutes: 5));
     final claimed = (claimRes as Success<List<SyncQueueItem>>).value;
     expect(claimed.first.status, SyncQueueItemStatus.processing);
 
@@ -125,27 +137,39 @@ void main() {
 
     final queueItems = await db.select(db.syncQueue).get();
     expect(queueItems.length, 2); // Cannot coalesce into processing item
-    
-    final processingItem = queueItems.firstWhere((q) => q.status == SyncQueueItemStatus.processing.name);
+
+    final processingItem = queueItems
+        .firstWhere((q) => q.status == SyncQueueItemStatus.processing.name);
     expect(processingItem.payload, '{"version": 1}');
-    
-    final pendingItem = queueItems.firstWhere((q) => q.status == SyncQueueItemStatus.pending.name);
+
+    final pendingItem = queueItems
+        .firstWhere((q) => q.status == SyncQueueItemStatus.pending.name);
     expect(pendingItem.payload, '{"version": 2}');
   });
 
   test('Claim batch creates a durable batchId shared across items', () async {
-    final item1 = SyncQueueItem(id: 'item-1', entityTable: 'pages', entityId: 'p1', operation: 'update', createdAt: DateTime.now());
-    final item2 = SyncQueueItem(id: 'item-2', entityTable: 'pages', entityId: 'p2', operation: 'update', createdAt: DateTime.now());
-    
+    final item1 = SyncQueueItem(
+        id: 'item-1',
+        entityTable: 'pages',
+        entityId: 'p1',
+        operation: 'update',
+        createdAt: DateTime.now());
+    final item2 = SyncQueueItem(
+        id: 'item-2',
+        entityTable: 'pages',
+        entityId: 'p2',
+        operation: 'update',
+        createdAt: DateTime.now());
+
     await repository.enqueueOrCoalesce(item1);
     await repository.enqueueOrCoalesce(item2);
 
-    final claimRes = await repository.claimNextBatch(limit: 50, leaseDuration: const Duration(minutes: 5));
+    final claimRes = await repository.claimNextBatch(
+        limit: 50, leaseDuration: const Duration(minutes: 5));
     final claimed = (claimRes as Success<List<SyncQueueItem>>).value;
-    
+
     expect(claimed.length, 2);
     expect(claimed[0].batchId, isNotNull);
     expect(claimed[0].batchId, claimed[1].batchId); // Shared batchId
   });
-
 }

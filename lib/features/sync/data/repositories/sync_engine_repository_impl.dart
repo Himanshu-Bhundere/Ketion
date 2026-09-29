@@ -105,9 +105,11 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
       }
 
       // 3. Process local queue items (Upload)
-      final leaseDuration = const Duration(minutes: 5);
+      const leaseDuration = Duration(minutes: 5);
       final batchResult = await _queueRepository.claimNextBatch(
-          limit: 50, leaseDuration: leaseDuration);
+        limit: 50,
+        leaseDuration: leaseDuration,
+      );
       if (batchResult is Success<List<SyncQueueItem>>) {
         final claimedItems = batchResult.value;
         if (claimedItems.isNotEmpty) {
@@ -321,7 +323,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
             if (payload is Map<String, dynamic>) {
               if (payload['id'] != null && payload['id'] != entityId) {
-                throw const FormatException('Payload id does not match change id');
+                throw const FormatException(
+                    'Payload id does not match change id');
               }
             }
           }
@@ -340,8 +343,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
               table: table,
               entityId: entityId,
               operation: operation,
-              remoteVersion: version as int,
-              remoteUpdatedAtUtc: DateTime.parse(updatedAt as String),
+              remoteVersion: version,
+              remoteUpdatedAtUtc: DateTime.parse(updatedAt),
               localDeviceId: syncState.deviceId,
               remoteDeviceId: remoteDeviceId ?? 'unknown',
             );
@@ -394,7 +397,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
 
             if (version == null || updatedAtStr == null) {
               throw const FormatException(
-                  'Missing version or updatedAt in unbatched change');
+                'Missing version or updatedAt in unbatched change',
+              );
             }
 
             final resolution = await _conflictResolver.resolveConflict(

@@ -99,7 +99,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
       final pageId = _pageLinks[title];
       if (pageId != null) {
         newSpans.add(
-            TextSpanData(text: '', pageLink: pageId, pageLinkTitle: title));
+          TextSpanData(text: '', pageLink: pageId, pageLinkTitle: title),
+        );
       } else {
         newSpans.add(TextSpanData(text: match.group(0)!));
       }
@@ -111,7 +112,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
     }
 
     final newData = _blockData.copyWith(
-        spans: newSpans.isEmpty ? [TextSpanData(text: text)] : newSpans);
+      spans: newSpans.isEmpty ? [TextSpanData(text: text)] : newSpans,
+    );
 
     final json = newData.toJson();
     json.remove('runtimeType');

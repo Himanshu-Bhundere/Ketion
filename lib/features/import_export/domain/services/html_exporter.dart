@@ -18,7 +18,8 @@ class HtmlExporter implements ExportRepository {
     buffer.writeln('<title>${_escapeHtml(document.title)}</title>');
     buffer.writeln('<style>');
     buffer.writeln(
-        'body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; }');
+      'body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; }',
+    );
     buffer.writeln('img { max-width: 100%; height: auto; }');
     buffer.writeln('</style>');
     buffer.writeln('</head>');
@@ -59,16 +60,19 @@ class HtmlExporter implements ExportRepository {
         image: (img) {
           buffer.writeln('<figure>');
           buffer.writeln(
-              '<img src="${_escapeHtml(img.attachmentId)}" alt="${_escapeHtml(img.caption ?? '')}">');
+            '<img src="${_escapeHtml(img.attachmentId)}" alt="${_escapeHtml(img.caption ?? '')}">',
+          );
           if (img.caption != null && img.caption!.isNotEmpty) {
             buffer.writeln(
-                '<figcaption>${_escapeHtml(img.caption!)}</figcaption>');
+              '<figcaption>${_escapeHtml(img.caption!)}</figcaption>',
+            );
           }
           buffer.writeln('</figure>');
         },
         file: (f) {
           buffer.writeln(
-              '<p><a href="${_escapeHtml(f.attachmentId)}">${_escapeHtml(f.caption ?? 'File')}</a></p>');
+            '<p><a href="${_escapeHtml(f.attachmentId)}">${_escapeHtml(f.caption ?? 'File')}</a></p>',
+          );
         },
       );
     }

@@ -8,7 +8,9 @@ class PickedFile {
 }
 
 abstract class FilePickerService {
-  Future<List<PickedFile>> pickFiles(
-      {bool allowMultiple = false, List<String>? allowedExtensions});
+  Future<List<PickedFile>> pickFiles({
+    bool allowMultiple = false,
+    List<String>? allowedExtensions,
+  });
   Future<PickedFile?> pickImage();
 }

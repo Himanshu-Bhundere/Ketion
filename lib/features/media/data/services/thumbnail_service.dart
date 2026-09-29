@@ -44,7 +44,9 @@ class ThumbnailService {
 
   /// Image thumbnail: decode → resize → encode as JPEG.
   Future<String?> _generateImageThumbnail(
-      io.File sourceFile, String hash) async {
+    io.File sourceFile,
+    String hash,
+  ) async {
     try {
       final thumbDir = await _thumbCacheDir;
       final thumbPath = p.join(thumbDir.path, '${hash}_thumb.jpg');
@@ -71,7 +73,9 @@ class ThumbnailService {
   /// Falls back to null when ffmpeg is not installed (the UI should display a
   /// generic video icon in that case).
   Future<String?> _generateVideoThumbnail(
-      io.File sourceFile, String hash) async {
+    io.File sourceFile,
+    String hash,
+  ) async {
     try {
       final thumbDir = await _thumbCacheDir;
       final thumbPath = p.join(thumbDir.path, '${hash}_video_thumb.jpg');

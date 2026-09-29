@@ -96,7 +96,8 @@ class SettingsPage extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Cache cleared successfully')),
+                            content: Text('Cache cleared successfully'),
+                          ),
                         );
                       }
                     },
@@ -137,12 +138,14 @@ class SettingsPage extends ConsumerWidget {
                     leading: const Icon(Icons.restore),
                     title: const Text('Restore Backup (ZIP)'),
                     subtitle: const Text(
-                        'Restore database and attachments from a local file'),
+                      'Restore database and attachments from a local file',
+                    ),
                     onTap: () async {
                       try {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Select backup file...')),
+                            content: Text('Select backup file...'),
+                          ),
                         );
                         await ref.read(backupServiceProvider).restoreBackup();
                         if (context.mounted) {
@@ -152,7 +155,8 @@ class SettingsPage extends ConsumerWidget {
                             builder: (context) => AlertDialog(
                               title: const Text('Restore Successful'),
                               content: const Text(
-                                  'The backup has been restored. Please restart the app completely to load the restored database.'),
+                                'The backup has been restored. Please restart the app completely to load the restored database.',
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () => context.pop(),
@@ -200,7 +204,7 @@ class SettingsPage extends ConsumerWidget {
                         '15 minutes',
                         '30 minutes',
                         '1 hour',
-                        'Daily'
+                        'Daily',
                       ].map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
@@ -222,7 +226,8 @@ class SettingsPage extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('Sync completed successfully')),
+                              content: Text('Sync completed successfully'),
+                            ),
                           );
                         }
                       } catch (e) {

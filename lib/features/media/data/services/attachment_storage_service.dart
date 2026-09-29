@@ -29,11 +29,14 @@ class AttachmentStorageService {
   ///
   /// The path format is `Attachments/<first_two_chars>/<hash>.<ext>`.
   /// Returns a tuple of (relativePath, optionalThumbnailRelativePath, hash).
-  Future<(String, String?, String)> saveAttachment(PlatformFile sourceFile,
-      {bool generateThumbnail = false}) async {
+  Future<(String, String?, String)> saveAttachment(
+    PlatformFile sourceFile, {
+    bool generateThumbnail = false,
+  }) async {
     if (kIsWeb) {
       throw UnsupportedError(
-          'Local attachment storage is not supported on the web');
+        'Local attachment storage is not supported on the web',
+      );
     }
 
     final mediaDir = await _attachmentsDir;

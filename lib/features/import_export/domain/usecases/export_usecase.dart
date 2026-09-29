@@ -1,11 +1,9 @@
 import 'dart:convert';
-import 'package:cross_file/cross_file.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/domain/models/block_data_models.dart';
 import 'package:ketion/features/import_export/domain/models/document_model.dart';
 import 'package:ketion/features/import_export/domain/services/export_repository.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExportUseCase {
@@ -15,7 +13,10 @@ class ExportUseCase {
 
   /// Exports a page to the selected format and shares it.
   Future<void> exportAndShare(
-      Page page, List<Block> blocks, String extension) async {
+    Page page,
+    List<Block> blocks,
+    String extension,
+  ) async {
     final exporter = _exporters.firstWhere((e) => e.fileExtension == extension);
 
     final document = _mapToDocument(page, blocks);
@@ -53,7 +54,8 @@ class ExportUseCase {
 
     for (final block in blocks) {
       final blockDataModel = BlockDataModel.fromJson(
-          jsonDecode(block.data) as Map<String, dynamic>);
+        jsonDecode(block.data) as Map<String, dynamic>,
+      );
       blockDataModel.map(
         text: (TextBlockData textBlock) {
           if (textBlock.headingLevel > 0) {

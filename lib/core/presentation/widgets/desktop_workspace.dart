@@ -28,23 +28,30 @@ class DesktopWorkspace extends StatelessWidget {
                   child: ListView(
                     children: const [
                       ListTile(
-                          leading: Icon(Icons.dashboard_outlined),
-                          title: Text('Workspace')),
+                        leading: Icon(Icons.dashboard_outlined),
+                        title: Text('Workspace'),
+                      ),
                       ListTile(
-                          leading: Icon(Icons.folder_outlined),
-                          title: Text('Collections')),
+                        leading: Icon(Icons.folder_outlined),
+                        title: Text('Collections'),
+                      ),
                       ListTile(
-                          leading: Icon(Icons.star_outline),
-                          title: Text('Favorites')),
+                        leading: Icon(Icons.star_outline),
+                        title: Text('Favorites'),
+                      ),
                       ListTile(
-                          leading: Icon(Icons.history), title: Text('Recent')),
+                        leading: Icon(Icons.history),
+                        title: Text('Recent'),
+                      ),
                       ListTile(leading: Icon(Icons.tag), title: Text('Tags')),
                       ListTile(
-                          leading: Icon(Icons.archive_outlined),
-                          title: Text('Archive')),
+                        leading: Icon(Icons.archive_outlined),
+                        title: Text('Archive'),
+                      ),
                       ListTile(
-                          leading: Icon(Icons.delete_outline),
-                          title: Text('Trash')),
+                        leading: Icon(Icons.delete_outline),
+                        title: Text('Trash'),
+                      ),
                     ],
                   ),
                 ),

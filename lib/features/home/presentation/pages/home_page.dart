@@ -88,8 +88,10 @@ class HomePage extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.history,
-                          color: Theme.of(context).colorScheme.outline),
+                      Icon(
+                        Icons.history,
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                       const Text('No recent pages.', style: AppTypography.body),
                     ],
@@ -121,8 +123,10 @@ class HomePage extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
-                      color: Theme.of(context).colorScheme.error),
+                  Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   const Text('Failed to load', style: AppTypography.body),
                   TextButton(
@@ -139,7 +143,10 @@ class HomePage extends ConsumerWidget {
   }
 
   Widget _buildRecentCard(
-      BuildContext context, WidgetRef ref, entity.Page page) {
+    BuildContext context,
+    WidgetRef ref,
+    entity.Page page,
+  ) {
     return SizedBox(
       width: 140,
       child: Card(

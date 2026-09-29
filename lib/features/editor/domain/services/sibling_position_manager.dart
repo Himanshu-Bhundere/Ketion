@@ -7,7 +7,9 @@ class SiblingPositionManager {
   /// - If [afterPosition] is null, we are inserting at the end.
   /// - If both are null, it's the first block.
   static double calculatePositionBetween(
-      double? beforePosition, double? afterPosition) {
+    double? beforePosition,
+    double? afterPosition,
+  ) {
     if (beforePosition == null && afterPosition == null) {
       return 0.0;
     } else if (beforePosition == null) {
@@ -21,8 +23,12 @@ class SiblingPositionManager {
 
   /// Calculates a position value for a block being moved or inserted between two sibling blocks.
   static double calculatePositionBetweenBlocks(
-      Block? beforeBlock, Block? afterBlock) {
+    Block? beforeBlock,
+    Block? afterBlock,
+  ) {
     return calculatePositionBetween(
-        beforeBlock?.position, afterBlock?.position);
+      beforeBlock?.position,
+      afterBlock?.position,
+    );
   }
 }

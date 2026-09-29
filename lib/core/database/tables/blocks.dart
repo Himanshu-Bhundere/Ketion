@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'pages.dart';
 
 @DataClassName('Block')
+@TableIndex(name: 'idx_blocks_parent_pos', columns: {#parentBlockId, #position})
+@TableIndex(name: 'idx_blocks_page', columns: {#pageId})
 class Blocks extends Table {
   TextColumn get id => text()();
   TextColumn get pageId =>

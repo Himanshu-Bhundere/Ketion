@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 
 class MobileNavigation extends StatelessWidget {
@@ -48,8 +50,17 @@ class MobileNavigation extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          CreateActionSheet.show(context);
+        onPressed: () async {
+          final page = await CreateActionSheet.show(context);
+          if (page != null && context.mounted) {
+            unawaited(
+              context.pushNamed(
+                Routes.editorName,
+                pathParameters: {'pageId': page.id},
+                extra: const {'focusTitle': true},
+              ),
+            );
+          }
         },
         child: const Icon(Icons.add),
       ),

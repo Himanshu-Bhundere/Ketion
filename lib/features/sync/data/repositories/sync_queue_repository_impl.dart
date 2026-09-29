@@ -184,6 +184,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
         )
         ..limit(1);
       final result = await query.getSingleOrNull();
+
       if (result != null) {
         return Success(SyncQueueItemMapper.fromData(result));
       }

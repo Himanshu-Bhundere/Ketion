@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
@@ -34,7 +36,12 @@ class CreatePageUseCase {
 
     final result = await _repository.createPage(page);
     if (result is Success) {
-      await _updateWidgetsUseCase();
+      unawaited(
+        _updateWidgetsUseCase().catchError((Object e, StackTrace s) {
+          debugPrint('Widget refresh failed: $e');
+          return const Success<void>(null);
+        }),
+      );
     }
     return result.fold(
       (_) => Success(page),

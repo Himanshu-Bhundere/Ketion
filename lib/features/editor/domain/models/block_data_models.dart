@@ -66,6 +66,15 @@ sealed class BlockDataModel with _$BlockDataModel {
     String? caption,
   }) = FileBlockData;
 
+  const factory BlockDataModel.divider() = DividerBlockData;
+
+  const factory BlockDataModel.code({
+    @Default('') String code,
+    @Default('plaintext') String language,
+    @Default(false) bool showLineNumbers,
+    @Default(true) bool wrapLines,
+  }) = CodeBlockData;
+
   factory BlockDataModel.fromJson(Map<String, dynamic> json) =>
       _$BlockDataModelFromJson(json);
 
@@ -79,6 +88,8 @@ sealed class BlockDataModel with _$BlockDataModel {
       audio: (a) => a.caption ?? '',
       pdf: (p) => p.caption ?? '',
       file: (f) => f.caption ?? '',
+      divider: (_) => '',
+      code: (c) => c.code,
     );
   }
 }

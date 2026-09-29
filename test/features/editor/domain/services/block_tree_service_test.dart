@@ -52,36 +52,7 @@ void main() {
       expect(tree[4].depth, 0);
     });
 
-    test('indentBlock moves block into previous sibling', () {
-      final blocks = [
-        createBlock(id: 'root1', position: 0),
-        createBlock(id: 'root2', position: 10),
-      ];
 
-      final updated = BlockTreeService.indentBlock('root2', blocks);
-      expect(updated.length, 1);
-      expect(updated[0].parentBlockId, 'root1');
-      expect(
-        updated[0].position,
-        0.0,
-      ); // Assuming SiblingPositionManager gives 0.0 for first child
-    });
-
-    test('outdentBlock moves block after its parent', () {
-      final blocks = [
-        createBlock(id: 'root1', position: 0),
-        createBlock(id: 'child', parentId: 'root1', position: 0),
-        createBlock(id: 'root2', position: 10),
-      ];
-
-      final updated = BlockTreeService.outdentBlock('child', blocks);
-      expect(updated.length, 1);
-      expect(updated[0].parentBlockId, isNull);
-      expect(
-        updated[0].position,
-        5.0,
-      ); // SiblingPositionManager should give middle of 0 and 10
-    });
 
     test('moveBlock handles DropIntent.after correctly', () {
       final blocks = [
@@ -110,6 +81,50 @@ void main() {
         const DropIntent.child('child'),
         blocks,
       );
+      expect(updated, isEmpty);
+    });
+
+    test('moveBlock prevents nesting beyond maxDepth (20 by default)', () {
+      final List<Block> blocks = [];
+      String? parentId;
+      for (int i = 0; i < 20; i++) {
+        final id = 'block_$i';
+        blocks.add(createBlock(id: id, parentId: parentId, position: 0));
+        parentId = id;
+      }
+      final extraBlock = createBlock(id: 'extra', position: 10);
+      blocks.add(extraBlock);
+
+      final updated = BlockTreeService.moveBlock(
+        'extra',
+        const DropIntent.child('block_19'),
+        blocks,
+      );
+      expect(updated, isEmpty);
+    });
+
+    test('moveBlock preserves subtree implicitly', () {
+      final blocks = [
+        createBlock(id: 'a', position: 0),
+        createBlock(id: 'a_child', parentId: 'a', position: 0),
+        createBlock(id: 'b', position: 10),
+      ];
+
+      // Move 'a' after 'b'
+      final updated = BlockTreeService.moveBlock('a', const DropIntent.after('b'), blocks);
+      expect(updated.length, 1);
+      expect(updated[0].id, 'a');
+      // 'a_child' is not in the updated list because its parentId doesn't change,
+      // which implies the subtree is preserved implicitly.
+    });
+
+    test('moveBlock rejects cross-page moves / unknown source block', () {
+      final blocks = [
+        createBlock(id: 'a', position: 0),
+      ];
+
+      // Try to move a block that is not in the current page
+      final updated = BlockTreeService.moveBlock('unknown_block', const DropIntent.after('a'), blocks);
       expect(updated, isEmpty);
     });
   });

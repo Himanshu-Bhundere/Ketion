@@ -84,7 +84,7 @@ void main() {
       await repository.createBlock(block);
 
       final updatedBlock = block.copyWith(data: 'Hello Updated');
-      await repository.updateBlock(updatedBlock);
+      await repository.updateBlock(updatedBlock, expectedVersion: block.version);
 
       final blockInDb = await (database.select(database.blocks)
             ..where((t) => t.id.equals('block1')))
@@ -120,7 +120,7 @@ void main() {
       );
 
       await repository.createBlock(block);
-      await repository.deleteBlock('block1');
+      await repository.deleteBlock('block1', expectedVersion: 1);
 
       final blocksInDb = await database.select(database.blocks).get();
       expect(blocksInDb.length, 1);
@@ -133,6 +133,53 @@ void main() {
         queueItems.length,
         0,
       ); // 1 create + 1 delete = coalesced and removed
+    });
+
+    test('updateBlock saves position and parentId correctly', () async {
+      await database.into(database.pages).insert(
+            PagesCompanion.insert(
+              id: 'page1',
+              title: const drift.Value('Test Page'),
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      final block = domain.Block(
+        id: 'block1',
+        pageId: 'page1',
+        type: 'text',
+        data: 'Hello',
+        position: 1.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await repository.createBlock(block);
+
+      final parentBlock = domain.Block(
+        id: 'parentBlock1',
+        pageId: 'page1',
+        type: 'text',
+        data: 'Parent',
+        position: 0.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await repository.createBlock(parentBlock);
+
+      final updatedBlock = block.copyWith(
+        position: 2.5,
+        parentBlockId: 'parentBlock1',
+      );
+      await repository.updateBlock(updatedBlock, expectedVersion: block.version);
+
+      final blockInDb = await (database.select(database.blocks)
+            ..where((t) => t.id.equals('block1')))
+          .getSingle();
+      
+      expect(blockInDb.position, 2.5);
+      expect(blockInDb.parentBlockId, 'parentBlock1');
     });
   });
 }

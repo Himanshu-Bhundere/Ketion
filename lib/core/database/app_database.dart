@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration {
@@ -392,7 +392,8 @@ class AppDatabase extends _$AppDatabase {
         if (from < 14) {
           await m.addColumn(appSettingsTable, appSettingsTable.accentColor);
           await m.addColumn(appSettingsTable, appSettingsTable.fontSize);
-          await m.addColumn(appSettingsTable, appSettingsTable.editorAppearance);
+          await m.addColumn(
+              appSettingsTable, appSettingsTable.editorAppearance,);
           await m.addColumn(appSettingsTable, appSettingsTable.highContrast);
           await m.addColumn(appSettingsTable, appSettingsTable.reducedMotion);
         }
@@ -424,8 +425,29 @@ class AppDatabase extends _$AppDatabase {
               SELECT new.id, new.page_id, 'block', new.searchable_text WHERE new.deleted = 0;
             END;
           ''');
-          
-          await customStatement('DELETE FROM search_fts WHERE entityType = "block"');
+
+          await customStatement(
+              'DELETE FROM search_fts WHERE entityType = "block"',);
+        }
+        if (from < 16) {
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_blocks_parent_pos ON blocks (parent_block_id, position);',);
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_blocks_page ON blocks (page_id);',);
+        }
+        if (from < 17) {
+          // v15 introduced searchable_text but left existing serialized editor
+          // blocks unindexed. Extract legacy and canonical span text, then
+          // rebuild FTS so old notes become searchable without a resave.
+          await customStatement('''
+            UPDATE blocks
+            SET searchable_text = (
+              SELECT group_concat(json_extract(value, '\$.text'), ' ')
+              FROM json_each(blocks.data, '\$.spans')
+            )
+            WHERE json_valid(data) AND json_type(data, '\$.spans') = 'array';
+          ''');
+          await rebuildSearchIndex();
         }
       },
       beforeOpen: (details) async {

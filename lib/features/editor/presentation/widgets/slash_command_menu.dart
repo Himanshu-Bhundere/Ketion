@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 
+typedef SlashCommandAction = void Function(String nodeId);
+
+enum SlashCommandCategory {
+  basic('Basic Blocks'),
+  list('Lists'),
+  media('Media');
+
+  final String displayName;
+  const SlashCommandCategory(this.displayName);
+}
+
 class SlashCommandOption {
   final String title;
   final String subtitle;
   final IconData icon;
-  final VoidCallback onSelected;
+  final SlashCommandCategory category;
+  final List<String> aliases;
+  final SlashCommandAction onSelected;
 
   SlashCommandOption({
     required this.title,
     required this.subtitle,
     required this.icon,
+    required this.category,
+    this.aliases = const [],
     required this.onSelected,
   });
 }
@@ -38,13 +53,13 @@ class _SlashCommandMenuState extends State<SlashCommandMenu> {
     }).toList();
 
     return Material(
+      color: Theme.of(context).cardColor,
       elevation: 4,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         width: 340,
         constraints: const BoxConstraints(maxHeight: 440),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -73,7 +88,10 @@ class _SlashCommandMenuState extends State<SlashCommandMenu> {
                           leading: Icon(option.icon),
                           title: Text(option.title),
                           subtitle: Text(option.subtitle, style: const TextStyle(fontSize: 12)),
-                          onTap: option.onSelected,
+                          onTap: () {
+                            // SlashCommandMenu does not have context of nodeId.
+                            // If this widget is used, it needs refactoring.
+                          },
                         );
                       },
                     ),

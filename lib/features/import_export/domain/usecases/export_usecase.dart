@@ -82,6 +82,15 @@ class ExportUseCase {
             ),
           );
         },
+        divider: (DividerBlockData dividerBlock) {
+          nodes.add(const DocumentNode.divider());
+        },
+        code: (CodeBlockData codeBlock) {
+          nodes.add(DocumentNode.code(
+            language: codeBlock.language,
+            code: codeBlock.code,
+          ),);
+        },
         image: (ImageBlockData imgBlock) {
           nodes.add(
             DocumentNode.image(

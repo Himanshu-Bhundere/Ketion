@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/search_result.dart';
 
 class SearchResultItem extends StatelessWidget {
-  final SearchResult result;
+  final GroupedSearchResult result;
   final VoidCallback onTap;
 
   const SearchResultItem({
@@ -59,20 +59,22 @@ class SearchResultItem extends StatelessWidget {
   }
 
   String _formatTitle() {
-    if (result.entityType == 'page') {
-      return result.pageTitle ?? 'Untitled Note';
-    } else if (result.entityType == 'block') {
-      return result.pageTitle ?? 'Untitled Note';
-    } else if (result.entityType == 'tag') {
-      return 'Tag Match: ${result.snippet.replaceAll(RegExp(r'<[^>]*>'), '')}';
+    final strongest = result.strongestMatch;
+    if (strongest.entityType == 'page') {
+      return strongest.pageTitle ?? 'Untitled Note';
+    } else if (strongest.entityType == 'block') {
+      return strongest.pageTitle ?? 'Untitled Note';
+    } else if (strongest.entityType == 'tag') {
+      return 'Tag Match: ${strongest.snippet.replaceAll(RegExp(r'<[^>]*>'), '')}';
     }
     return 'Result';
   }
 
   @override
   Widget build(BuildContext context) {
+    final strongest = result.strongestMatch;
     IconData icon;
-    switch (result.entityType) {
+    switch (strongest.entityType) {
       case 'page':
         icon = Icons.insert_drive_file_outlined;
         break;
@@ -98,9 +100,9 @@ class SearchResultItem extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (result.breadcrumb != null) ...[
+          if (strongest.breadcrumb != null) ...[
             Text(
-              result.breadcrumb!,
+              strongest.breadcrumb!,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.secondary,
                 fontWeight: FontWeight.w500,
@@ -112,21 +114,42 @@ class SearchResultItem extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             text: TextSpan(
-              children: _buildHighlightedSpans(result.snippet, context),
+              children: _buildHighlightedSpans(strongest.snippet, context),
             ),
           ),
-          if (result.modifiedAt != null) ...[
+          if (strongest.modifiedAt != null || result.matchCount > 1) ...[
             const SizedBox(height: 4),
-            Text(
-              'Modified ${_formatDate(result.modifiedAt!)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Row(
+              children: [
+                if (strongest.modifiedAt != null)
+                  Text(
+                    'Modified ${_formatDate(strongest.modifiedAt!)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                if (strongest.modifiedAt != null && result.matchCount > 1)
+                  const SizedBox(width: 8),
+                if (result.matchCount > 1)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${result.matchCount} matches',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ],
       ),
-      isThreeLine: result.breadcrumb != null || result.modifiedAt != null,
+      isThreeLine: strongest.breadcrumb != null || strongest.modifiedAt != null || result.matchCount > 1,
       onTap: onTap,
     );
   }

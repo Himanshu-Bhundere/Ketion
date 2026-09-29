@@ -22,6 +22,7 @@ mixin _$DropIntent {
     required TResult Function(String targetBlockId) before,
     required TResult Function(String targetBlockId) after,
     required TResult Function(String targetBlockId) child,
+    required TResult Function(String targetBlockId) unnest,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -29,6 +30,7 @@ mixin _$DropIntent {
     TResult? Function(String targetBlockId)? before,
     TResult? Function(String targetBlockId)? after,
     TResult? Function(String targetBlockId)? child,
+    TResult? Function(String targetBlockId)? unnest,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -36,6 +38,7 @@ mixin _$DropIntent {
     TResult Function(String targetBlockId)? before,
     TResult Function(String targetBlockId)? after,
     TResult Function(String targetBlockId)? child,
+    TResult Function(String targetBlockId)? unnest,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -44,6 +47,7 @@ mixin _$DropIntent {
     required TResult Function(DropIntentBefore value) before,
     required TResult Function(DropIntentAfter value) after,
     required TResult Function(DropIntentChild value) child,
+    required TResult Function(DropIntentUnnest value) unnest,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -51,6 +55,7 @@ mixin _$DropIntent {
     TResult? Function(DropIntentBefore value)? before,
     TResult? Function(DropIntentAfter value)? after,
     TResult? Function(DropIntentChild value)? child,
+    TResult? Function(DropIntentUnnest value)? unnest,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -58,6 +63,7 @@ mixin _$DropIntent {
     TResult Function(DropIntentBefore value)? before,
     TResult Function(DropIntentAfter value)? after,
     TResult Function(DropIntentChild value)? child,
+    TResult Function(DropIntentUnnest value)? unnest,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -171,6 +177,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     required TResult Function(String targetBlockId) before,
     required TResult Function(String targetBlockId) after,
     required TResult Function(String targetBlockId) child,
+    required TResult Function(String targetBlockId) unnest,
   }) {
     return before(targetBlockId);
   }
@@ -181,6 +188,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     TResult? Function(String targetBlockId)? before,
     TResult? Function(String targetBlockId)? after,
     TResult? Function(String targetBlockId)? child,
+    TResult? Function(String targetBlockId)? unnest,
   }) {
     return before?.call(targetBlockId);
   }
@@ -191,6 +199,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     TResult Function(String targetBlockId)? before,
     TResult Function(String targetBlockId)? after,
     TResult Function(String targetBlockId)? child,
+    TResult Function(String targetBlockId)? unnest,
     required TResult orElse(),
   }) {
     if (before != null) {
@@ -205,6 +214,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     required TResult Function(DropIntentBefore value) before,
     required TResult Function(DropIntentAfter value) after,
     required TResult Function(DropIntentChild value) child,
+    required TResult Function(DropIntentUnnest value) unnest,
   }) {
     return before(this);
   }
@@ -215,6 +225,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     TResult? Function(DropIntentBefore value)? before,
     TResult? Function(DropIntentAfter value)? after,
     TResult? Function(DropIntentChild value)? child,
+    TResult? Function(DropIntentUnnest value)? unnest,
   }) {
     return before?.call(this);
   }
@@ -225,6 +236,7 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
     TResult Function(DropIntentBefore value)? before,
     TResult Function(DropIntentAfter value)? after,
     TResult Function(DropIntentChild value)? child,
+    TResult Function(DropIntentUnnest value)? unnest,
     required TResult orElse(),
   }) {
     if (before != null) {
@@ -317,6 +329,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     required TResult Function(String targetBlockId) before,
     required TResult Function(String targetBlockId) after,
     required TResult Function(String targetBlockId) child,
+    required TResult Function(String targetBlockId) unnest,
   }) {
     return after(targetBlockId);
   }
@@ -327,6 +340,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     TResult? Function(String targetBlockId)? before,
     TResult? Function(String targetBlockId)? after,
     TResult? Function(String targetBlockId)? child,
+    TResult? Function(String targetBlockId)? unnest,
   }) {
     return after?.call(targetBlockId);
   }
@@ -337,6 +351,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     TResult Function(String targetBlockId)? before,
     TResult Function(String targetBlockId)? after,
     TResult Function(String targetBlockId)? child,
+    TResult Function(String targetBlockId)? unnest,
     required TResult orElse(),
   }) {
     if (after != null) {
@@ -351,6 +366,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     required TResult Function(DropIntentBefore value) before,
     required TResult Function(DropIntentAfter value) after,
     required TResult Function(DropIntentChild value) child,
+    required TResult Function(DropIntentUnnest value) unnest,
   }) {
     return after(this);
   }
@@ -361,6 +377,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     TResult? Function(DropIntentBefore value)? before,
     TResult? Function(DropIntentAfter value)? after,
     TResult? Function(DropIntentChild value)? child,
+    TResult? Function(DropIntentUnnest value)? unnest,
   }) {
     return after?.call(this);
   }
@@ -371,6 +388,7 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
     TResult Function(DropIntentBefore value)? before,
     TResult Function(DropIntentAfter value)? after,
     TResult Function(DropIntentChild value)? child,
+    TResult Function(DropIntentUnnest value)? unnest,
     required TResult orElse(),
   }) {
     if (after != null) {
@@ -463,6 +481,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     required TResult Function(String targetBlockId) before,
     required TResult Function(String targetBlockId) after,
     required TResult Function(String targetBlockId) child,
+    required TResult Function(String targetBlockId) unnest,
   }) {
     return child(targetBlockId);
   }
@@ -473,6 +492,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     TResult? Function(String targetBlockId)? before,
     TResult? Function(String targetBlockId)? after,
     TResult? Function(String targetBlockId)? child,
+    TResult? Function(String targetBlockId)? unnest,
   }) {
     return child?.call(targetBlockId);
   }
@@ -483,6 +503,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     TResult Function(String targetBlockId)? before,
     TResult Function(String targetBlockId)? after,
     TResult Function(String targetBlockId)? child,
+    TResult Function(String targetBlockId)? unnest,
     required TResult orElse(),
   }) {
     if (child != null) {
@@ -497,6 +518,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     required TResult Function(DropIntentBefore value) before,
     required TResult Function(DropIntentAfter value) after,
     required TResult Function(DropIntentChild value) child,
+    required TResult Function(DropIntentUnnest value) unnest,
   }) {
     return child(this);
   }
@@ -507,6 +529,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     TResult? Function(DropIntentBefore value)? before,
     TResult? Function(DropIntentAfter value)? after,
     TResult? Function(DropIntentChild value)? child,
+    TResult? Function(DropIntentUnnest value)? unnest,
   }) {
     return child?.call(this);
   }
@@ -517,6 +540,7 @@ class _$DropIntentChildImpl implements DropIntentChild {
     TResult Function(DropIntentBefore value)? before,
     TResult Function(DropIntentAfter value)? after,
     TResult Function(DropIntentChild value)? child,
+    TResult Function(DropIntentUnnest value)? unnest,
     required TResult orElse(),
   }) {
     if (child != null) {
@@ -535,5 +559,157 @@ abstract class DropIntentChild implements DropIntent {
   @override
   @JsonKey(ignore: true)
   _$$DropIntentChildImplCopyWith<_$DropIntentChildImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DropIntentUnnestImplCopyWith<$Res>
+    implements $DropIntentCopyWith<$Res> {
+  factory _$$DropIntentUnnestImplCopyWith(_$DropIntentUnnestImpl value,
+          $Res Function(_$DropIntentUnnestImpl) then) =
+      __$$DropIntentUnnestImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String targetBlockId});
+}
+
+/// @nodoc
+class __$$DropIntentUnnestImplCopyWithImpl<$Res>
+    extends _$DropIntentCopyWithImpl<$Res, _$DropIntentUnnestImpl>
+    implements _$$DropIntentUnnestImplCopyWith<$Res> {
+  __$$DropIntentUnnestImplCopyWithImpl(_$DropIntentUnnestImpl _value,
+      $Res Function(_$DropIntentUnnestImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? targetBlockId = null,
+  }) {
+    return _then(_$DropIntentUnnestImpl(
+      null == targetBlockId
+          ? _value.targetBlockId
+          : targetBlockId // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DropIntentUnnestImpl implements DropIntentUnnest {
+  const _$DropIntentUnnestImpl(this.targetBlockId);
+
+  @override
+  final String targetBlockId;
+
+  @override
+  String toString() {
+    return 'DropIntent.unnest(targetBlockId: $targetBlockId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DropIntentUnnestImpl &&
+            (identical(other.targetBlockId, targetBlockId) ||
+                other.targetBlockId == targetBlockId));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, targetBlockId);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DropIntentUnnestImplCopyWith<_$DropIntentUnnestImpl> get copyWith =>
+      __$$DropIntentUnnestImplCopyWithImpl<_$DropIntentUnnestImpl>(
+          this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(String targetBlockId) before,
+    required TResult Function(String targetBlockId) after,
+    required TResult Function(String targetBlockId) child,
+    required TResult Function(String targetBlockId) unnest,
+  }) {
+    return unnest(targetBlockId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(String targetBlockId)? before,
+    TResult? Function(String targetBlockId)? after,
+    TResult? Function(String targetBlockId)? child,
+    TResult? Function(String targetBlockId)? unnest,
+  }) {
+    return unnest?.call(targetBlockId);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(String targetBlockId)? before,
+    TResult Function(String targetBlockId)? after,
+    TResult Function(String targetBlockId)? child,
+    TResult Function(String targetBlockId)? unnest,
+    required TResult orElse(),
+  }) {
+    if (unnest != null) {
+      return unnest(targetBlockId);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(DropIntentBefore value) before,
+    required TResult Function(DropIntentAfter value) after,
+    required TResult Function(DropIntentChild value) child,
+    required TResult Function(DropIntentUnnest value) unnest,
+  }) {
+    return unnest(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(DropIntentBefore value)? before,
+    TResult? Function(DropIntentAfter value)? after,
+    TResult? Function(DropIntentChild value)? child,
+    TResult? Function(DropIntentUnnest value)? unnest,
+  }) {
+    return unnest?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(DropIntentBefore value)? before,
+    TResult Function(DropIntentAfter value)? after,
+    TResult Function(DropIntentChild value)? child,
+    TResult Function(DropIntentUnnest value)? unnest,
+    required TResult orElse(),
+  }) {
+    if (unnest != null) {
+      return unnest(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class DropIntentUnnest implements DropIntent {
+  const factory DropIntentUnnest(final String targetBlockId) =
+      _$DropIntentUnnestImpl;
+
+  @override
+  String get targetBlockId;
+  @override
+  @JsonKey(ignore: true)
+  _$$DropIntentUnnestImplCopyWith<_$DropIntentUnnestImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

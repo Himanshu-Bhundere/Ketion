@@ -8,6 +8,7 @@ import 'package:ketion/features/search/presentation/pages/search_page.dart';
 import 'package:ketion/features/settings/presentation/pages/settings_page.dart';
 import 'package:ketion/features/pages/presentation/pages/notes_page.dart';
 import 'package:ketion/features/reminders/presentation/pages/reminders_page.dart';
+import 'package:ketion/features/editor/domain/models/editor_open_target.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -76,7 +77,12 @@ final appRouter = GoRouter(
         final pageId = state.pathParameters['pageId']!;
         final extra = state.extra as Map<String, dynamic>?;
         final focusTitle = extra?['focusTitle'] as bool? ?? false;
-        return EditorPage(pageId: pageId, focusTitle: focusTitle);
+        final openTarget = extra?['openTarget'] as EditorOpenTarget?;
+        return EditorPage(
+          pageId: pageId,
+          focusTitle: focusTitle,
+          openTarget: openTarget,
+        );
       },
     ),
   ],

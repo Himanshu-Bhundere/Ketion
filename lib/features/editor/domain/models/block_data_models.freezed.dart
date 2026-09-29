@@ -342,6 +342,10 @@ BlockDataModel _$BlockDataModelFromJson(Map<String, dynamic> json) {
       return PdfBlockData.fromJson(json);
     case 'file':
       return FileBlockData.fromJson(json);
+    case 'divider':
+      return DividerBlockData.fromJson(json);
+    case 'code':
+      return CodeBlockData.fromJson(json);
 
     default:
       throw CheckedFromJsonException(json, 'runtimeType', 'BlockDataModel',
@@ -363,6 +367,10 @@ mixin _$BlockDataModel {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -376,6 +384,10 @@ mixin _$BlockDataModel {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -389,6 +401,10 @@ mixin _$BlockDataModel {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -402,6 +418,8 @@ mixin _$BlockDataModel {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -414,6 +432,8 @@ mixin _$BlockDataModel {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -426,6 +446,8 @@ mixin _$BlockDataModel {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -555,6 +577,10 @@ class _$TextBlockDataImpl extends TextBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return text(spans, headingLevel);
   }
@@ -571,6 +597,10 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return text?.call(spans, headingLevel);
   }
@@ -587,6 +617,10 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (text != null) {
@@ -606,6 +640,8 @@ class _$TextBlockDataImpl extends TextBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return text(this);
   }
@@ -621,6 +657,8 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return text?.call(this);
   }
@@ -636,6 +674,8 @@ class _$TextBlockDataImpl extends TextBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (text != null) {
@@ -783,6 +823,10 @@ class _$ListBlockDataImpl extends ListBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return list(spans, checked, listType);
   }
@@ -799,6 +843,10 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return list?.call(spans, checked, listType);
   }
@@ -815,6 +863,10 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (list != null) {
@@ -834,6 +886,8 @@ class _$ListBlockDataImpl extends ListBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return list(this);
   }
@@ -849,6 +903,8 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return list?.call(this);
   }
@@ -864,6 +920,8 @@ class _$ListBlockDataImpl extends ListBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (list != null) {
@@ -991,6 +1049,10 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return unknown(rawData);
   }
@@ -1007,6 +1069,10 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return unknown?.call(rawData);
   }
@@ -1023,6 +1089,10 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (unknown != null) {
@@ -1042,6 +1112,8 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return unknown(this);
   }
@@ -1057,6 +1129,8 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return unknown?.call(this);
   }
@@ -1072,6 +1146,8 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (unknown != null) {
@@ -1196,6 +1272,10 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return image(attachmentId, caption);
   }
@@ -1212,6 +1292,10 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return image?.call(attachmentId, caption);
   }
@@ -1228,6 +1312,10 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -1247,6 +1335,8 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return image(this);
   }
@@ -1262,6 +1352,8 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return image?.call(this);
   }
@@ -1277,6 +1369,8 @@ class _$ImageBlockDataImpl extends ImageBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
@@ -1403,6 +1497,10 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return video(attachmentId, caption);
   }
@@ -1419,6 +1517,10 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return video?.call(attachmentId, caption);
   }
@@ -1435,6 +1537,10 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (video != null) {
@@ -1454,6 +1560,8 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return video(this);
   }
@@ -1469,6 +1577,8 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return video?.call(this);
   }
@@ -1484,6 +1594,8 @@ class _$VideoBlockDataImpl extends VideoBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (video != null) {
@@ -1610,6 +1722,10 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return audio(attachmentId, caption);
   }
@@ -1626,6 +1742,10 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return audio?.call(attachmentId, caption);
   }
@@ -1642,6 +1762,10 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (audio != null) {
@@ -1661,6 +1785,8 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return audio(this);
   }
@@ -1676,6 +1802,8 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return audio?.call(this);
   }
@@ -1691,6 +1819,8 @@ class _$AudioBlockDataImpl extends AudioBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (audio != null) {
@@ -1816,6 +1946,10 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return pdf(attachmentId, caption);
   }
@@ -1832,6 +1966,10 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return pdf?.call(attachmentId, caption);
   }
@@ -1848,6 +1986,10 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (pdf != null) {
@@ -1867,6 +2009,8 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return pdf(this);
   }
@@ -1882,6 +2026,8 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return pdf?.call(this);
   }
@@ -1897,6 +2043,8 @@ class _$PdfBlockDataImpl extends PdfBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (pdf != null) {
@@ -2022,6 +2170,10 @@ class _$FileBlockDataImpl extends FileBlockData {
     required TResult Function(String attachmentId, String? caption) audio,
     required TResult Function(String attachmentId, String? caption) pdf,
     required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
   }) {
     return file(attachmentId, caption);
   }
@@ -2038,6 +2190,10 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult? Function(String attachmentId, String? caption)? audio,
     TResult? Function(String attachmentId, String? caption)? pdf,
     TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
   }) {
     return file?.call(attachmentId, caption);
   }
@@ -2054,6 +2210,10 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult Function(String attachmentId, String? caption)? audio,
     TResult Function(String attachmentId, String? caption)? pdf,
     TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -2073,6 +2233,8 @@ class _$FileBlockDataImpl extends FileBlockData {
     required TResult Function(AudioBlockData value) audio,
     required TResult Function(PdfBlockData value) pdf,
     required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
   }) {
     return file(this);
   }
@@ -2088,6 +2250,8 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult? Function(AudioBlockData value)? audio,
     TResult? Function(PdfBlockData value)? pdf,
     TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
   }) {
     return file?.call(this);
   }
@@ -2103,6 +2267,8 @@ class _$FileBlockDataImpl extends FileBlockData {
     TResult Function(AudioBlockData value)? audio,
     TResult Function(PdfBlockData value)? pdf,
     TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
@@ -2132,5 +2298,441 @@ abstract class FileBlockData extends BlockDataModel {
   String? get caption;
   @JsonKey(ignore: true)
   _$$FileBlockDataImplCopyWith<_$FileBlockDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DividerBlockDataImplCopyWith<$Res> {
+  factory _$$DividerBlockDataImplCopyWith(_$DividerBlockDataImpl value,
+          $Res Function(_$DividerBlockDataImpl) then) =
+      __$$DividerBlockDataImplCopyWithImpl<$Res>;
+}
+
+/// @nodoc
+class __$$DividerBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$DividerBlockDataImpl>
+    implements _$$DividerBlockDataImplCopyWith<$Res> {
+  __$$DividerBlockDataImplCopyWithImpl(_$DividerBlockDataImpl _value,
+      $Res Function(_$DividerBlockDataImpl) _then)
+      : super(_value, _then);
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$DividerBlockDataImpl extends DividerBlockData {
+  const _$DividerBlockDataImpl({final String? $type})
+      : $type = $type ?? 'divider',
+        super._();
+
+  factory _$DividerBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$DividerBlockDataImplFromJson(json);
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.divider()';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType && other is _$DividerBlockDataImpl);
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => runtimeType.hashCode;
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
+    required TResult Function(
+            List<TextSpanData> spans, bool checked, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return divider();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return divider?.call();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider();
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return divider(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return divider?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (divider != null) {
+      return divider(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$DividerBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class DividerBlockData extends BlockDataModel {
+  const factory DividerBlockData() = _$DividerBlockDataImpl;
+  const DividerBlockData._() : super._();
+
+  factory DividerBlockData.fromJson(Map<String, dynamic> json) =
+      _$DividerBlockDataImpl.fromJson;
+}
+
+/// @nodoc
+abstract class _$$CodeBlockDataImplCopyWith<$Res> {
+  factory _$$CodeBlockDataImplCopyWith(
+          _$CodeBlockDataImpl value, $Res Function(_$CodeBlockDataImpl) then) =
+      __$$CodeBlockDataImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call(
+      {String code, String language, bool showLineNumbers, bool wrapLines});
+}
+
+/// @nodoc
+class __$$CodeBlockDataImplCopyWithImpl<$Res>
+    extends _$BlockDataModelCopyWithImpl<$Res, _$CodeBlockDataImpl>
+    implements _$$CodeBlockDataImplCopyWith<$Res> {
+  __$$CodeBlockDataImplCopyWithImpl(
+      _$CodeBlockDataImpl _value, $Res Function(_$CodeBlockDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? code = null,
+    Object? language = null,
+    Object? showLineNumbers = null,
+    Object? wrapLines = null,
+  }) {
+    return _then(_$CodeBlockDataImpl(
+      code: null == code
+          ? _value.code
+          : code // ignore: cast_nullable_to_non_nullable
+              as String,
+      language: null == language
+          ? _value.language
+          : language // ignore: cast_nullable_to_non_nullable
+              as String,
+      showLineNumbers: null == showLineNumbers
+          ? _value.showLineNumbers
+          : showLineNumbers // ignore: cast_nullable_to_non_nullable
+              as bool,
+      wrapLines: null == wrapLines
+          ? _value.wrapLines
+          : wrapLines // ignore: cast_nullable_to_non_nullable
+              as bool,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$CodeBlockDataImpl extends CodeBlockData {
+  const _$CodeBlockDataImpl(
+      {this.code = '',
+      this.language = 'plaintext',
+      this.showLineNumbers = false,
+      this.wrapLines = true,
+      final String? $type})
+      : $type = $type ?? 'code',
+        super._();
+
+  factory _$CodeBlockDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$CodeBlockDataImplFromJson(json);
+
+  @override
+  @JsonKey()
+  final String code;
+  @override
+  @JsonKey()
+  final String language;
+  @override
+  @JsonKey()
+  final bool showLineNumbers;
+  @override
+  @JsonKey()
+  final bool wrapLines;
+
+  @JsonKey(name: 'runtimeType')
+  final String $type;
+
+  @override
+  String toString() {
+    return 'BlockDataModel.code(code: $code, language: $language, showLineNumbers: $showLineNumbers, wrapLines: $wrapLines)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$CodeBlockDataImpl &&
+            (identical(other.code, code) || other.code == code) &&
+            (identical(other.language, language) ||
+                other.language == language) &&
+            (identical(other.showLineNumbers, showLineNumbers) ||
+                other.showLineNumbers == showLineNumbers) &&
+            (identical(other.wrapLines, wrapLines) ||
+                other.wrapLines == wrapLines));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode =>
+      Object.hash(runtimeType, code, language, showLineNumbers, wrapLines);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
+      __$$CodeBlockDataImplCopyWithImpl<_$CodeBlockDataImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<TextSpanData> spans, int headingLevel) text,
+    required TResult Function(
+            List<TextSpanData> spans, bool checked, String listType)
+        list,
+    required TResult Function(Map<String, dynamic> rawData) unknown,
+    required TResult Function(String attachmentId, String? caption) image,
+    required TResult Function(String attachmentId, String? caption) video,
+    required TResult Function(String attachmentId, String? caption) audio,
+    required TResult Function(String attachmentId, String? caption) pdf,
+    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function() divider,
+    required TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)
+        code,
+  }) {
+    return code(this.code, language, showLineNumbers, wrapLines);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult? Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult? Function(Map<String, dynamic> rawData)? unknown,
+    TResult? Function(String attachmentId, String? caption)? image,
+    TResult? Function(String attachmentId, String? caption)? video,
+    TResult? Function(String attachmentId, String? caption)? audio,
+    TResult? Function(String attachmentId, String? caption)? pdf,
+    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function()? divider,
+    TResult? Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+  }) {
+    return code?.call(this.code, language, showLineNumbers, wrapLines);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<TextSpanData> spans, int headingLevel)? text,
+    TResult Function(List<TextSpanData> spans, bool checked, String listType)?
+        list,
+    TResult Function(Map<String, dynamic> rawData)? unknown,
+    TResult Function(String attachmentId, String? caption)? image,
+    TResult Function(String attachmentId, String? caption)? video,
+    TResult Function(String attachmentId, String? caption)? audio,
+    TResult Function(String attachmentId, String? caption)? pdf,
+    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function()? divider,
+    TResult Function(
+            String code, String language, bool showLineNumbers, bool wrapLines)?
+        code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this.code, language, showLineNumbers, wrapLines);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(TextBlockData value) text,
+    required TResult Function(ListBlockData value) list,
+    required TResult Function(UnknownBlockData value) unknown,
+    required TResult Function(ImageBlockData value) image,
+    required TResult Function(VideoBlockData value) video,
+    required TResult Function(AudioBlockData value) audio,
+    required TResult Function(PdfBlockData value) pdf,
+    required TResult Function(FileBlockData value) file,
+    required TResult Function(DividerBlockData value) divider,
+    required TResult Function(CodeBlockData value) code,
+  }) {
+    return code(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(TextBlockData value)? text,
+    TResult? Function(ListBlockData value)? list,
+    TResult? Function(UnknownBlockData value)? unknown,
+    TResult? Function(ImageBlockData value)? image,
+    TResult? Function(VideoBlockData value)? video,
+    TResult? Function(AudioBlockData value)? audio,
+    TResult? Function(PdfBlockData value)? pdf,
+    TResult? Function(FileBlockData value)? file,
+    TResult? Function(DividerBlockData value)? divider,
+    TResult? Function(CodeBlockData value)? code,
+  }) {
+    return code?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(TextBlockData value)? text,
+    TResult Function(ListBlockData value)? list,
+    TResult Function(UnknownBlockData value)? unknown,
+    TResult Function(ImageBlockData value)? image,
+    TResult Function(VideoBlockData value)? video,
+    TResult Function(AudioBlockData value)? audio,
+    TResult Function(PdfBlockData value)? pdf,
+    TResult Function(FileBlockData value)? file,
+    TResult Function(DividerBlockData value)? divider,
+    TResult Function(CodeBlockData value)? code,
+    required TResult orElse(),
+  }) {
+    if (code != null) {
+      return code(this);
+    }
+    return orElse();
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$CodeBlockDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class CodeBlockData extends BlockDataModel {
+  const factory CodeBlockData(
+      {final String code,
+      final String language,
+      final bool showLineNumbers,
+      final bool wrapLines}) = _$CodeBlockDataImpl;
+  const CodeBlockData._() : super._();
+
+  factory CodeBlockData.fromJson(Map<String, dynamic> json) =
+      _$CodeBlockDataImpl.fromJson;
+
+  String get code;
+  String get language;
+  bool get showLineNumbers;
+  bool get wrapLines;
+  @JsonKey(ignore: true)
+  _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

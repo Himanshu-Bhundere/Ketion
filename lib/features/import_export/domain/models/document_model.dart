@@ -38,6 +38,13 @@ sealed class DocumentNode with _$DocumentNode {
     required String attachmentId,
     String? caption,
   }) = DocFile;
+
+  const factory DocumentNode.divider() = DocDivider;
+
+  const factory DocumentNode.code({
+    required String code,
+    required String language,
+  }) = DocCode;
 }
 
 @freezed

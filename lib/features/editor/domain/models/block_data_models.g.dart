@@ -154,3 +154,33 @@ Map<String, dynamic> _$$FileBlockDataImplToJson(_$FileBlockDataImpl instance) =>
       'caption': instance.caption,
       'runtimeType': instance.$type,
     };
+
+_$DividerBlockDataImpl _$$DividerBlockDataImplFromJson(
+        Map<String, dynamic> json) =>
+    _$DividerBlockDataImpl(
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$$DividerBlockDataImplToJson(
+        _$DividerBlockDataImpl instance) =>
+    <String, dynamic>{
+      'runtimeType': instance.$type,
+    };
+
+_$CodeBlockDataImpl _$$CodeBlockDataImplFromJson(Map<String, dynamic> json) =>
+    _$CodeBlockDataImpl(
+      code: json['code'] as String? ?? '',
+      language: json['language'] as String? ?? 'plaintext',
+      showLineNumbers: json['showLineNumbers'] as bool? ?? false,
+      wrapLines: json['wrapLines'] as bool? ?? true,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$$CodeBlockDataImplToJson(_$CodeBlockDataImpl instance) =>
+    <String, dynamic>{
+      'code': instance.code,
+      'language': instance.language,
+      'showLineNumbers': instance.showLineNumbers,
+      'wrapLines': instance.wrapLines,
+      'runtimeType': instance.$type,
+    };

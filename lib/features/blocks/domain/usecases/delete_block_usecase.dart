@@ -6,7 +6,7 @@ class DeleteBlockUseCase {
 
   DeleteBlockUseCase(this._repository);
 
-  Future<Result<void>> call(String id) {
-    return _repository.deleteBlock(id);
+  Future<Result<void>> call(String id, {required int expectedVersion}) {
+    return _repository.deleteBlock(id, expectedVersion: expectedVersion);
   }
 }

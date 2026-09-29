@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
-import '../widgets/block_editor_widget.dart';
+import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
 
 class EditorPage extends ConsumerWidget {
@@ -28,7 +28,11 @@ class EditorPage extends ConsumerWidget {
 
     final updatedPage = page.copyWith(title: title ?? page.title, icon: icon ?? page.icon);
     final result = await ref.read(updatePageUseCaseProvider)(updatedPage);
-    if (result is Success<void>) ref.invalidate(pageProvider(pageId));
+    if (result is Success<void>) {
+      ref.invalidate(pageProvider(pageId));
+      ref.invalidate(recentPagesProvider);
+      ref.invalidate(favoritePagesProvider);
+    }
     return result;
   }
 
@@ -36,7 +40,7 @@ class EditorPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: EditorTopBar(pageId: pageId),
-      body: BlockEditorWidget(
+      body: KetionEditorHost(
         pageId: pageId,
         focusTitle: focusTitle,
         onTitleChanged: (title) => _updatePage(ref, title: title),

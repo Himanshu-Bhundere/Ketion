@@ -4,11 +4,53 @@ import 'package:go_router/go_router.dart';
 import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 
-class CreateActionSheet extends ConsumerWidget {
+class CreateActionSheet extends ConsumerStatefulWidget {
   const CreateActionSheet({super.key});
 
+  static void show(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => const CreateActionSheet(),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CreateActionSheet> createState() => _CreateActionSheetState();
+}
+
+class _CreateActionSheetState extends ConsumerState<CreateActionSheet> {
+  bool _isCreating = false;
+
+  Future<void> _createNote(BuildContext context) async {
+    if (_isCreating) return;
+    setState(() => _isCreating = true);
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop();
+
+    final result = await ref.read(createPageUseCaseProvider)(title: '');
+    result.fold(
+      (page) {
+        ref.invalidate(recentPagesProvider);
+        ref.invalidate(favoritePagesProvider);
+        ref.invalidate(pageProvider(page.id));
+        router.pushNamed(
+          Routes.editorName,
+          pathParameters: {'pageId': page.id},
+          extra: {'focusTitle': true},
+        );
+      },
+      (error) => messenger.showSnackBar(
+        SnackBar(content: Text('Failed to create note: $error')),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -26,38 +68,8 @@ class CreateActionSheet extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.description),
             title: const Text('New Note'),
-            onTap: () async {
-              // Pop the bottom sheet first
-              Navigator.of(context).pop();
-
-              // Execute use case
-              final createPage = ref.read(createPageUseCaseProvider);
-              final result = await createPage(title: '');
-
-              result.fold(
-                (page) {
-                  // Invalidate lists so new page appears immediately
-                  ref.invalidate(recentPagesProvider);
-                  ref.invalidate(favoritePagesProvider);
-                  ref.invalidate(pageProvider(page.id));
-
-                  // Navigate to the new page
-                  context.pushNamed(
-                    Routes.editorName,
-                    pathParameters: {'pageId': page.id},
-                    extra: {'focusTitle': true},
-                  );
-                },
-                (error) {
-                  if (context.mounted) {
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to create note: $error')),
-                    );
-                  }
-                },
-              );
-            },
+            enabled: !_isCreating,
+            onTap: () => _createNote(context),
           ),
           ListTile(
             leading: const Icon(Icons.check_box),
@@ -76,16 +88,6 @@ class CreateActionSheet extends ConsumerWidget {
           const SizedBox(height: 16),
         ],
       ),
-    );
-  }
-
-  static void show(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => const CreateActionSheet(),
     );
   }
 }

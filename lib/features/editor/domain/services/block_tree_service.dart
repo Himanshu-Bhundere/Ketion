@@ -43,76 +43,6 @@ class BlockTreeService {
     return visibleBlocks;
   }
 
-  /// Indents a block by making it a child of its immediately preceding sibling.
-  static List<Block> indentBlock(String blockId, List<Block> allBlocks) {
-    final block = allBlocks.firstWhere((b) => b.id == blockId);
-
-    // Find preceding sibling
-    final siblings = allBlocks
-        .where((b) => b.parentBlockId == block.parentBlockId && !b.deleted)
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    final siblingIndex = siblings.indexWhere((b) => b.id == blockId);
-    if (siblingIndex <= 0) return []; // Cannot indent first sibling
-
-    final previousSibling = siblings[siblingIndex - 1];
-
-    // Find new position at end of new parent's children
-    final newSiblings = allBlocks
-        .where((b) => b.parentBlockId == previousSibling.id && !b.deleted)
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    final newPosition = SiblingPositionManager.calculatePositionBetween(
-      newSiblings.isEmpty ? null : newSiblings.last.position,
-      null,
-    );
-
-    return [
-      block.copyWith(
-        parentBlockId: previousSibling.id,
-        position: newPosition,
-        updatedAt: DateTime.now(),
-      ),
-    ];
-  }
-
-  /// Outdents a block by making it a sibling of its current parent, placed immediately after the parent.
-  static List<Block> outdentBlock(String blockId, List<Block> allBlocks) {
-    final block = allBlocks.firstWhere((b) => b.id == blockId);
-    if (block.parentBlockId == null) {
-      return []; // Cannot outdent top-level block
-    }
-
-    final parent = allBlocks.firstWhere((b) => b.id == block.parentBlockId);
-
-    // The block should be placed after its current parent.
-    // Find the parent's siblings to determine the new position.
-    final parentSiblings = allBlocks
-        .where((b) => b.parentBlockId == parent.parentBlockId && !b.deleted)
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
-
-    final parentIndex = parentSiblings.indexWhere((b) => b.id == parent.id);
-    Block? blockAfterParent;
-    if (parentIndex >= 0 && parentIndex < parentSiblings.length - 1) {
-      blockAfterParent = parentSiblings[parentIndex + 1];
-    }
-
-    final newPosition = SiblingPositionManager.calculatePositionBetweenBlocks(
-      parent,
-      blockAfterParent,
-    );
-
-    return [
-      block.copyWith(
-        parentBlockId: parent.parentBlockId,
-        position: newPosition,
-        updatedAt: DateTime.now(),
-      ),
-    ];
-  }
 
   /// Moves a block according to a DropIntent.
   static List<Block> moveBlock(
@@ -120,15 +50,28 @@ class BlockTreeService {
     DropIntent intent,
     List<Block> allBlocks,
   ) {
-    final sourceBlock = allBlocks.firstWhere((b) => b.id == sourceBlockId);
+    final sourceBlock = allBlocks.firstWhere((b) => b.id == sourceBlockId, orElse: () => allBlocks.first);
+    if (sourceBlock.id != sourceBlockId || sourceBlock.deleted) return [];
+
+    final targetId = intent.when(
+      before: (id) => id,
+      after: (id) => id,
+      child: (id) => id,
+      unnest: (id) => id,
+    );
+
+    final targetBlock = allBlocks.firstWhere((b) => b.id == targetId, orElse: () => allBlocks.first);
+    if (targetBlock.id != targetId || targetBlock.deleted) return [];
+
+    if (sourceBlock.pageId != targetBlock.pageId) return []; // Cross-page move rejected
+    final isUnnest = intent.maybeWhen(
+      unnest: (_) => true,
+      orElse: () => false,
+    );
+    if (!isUnnest && _isDescendant(sourceBlockId, targetId, allBlocks)) return []; // Prevent cycle
 
     return intent.when(
       before: (targetId) {
-        if (_isDescendant(sourceBlockId, targetId, allBlocks)) {
-          return []; // Prevent cycle
-        }
-        final targetBlock = allBlocks.firstWhere((b) => b.id == targetId);
-
         final targetSiblings = allBlocks
             .where(
               (b) =>
@@ -150,18 +93,17 @@ class BlockTreeService {
           targetBlock,
         );
 
+        if (sourceBlock.parentBlockId == targetBlock.parentBlockId && sourceBlock.position == newPos) return [];
+
         return [
           sourceBlock.copyWith(
             parentBlockId: targetBlock.parentBlockId,
             position: newPos,
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now().toUtc(),
           ),
         ];
       },
       after: (targetId) {
-        if (_isDescendant(sourceBlockId, targetId, allBlocks)) return [];
-        final targetBlock = allBlocks.firstWhere((b) => b.id == targetId);
-
         final targetSiblings = allBlocks
             .where(
               (b) =>
@@ -182,17 +124,19 @@ class BlockTreeService {
           targetBlock,
           blockAfterTarget,
         );
+        
+        if (sourceBlock.parentBlockId == targetBlock.parentBlockId && sourceBlock.position == newPos) return [];
 
         return [
           sourceBlock.copyWith(
             parentBlockId: targetBlock.parentBlockId,
             position: newPos,
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now().toUtc(),
           ),
         ];
       },
       child: (targetId) {
-        if (_isDescendant(sourceBlockId, targetId, allBlocks)) return [];
+        if (!_isDepthValid(sourceBlockId, targetId, allBlocks)) return [];
 
         final targetChildren = allBlocks
             .where(
@@ -209,11 +153,51 @@ class BlockTreeService {
           null,
         );
 
+        if (sourceBlock.parentBlockId == targetId && sourceBlock.position == newPos) return [];
+
         return [
           sourceBlock.copyWith(
             parentBlockId: targetId,
             position: newPos,
-            updatedAt: DateTime.now(),
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        ];
+      },
+      unnest: (targetId) {
+        final currentParentId = targetBlock.parentBlockId;
+        if (currentParentId == null) return []; // Already at root
+
+        final currentParent = allBlocks.firstWhere((b) => b.id == currentParentId);
+        final destinationParentId = currentParent.parentBlockId;
+
+        final targetSiblings = allBlocks
+            .where(
+              (b) =>
+                  b.parentBlockId == destinationParentId &&
+                  !b.deleted &&
+                  b.id != sourceBlockId,
+            )
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
+
+        final parentIndex = targetSiblings.indexWhere((b) => b.id == currentParentId);
+        Block? blockAfterParent;
+        if (parentIndex >= 0 && parentIndex < targetSiblings.length - 1) {
+          blockAfterParent = targetSiblings[parentIndex + 1];
+        }
+
+        final newPos = SiblingPositionManager.calculatePositionBetweenBlocks(
+          currentParent,
+          blockAfterParent,
+        );
+
+        if (sourceBlock.parentBlockId == destinationParentId && sourceBlock.position == newPos) return [];
+
+        return [
+          sourceBlock.copyWith(
+            parentBlockId: destinationParentId,
+            position: newPos,
+            updatedAt: DateTime.now().toUtc(),
           ),
         ];
       },
@@ -236,5 +220,31 @@ class BlockTreeService {
       currentId = blockMap[currentId]?.parentBlockId;
     }
     return false;
+  }
+
+  static bool _isDepthValid(String sourceBlockId, String newParentId, List<Block> allBlocks, {int maxDepth = 20}) {
+    final Map<String, Block> blockMap = {for (var b in allBlocks) b.id: b};
+    
+    // Calculate new parent depth
+    int parentDepth = 0;
+    String? currentId = newParentId;
+    while (currentId != null) {
+      parentDepth++;
+      currentId = blockMap[currentId]?.parentBlockId;
+    }
+
+    // Calculate source subtree depth
+    int maxSubtreeDepth = 0;
+    void traverse(String blockId, int currentDepth) {
+      if (currentDepth > maxSubtreeDepth) maxSubtreeDepth = currentDepth;
+      final children = allBlocks.where((b) => b.parentBlockId == blockId && !b.deleted);
+      for (final child in children) {
+        traverse(child.id, currentDepth + 1);
+      }
+    }
+    
+    traverse(sourceBlockId, 1);
+    
+    return (parentDepth + maxSubtreeDepth) <= maxDepth;
   }
 }

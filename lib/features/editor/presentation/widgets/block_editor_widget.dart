@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
@@ -49,15 +50,71 @@ class BlockEditorWidget extends ConsumerStatefulWidget {
 
 class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
   final ScrollController _scrollController = ScrollController();
+  Timer? _autoScrollTimer;
+  double _scrollDelta = 0.0;
+
+  @override
+  void dispose() {
+    _stopAutoScroll();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleBlockDragUpdate(Offset globalPosition) {
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    
+    final localPosition = renderBox.globalToLocal(globalPosition);
+    final height = renderBox.size.height;
+    
+    const edgeThreshold = 60.0;
+    const scrollAmount = 10.0;
+    
+    if (localPosition.dy < edgeThreshold) {
+      _startAutoScroll(-scrollAmount);
+    } else if (localPosition.dy > height - edgeThreshold) {
+      _startAutoScroll(scrollAmount);
+    } else {
+      _stopAutoScroll();
+    }
+  }
+
+  void _startAutoScroll(double delta) {
+    if (_autoScrollTimer != null && _autoScrollTimer!.isActive) {
+      _scrollDelta = delta;
+      return;
+    }
+    
+    _scrollDelta = delta;
+    _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!_scrollController.hasClients) return;
+      
+      final currentScroll = _scrollController.offset;
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final minScroll = _scrollController.position.minScrollExtent;
+      
+      final newScroll = (currentScroll + _scrollDelta).clamp(minScroll, maxScroll);
+      if (newScroll != currentScroll) {
+        _scrollController.jumpTo(newScroll);
+      } else {
+        _stopAutoScroll();
+      }
+    });
+  }
+
+  void _stopAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
+  }
 
   void _handleBlockUpdate(Block block) {
     ref.read(editorStateProvider(widget.pageId).notifier).updateBlock(block);
   }
 
-  void _handleInsertBlock(Block existingBlock) {
+  void _handleInsertBlock(Block existingBlock, {String type = 'text'}) {
     ref
         .read(editorStateProvider(widget.pageId).notifier)
-        .insertBlockAfter(existingBlock);
+        .insertBlockAfter(existingBlock, type: type);
   }
 
   Future<void> _handleSplitBlock(Block block, String before, String after) {
@@ -66,14 +123,10 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         .splitTextBlock(block, before, after);
   }
 
-  Future<void> _handleMergeEmptyBlock(Block block) {
+  Future<void> _handleMergeBlockWithPrevious(Block block, String textToMerge) {
     return ref
         .read(editorStateProvider(widget.pageId).notifier)
-        .mergeEmptyBlockWithPrevious(block);
-  }
-
-  void _handleDeleteBlock(String blockId) {
-    ref.read(editorStateProvider(widget.pageId).notifier).deleteBlock(blockId);
+        .mergeBlockWithPrevious(block, textToMerge);
   }
 
   Widget _buildBlockWidget(VisibleBlock visibleBlock, int index) {
@@ -85,10 +138,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
         content = ListBlockWidget(
           block: block,
           onUpdate: _handleBlockUpdate,
-          onSplit: () => _handleInsertBlock(block),
-          onMergePrevious: () {
-            if (index > 0) _handleDeleteBlock(block.id);
-          },
+          onSplit: (before, after) => ref.read(editorStateProvider(widget.pageId).notifier).splitListBlock(block, before, after),
+          onMergePrevious: (text) => _handleMergeBlockWithPrevious(block, text),
         );
         break;
       case 'image':
@@ -127,7 +178,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
           block: block,
           onUpdate: _handleBlockUpdate,
           onSplit: (before, after) => _handleSplitBlock(block, before, after),
-          onMergePrevious: () => _handleMergeEmptyBlock(block),
+          onMergePrevious: (text) => _handleMergeBlockWithPrevious(block, text),
         );
     }
 
@@ -137,6 +188,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
       index: index,
       depth: visibleBlock.depth,
       pageId: widget.pageId,
+      onInsert: (type) => _handleInsertBlock(block, type: type),
+      onDragUpdate: _handleBlockDragUpdate,
+      onDragEnd: _stopAutoScroll,
       child: content,
     );
   }

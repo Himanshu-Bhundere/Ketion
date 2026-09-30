@@ -121,7 +121,9 @@ void main() {
 
     // claim to set to processing
     final claimRes = await repository.claimNextBatch(
-        limit: 50, leaseDuration: const Duration(minutes: 5));
+      limit: 50,
+      leaseDuration: const Duration(minutes: 5),
+    );
     final claimed = (claimRes as Success<List<SyncQueueItem>>).value;
     expect(claimed.first.status, SyncQueueItemStatus.processing);
 
@@ -149,23 +151,27 @@ void main() {
 
   test('Claim batch creates a durable batchId shared across items', () async {
     final item1 = SyncQueueItem(
-        id: 'item-1',
-        entityTable: 'pages',
-        entityId: 'p1',
-        operation: 'update',
-        createdAt: DateTime.now());
+      id: 'item-1',
+      entityTable: 'pages',
+      entityId: 'p1',
+      operation: 'update',
+      createdAt: DateTime.now(),
+    );
     final item2 = SyncQueueItem(
-        id: 'item-2',
-        entityTable: 'pages',
-        entityId: 'p2',
-        operation: 'update',
-        createdAt: DateTime.now());
+      id: 'item-2',
+      entityTable: 'pages',
+      entityId: 'p2',
+      operation: 'update',
+      createdAt: DateTime.now(),
+    );
 
     await repository.enqueueOrCoalesce(item1);
     await repository.enqueueOrCoalesce(item2);
 
     final claimRes = await repository.claimNextBatch(
-        limit: 50, leaseDuration: const Duration(minutes: 5));
+      limit: 50,
+      leaseDuration: const Duration(minutes: 5),
+    );
     final claimed = (claimRes as Success<List<SyncQueueItem>>).value;
 
     expect(claimed.length, 2);

@@ -103,7 +103,7 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
           )
           ..orderBy([
             (tbl) =>
-                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc)
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.asc),
           ])
           ..limit(1);
 
@@ -130,7 +130,9 @@ class SyncQueueRepositoryImpl implements SyncQueueRepository {
             )
             ..orderBy([
               (tbl) => OrderingTerm(
-                  expression: tbl.createdAt, mode: OrderingMode.asc)
+                    expression: tbl.createdAt,
+                    mode: OrderingMode.asc,
+                  ),
             ])
             ..limit(limit);
 

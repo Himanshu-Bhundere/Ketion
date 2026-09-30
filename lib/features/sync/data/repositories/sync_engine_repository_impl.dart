@@ -324,7 +324,8 @@ class SyncEngineRepositoryImpl implements SyncEngineRepository {
             if (payload is Map<String, dynamic>) {
               if (payload['id'] != null && payload['id'] != entityId) {
                 throw const FormatException(
-                    'Payload id does not match change id');
+                  'Payload id does not match change id',
+                );
               }
             }
           }

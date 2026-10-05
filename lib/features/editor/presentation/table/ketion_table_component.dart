@@ -66,7 +66,9 @@ class KetionTableComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionTableNode) return null;
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
@@ -106,8 +108,10 @@ class KetionTableComponentBuilder implements ComponentBuilder {
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionTableComponentViewModel) return null;
     return BoxComponent(
       key: componentContext.componentKey,
@@ -233,7 +237,8 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
     }
 
     debugPrint(
-        'didUpdateWidget: rows.length=${widget.viewModel.rows.length}, validCellIds.length=${validCellIds.length}, keysToRemove=${keysToRemove.length}, currentControllers=${_controllers.length}',);
+      'didUpdateWidget: rows.length=${widget.viewModel.rows.length}, validCellIds.length=${validCellIds.length}, keysToRemove=${keysToRemove.length}, currentControllers=${_controllers.length}',
+    );
 
     for (var key in keysToRemove) {
       _controllers.remove(key)?.dispose();
@@ -248,7 +253,15 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
     for (var row in widget.viewModel.rows) {
       for (var cell in row.cells) {
         if (_controllers.containsKey(cell.id)) {
-          if (_localCellState.containsKey(cell.id)) continue;
+          final isActivelyEditing = _focusNodes[cell.id]?.hasFocus == true ||
+              _activeCellId == cell.id;
+          final isPendingDebounce =
+              _debounceTimer != null && _debounceTimer!.isActive;
+          if ((isActivelyEditing || isPendingDebounce) &&
+              _localCellState.containsKey(cell.id)) {
+            continue;
+          }
+          _localCellState.remove(cell.id);
           final controller = _controllers[cell.id]!;
           final cellText = cell.spans.map((s) => s.text).join('');
           if (controller.text != cellText) {
@@ -465,8 +478,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
   void _ensureCellVisible(String cellId) {
     final context = _focusNodes[cellId]?.context;
     if (context != null) {
-      Scrollable.ensureVisible(context,
-          alignment: 0.5, duration: const Duration(milliseconds: 200),);
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 200),
+      );
     }
   }
 
@@ -488,17 +504,23 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             key: _tableKey,
             border: TableBorder(
               horizontalInside: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
               verticalInside: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
               top: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
               bottom: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
               left: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
               right: BorderSide(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+              ),
             ),
             columnWidths: {
               for (var i = 0; i < columnCount; i++)
@@ -534,7 +556,8 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                                         border: InputBorder.none,
                                         isDense: true,
                                         contentPadding: EdgeInsets.symmetric(
-                                            vertical: 12.0,),
+                                          vertical: 12.0,
+                                        ),
                                       ),
                                       style: const TextStyle(fontSize: 14),
                                       onChanged: (value) {
@@ -549,9 +572,12 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                                     )
                                   : Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          vertical: 12.0,),
-                                      child: Text(text,
-                                          style: const TextStyle(fontSize: 14),),
+                                        vertical: 12.0,
+                                      ),
+                                      child: Text(
+                                        text,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
                                     ),
                             ),
                           );
@@ -584,7 +610,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
       final rect = _geometry!.rowRects[row.id];
       final rowRect = rect ??
           Rect.fromLTWH(
-              0, currentY, widget.viewModel.columnCount * 150.0, 48.0,);
+            0,
+            currentY,
+            widget.viewModel.columnCount * 150.0,
+            48.0,
+          );
       currentY = rowRect.bottom;
 
       rowWidgets.add(
@@ -634,8 +664,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => _showRowMenu(row.id),
-                    child: Icon(Icons.more_horiz,
-                        size: 16, color: Colors.grey.shade500,),
+                    child: Icon(
+                      Icons.more_horiz,
+                      size: 16,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   LongPressDraggable<String>(
@@ -663,8 +696,10 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                           border: Border.all(color: Colors.blue, width: 2),
                         ),
                         child: Center(
-                          child: Icon(Icons.drag_indicator,
-                              color: Colors.grey.shade600,),
+                          child: Icon(
+                            Icons.drag_indicator,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ),
                     ),
@@ -744,8 +779,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => _showColumnMenu(c),
-                    child: Icon(Icons.more_vert,
-                        size: 16, color: Colors.grey.shade500,),
+                    child: Icon(
+                      Icons.more_vert,
+                      size: 16,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   LongPressDraggable<String>(
@@ -778,8 +816,10 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                           border: Border.all(color: Colors.blue, width: 2),
                         ),
                         child: Center(
-                          child: Icon(Icons.drag_handle,
-                              color: Colors.grey.shade600,),
+                          child: Icon(
+                            Icons.drag_handle,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ),
                     ),
@@ -876,7 +916,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
       showMenu<String>(
         context: context,
         position: RelativeRect.fromLTRB(
-            offset.dx, offset.dy, offset.dx + 1, offset.dy + 1,),
+          offset.dx,
+          offset.dy,
+          offset.dx + 1,
+          offset.dy + 1,
+        ),
         items: items,
       ).then((value) {
         if (value != null) onSelected(value);
@@ -900,19 +944,27 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
       offset: offset,
       items: [
         const PopupMenuItem<String>(
-            value: 'insert_above', child: Text('Insert row above'),),
+          value: 'insert_above',
+          child: Text('Insert row above'),
+        ),
         const PopupMenuItem<String>(
-            value: 'insert_below', child: Text('Insert row below'),),
+          value: 'insert_below',
+          child: Text('Insert row below'),
+        ),
         const PopupMenuItem<String>(
-            value: 'duplicate', child: Text('Duplicate row'),),
+          value: 'duplicate',
+          child: Text('Duplicate row'),
+        ),
         PopupMenuItem<String>(
           value: 'delete',
           enabled: widget.viewModel.rows.length > 1,
-          child: Text('Delete row',
-              style: TextStyle(
-                  color: widget.viewModel.rows.length > 1
-                      ? Colors.red
-                      : Colors.grey,),),
+          child: Text(
+            'Delete row',
+            style: TextStyle(
+              color:
+                  widget.viewModel.rows.length > 1 ? Colors.red : Colors.grey,
+            ),
+          ),
         ),
       ],
       onSelected: (value) {
@@ -921,7 +973,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: AddTableRowCommand(
-                  nodeId: widget.viewModel.nodeId, afterRowIndex: rowIndex - 1,),
+                nodeId: widget.viewModel.nodeId,
+                afterRowIndex: rowIndex - 1,
+              ),
             ),
           ]);
         } else if (value == 'insert_below') {
@@ -929,7 +983,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: AddTableRowCommand(
-                  nodeId: widget.viewModel.nodeId, afterRowIndex: rowIndex,),
+                nodeId: widget.viewModel.nodeId,
+                afterRowIndex: rowIndex,
+              ),
             ),
           ]);
         } else if (value == 'duplicate') {
@@ -937,7 +993,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: DuplicateTableRowCommand(
-                  nodeId: widget.viewModel.nodeId, rowIndex: rowIndex,),
+                nodeId: widget.viewModel.nodeId,
+                rowIndex: rowIndex,
+              ),
             ),
           ]);
         } else if (value == 'delete') {
@@ -945,7 +1003,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: DeleteTableRowCommand(
-                  nodeId: widget.viewModel.nodeId, rowIndex: rowIndex,),
+                nodeId: widget.viewModel.nodeId,
+                rowIndex: rowIndex,
+              ),
             ),
           ]);
         }
@@ -967,19 +1027,27 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
       offset: offset,
       items: [
         const PopupMenuItem<String>(
-            value: 'insert_left', child: Text('Insert column left'),),
+          value: 'insert_left',
+          child: Text('Insert column left'),
+        ),
         const PopupMenuItem<String>(
-            value: 'insert_right', child: Text('Insert column right'),),
+          value: 'insert_right',
+          child: Text('Insert column right'),
+        ),
         const PopupMenuItem<String>(
-            value: 'duplicate', child: Text('Duplicate column'),),
+          value: 'duplicate',
+          child: Text('Duplicate column'),
+        ),
         PopupMenuItem<String>(
           value: 'delete',
           enabled: widget.viewModel.columnCount > 1,
-          child: Text('Delete column',
-              style: TextStyle(
-                  color: widget.viewModel.columnCount > 1
-                      ? Colors.red
-                      : Colors.grey,),),
+          child: Text(
+            'Delete column',
+            style: TextStyle(
+              color:
+                  widget.viewModel.columnCount > 1 ? Colors.red : Colors.grey,
+            ),
+          ),
         ),
       ],
       onSelected: (value) {
@@ -988,7 +1056,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: AddTableColumnCommand(
-                  nodeId: widget.viewModel.nodeId, afterColIndex: colIndex - 1,),
+                nodeId: widget.viewModel.nodeId,
+                afterColIndex: colIndex - 1,
+              ),
             ),
           ]);
         } else if (value == 'insert_right') {
@@ -996,7 +1066,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: AddTableColumnCommand(
-                  nodeId: widget.viewModel.nodeId, afterColIndex: colIndex,),
+                nodeId: widget.viewModel.nodeId,
+                afterColIndex: colIndex,
+              ),
             ),
           ]);
         } else if (value == 'duplicate') {
@@ -1004,7 +1076,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: DuplicateTableColumnCommand(
-                  nodeId: widget.viewModel.nodeId, colIndex: colIndex,),
+                nodeId: widget.viewModel.nodeId,
+                colIndex: colIndex,
+              ),
             ),
           ]);
         } else if (value == 'delete') {
@@ -1012,7 +1086,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             UpdateTableRequest(
               nodeId: widget.viewModel.nodeId,
               innerCommand: DeleteTableColumnCommand(
-                  nodeId: widget.viewModel.nodeId, colIndex: colIndex,),
+                nodeId: widget.viewModel.nodeId,
+                colIndex: colIndex,
+              ),
             ),
           ]);
         }
@@ -1060,8 +1136,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
             Column(
               children: [
                 const SizedBox(
-                    height: 32,
-                    width: 32,), // Corner space for ColumnHandleHeader
+                  height: 32,
+                  width: 32,
+                ), // Corner space for ColumnHandleHeader
                 SizedBox(
                   width: 32,
                   height: _geometry?.tableHeight ?? 0,

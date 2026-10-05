@@ -6,7 +6,10 @@ class TableStateTransformer {
   static const Uuid _uuid = Uuid();
 
   static List<TableRowData> insertRow(
-      List<TableRowData> rows, int columnCount, int targetIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int targetIndex,
+  ) {
     TableStateValidator.validate(rows, columnCount);
 
     final newCells = List.generate(
@@ -21,7 +24,10 @@ class TableStateTransformer {
   }
 
   static List<TableRowData> deleteRow(
-      List<TableRowData> rows, int columnCount, int rowIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int rowIndex,
+  ) {
     TableStateValidator.validateDeletion(rows, columnCount, isRow: true);
     if (rowIndex < 0 || rowIndex >= rows.length) return rows;
 
@@ -31,7 +37,10 @@ class TableStateTransformer {
   }
 
   static List<TableRowData> insertColumn(
-      List<TableRowData> rows, int columnCount, int targetIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int targetIndex,
+  ) {
     TableStateValidator.validate(rows, columnCount);
 
     final updatedRows = rows.map((row) {
@@ -46,7 +55,10 @@ class TableStateTransformer {
   }
 
   static List<TableRowData> deleteColumn(
-      List<TableRowData> rows, int columnCount, int colIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int colIndex,
+  ) {
     TableStateValidator.validateDeletion(rows, columnCount, isRow: false);
     if (colIndex < 0 || colIndex >= columnCount) return rows;
 
@@ -59,7 +71,10 @@ class TableStateTransformer {
   }
 
   static List<TableRowData> duplicateRow(
-      List<TableRowData> rows, int columnCount, int rowIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int rowIndex,
+  ) {
     TableStateValidator.validate(rows, columnCount);
     if (rowIndex < 0 || rowIndex >= rows.length) return rows;
 
@@ -74,7 +89,10 @@ class TableStateTransformer {
   }
 
   static List<TableRowData> duplicateColumn(
-      List<TableRowData> rows, int columnCount, int colIndex,) {
+    List<TableRowData> rows,
+    int columnCount,
+    int colIndex,
+  ) {
     TableStateValidator.validate(rows, columnCount);
     if (colIndex < 0 || colIndex >= columnCount) return rows;
 
@@ -87,8 +105,12 @@ class TableStateTransformer {
     return updatedRows;
   }
 
-  static List<TableRowData> reorderRowById(List<TableRowData> rows,
-      int columnCount, String draggedRowId, String targetRowId,) {
+  static List<TableRowData> reorderRowById(
+    List<TableRowData> rows,
+    int columnCount,
+    String draggedRowId,
+    String targetRowId,
+  ) {
     TableStateValidator.validate(rows, columnCount);
 
     int oldIndex = rows.indexWhere((r) => r.id == draggedRowId);
@@ -108,8 +130,12 @@ class TableStateTransformer {
     return updatedRows;
   }
 
-  static List<TableRowData> reorderColumnByIndex(List<TableRowData> rows,
-      int columnCount, int draggedColumnIndex, int targetColumnIndex,) {
+  static List<TableRowData> reorderColumnByIndex(
+    List<TableRowData> rows,
+    int columnCount,
+    int draggedColumnIndex,
+    int targetColumnIndex,
+  ) {
     TableStateValidator.validate(rows, columnCount);
     if (draggedColumnIndex < 0 ||
         draggedColumnIndex >= columnCount ||

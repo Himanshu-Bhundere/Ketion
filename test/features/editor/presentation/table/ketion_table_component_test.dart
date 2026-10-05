@@ -35,14 +35,16 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
   @override
   Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
@@ -66,8 +68,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -93,14 +97,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -110,7 +118,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     return const Success([]);
   }
 
@@ -150,7 +160,11 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     return const Success(null);
   }
 }
@@ -171,11 +185,12 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp(
-      {required List<Block> blocks,
-      required page_entity.Page testPage,
-      double width = 800,
-      double height = 600,}) {
+  Widget buildTestApp({
+    required List<Block> blocks,
+    required page_entity.Page testPage,
+    double width = 800,
+    double height = 600,
+  }) {
     return ProviderScope(
       overrides: [
         getPageBlocksUseCaseProvider
@@ -249,7 +264,8 @@ void main() {
       'Matrix Test: FocusNode and Controller Identity Checks during structural mutation',
       (tester) async {
     await tester.pumpWidget(
-        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
+      buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),
+    );
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
 
@@ -299,7 +315,8 @@ void main() {
   testWidgets('Matrix Test: Geometry recalculation on structural changes',
       (tester) async {
     await tester.pumpWidget(
-        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
+      buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),
+    );
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
 
@@ -329,7 +346,8 @@ void main() {
 
   testWidgets('Matrix Test: Undo identity tests', (tester) async {
     await tester.pumpWidget(
-        buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),);
+      buildTestApp(blocks: createInitialTableBlock(), testPage: testPage),
+    );
     await pumpUntilInitialized(tester);
     await tester.pumpAndSettle();
 
@@ -350,10 +368,12 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 1000));
 
     expect(
-        find.descendant(
-            of: find.byType(KetionTableComponent),
-            matching: find.byType(TextField),),
-        findsNWidgets(6),);
+      find.descendant(
+        of: find.byType(KetionTableComponent),
+        matching: find.byType(TextField),
+      ),
+      findsNWidgets(6),
+    );
 
     // Simulate Cmd/Ctrl+Z for Undo.
     // Instead of raw keys that might get intercepted by focus, invoke undo directly

@@ -115,7 +115,10 @@ class AddTableRowCommand extends EditCommand {
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
 
     final newRows = TableStateTransformer.insertRow(
-        node.rows, columnCount, afterRowIndex + 1,);
+      node.rows,
+      columnCount,
+      afterRowIndex + 1,
+    );
 
     document.replaceNodeById(
       node.id,
@@ -227,7 +230,10 @@ class AddTableColumnCommand extends EditCommand {
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
     final newRows = TableStateTransformer.insertColumn(
-        node.rows, columnCount, afterColIndex + 1,);
+      node.rows,
+      columnCount,
+      afterColIndex + 1,
+    );
     final newColumnCount = columnCount + 1;
 
     document.replaceNodeById(
@@ -346,7 +352,11 @@ class ReorderTableRowCommand extends EditCommand {
 
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
     final newRows = TableStateTransformer.reorderRowById(
-        node.rows, columnCount, draggedRowId, targetRowId,);
+      node.rows,
+      columnCount,
+      draggedRowId,
+      targetRowId,
+    );
 
     document.replaceNodeById(
       node.id,
@@ -386,7 +396,11 @@ class ReorderTableColumnCommand extends EditCommand {
     final columnCount = node.metadata['columnCount'] as int? ?? 2;
 
     final newRows = TableStateTransformer.reorderColumnByIndex(
-        node.rows, columnCount, draggedColumnIndex, targetColumnIndex,);
+      node.rows,
+      columnCount,
+      draggedColumnIndex,
+      targetColumnIndex,
+    );
 
     document.replaceNodeById(
       node.id,

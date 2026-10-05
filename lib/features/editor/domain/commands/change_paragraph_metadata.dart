@@ -23,11 +23,7 @@ class ChangeParagraphMetadataCommand extends EditCommand {
     if (node is ParagraphNode) {
       document.replaceNodeById(
         node.id,
-        ParagraphNode(
-          id: node.id,
-          text: node.text,
-          metadata: request.metadata,
-        ),
+        node.copyAndReplaceMetadata(request.metadata),
       );
 
       executor.logChanges([
@@ -40,7 +36,9 @@ class ChangeParagraphMetadataCommand extends EditCommand {
 }
 
 EditCommand? changeParagraphMetadataRequestHandler(
-    Editor editor, EditRequest request,) {
+  Editor editor,
+  EditRequest request,
+) {
   if (request is ChangeParagraphMetadataRequest) {
     return ChangeParagraphMetadataCommand(request);
   }

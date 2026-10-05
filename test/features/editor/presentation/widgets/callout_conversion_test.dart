@@ -42,14 +42,16 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
   @override
   Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
@@ -73,8 +75,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -100,14 +104,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -117,7 +125,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     return const Success([]);
   }
 
@@ -157,7 +167,11 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     testBlocks.add(
       Block(
         id: id,
@@ -183,7 +197,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -191,8 +206,10 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp(
-      {required List<Block> blocks, required page_entity.Page testPage,}) {
+  Widget buildTestApp({
+    required List<Block> blocks,
+    required page_entity.Page testPage,
+  }) {
     return ProviderScope(
       overrides: [
         getPageBlocksUseCaseProvider
@@ -275,10 +292,16 @@ void main() {
     expect(document.nodeCount, 1);
     expect(document.getNodeAt(0) is KetionCalloutNode, isTrue);
     final calloutNode = document.getNodeAt(0) as KetionCalloutNode;
-    expect(calloutNode.id, currentParaId,
-        reason: 'ID must be preserved on conversion to Callout',);
-    expect(calloutNode.text.toPlainText(), 'Current Paragraph',
-        reason: 'Text must be preserved',);
+    expect(
+      calloutNode.id,
+      currentParaId,
+      reason: 'ID must be preserved on conversion to Callout',
+    );
+    expect(
+      calloutNode.text.toPlainText(),
+      'Current Paragraph',
+      reason: 'Text must be preserved',
+    );
     expect(calloutNode.icon, '💡');
     expect(calloutNode.color, 'grey');
 
@@ -311,9 +334,11 @@ void main() {
 
   group('Callout slash command conversion logic', () {
     testWidgets('`/callout` -> empty text', (tester) async {
-      final document = MutableDocument(nodes: [
-        ParagraphNode(id: '1', text: AttributedText('/callout')),
-      ],);
+      final document = MutableDocument(
+        nodes: [
+          ParagraphNode(id: '1', text: AttributedText('/callout')),
+        ],
+      );
       final composer = MutableDocumentComposer(
         initialSelection: const DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -341,16 +366,18 @@ void main() {
       expect(document.first is KetionCalloutNode, isTrue);
       final callout = document.first as KetionCalloutNode;
       expect(callout.text.toPlainText(), '');
-      
+
       final selection = composer.selection;
       expect(selection, isNotNull);
       expect((selection!.extent.nodePosition as TextNodePosition).offset, 0);
     });
 
     testWidgets('`Hello /callout` -> `Hello `', (tester) async {
-      final document = MutableDocument(nodes: [
-        ParagraphNode(id: '1', text: AttributedText('Hello /callout')),
-      ],);
+      final document = MutableDocument(
+        nodes: [
+          ParagraphNode(id: '1', text: AttributedText('Hello /callout')),
+        ],
+      );
       final composer = MutableDocumentComposer(
         initialSelection: const DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -378,7 +405,7 @@ void main() {
       expect(document.first is KetionCalloutNode, isTrue);
       final callout = document.first as KetionCalloutNode;
       expect(callout.text.toPlainText(), 'Hello ');
-      
+
       final selection = composer.selection;
       expect((selection!.extent.nodePosition as TextNodePosition).offset, 6);
     });
@@ -388,15 +415,23 @@ void main() {
         'Some bold text /callout world',
         AttributedSpans(
           attributions: [
-            const SpanMarker(attribution: boldAttribution, offset: 5, markerType: SpanMarkerType.start),
-            const SpanMarker(attribution: boldAttribution, offset: 8, markerType: SpanMarkerType.end),
+            const SpanMarker(
+                attribution: boldAttribution,
+                offset: 5,
+                markerType: SpanMarkerType.start),
+            const SpanMarker(
+                attribution: boldAttribution,
+                offset: 8,
+                markerType: SpanMarkerType.end),
           ],
         ),
       );
 
-      final document = MutableDocument(nodes: [
-        ParagraphNode(id: '1', text: text),
-      ],);
+      final document = MutableDocument(
+        nodes: [
+          ParagraphNode(id: '1', text: text),
+        ],
+      );
       final composer = MutableDocumentComposer(
         initialSelection: const DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -424,10 +459,11 @@ void main() {
       expect(document.first is KetionCalloutNode, isTrue);
       final callout = document.first as KetionCalloutNode;
       expect(callout.text.toPlainText(), 'Some bold text  world');
-      
+
       // Check attributes survived
-      expect(callout.text.hasAttributionAt(5, attribution: boldAttribution), isTrue);
-      
+      expect(callout.text.hasAttributionAt(5, attribution: boldAttribution),
+          isTrue);
+
       final selection = composer.selection;
       expect((selection!.extent.nodePosition as TextNodePosition).offset, 15);
     });
@@ -435,7 +471,6 @@ void main() {
       final testPage = page_entity.Page(
         id: 'p1',
         title: 'Test',
-
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -456,7 +491,8 @@ void main() {
         ),
       ];
 
-      await tester.pumpWidget(buildTestApp(blocks: initialBlocks, testPage: testPage));
+      await tester
+          .pumpWidget(buildTestApp(blocks: initialBlocks, testPage: testPage));
       await pumpUntilInitialized(tester);
 
       final State state = tester.state(find.byType(SuperEditorHost));
@@ -482,7 +518,7 @@ void main() {
 
       // Simulate typing "Important information"
       final calloutNode = document.getNodeAt(0) as KetionCalloutNode;
-      
+
       editor.execute([
         ExecuteCommandRequest(
           _UpdateCalloutCommand(calloutNode.id, 'Important information'),
@@ -494,13 +530,14 @@ void main() {
 
       // Reload
       await tester.pumpWidget(const SizedBox()); // Clear
-      await tester.pumpWidget(buildTestApp(blocks: List.from(testBlocks), testPage: testPage)); 
+      await tester.pumpWidget(
+          buildTestApp(blocks: List.from(testBlocks), testPage: testPage));
       await pumpUntilInitialized(tester);
 
       final State stateReopened = tester.state(find.byType(SuperEditorHost));
       final dynamic hostStateReopened = stateReopened;
       final reloadedDocument = hostStateReopened.document as MutableDocument;
-      
+
       expect(reloadedDocument.first is KetionCalloutNode, isTrue);
       final reloadedCallout = reloadedDocument.first as KetionCalloutNode;
       expect(reloadedCallout.text.toPlainText(), 'Important information');
@@ -524,7 +561,7 @@ class _UpdateCalloutCommand implements EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final document = context.document;
     final calloutNode = document.getNodeById(nodeId) as KetionCalloutNode;
-    
+
     document.replaceNodeById(
       calloutNode.id,
       KetionCalloutNode(

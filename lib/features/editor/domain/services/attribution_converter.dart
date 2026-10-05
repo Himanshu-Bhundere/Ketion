@@ -29,8 +29,8 @@ class AttributionConverter {
         'italic': attributions.contains(italicsAttribution),
         'underline': attributions.contains(underlineAttribution),
         'strikethrough': attributions.contains(strikethroughAttribution),
-        'code': attributions.contains(
-            codeAttribution,), // Assuming code is a standard attribution
+        'code': attributions.contains(codeAttribution) ||
+            attributions.contains(const NamedAttribution('code')),
       });
 
       i = nextChangeIndex;
@@ -45,11 +45,17 @@ class AttributionConverter {
       return AttributedText();
     }
 
-    final fullText = spans.map((e) => e['text'] as String? ?? '').join();
+    final fullText = spans.map((e) {
+      if (e is Map) {
+        return e['text'] as String? ?? '';
+      }
+      return '';
+    }).join();
     final attributedText = AttributedText(fullText);
 
     int currentIndex = 0;
     for (final span in spans) {
+      if (span is! Map) continue;
       final text = span['text'] as String? ?? '';
       if (text.isEmpty) continue;
 
@@ -57,33 +63,39 @@ class AttributionConverter {
 
       if (span['bold'] == true) {
         attributedText.addAttribution(
-            boldAttribution, SpanRange(currentIndex, end),);
+          boldAttribution,
+          SpanRange(currentIndex, end),
+        );
       }
       if (span['italic'] == true) {
         attributedText.addAttribution(
-            italicsAttribution, SpanRange(currentIndex, end),);
+          italicsAttribution,
+          SpanRange(currentIndex, end),
+        );
       }
       if (span['underline'] == true) {
         attributedText.addAttribution(
-            underlineAttribution, SpanRange(currentIndex, end),);
+          underlineAttribution,
+          SpanRange(currentIndex, end),
+        );
       }
       if (span['strikethrough'] == true) {
         attributedText.addAttribution(
-            strikethroughAttribution, SpanRange(currentIndex, end),);
+          strikethroughAttribution,
+          SpanRange(currentIndex, end),
+        );
       }
-      // Wait, is there a standard codeAttribution in super editor?
-      // I'll assume we can use NamedAttribution('code') if it's not defined, or maybe it's just 'code'
-      // Super Editor doesn't export 'codeAttribution' by default, wait it might be 'code' or similar.
-      // Actually let's check what it's named. It's usually `codeAttribution` in SuperEditor.
       if (span['code'] == true) {
         try {
-          // let's define it below just in case or use a custom one if missing
           attributedText.addAttribution(
-              codeAttribution, SpanRange(currentIndex, end),);
-        } catch (e) {
-          // fallback
+            codeAttribution,
+            SpanRange(currentIndex, end),
+          );
+        } catch (_) {
           attributedText.addAttribution(
-              const NamedAttribution('code'), SpanRange(currentIndex, end),);
+            const NamedAttribution('code'),
+            SpanRange(currentIndex, end),
+          );
         }
       }
 

@@ -12,24 +12,43 @@ ExecutionInstruction splitCalloutWhenEnterPressed({
       keyEvent.logicalKey != LogicalKeyboardKey.numpadEnter) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   final hardwareKeyboard = HardwareKeyboard.instance;
   if (hardwareKeyboard.isShiftPressed) {
     return ExecutionInstruction.continueExecution;
   }
 
   final selection = editContext.composer.selection;
-  if (selection == null || !selection.isCollapsed) {
+  if (selection == null) {
     return ExecutionInstruction.continueExecution;
   }
 
-  final node = editContext.document.getNodeById(selection.extent.nodeId);
+  final extentNodeId = selection.extent.nodeId;
+  final baseNodeId = selection.base.nodeId;
+  if (extentNodeId != baseNodeId) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final node = editContext.document.getNodeById(extentNodeId);
   if (node is! KetionCalloutNode) {
     return ExecutionInstruction.continueExecution;
+  }
+
+  int splitOffset = 0;
+  int? tailOffset;
+  final extentPos = selection.extent.nodePosition;
+  final basePos = selection.base.nodePosition;
+  if (extentPos is TextNodePosition && basePos is TextNodePosition) {
+    final startOffset =
+        extentPos.offset < basePos.offset ? extentPos.offset : basePos.offset;
+    final endOffset =
+        extentPos.offset > basePos.offset ? extentPos.offset : basePos.offset;
+    splitOffset = startOffset;
+    tailOffset = endOffset;
   }
 
   final newNodeId = Editor.createNodeId();
@@ -38,6 +57,8 @@ ExecutionInstruction splitCalloutWhenEnterPressed({
     SplitCalloutRequest(
       nodeId: node.id,
       newNodeId: newNodeId,
+      splitOffset: splitOffset,
+      tailOffset: tailOffset,
     ),
     ChangeSelectionRequest(
       DocumentSelection.collapsed(
@@ -54,6 +75,8 @@ ExecutionInstruction splitCalloutWhenEnterPressed({
   return ExecutionInstruction.haltExecution;
 }
 
+/// Backspace at offset 0 of a callout should NOT implicitly convert it to a paragraph.
+/// Conversion should happen only when explicitly requested by the user.
 ExecutionInstruction convertCalloutToParagraphWhenBackspacePressed({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
@@ -61,7 +84,7 @@ ExecutionInstruction convertCalloutToParagraphWhenBackspacePressed({
   if (keyEvent.logicalKey != LogicalKeyboardKey.backspace) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
@@ -81,12 +104,6 @@ ExecutionInstruction convertCalloutToParagraphWhenBackspacePressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  // We are at the start of a Callout. Backspace should convert it to a Paragraph.
-  editContext.editor.execute([
-    ConvertCalloutToParagraphRequest(
-      nodeId: node.id,
-    ),
-  ]);
-
+  // We are at the start of a Callout. Do not convert to paragraph implicitly.
   return ExecutionInstruction.haltExecution;
 }

@@ -49,7 +49,8 @@ class ConvertToCalloutCommand implements EditCommand {
       final safeStart = request.slashStartIndex!.clamp(0, textLength);
       final safeEnd = request.slashEndIndex!.clamp(0, textLength);
       if (safeEnd > safeStart) {
-        newText = newText.removeRegion(startOffset: safeStart, endOffset: safeEnd);
+        newText =
+            newText.removeRegion(startOffset: safeStart, endOffset: safeEnd);
       }
     }
 
@@ -135,10 +136,14 @@ class SplitCalloutRequest implements EditRequest {
   const SplitCalloutRequest({
     required this.nodeId,
     required this.newNodeId,
+    this.splitOffset,
+    this.tailOffset,
   });
 
   final String nodeId;
   final String newNodeId;
+  final int? splitOffset;
+  final int? tailOffset;
 }
 
 class SplitCalloutCommand implements EditCommand {
@@ -158,16 +163,28 @@ class SplitCalloutCommand implements EditCommand {
     final node = document.getNodeById(request.nodeId);
     if (node is! KetionCalloutNode) return;
 
-    final selection = context.composer.selection;
-    if (selection == null || !selection.isCollapsed || selection.extent.nodeId != node.id) {
-      return;
+    final textLength = node.text.toPlainText().length;
+    int splitOffset;
+
+    if (request.splitOffset != null) {
+      splitOffset = request.splitOffset!.clamp(0, textLength);
+    } else {
+      final selection = context.composer.selection;
+      if (selection != null && selection.extent.nodeId == node.id) {
+        final position = selection.extent.nodePosition;
+        if (position is TextNodePosition) {
+          splitOffset = position.offset.clamp(0, textLength);
+        } else {
+          splitOffset = textLength;
+        }
+      } else {
+        splitOffset = textLength;
+      }
     }
 
-    final position = selection.extent.nodePosition;
-    if (position is! TextNodePosition) return;
-
-    final textBefore = node.text.copyText(0, position.offset);
-    final textAfter = node.text.copyText(position.offset);
+    final textBefore = node.text.copyText(0, splitOffset);
+    final tail = (request.tailOffset ?? splitOffset).clamp(0, textLength);
+    final textAfter = node.text.copyText(tail);
 
     // Create new nodes
     final newCalloutNode = KetionCalloutNode(
@@ -175,21 +192,21 @@ class SplitCalloutCommand implements EditCommand {
       text: textBefore,
       icon: node.icon,
       color: node.color,
-      metadata: node.metadata,
+      metadata: Map<String, dynamic>.from(node.metadata),
     );
 
     final newNode = ParagraphNode(
       id: request.newNodeId,
       text: textAfter,
     );
-    
+
     document.replaceNodeById(node.id, newCalloutNode);
     document.insertNodeAfter(existingNodeId: node.id, newNode: newNode);
 
-    // Note: Caret selection change is handled by the caller or by a separate command.
     executor.logChanges([
       DocumentEdit(NodeChangeEvent(node.id)),
-      DocumentEdit(NodeInsertedEvent(newNode.id, document.getNodeIndexById(newNode.id))),
+      DocumentEdit(
+          NodeInsertedEvent(newNode.id, document.getNodeIndexById(newNode.id))),
     ]);
   }
 }

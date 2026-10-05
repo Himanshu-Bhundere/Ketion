@@ -10,21 +10,25 @@ void main() {
         AttributedSpans(
           attributions: [
             const SpanMarker(
-                attribution: boldAttribution,
-                offset: 0,
-                markerType: SpanMarkerType.start,),
+              attribution: boldAttribution,
+              offset: 0,
+              markerType: SpanMarkerType.start,
+            ),
             const SpanMarker(
-                attribution: boldAttribution,
-                offset: 4,
-                markerType: SpanMarkerType.end,),
+              attribution: boldAttribution,
+              offset: 4,
+              markerType: SpanMarkerType.end,
+            ),
             const SpanMarker(
-                attribution: italicsAttribution,
-                offset: 6,
-                markerType: SpanMarkerType.start,),
+              attribution: italicsAttribution,
+              offset: 6,
+              markerType: SpanMarkerType.start,
+            ),
             const SpanMarker(
-                attribution: italicsAttribution,
-                offset: 10,
-                markerType: SpanMarkerType.end,),
+              attribution: italicsAttribution,
+              offset: 10,
+              markerType: SpanMarkerType.end,
+            ),
           ],
         ),
       );

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ketion/features/editor/presentation/widgets/convert_paragraph_to_callout.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:uuid/uuid.dart';
+import 'ketion_callout_node.dart';
 
 import '../../domain/services/block_data_serializer.dart';
 
@@ -114,14 +115,18 @@ class UpdateReminderCommand extends EditCommand {
 }
 
 SemanticMutation? _translateRequest(
-    EditRequest request, EditorIdentityRegistry registry,) {
+  EditRequest request,
+  EditorIdentityRegistry registry,
+) {
   if (request is ConvertSlashCommandRequest) {
     return _translateRequest(request.innerRequest, registry);
   }
 
   if (request is ToggleExpandedRequest) {
     return ToggleBlockExpandedMutation(
-        nodeId: request.nodeId, isExpanded: request.isExpanded,);
+      nodeId: request.nodeId,
+      isExpanded: request.isExpanded,
+    );
   }
 
   // --- Split requests ---
@@ -256,7 +261,9 @@ SemanticMutation? _translateRequest(
 }
 
 String? _validateIdentity(
-    SemanticMutation mutation, EditorIdentityRegistry registry,) {
+  SemanticMutation mutation,
+  EditorIdentityRegistry registry,
+) {
   switch (mutation) {
     case SplitBlockMutation(:final originalNodeId):
       if (!registry.containsNode(originalNodeId)) {
@@ -363,7 +370,8 @@ class _KetionDelegatingCommand extends EditCommand {
     final originalCommand = _createOriginalCommand();
     if (originalCommand == null) {
       debugPrint(
-          'KETION: Could not create original command for ${mutation.runtimeType}',);
+        'KETION: Could not create original command for ${mutation.runtimeType}',
+      );
       return;
     }
 
@@ -421,11 +429,13 @@ class _KetionDelegatingCommand extends EditCommand {
             final deleteCommand = DeleteContentCommand(
               documentRange: DocumentRange(
                 start: DocumentPosition(
-                    nodeId: request.target.nodeId,
-                    nodePosition: TextNodePosition(offset: safeStart),),
+                  nodeId: request.target.nodeId,
+                  nodePosition: TextNodePosition(offset: safeStart),
+                ),
                 end: DocumentPosition(
-                    nodeId: request.target.nodeId,
-                    nodePosition: TextNodePosition(offset: safeEnd),),
+                  nodeId: request.target.nodeId,
+                  nodePosition: TextNodePosition(offset: safeEnd),
+                ),
               ),
             );
             executor.executeCommand(deleteCommand);
@@ -452,17 +462,30 @@ class _KetionDelegatingCommand extends EditCommand {
         final newNodeId = (mutation as SplitBlockMutation).newNodeId;
         if (!registry.containsNode(newNodeId)) {
           registry.registerPendingMapping(
-              nodeId: newNodeId, blockId: const Uuid().v7(),);
+            nodeId: newNodeId,
+            blockId: const Uuid().v7(),
+          );
         }
       } else if (mutation is InsertBlockMutation) {
         final newNodeId = (mutation as InsertBlockMutation).newNodeId;
         if (!registry.containsNode(newNodeId)) {
           registry.registerPendingMapping(
-              nodeId: newNodeId, blockId: const Uuid().v7(),);
+            nodeId: newNodeId,
+            blockId: const Uuid().v7(),
+          );
         }
       }
 
       if (request is SplitParagraphRequest) {
+        composer.setSelectionWithReason(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: request.newNodeId,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+        );
+      } else if (request is SplitCalloutRequest) {
         composer.setSelectionWithReason(
           DocumentSelection.collapsed(
             position: DocumentPosition(
@@ -541,6 +564,16 @@ class _KetionDelegatingCommand extends EditCommand {
       case SplitBlockMutation():
         if (reqToCreate is SplitParagraphRequest) {
           final req = reqToCreate;
+          final targetNode = document.getNodeById(req.nodeId);
+          if (targetNode is KetionCalloutNode) {
+            return SplitCalloutCommand(
+              SplitCalloutRequest(
+                nodeId: req.nodeId,
+                newNodeId: req.newNodeId,
+                splitOffset: req.splitPosition.offset,
+              ),
+            );
+          }
           return SplitParagraphCommand(
             nodeId: req.nodeId,
             splitPosition: req.splitPosition,
@@ -572,6 +605,7 @@ class _KetionDelegatingCommand extends EditCommand {
             SplitCalloutRequest(
               nodeId: req.nodeId,
               newNodeId: req.newNodeId,
+              splitOffset: req.splitOffset,
             ),
           );
         }
@@ -598,7 +632,9 @@ class _KetionDelegatingCommand extends EditCommand {
         if (reqToCreate is InsertNodeAtIndexRequest) {
           final req = reqToCreate;
           return InsertNodeAtIndexCommand(
-              nodeIndex: req.nodeIndex, newNode: req.newNode,);
+            nodeIndex: req.nodeIndex,
+            newNode: req.newNode,
+          );
         }
         if (reqToCreate is InsertNodeBeforeNodeRequest) {
           final req = reqToCreate;
@@ -645,7 +681,9 @@ class _KetionDelegatingCommand extends EditCommand {
         if (reqToCreate is ConvertParagraphToListItemRequest) {
           final req = reqToCreate;
           return ConvertParagraphToListItemCommand(
-              nodeId: req.nodeId, type: req.type,);
+            nodeId: req.nodeId,
+            type: req.type,
+          );
         }
         if (reqToCreate is ConvertParagraphToTaskRequest) {
           final req = reqToCreate;
@@ -654,7 +692,9 @@ class _KetionDelegatingCommand extends EditCommand {
         if (reqToCreate is ChangeParagraphBlockTypeRequest) {
           final req = reqToCreate;
           return ChangeParagraphBlockTypeCommand(
-              nodeId: req.nodeId, blockType: req.blockType,);
+            nodeId: req.nodeId,
+            blockType: req.blockType,
+          );
         }
         if (reqToCreate is ConvertListItemToParagraphRequest) {
           final req = reqToCreate;
@@ -670,23 +710,31 @@ class _KetionDelegatingCommand extends EditCommand {
         if (reqToCreate is ChangeListItemTypeRequest) {
           final req = reqToCreate;
           return ChangeListItemTypeCommand(
-              nodeId: req.nodeId, newType: req.newType,);
+            nodeId: req.nodeId,
+            newType: req.newType,
+          );
         }
         if (reqToCreate is ConvertToCalloutRequest) {
           final req = reqToCreate;
           int? startIndex;
           int? endIndex;
           if (originalRequest is ConvertSlashCommandRequest) {
-            startIndex = (originalRequest as ConvertSlashCommandRequest).target.slashStartIndex;
-            endIndex = (originalRequest as ConvertSlashCommandRequest).target.slashEndIndex;
+            startIndex = (originalRequest as ConvertSlashCommandRequest)
+                .target
+                .slashStartIndex;
+            endIndex = (originalRequest as ConvertSlashCommandRequest)
+                .target
+                .slashEndIndex;
           }
-          return ConvertToCalloutCommand(ConvertToCalloutRequest(
-            nodeId: req.nodeId,
-            icon: req.icon,
-            color: req.color,
-            slashStartIndex: startIndex,
-            slashEndIndex: endIndex,
-          ),);
+          return ConvertToCalloutCommand(
+            ConvertToCalloutRequest(
+              nodeId: req.nodeId,
+              icon: req.icon,
+              color: req.color,
+              slashStartIndex: startIndex,
+              slashEndIndex: endIndex,
+            ),
+          );
         }
         if (reqToCreate is ConvertCalloutToParagraphRequest) {
           final req = reqToCreate;
@@ -791,7 +839,8 @@ class _KetionDelegatingCommand extends EditCommand {
       }
     } catch (e) {
       debugPrint(
-          'KETION: Payload building failed for ${mutation.runtimeType}: $e',);
+        'KETION: Payload building failed for ${mutation.runtimeType}: $e',
+      );
       return;
     }
 
@@ -801,12 +850,15 @@ class _KetionDelegatingCommand extends EditCommand {
       snapshot.applyMutation(persistenceMutation);
     } else {
       debugPrint(
-          'KETION: Coordinator rejected mutation ${mutation.runtimeType}',);
+        'KETION: Coordinator rejected mutation ${mutation.runtimeType}',
+      );
     }
   }
 
   persistence_mutations.SplitBlockMutation? _buildSplitPayload(
-      String originalNodeId, String newNodeId,) {
+    String originalNodeId,
+    String newNodeId,
+  ) {
     final originalBlockId = registry.blockIdForNode(originalNodeId)!;
     final newBlockId = registry.blockIdForNode(newNodeId)!;
 
@@ -832,7 +884,9 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.MergeBlocksMutation? _buildMergePayload(
-      String survivorNodeId, String victimNodeId,) {
+    String survivorNodeId,
+    String victimNodeId,
+  ) {
     final survivorBlockId = registry.blockIdForNode(survivorNodeId)!;
     final victimBlockId = registry.blockIdForNode(victimNodeId)!;
 
@@ -857,7 +911,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.DeleteBlockMutation? _buildDeletePayload(
-      String nodeId,) {
+    String nodeId,
+  ) {
     final blockId = registry.blockIdForNode(nodeId)!;
 
     registry.recordTombstone(nodeId: nodeId, blockId: blockId);
@@ -872,7 +927,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.InsertBlockMutation? _buildInsertPayload(
-      InsertBlockMutation mutation,) {
+    InsertBlockMutation mutation,
+  ) {
     final newNodeId = mutation.newNodeId;
     final node = document.getNodeById(newNodeId);
     if (node == null) return null;
@@ -922,7 +978,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.ChangeBlockTypeMutation? _buildChangeBlockTypePayload(
-      String nodeId,) {
+    String nodeId,
+  ) {
     final blockId = registry.blockIdForNode(nodeId)!;
 
     final node = document.getNodeById(nodeId);
@@ -957,7 +1014,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.MoveBlockMutation? _buildUnindentPayload(
-      String nodeId,) {
+    String nodeId,
+  ) {
     final blockId = registry.blockIdForNode(nodeId);
     if (blockId == null) return null;
 
@@ -972,7 +1030,9 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.UpdateToggleMutation? _buildToggleExpandedPayload(
-      String nodeId, bool isExpanded,) {
+    String nodeId,
+    bool isExpanded,
+  ) {
     final blockId = registry.blockIdForNode(nodeId)!;
 
     final node = document.getNodeById(nodeId);
@@ -1003,7 +1063,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.UpdateBlockMutation? _buildUpdateReminderPayload(
-      String nodeId,) {
+    String nodeId,
+  ) {
     final blockId = registry.blockIdForNode(nodeId)!;
 
     final node = document.getNodeById(nodeId);
@@ -1033,7 +1094,8 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   persistence_mutations.UpdateBlockMutation? _buildUpdateTablePayload(
-      String nodeId,) {
+    String nodeId,
+  ) {
     final blockId = registry.blockIdForNode(nodeId)!;
 
     final node = document.getNodeById(nodeId);
@@ -1056,7 +1118,8 @@ class _KetionDelegatingCommand extends EditCommand {
       final cells = row.cells;
       if (cells.length != columnCount) {
         throw StateError(
-            'Table row $i has ${cells.length} cells, expected $columnCount',);
+          'Table row $i has ${cells.length} cells, expected $columnCount',
+        );
       }
       for (int j = 0; j < cells.length; j++) {
         final cell = cells[j];

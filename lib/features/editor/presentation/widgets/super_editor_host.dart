@@ -89,6 +89,9 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   @visibleForTesting
   KetionSuperEditorAdapter get adapter => _adapter;
 
+  @visibleForTesting
+  MutableDocumentComposer get composer => _composer;
+
   @override
   void initState() {
     super.initState();
@@ -246,7 +249,8 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   }
 
   void _replaceSlashWithNode(SlashCommandTarget target, DocumentNode newNode) {
-    final emptyParagraph = ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
+    final emptyParagraph =
+        ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
     _editor.execute([
       InsertNodeAfterNodeRequest(
         existingNodeId: target.nodeId,
@@ -273,15 +277,18 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   Future<void> _handleBookmarkSlashSelected(SlashCommandTarget target) async {
     final url = await UrlInputDialog.show(context, title: 'Add Bookmark');
     if (url != null && mounted) {
-      _replaceSlashWithNode(target, KetionBookmarkNode(id: Editor.createNodeId(), url: url));
+      _replaceSlashWithNode(
+          target, KetionBookmarkNode(id: Editor.createNodeId(), url: url));
       _focusNode.requestFocus();
     }
   }
 
-  Future<void> _handleWebBookmarkSlashSelected(SlashCommandTarget target) async {
+  Future<void> _handleWebBookmarkSlashSelected(
+      SlashCommandTarget target) async {
     final url = await UrlInputDialog.show(context, title: 'Add Web Bookmark');
     if (url != null && mounted) {
-      _replaceSlashWithNode(target, KetionWebLinkNode(id: Editor.createNodeId(), url: url));
+      _replaceSlashWithNode(
+          target, KetionWebLinkNode(id: Editor.createNodeId(), url: url));
       _focusNode.requestFocus();
     }
   }
@@ -292,30 +299,39 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       builder: (context) => const PagePickerSheet(),
     );
     if (page != null && mounted) {
-      _replaceSlashWithNode(target, KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id));
+      _replaceSlashWithNode(target,
+          KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id));
       _focusNode.requestFocus();
     }
   }
 
-  Future<void> _handleMediaSlashSelected(SlashCommandTarget target, FileType fileType, String mimePrefix, BlockNode Function(String, String) nodeBuilder, {List<String>? allowedExtensions}) async {
-    final result = await FilePicker.platform.pickFiles(type: fileType, allowedExtensions: allowedExtensions);
+  Future<void> _handleMediaSlashSelected(
+      SlashCommandTarget target,
+      FileType fileType,
+      String mimePrefix,
+      BlockNode Function(String, String) nodeBuilder,
+      {List<String>? allowedExtensions}) async {
+    final result = await FilePicker.platform
+        .pickFiles(type: fileType, allowedExtensions: allowedExtensions);
     if (result != null && result.files.isNotEmpty && mounted) {
       final file = result.files.first;
       if (file.path == null) return;
-      
+
       final newNodeId = Editor.createNodeId();
       final newBlockId = const Uuid().v7();
-      
-      // Pre-register so the delegating command doesn't overwrite it
-      _adapter.registry.registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
 
-      final attachment = await ref.read(attachmentRepositoryProvider).saveAttachment(
-        pageId: widget.pageId,
-        blockId: newBlockId,
-        sourceFile: file,
-        mimeType: '$mimePrefix/${file.extension}',
-      );
-      
+      // Pre-register so the delegating command doesn't overwrite it
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final attachment =
+          await ref.read(attachmentRepositoryProvider).saveAttachment(
+                pageId: widget.pageId,
+                blockId: newBlockId,
+                sourceFile: file,
+                mimeType: '$mimePrefix/${file.extension}',
+              );
+
       if (mounted) {
         _replaceSlashWithNode(target, nodeBuilder(newNodeId, attachment.id));
         _focusNode.requestFocus();
@@ -326,27 +342,45 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   }
 
   Future<void> _handleImageSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.image, 'image', (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId));
+    return _handleMediaSlashSelected(target, FileType.image, 'image',
+        (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId));
   }
 
   Future<void> _handleVideoSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.video, 'video', (id, attachmentId) => KetionVideoNode(id: id, attachmentId: attachmentId));
+    return _handleMediaSlashSelected(
+        target,
+        FileType.video,
+        'video',
+        (id, attachmentId) =>
+            KetionVideoNode(id: id, attachmentId: attachmentId));
   }
 
   Future<void> _handleAudioSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.audio, 'audio', (id, attachmentId) => KetionAudioNode(id: id, attachmentId: attachmentId));
+    return _handleMediaSlashSelected(
+        target,
+        FileType.audio,
+        'audio',
+        (id, attachmentId) =>
+            KetionAudioNode(id: id, attachmentId: attachmentId));
   }
 
   Future<void> _handleFileSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.any, 'application', (id, attachmentId) {
+    return _handleMediaSlashSelected(target, FileType.any, 'application',
+        (id, attachmentId) {
       return KetionFileNode(id: id, attachmentId: attachmentId);
     });
   }
 
   Future<void> _handlePdfSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.custom, 'application/pdf', (id, attachmentId) {
-      return KetionPdfNode(id: id, attachmentId: attachmentId);
-    }, allowedExtensions: ['pdf'],);
+    return _handleMediaSlashSelected(
+      target,
+      FileType.custom,
+      'application/pdf',
+      (id, attachmentId) {
+        return KetionPdfNode(id: id, attachmentId: attachmentId);
+      },
+      allowedExtensions: ['pdf'],
+    );
   }
 
   void _scrollToTarget(EditorOpenTarget target) {
@@ -373,7 +407,6 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
   @override
   void dispose() {
-
     if (_isInitialized) {
       _editor.removeListener(_editListener);
       _slashController.dispose();
@@ -386,7 +419,6 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     _composer.dispose();
 
     super.dispose();
-
   }
 
   @visibleForTesting
@@ -595,7 +627,9 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                     ),
                   ],
                   documentPadding: const EdgeInsets.symmetric(
-                      horizontal: 24.0, vertical: 16.0,),
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                 ),
                 componentBuilders: [
                   KetionToggleComponentBuilder(_editor),
@@ -612,7 +646,10 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   const KetionWebLinkComponentBuilder(),
                   KetionReminderComponentBuilder(_editor),
                   ...defaultComponentBuilders,
-                ].map((b) => DepthWrappingComponentBuilder(b, _editor.document)).toList(),
+                ]
+                    .map((b) =>
+                        DepthWrappingComponentBuilder(b, _editor.document))
+                    .toList(),
                 keyboardActions: [
                   indentParagraphWhenTabPressed,
                   unindentParagraphWhenShiftTabPressed,

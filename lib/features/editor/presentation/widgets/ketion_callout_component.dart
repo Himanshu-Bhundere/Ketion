@@ -53,7 +53,9 @@ class KetionCalloutComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionCalloutNode) {
       return null;
     }
@@ -141,12 +143,13 @@ class _KetionCalloutComponentState extends State<KetionCalloutComponent>
     );
 
     final childLocalOffset = localOffset - childOffset;
-    
+
     // Snap to the closest text boundary
     final dx = childLocalOffset.dx.clamp(0.0, childRenderObject.size.width);
     final dy = childLocalOffset.dy.clamp(0.0, childRenderObject.size.height);
-    
-    return (childDocumentComponentKey.currentState as DocumentComponent).getPositionAtOffset(Offset(dx, dy));
+
+    return (childDocumentComponentKey.currentState as DocumentComponent)
+        .getPositionAtOffset(Offset(dx, dy));
   }
 
   Color _getBackgroundColor(BuildContext context, String colorString) {
@@ -206,11 +209,14 @@ class _KetionCalloutComponentState extends State<KetionCalloutComponent>
           border: Border(
             left: BorderSide(color: borderColor, width: 4),
             top: BorderSide(
-                color: isDark ? Colors.transparent : Colors.grey.shade200,),
+              color: isDark ? Colors.transparent : Colors.grey.shade200,
+            ),
             right: BorderSide(
-                color: isDark ? Colors.transparent : Colors.grey.shade200,),
+              color: isDark ? Colors.transparent : Colors.grey.shade200,
+            ),
             bottom: BorderSide(
-                color: isDark ? Colors.transparent : Colors.grey.shade200,),
+              color: isDark ? Colors.transparent : Colors.grey.shade200,
+            ),
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

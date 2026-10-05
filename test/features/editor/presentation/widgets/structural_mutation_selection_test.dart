@@ -33,14 +33,16 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
   @override
   Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
@@ -64,8 +66,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -94,12 +98,16 @@ class DummyBlockRepository implements BlockRepository {
       Success(testBlocks);
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async =>
-      Success(testBlocks
-          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-          .toList(),);
+      Success(
+        testBlocks
+            .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+            .toList(),
+      );
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -114,8 +122,12 @@ class DummyBlockRepository implements BlockRepository {
 
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
-  Future<Result<void>> restoreBlock(String id, String data,
-          String? parentBlockId, double position,) async =>
+  Future<Result<void>> restoreBlock(
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async =>
       const Success(null);
   @override
   Future<Result<void>> mergeBlocks({
@@ -127,7 +139,9 @@ class DummyBlockRepository implements BlockRepository {
       const Success(null);
   @override
   Future<Result<List<Block>>> moveBlock(
-          String sourceBlockId, DropIntent intent,) async =>
+    String sourceBlockId,
+    DropIntent intent,
+  ) async =>
       const Success([]);
   @override
   Future<Result<void>> splitBlock({
@@ -210,8 +224,9 @@ void main() {
       editor.execute([
         InsertTextRequest(
           documentPosition: DocumentPosition(
-              nodeId: initialNode.id,
-              nodePosition: const TextNodePosition(offset: 0),),
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
           textToInsert: '/bullet',
           attributions: {},
         ),
@@ -231,15 +246,19 @@ void main() {
         DeleteContentRequest(
           documentRange: DocumentRange(
             start: DocumentPosition(
-                nodeId: initialNode.id,
-                nodePosition: const TextNodePosition(offset: 0),),
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
             end: DocumentPosition(
-                nodeId: initialNode.id,
-                nodePosition: const TextNodePosition(offset: 7),),
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: 7),
+            ),
           ),
         ),
         ConvertParagraphToListItemRequest(
-            nodeId: initialNode.id, type: ListItemType.unordered,),
+          nodeId: initialNode.id,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       await tester.pumpAndSettle();
@@ -262,8 +281,10 @@ void main() {
 
       // Verify Layer 2: Composer
       expect(composer.selection!.extent.nodeId, initialNode.id);
-      expect(composer.selection!.extent.nodePosition,
-          const TextNodePosition(offset: 0),);
+      expect(
+        composer.selection!.extent.nodePosition,
+        const TextNodePosition(offset: 0),
+      );
 
       // Layer 3: Input "First"
       editor.execute([
@@ -285,8 +306,9 @@ void main() {
       );
 
       expect(
-          (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
-          'First',);
+        (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
+        'First',
+      );
 
       // Now simulate Enter (SplitListItemRequest)
       editor.execute([
@@ -306,8 +328,10 @@ void main() {
 
       // Verify Layer 2: Composer updated to new node @ 0
       expect(composer.selection!.extent.nodeId, newNode.id);
-      expect(composer.selection!.extent.nodePosition,
-          const TextNodePosition(offset: 0),);
+      expect(
+        composer.selection!.extent.nodePosition,
+        const TextNodePosition(offset: 0),
+      );
 
       // Layer 3: Input "Second"
       editor.execute([
@@ -317,8 +341,10 @@ void main() {
           attributions: {},
         ),
       ]);
-      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
-          'Second',);
+      expect(
+        (document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
+        'Second',
+      );
 
       await tester.pump(const Duration(milliseconds: 300));
     });
@@ -337,8 +363,9 @@ void main() {
       editor.execute([
         InsertTextRequest(
           documentPosition: DocumentPosition(
-              nodeId: initialNode.id,
-              nodePosition: const TextNodePosition(offset: 0),),
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
           textToInsert: 'Hello /bullet',
           attributions: {},
         ),
@@ -352,15 +379,19 @@ void main() {
         DeleteContentRequest(
           documentRange: DocumentRange(
             start: DocumentPosition(
-                nodeId: initialNode.id,
-                nodePosition: const TextNodePosition(offset: slashStartOffset),),
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: slashStartOffset),
+            ),
             end: DocumentPosition(
-                nodeId: initialNode.id,
-                nodePosition: const TextNodePosition(offset: cursorOffset),),
+              nodeId: initialNode.id,
+              nodePosition: const TextNodePosition(offset: cursorOffset),
+            ),
           ),
         ),
         ConvertParagraphToListItemRequest(
-            nodeId: initialNode.id, type: ListItemType.unordered,),
+          nodeId: initialNode.id,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       final textNode = document.getNodeById(initialNode.id) as TextNode;
@@ -383,8 +414,10 @@ void main() {
 
       // Verify Layer 2: Composer Offset is exactly 6
       expect(composer.selection!.extent.nodeId, initialNode.id);
-      expect(composer.selection!.extent.nodePosition,
-          const TextNodePosition(offset: 6),);
+      expect(
+        composer.selection!.extent.nodePosition,
+        const TextNodePosition(offset: 6),
+      );
 
       await tester.pumpAndSettle(const Duration(milliseconds: 300));
     });
@@ -406,8 +439,9 @@ void main() {
       composer.setSelectionWithReason(
         DocumentSelection.collapsed(
           position: DocumentPosition(
-              nodeId: initialNode.id,
-              nodePosition: const TextNodePosition(offset: 0),),
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
         ),
       );
 
@@ -425,14 +459,16 @@ void main() {
       composer.setSelectionWithReason(
         DocumentSelection.collapsed(
           position: DocumentPosition(
-              nodeId: initialNode.id,
-              nodePosition: const TextNodePosition(offset: 5),),
+            nodeId: initialNode.id,
+            nodePosition: const TextNodePosition(offset: 5),
+          ),
         ),
       );
 
       expect(
-          (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
-          'First',);
+        (document.getNodeById(initialNode.id) as TextNode).text.toPlainText(),
+        'First',
+      );
 
       editor.execute([
         SplitExistingTaskRequest(
@@ -449,8 +485,10 @@ void main() {
 
       // Verify Layer 2 (should be newNode@0)
       expect(composer.selection!.extent.nodeId, newNode.id);
-      expect(composer.selection!.extent.nodePosition,
-          const TextNodePosition(offset: 0),);
+      expect(
+        composer.selection!.extent.nodePosition,
+        const TextNodePosition(offset: 0),
+      );
 
       // Verify Layer 3
       editor.execute([
@@ -460,8 +498,10 @@ void main() {
           attributions: {},
         ),
       ]);
-      expect((document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
-          'Second',);
+      expect(
+        (document.getNodeById(newNode.id) as TextNode).text.toPlainText(),
+        'Second',
+      );
 
       await tester.pump(const Duration(milliseconds: 300));
     });

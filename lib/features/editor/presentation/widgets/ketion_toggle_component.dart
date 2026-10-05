@@ -28,7 +28,9 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! ParagraphNode || node.metadata['blockType'] != 'toggle') {
       return null;
     }
@@ -125,12 +127,13 @@ class _KetionToggleComponentState extends State<KetionToggleComponent>
     );
 
     final childLocalOffset = localOffset - childOffset;
-    
+
     // Snap to the closest text boundary
     final dx = childLocalOffset.dx.clamp(0.0, childRenderObject.size.width);
     final dy = childLocalOffset.dy.clamp(0.0, childRenderObject.size.height);
-    
-    return (childDocumentComponentKey.currentState as DocumentComponent).getPositionAtOffset(Offset(dx, dy));
+
+    return (childDocumentComponentKey.currentState as DocumentComponent)
+        .getPositionAtOffset(Offset(dx, dy));
   }
 
   @override

@@ -63,18 +63,24 @@ class EditorIdentityRegistry {
   void registerMapping({required String nodeId, required String blockId}) {
     // 1:1 Invariant checks
     if (_nodeToBlock.containsKey(nodeId) && _nodeToBlock[nodeId] != blockId) {
-      assert(false,
-          'Invariant violation: Node $nodeId already mapped to ${_nodeToBlock[nodeId]}. Cannot map to $blockId.',);
+      assert(
+        false,
+        'Invariant violation: Node $nodeId already mapped to ${_nodeToBlock[nodeId]}. Cannot map to $blockId.',
+      );
       debugPrint(
-          'Error: Mapping conflict. Node $nodeId is already mapped to ${_nodeToBlock[nodeId]}. Ignoring new mapping to $blockId.',);
+        'Error: Mapping conflict. Node $nodeId is already mapped to ${_nodeToBlock[nodeId]}. Ignoring new mapping to $blockId.',
+      );
       return;
     }
 
     if (_blockToNode.containsKey(blockId) && _blockToNode[blockId] != nodeId) {
-      assert(false,
-          'Invariant violation: Block $blockId already mapped to ${_blockToNode[blockId]}. Cannot map to $nodeId.',);
+      assert(
+        false,
+        'Invariant violation: Block $blockId already mapped to ${_blockToNode[blockId]}. Cannot map to $nodeId.',
+      );
       debugPrint(
-          'Error: Mapping conflict. Block $blockId is already mapped to ${_blockToNode[blockId]}. Ignoring new mapping to $nodeId.',);
+        'Error: Mapping conflict. Block $blockId is already mapped to ${_blockToNode[blockId]}. Ignoring new mapping to $nodeId.',
+      );
       return;
     }
 
@@ -82,8 +88,10 @@ class EditorIdentityRegistry {
     _blockToNode[blockId] = nodeId;
   }
 
-  void registerPendingMapping(
-      {required String nodeId, required String blockId,}) {
+  void registerPendingMapping({
+    required String nodeId,
+    required String blockId,
+  }) {
     _pendingNodeToBlock[nodeId] = blockId;
     _pendingBlockToNode[blockId] = nodeId;
   }

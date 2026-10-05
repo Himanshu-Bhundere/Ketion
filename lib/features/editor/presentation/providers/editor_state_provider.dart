@@ -96,7 +96,10 @@ class EditorStateNotifier
   }
 
   Future<void> splitBlockDirectly(
-      Block updatedOriginalBlock, Block newBlock, int newBlockIndex,) async {
+    Block updatedOriginalBlock,
+    Block newBlock,
+    int newBlockIndex,
+  ) async {
     final splitBlockUseCase = ref.read(splitBlockUseCaseProvider);
     final result = await splitBlockUseCase(
       updatedOriginalBlock: updatedOriginalBlock,
@@ -123,7 +126,9 @@ class EditorStateNotifier
   }
 
   Future<void> mergeBlocksDirectly(
-      Block mergedBlock, String deletedBlockId,) async {
+    Block mergedBlock,
+    String deletedBlockId,
+  ) async {
     final mergeBlocksUseCase = ref.read(mergeBlocksUseCaseProvider);
     final result = await mergeBlocksUseCase(
       mergedBlock: mergedBlock,
@@ -143,8 +148,12 @@ class EditorStateNotifier
     state = AsyncData(newBlocks);
   }
 
-  Future<void> restoreBlockDirectly(String blockId, String data,
-      String? parentBlockId, double position,) async {
+  Future<void> restoreBlockDirectly(
+    String blockId,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     final restoreBlockUseCase = ref.read(restoreBlockUseCaseProvider);
     final result = await restoreBlockUseCase(
       blockId,
@@ -197,16 +206,21 @@ class EditorStateNotifier
     await updateBlockDirectly(block);
   }
 
-  Future<void> insertBlockAfter(Block existingBlock,
-      {String type = 'text', String? data,}) async {
+  Future<void> insertBlockAfter(
+    Block existingBlock, {
+    String type = 'text',
+    String? data,
+  }) async {
     final currentBlocks = state.valueOrNull ?? [];
     final index = currentBlocks.indexWhere((b) => b.id == existingBlock.id);
     if (index == -1) return;
 
     final siblings = currentBlocks
-        .where((block) =>
-            block.parentBlockId == existingBlock.parentBlockId &&
-            !block.deleted,)
+        .where(
+          (block) =>
+              block.parentBlockId == existingBlock.parentBlockId &&
+              !block.deleted,
+        )
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
     final siblingIndex =
@@ -223,7 +237,9 @@ class EditorStateNotifier
       parentBlockId: existingBlock.parentBlockId,
       type: type,
       position: SiblingPositionManager.calculatePositionBetweenBlocks(
-          existingBlock, nextSibling,),
+        existingBlock,
+        nextSibling,
+      ),
       data: blockData,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -261,8 +277,9 @@ class EditorStateNotifier
 
     final updated = block.copyWith(data: beforeDataString);
     final siblings = currentBlocks
-        .where((item) =>
-            item.parentBlockId == block.parentBlockId && !item.deleted,)
+        .where(
+          (item) => item.parentBlockId == block.parentBlockId && !item.deleted,
+        )
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
     final siblingIndex = siblings.indexWhere((item) => item.id == block.id);
@@ -334,8 +351,9 @@ class EditorStateNotifier
 
     final updated = block.copyWith(data: listData(before));
     final siblings = currentBlocks
-        .where((item) =>
-            item.parentBlockId == block.parentBlockId && !item.deleted,)
+        .where(
+          (item) => item.parentBlockId == block.parentBlockId && !item.deleted,
+        )
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
     final siblingIndex = siblings.indexWhere((item) => item.id == block.id);
@@ -483,8 +501,10 @@ class EditorStateNotifier
 
     final original = currentBlocks[index];
     final siblings = currentBlocks
-        .where((block) =>
-            block.parentBlockId == original.parentBlockId && !block.deleted,)
+        .where(
+          (block) =>
+              block.parentBlockId == original.parentBlockId && !block.deleted,
+        )
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
     final siblingIndex =
@@ -499,7 +519,9 @@ class EditorStateNotifier
       parentBlockId: original.parentBlockId,
       type: original.type,
       position: SiblingPositionManager.calculatePositionBetweenBlocks(
-          original, nextSibling,),
+        original,
+        nextSibling,
+      ),
       data: original.data,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -539,7 +561,10 @@ class EditorStateNotifier
 
     // Check cycle and depth via moveBlock simulation
     final updatedBlocks = BlockTreeService.moveBlock(
-        blockId, DropIntent.child(previousSibling.id), currentBlocks,);
+      blockId,
+      DropIntent.child(previousSibling.id),
+      currentBlocks,
+    );
     if (updatedBlocks.isEmpty) return;
 
     // Execute the move directly by taking the result from BlockTreeService simulation
@@ -557,7 +582,10 @@ class EditorStateNotifier
     if (oldBlock.parentBlockId == null) return;
 
     final updatedBlocks = BlockTreeService.moveBlock(
-        blockId, DropIntent.unnest(blockId), currentBlocks,);
+      blockId,
+      DropIntent.unnest(blockId),
+      currentBlocks,
+    );
     if (updatedBlocks.isEmpty) return;
 
     await moveBlockToIntent(
@@ -572,8 +600,10 @@ class EditorStateNotifier
     DropIntent intent,
   ) async {
     final currentBlocks = state.valueOrNull ?? [];
-    final oldBlock = currentBlocks.firstWhere((b) => b.id == draggedBlockId,
-        orElse: () => currentBlocks.first,);
+    final oldBlock = currentBlocks.firstWhere(
+      (b) => b.id == draggedBlockId,
+      orElse: () => currentBlocks.first,
+    );
     if (oldBlock.id != draggedBlockId) return; // Block deleted/missing
 
     final targetId = intent.when(
@@ -583,8 +613,10 @@ class EditorStateNotifier
       unnest: (id) => id,
     );
 
-    final targetBlock = currentBlocks.firstWhere((b) => b.id == targetId,
-        orElse: () => currentBlocks.first,);
+    final targetBlock = currentBlocks.firstWhere(
+      (b) => b.id == targetId,
+      orElse: () => currentBlocks.first,
+    );
     if (targetBlock.id != targetId) return; // Target deleted
     if (oldBlock.pageId != targetBlock.pageId) return; // Cross-page rejection
 
@@ -624,8 +656,10 @@ class EditorStateNotifier
       );
     }
 
-    final newBlock = updatedBlocks.firstWhere((b) => b.id == sourceBlockId,
-        orElse: () => updatedBlocks.first,);
+    final newBlock = updatedBlocks.firstWhere(
+      (b) => b.id == sourceBlockId,
+      orElse: () => updatedBlocks.first,
+    );
 
     // Update state directly because the repository already updated DB
     final newBlocks = List<Block>.from(currentBlocks);

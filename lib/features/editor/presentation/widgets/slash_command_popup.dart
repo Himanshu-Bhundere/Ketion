@@ -93,7 +93,8 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.2),),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+          ),
         ),
         child: widget.options.isEmpty
             ? const Padding(
@@ -136,7 +137,8 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                             padding: const EdgeInsets.only(bottom: 2),
                             child: ListTile(
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                               tileColor: isSelected
                                   ? Theme.of(context)
                                       .colorScheme
@@ -145,7 +147,9 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                                   : Colors.transparent,
                               dense: true,
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 0,),
+                                horizontal: 12,
+                                vertical: 0,
+                              ),
                               leading: Icon(
                                 option.icon,
                                 size: 20,
@@ -176,7 +180,9 @@ class _SlashCommandPopupState extends State<SlashCommandPopup> {
                                     const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2,),
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Theme.of(context)
                                             .disabledColor

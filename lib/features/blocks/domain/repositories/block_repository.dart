@@ -10,9 +10,9 @@ abstract class BlockRepository {
   Future<Result<List<Block>>> getBlocksForPage(String pageId);
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId);
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId,
-      DropIntent
-          intent,); // Wait, moveBlock in gateway doesn't use DropIntent anymore. Gateway uses moveBlock directly?
+    String sourceBlockId,
+    DropIntent intent,
+  ); // Wait, moveBlock in gateway doesn't use DropIntent anymore. Gateway uses moveBlock directly?
   // Ah, the gateway currently uses updateBlock for MoveBlockMutation!
 
   Future<Result<void>> splitBlock({
@@ -27,5 +27,9 @@ abstract class BlockRepository {
     required int victimExpectedVersion,
   });
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,);
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  );
 }

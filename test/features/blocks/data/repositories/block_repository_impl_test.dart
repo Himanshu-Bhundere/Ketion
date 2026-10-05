@@ -84,8 +84,10 @@ void main() {
       await repository.createBlock(block);
 
       final updatedBlock = block.copyWith(data: 'Hello Updated');
-      await repository.updateBlock(updatedBlock,
-          expectedVersion: block.version,);
+      await repository.updateBlock(
+        updatedBlock,
+        expectedVersion: block.version,
+      );
 
       final blockInDb = await (database.select(database.blocks)
             ..where((t) => t.id.equals('block1')))
@@ -173,8 +175,10 @@ void main() {
         position: 2.5,
         parentBlockId: 'parentBlock1',
       );
-      await repository.updateBlock(updatedBlock,
-          expectedVersion: block.version,);
+      await repository.updateBlock(
+        updatedBlock,
+        expectedVersion: block.version,
+      );
 
       final blockInDb = await (database.select(database.blocks)
             ..where((t) => t.id.equals('block1')))

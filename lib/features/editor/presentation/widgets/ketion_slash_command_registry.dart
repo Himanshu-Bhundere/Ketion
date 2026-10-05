@@ -37,7 +37,8 @@ class KetionSlashCommand extends SuperEditorSlashCommandOption {
 }
 
 class KetionSlashCommandRegistry {
-  static Map<String, dynamic> _getInheritedMetadata(String nodeId, Document doc) {
+  static Map<String, dynamic> _getInheritedMetadata(
+      String nodeId, Document doc) {
     final node = doc.getNodeById(nodeId);
     if (node != null && node.metadata.containsKey('parentBlockId')) {
       return {'parentBlockId': node.metadata['parentBlockId']};
@@ -96,7 +97,9 @@ class KetionSlashCommandRegistry {
       getRequestsWithDoc: (nodeId, doc) => [
         InsertNodeBeforeNodeRequest(
           existingNodeId: nodeId,
-          newNode: HorizontalRuleNode(id: Editor.createNodeId()), // SuperEditor's HorizontalRuleNode doesn't explicitly expose metadata in its basic constructor sometimes, but wait...
+          newNode: HorizontalRuleNode(
+              id: Editor
+                  .createNodeId()), // SuperEditor's HorizontalRuleNode doesn't explicitly expose metadata in its basic constructor sometimes, but wait...
         ),
       ],
     ),
@@ -182,16 +185,16 @@ class KetionSlashCommandRegistry {
             ),
           ),
           ExecuteCommandRequest(
-             ChangeSelectionCommand(
-                DocumentSelection.collapsed(
-                  position: DocumentPosition(
-                    nodeId: newChildId,
-                    nodePosition: const TextNodePosition(offset: 0),
-                  ),
+            ChangeSelectionCommand(
+              DocumentSelection.collapsed(
+                position: DocumentPosition(
+                  nodeId: newChildId,
+                  nodePosition: const TextNodePosition(offset: 0),
                 ),
-                SelectionChangeType.placeCaret,
-                SelectionReason.userInteraction,
-             ),
+              ),
+              SelectionChangeType.placeCaret,
+              SelectionReason.userInteraction,
+            ),
           ),
         ];
       },
@@ -413,7 +416,10 @@ class KetionSlashCommandRegistry {
   }
 
   static List<EditRequest> _getListRequests(
-      String nodeId, Document document, String listType,) {
+    String nodeId,
+    Document document,
+    String listType,
+  ) {
     final node = document.getNodeById(nodeId);
 
     if (listType == 'checklist') {
@@ -452,7 +458,10 @@ class KetionSlashCommandRegistry {
   }
 
   static List<EditRequest> _getParagraphTypeRequests(
-      String nodeId, Document document, NamedAttribution blockType,) {
+    String nodeId,
+    Document document,
+    NamedAttribution blockType,
+  ) {
     final node = document.getNodeById(nodeId);
     if (node == null) return [];
 
@@ -479,8 +488,11 @@ class KetionSlashCommandRegistry {
     return [];
   }
 
-  static List<EditRequest> _getParagraphMetadataRequests(String nodeId,
-      Document document, Map<String, dynamic> metadataOverrides,) {
+  static List<EditRequest> _getParagraphMetadataRequests(
+    String nodeId,
+    Document document,
+    Map<String, dynamic> metadataOverrides,
+  ) {
     final node = document.getNodeById(nodeId);
     if (node == null) return [];
 

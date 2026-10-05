@@ -70,7 +70,8 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
         } else if (pending.action.startsWith('offset:')) {
           final offset = int.tryParse(pending.action.substring(7)) ?? 0;
           _controller.selection = TextSelection.collapsed(
-              offset: offset.clamp(0, _controller.text.length),);
+            offset: offset.clamp(0, _controller.text.length),
+          );
         }
         ref.read(pendingBlockFocusProvider.notifier).state = null;
       }
@@ -356,10 +357,12 @@ class _TextBlockWidgetState extends ConsumerState<TextBlockWidget> {
         } else if (pending.action.startsWith('offset:')) {
           final offset = int.tryParse(pending.action.substring(7)) ?? 0;
           _controller.selection = TextSelection.collapsed(
-              offset: offset.clamp(0, _controller.text.length),);
+            offset: offset.clamp(0, _controller.text.length),
+          );
         }
         Future.microtask(
-            () => ref.read(pendingBlockFocusProvider.notifier).state = null,);
+          () => ref.read(pendingBlockFocusProvider.notifier).state = null,
+        );
       }
     });
 

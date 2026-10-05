@@ -13,10 +13,12 @@ class KetionPdfPlayerComponent extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<KetionPdfPlayerComponent> createState() => _KetionPdfPlayerComponentState();
+  ConsumerState<KetionPdfPlayerComponent> createState() =>
+      _KetionPdfPlayerComponentState();
 }
 
-class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerComponent> {
+class _KetionPdfPlayerComponentState
+    extends ConsumerState<KetionPdfPlayerComponent> {
   PdfController? _pdfController;
 
   @override
@@ -64,8 +66,9 @@ class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerCompon
             }
 
             _initController(localPath);
-            
-            final fileName = attachment.localPath?.split('/').last ?? 'Document.pdf';
+
+            final fileName =
+                attachment.localPath?.split('/').last ?? 'Document.pdf';
             final fileSize = attachment.fileSize / 1024 / 1024;
 
             return Column(
@@ -92,7 +95,8 @@ class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerCompon
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     border: Border.all(color: Theme.of(context).dividerColor),
@@ -103,7 +107,8 @@ class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerCompon
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.picture_as_pdf, color: Colors.red.shade700, size: 24),
+                      Icon(Icons.picture_as_pdf,
+                          color: Colors.red.shade700, size: 24),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -112,13 +117,19 @@ class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerCompon
                           children: [
                             Text(
                               fileName,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               '${fileSize.toStringAsFixed(2)} MB',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: Colors.grey),
                             ),
                           ],
                         ),
@@ -126,7 +137,9 @@ class _KetionPdfPlayerComponentState extends ConsumerState<KetionPdfPlayerCompon
                       IconButton(
                         icon: const Icon(Icons.open_in_new),
                         onPressed: () {
-                          ref.read(attachmentLauncherProvider).launch(localPath);
+                          ref
+                              .read(attachmentLauncherProvider)
+                              .launch(localPath);
                         },
                         tooltip: 'Open in external viewer',
                       ),

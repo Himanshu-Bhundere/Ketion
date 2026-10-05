@@ -92,7 +92,9 @@ void main() {
   }
 
   group('Block Movement Persistence & Lifecycle Tests', () {
-    testWidgets('Drag block1 before block2 persists in SQLite and survives reload', (tester) async {
+    testWidgets(
+        'Drag block1 before block2 persists in SQLite and survives reload',
+        (tester) async {
       const String pageId = 'test-page-move';
 
       // 1. Setup Data in DB
@@ -141,7 +143,8 @@ void main() {
       expect((document.last as TextNode).text.toPlainText(), 'Block 2');
 
       // 3. Simulate DropIntent (drag block2 before block1)
-      final providerContainer = ProviderScope.containerOf(tester.element(find.byType(SuperEditorHost)));
+      final providerContainer = ProviderScope.containerOf(
+          tester.element(find.byType(SuperEditorHost)));
       await providerContainer
           .read(editorStateProvider(pageId).notifier)
           .handleDropIntent('block2', const DropIntent.before('block1'));
@@ -155,7 +158,10 @@ void main() {
       // 4. Verify SQLite directly
       final dbBlocks = await (database.select(database.blocks)
             ..where((t) => t.pageId.equals(pageId))
-            ..orderBy([(t) => drift.OrderingTerm(expression: t.position, mode: drift.OrderingMode.asc)]))
+            ..orderBy([
+              (t) => drift.OrderingTerm(
+                  expression: t.position, mode: drift.OrderingMode.asc)
+            ]))
           .get();
 
       expect(dbBlocks.length, 2);
@@ -169,7 +175,8 @@ void main() {
       await tester.pumpWidget(buildTestApp(pageId)); // mount new instance
       await pumpUntilInitialized(tester);
 
-      final newHostState = tester.state(find.byType(SuperEditorHost)) as dynamic;
+      final newHostState =
+          tester.state(find.byType(SuperEditorHost)) as dynamic;
       final newDocument = newHostState.document as MutableDocument;
 
       // 6. Verify SuperEditor Document after reload
@@ -178,7 +185,9 @@ void main() {
       expect((newDocument.last as TextNode).text.toPlainText(), 'Block 1');
     });
 
-    testWidgets('Nest block2 as child of block1 persists and restores correctly', (tester) async {
+    testWidgets(
+        'Nest block2 as child of block1 persists and restores correctly',
+        (tester) async {
       const String pageId = 'test-page-nest';
 
       await database.into(database.pages).insert(
@@ -216,7 +225,8 @@ void main() {
       await tester.pumpWidget(buildTestApp(pageId));
       await pumpUntilInitialized(tester);
 
-      final providerContainer = ProviderScope.containerOf(tester.element(find.byType(SuperEditorHost)));
+      final providerContainer = ProviderScope.containerOf(
+          tester.element(find.byType(SuperEditorHost)));
       await providerContainer
           .read(editorStateProvider(pageId).notifier)
           .handleDropIntent('block2', const DropIntent.child('block1'));
@@ -230,7 +240,10 @@ void main() {
       // Verify SQLite
       final dbBlocks = await (database.select(database.blocks)
             ..where((t) => t.pageId.equals(pageId))
-            ..orderBy([(t) => drift.OrderingTerm(expression: t.position, mode: drift.OrderingMode.asc)]))
+            ..orderBy([
+              (t) => drift.OrderingTerm(
+                  expression: t.position, mode: drift.OrderingMode.asc)
+            ]))
           .get();
 
       final dbBlock1 = dbBlocks.firstWhere((b) => b.id == 'block1');
@@ -244,10 +257,14 @@ void main() {
       await tester.pumpWidget(buildTestApp(pageId));
       await pumpUntilInitialized(tester);
 
-      // Verify in Super Editor (Ketion displays children somehow - if it doesn't display visually yet, 
+      // Verify in Super Editor (Ketion displays children somehow - if it doesn't display visually yet,
       // the Block mapping still reflects it. We will verify via internal registry if needed).
-      final newProviderContainer = ProviderScope.containerOf(tester.element(find.byType(SuperEditorHost)));
-      final restoredBlock2 = newProviderContainer.read(editorStateProvider(pageId)).value!.firstWhere((b) => b.id == 'block2');
+      final newProviderContainer = ProviderScope.containerOf(
+          tester.element(find.byType(SuperEditorHost)));
+      final restoredBlock2 = newProviderContainer
+          .read(editorStateProvider(pageId))
+          .value!
+          .firstWhere((b) => b.id == 'block2');
       expect(restoredBlock2.parentBlockId, 'block1');
     });
   });

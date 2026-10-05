@@ -10,7 +10,9 @@ class KetionTaskComponentBuilder implements ComponentBuilder {
 
   @override
   TaskComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! TaskNode) {
       return null;
     }
@@ -98,7 +100,8 @@ class _KetionTaskComponentState extends State<KetionTaskComponent>
             decoration: style.decoration == null
                 ? TextDecoration.lineThrough
                 : TextDecoration.combine(
-                    [TextDecoration.lineThrough, style.decoration!],),
+                    [TextDecoration.lineThrough, style.decoration!],
+                  ),
           )
         : style;
   }
@@ -118,7 +121,8 @@ class _KetionTaskComponentState extends State<KetionTaskComponent>
           ),
           Padding(
             padding: const EdgeInsets.only(
-                right: 8,), // Removed left padding, standard 8px right padding
+              right: 8,
+            ), // Removed left padding, standard 8px right padding
             child: Checkbox(
               visualDensity: Theme.of(context).visualDensity,
               value: widget.viewModel.isComplete,

@@ -222,10 +222,12 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     ];
     final normalized = query.toLowerCase();
     return options
-        .where((option) =>
-            normalized.isEmpty ||
-            option.title.toLowerCase().contains(normalized) ||
-            option.subtitle.toLowerCase().contains(normalized),)
+        .where(
+          (option) =>
+              normalized.isEmpty ||
+              option.title.toLowerCase().contains(normalized) ||
+              option.subtitle.toLowerCase().contains(normalized),
+        )
         .toList();
   }
 
@@ -236,8 +238,9 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     final before = _controller.text.substring(0, cursor);
     final after = _controller.text.substring(selection.end);
     _controller.value = TextEditingValue(
-        text: before,
-        selection: TextSelection.collapsed(offset: before.length),);
+      text: before,
+      selection: TextSelection.collapsed(offset: before.length),
+    );
     unawaited(widget.onSplit(before, after));
   }
 
@@ -251,8 +254,9 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
     final before = value.substring(0, newline);
     final after = value.substring(newline + 1);
     _controller.value = TextEditingValue(
-        text: before,
-        selection: TextSelection.collapsed(offset: before.length),);
+      text: before,
+      selection: TextSelection.collapsed(offset: before.length),
+    );
     unawaited(widget.onSplit(before, after));
     return true;
   }

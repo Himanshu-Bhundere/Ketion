@@ -19,7 +19,10 @@ void main() {
   test('checklist serialization carries its type and searchable text', () {
     final encoded = BlockDataSerializer.encodeDocumentNode(
       TaskNode(
-          id: 'task', text: AttributedText('Pack passport'), isComplete: false,),
+        id: 'task',
+        text: AttributedText('Pack passport'),
+        isComplete: false,
+      ),
     );
 
     final json = jsonDecode(encoded) as Map<String, dynamic>;

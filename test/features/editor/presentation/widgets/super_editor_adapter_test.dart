@@ -43,8 +43,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -75,14 +77,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -92,7 +98,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     final updatedBlocks =
         BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
@@ -149,8 +157,12 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data,
-          String? parentBlockId, double position,) async =>
+  Future<Result<void>> restoreBlock(
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async =>
       const Success(null);
 }
 
@@ -166,8 +178,10 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     calls.add('updateBlock:${block.id}:v$expectedVersion');
     return super.updateBlock(block, expectedVersion: expectedVersion);
   }
@@ -187,8 +201,10 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     calls.add('deleteBlock:$id');
     return super.deleteBlock(id, expectedVersion: expectedVersion);
   }
@@ -203,7 +219,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -571,7 +588,9 @@ void main() {
       // Issue the same conversion request that the slash menu issues
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: nodeId, type: ListItemType.unordered,),
+          nodeId: nodeId,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -622,7 +641,9 @@ void main() {
 
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: nodeId, type: ListItemType.ordered,),
+          nodeId: nodeId,
+          type: ListItemType.ordered,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -705,7 +726,9 @@ void main() {
 
       editor.execute([
         ChangeParagraphBlockTypeRequest(
-            nodeId: nodeId, blockType: header2Attribution,),
+          nodeId: nodeId,
+          blockType: header2Attribution,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -750,7 +773,9 @@ void main() {
       // Convert to bullet
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: nodeId, type: ListItemType.unordered,),
+          nodeId: nodeId,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -894,7 +919,9 @@ void main() {
       // Issue conversion
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: nodeId, type: ListItemType.unordered,),
+          nodeId: nodeId,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -988,7 +1015,9 @@ void main() {
       // Step 1: Convert to bullet
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: nodeId, type: ListItemType.unordered,),
+          nodeId: nodeId,
+          type: ListItemType.unordered,
+        ),
       ]);
 
       await tester.pump(const Duration(milliseconds: 500));
@@ -1057,7 +1086,9 @@ void main() {
       String currentNodeId = document.first.id;
       editor.execute([
         ConvertParagraphToListItemRequest(
-            nodeId: currentNodeId, type: ListItemType.ordered,),
+          nodeId: currentNodeId,
+          type: ListItemType.ordered,
+        ),
       ]);
       await tester.pump(const Duration(milliseconds: 500));
       await adapter.flushPendingChanges();
@@ -1137,11 +1168,13 @@ void main() {
         DeleteContentRequest(
           documentRange: DocumentSelection(
             base: DocumentPosition(
-                nodeId: currentNodeId,
-                nodePosition: const TextNodePosition(offset: 0),),
+              nodeId: currentNodeId,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
             extent: DocumentPosition(
-                nodeId: currentNodeId,
-                nodePosition: const TextNodePosition(offset: 1),),
+              nodeId: currentNodeId,
+              nodePosition: const TextNodePosition(offset: 1),
+            ),
           ),
         ),
         ChangeListItemTypeRequest(
@@ -1161,8 +1194,11 @@ void main() {
 
       // The other two blocks should have different IDs
       final blockIds = testBlocks.map((b) => b.id).toSet();
-      expect(blockIds.length, 3,
-          reason: 'Each split must create a new block ID',);
+      expect(
+        blockIds.length,
+        3,
+        reason: 'Each split must create a new block ID',
+      );
 
       // Finding the other blocks
       final newBlocks = testBlocks.where((b) => b.id != 'block-m').toList();
@@ -1170,10 +1206,12 @@ void main() {
       expect(newBlocks[1].type, 'list');
 
       // The last one should be bulleted
-      final lastBlock = testBlocks.lastWhere((b) =>
-          b.id ==
-          (state.registry as EditorIdentityRegistry)
-              .blockIdForNode(currentNodeId),);
+      final lastBlock = testBlocks.lastWhere(
+        (b) =>
+            b.id ==
+            (state.registry as EditorIdentityRegistry)
+                .blockIdForNode(currentNodeId),
+      );
       expect(jsonDecode(lastBlock.data)['listType'], 'bullet');
 
       debugDefaultTargetPlatformOverride = null;
@@ -1204,9 +1242,13 @@ void main() {
       // Trigger an unowned NodeInsertedEvent (simulating a paste or external insertion)
       final newNodeId = Editor.createNodeId();
       final newNode = ParagraphNode(
-          id: newNodeId, text: AttributedText('Pasted Paragraph'),);
+        id: newNodeId,
+        text: AttributedText('Pasted Paragraph'),
+      );
       document.insertNodeAfter(
-          existingNodeId: document.first.id, newNode: newNode,);
+        existingNodeId: document.first.id,
+        newNode: newNode,
+      );
 
       adapter.onDocumentChangeForTesting(
         DocumentChangeLog([
@@ -1226,11 +1268,17 @@ void main() {
       final updateCalls =
           spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
 
-      expect(createCalls.length, 1,
-          reason: 'Must produce exactly one createBlock call',);
-      expect(updateCalls.length, 0,
-          reason:
-              'Must NOT produce an updateBlock call for a newly inserted node',);
+      expect(
+        createCalls.length,
+        1,
+        reason: 'Must produce exactly one createBlock call',
+      );
+      expect(
+        updateCalls.length,
+        0,
+        reason:
+            'Must NOT produce an updateBlock call for a newly inserted node',
+      );
 
       // Check testBlocks
       expect(testBlocks.length, 2);
@@ -1265,15 +1313,23 @@ void main() {
 
       // We insert Block B, Block C, Block D in that order after Block A
       final nodeB = ParagraphNode(
-          id: Editor.createNodeId(), text: AttributedText('Block B'),);
+        id: Editor.createNodeId(),
+        text: AttributedText('Block B'),
+      );
       final nodeC = ParagraphNode(
-          id: Editor.createNodeId(), text: AttributedText('Block C'),);
+        id: Editor.createNodeId(),
+        text: AttributedText('Block C'),
+      );
       final nodeD = ParagraphNode(
-          id: Editor.createNodeId(), text: AttributedText('Block D'),);
+        id: Editor.createNodeId(),
+        text: AttributedText('Block D'),
+      );
 
       // Insert sequentially so their document index represents A < B < C < D
       document.insertNodeAfter(
-          existingNodeId: document.first.id, newNode: nodeB,);
+        existingNodeId: document.first.id,
+        newNode: nodeB,
+      );
       document.insertNodeAfter(existingNodeId: nodeB.id, newNode: nodeC);
       document.insertNodeAfter(existingNodeId: nodeC.id, newNode: nodeD);
 
@@ -1291,8 +1347,11 @@ void main() {
 
       final createCalls =
           spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      expect(createCalls.length, 3,
-          reason: 'Must produce exactly three createBlock calls',);
+      expect(
+        createCalls.length,
+        3,
+        reason: 'Must produce exactly three createBlock calls',
+      );
 
       // Assert positional ordering A < B < C < D in testBlocks
       testBlocks.sort((b1, b2) => b1.position.compareTo(b2.position));
@@ -1397,7 +1456,9 @@ void main() {
       // Convert to H1
       editor.execute([
         ChangeParagraphBlockTypeRequest(
-            nodeId: nodeId, blockType: header1Attribution,),
+          nodeId: nodeId,
+          blockType: header1Attribution,
+        ),
       ]);
       await tester.pump();
 
@@ -1416,7 +1477,9 @@ void main() {
       // Convert to H2
       editor.execute([
         ChangeParagraphBlockTypeRequest(
-            nodeId: nodeId, blockType: header2Attribution,),
+          nodeId: nodeId,
+          blockType: header2Attribution,
+        ),
       ]);
       await tester.pump();
 
@@ -1435,7 +1498,9 @@ void main() {
       // Convert to H3
       editor.execute([
         ChangeParagraphBlockTypeRequest(
-            nodeId: nodeId, blockType: header3Attribution,),
+          nodeId: nodeId,
+          blockType: header3Attribution,
+        ),
       ]);
       await tester.pump();
 

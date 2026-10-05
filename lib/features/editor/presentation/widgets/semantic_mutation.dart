@@ -90,8 +90,10 @@ class ToggleBlockExpandedMutation extends SemanticMutation {
   final String nodeId;
   final bool isExpanded;
 
-  const ToggleBlockExpandedMutation(
-      {required this.nodeId, required this.isExpanded,});
+  const ToggleBlockExpandedMutation({
+    required this.nodeId,
+    required this.isExpanded,
+  });
 }
 
 class UpdateReminderMutation extends SemanticMutation {

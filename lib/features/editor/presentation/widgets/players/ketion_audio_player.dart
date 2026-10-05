@@ -12,10 +12,12 @@ class KetionAudioPlayerComponent extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<KetionAudioPlayerComponent> createState() => _KetionAudioPlayerComponentState();
+  ConsumerState<KetionAudioPlayerComponent> createState() =>
+      _KetionAudioPlayerComponentState();
 }
 
-class _KetionAudioPlayerComponentState extends ConsumerState<KetionAudioPlayerComponent> {
+class _KetionAudioPlayerComponentState
+    extends ConsumerState<KetionAudioPlayerComponent> {
   AudioPlayer? _player;
   bool _isPlaying = false;
   Duration _position = Duration.zero;
@@ -155,17 +157,23 @@ class _KetionAudioPlayerComponentState extends ConsumerState<KetionAudioPlayerCo
                               overlayShape: const RoundSliderOverlayShape(
                                 overlayRadius: 12.0,
                               ),
-                              activeTrackColor: Theme.of(context).colorScheme.primary,
-                              inactiveTrackColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              activeTrackColor:
+                                  Theme.of(context).colorScheme.primary,
+                              inactiveTrackColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
                             ),
                             child: Slider(
                               value: _duration.inMilliseconds > 0
-                                  ? _position.inMilliseconds / _duration.inMilliseconds
+                                  ? _position.inMilliseconds /
+                                      _duration.inMilliseconds
                                   : 0.0,
                               onChanged: _isInitialised
                                   ? (value) {
                                       final newPos = Duration(
-                                        milliseconds: (value * _duration.inMilliseconds).round(),
+                                        milliseconds:
+                                            (value * _duration.inMilliseconds)
+                                                .round(),
                                       );
                                       _player?.seek(newPos);
                                     }

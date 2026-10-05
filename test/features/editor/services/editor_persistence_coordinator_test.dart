@@ -89,7 +89,9 @@ void main() {
     // B should be blocked, A is failed
     expect(coordinator.hasPendingMutations, isTrue);
     expect(
-        gateway.mutations, hasLength(1),); // B was blocked, not sent to gateway
+      gateway.mutations,
+      hasLength(1),
+    ); // B was blocked, not sent to gateway
 
     // Now retry and succeed
     gateway.fail = false;
@@ -102,8 +104,10 @@ void main() {
     expect((gateway.mutations[1] as UpdateBlockMutation).data, 'A_failed');
     expect((gateway.mutations[1] as UpdateBlockMutation).expectedVersion, 1);
     expect((gateway.mutations[2] as UpdateBlockMutation).data, 'A_dependent');
-    expect((gateway.mutations[2] as UpdateBlockMutation).expectedVersion,
-        2,); // Dependent advanced to 2
+    expect(
+      (gateway.mutations[2] as UpdateBlockMutation).expectedVersion,
+      2,
+    ); // Dependent advanced to 2
   });
 
   test(
@@ -247,7 +251,9 @@ void main() {
 
     expect(gateway.mutations, hasLength(2));
     expect((gateway.mutations[0] as UpdateBlockMutation).blockId, 'block2');
-    expect((gateway.mutations[1] as MergeBlocksMutation).victimExpectedVersion,
-        3,); // Victim version was expected to be 2, then updated to 3 because of the pending update!
+    expect(
+      (gateway.mutations[1] as MergeBlocksMutation).victimExpectedVersion,
+      3,
+    ); // Victim version was expected to be 2, then updated to 3 because of the pending update!
   });
 }

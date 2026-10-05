@@ -7,7 +7,11 @@ class RestoreBlockUseCase {
   RestoreBlockUseCase(this._repository);
 
   Future<Result<void>> call(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     return _repository.restoreBlock(id, data, parentBlockId, position);
   }
 }

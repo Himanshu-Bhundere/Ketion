@@ -156,7 +156,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                     onPressed: () {},
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(
-                                        minWidth: 24, minHeight: 24,),
+                                      minWidth: 24,
+                                      minHeight: 24,
+                                    ),
                                   ),
                                 ),
                                 child: IconButton(
@@ -164,7 +166,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                   onPressed: () {},
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(
-                                      minWidth: 24, minHeight: 24,),
+                                    minWidth: 24,
+                                    minHeight: 24,
+                                  ),
                                 ),
                                 onDragUpdate: (details) => widget.onDragUpdate
                                     ?.call(details.globalPosition),
@@ -180,7 +184,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                     onPressed: () {},
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(
-                                        minWidth: 24, minHeight: 24,),
+                                      minWidth: 24,
+                                      minHeight: 24,
+                                    ),
                                   ),
                                 ),
                                 child: IconButton(
@@ -188,7 +194,9 @@ class _BlockWrapperState extends ConsumerState<BlockWrapper> {
                                   onPressed: () {},
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(
-                                      minWidth: 24, minHeight: 24,),
+                                    minWidth: 24,
+                                    minHeight: 24,
+                                  ),
                                 ),
                                 onDragUpdate: (details) => widget.onDragUpdate
                                     ?.call(details.globalPosition),

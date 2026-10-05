@@ -100,13 +100,14 @@ void main() {
         },
         requestHandlers: [
           createKetionRequestHandler(
-              registry: adapter.registry,
-              pageId: 'page-1',
-              document: document,
-              composer: MutableDocumentComposer(),
-              coordinator: coordinator,
-              snapshot: snapshot,
-              adapter: adapter,),
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: MutableDocumentComposer(),
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
           changeParagraphMetadataRequestHandler,
         ],
       );
@@ -129,19 +130,25 @@ void main() {
 
       // At this point, the adapter intercepts the mutation and enqueues an UpdateBlockMutation
       final updateMutation = coordinator.mutations.lastWhere(
-              (m) => m is UpdateBlockMutation && m.blockId == 'toggle-1',)
-          as UpdateBlockMutation;
+        (m) => m is UpdateBlockMutation && m.blockId == 'toggle-1',
+      ) as UpdateBlockMutation;
 
       final updatedData = jsonDecode(updateMutation.data);
-      expect(updatedData['isExpanded'], false,
-          reason: 'Toggle should be saved as collapsed',);
+      expect(
+        updatedData['isExpanded'],
+        false,
+        reason: 'Toggle should be saved as collapsed',
+      );
 
       // Wait for the stream event to be processed by the adapter
       await Future<void>.delayed(Duration.zero);
 
       // Check the projection
-      expect(document.nodeCount, 1,
-          reason: 'Child node was removed from SuperEditor when collapsed',);
+      expect(
+        document.nodeCount,
+        1,
+        reason: 'Child node was removed from SuperEditor when collapsed',
+      );
 
       // 3. Simulate Restart / Reload
       block1 = block1.copyWith(data: updateMutation.data);
@@ -155,8 +162,11 @@ void main() {
       final document2 = adapter2.createDocument([block1, childBlock]);
 
       // Because isExpanded is false, the child is omitted from createDocument, but kept in hidden node cache
-      expect(document2.nodeCount, 1,
-          reason: 'Child node omitted on reload because parent is collapsed',);
+      expect(
+        document2.nodeCount,
+        1,
+        reason: 'Child node omitted on reload because parent is collapsed',
+      );
 
       // 4. Expand the toggle via ToggleExpandedRequest
       final editor2 = Editor(
@@ -165,13 +175,14 @@ void main() {
         },
         requestHandlers: [
           createKetionRequestHandler(
-              registry: adapter2.registry,
-              pageId: 'page-1',
-              document: document2,
-              composer: MutableDocumentComposer(),
-              coordinator: adapter2.coordinator,
-              snapshot: adapter2.snapshot,
-              adapter: adapter2,),
+            registry: adapter2.registry,
+            pageId: 'page-1',
+            document: document2,
+            composer: MutableDocumentComposer(),
+            coordinator: adapter2.coordinator,
+            snapshot: adapter2.snapshot,
+            adapter: adapter2,
+          ),
           changeParagraphMetadataRequestHandler,
         ],
       );
@@ -188,8 +199,11 @@ void main() {
       // Wait for the stream event to be processed by the adapter
       await Future<void>.delayed(Duration.zero);
 
-      expect(document2.nodeCount, 2,
-          reason: 'Child node is restored from cache when toggle is expanded!',);
+      expect(
+        document2.nodeCount,
+        2,
+        reason: 'Child node is restored from cache when toggle is expanded!',
+      );
       final restoredChildNode = document2.getNodeAt(1);
       final childBlockId =
           adapter2.registry.blockIdForNode(restoredChildNode!.id);

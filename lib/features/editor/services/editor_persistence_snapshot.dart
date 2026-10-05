@@ -52,8 +52,9 @@ class EditorPersistenceSnapshot {
   final Map<String, BlockSnapshot> _blocks;
 
   EditorPersistenceSnapshot(
-      this.pageId, Map<String, BlockSnapshot> initialBlocks,)
-      : _blocks = Map.of(initialBlocks);
+    this.pageId,
+    Map<String, BlockSnapshot> initialBlocks,
+  ) : _blocks = Map.of(initialBlocks);
 
   BlockSnapshot? getBlock(String blockId) => _blocks[blockId];
 

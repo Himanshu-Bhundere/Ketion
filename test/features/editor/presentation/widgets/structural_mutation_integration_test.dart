@@ -39,7 +39,8 @@ class _MockPageRepo implements PageRepository {
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
 
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
 
   @override
@@ -49,7 +50,8 @@ class _MockPageRepo implements PageRepository {
 
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
 
   @override
@@ -78,8 +80,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -108,14 +112,18 @@ class DummyBlockRepository implements BlockRepository {
       Success(testBlocks);
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -125,7 +133,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     return const Success([]);
   }
 
@@ -168,7 +178,11 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     testBlocks.add(
       Block(
         id: id,
@@ -206,7 +220,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -214,8 +229,10 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const String pageId = 'test-page-id';
 
-  Widget buildTestApp(
-      {required List<Block> blocks, required page_entity.Page testPage,}) {
+  Widget buildTestApp({
+    required List<Block> blocks,
+    required page_entity.Page testPage,
+  }) {
     return ProviderScope(
       overrides: [
         getPageBlocksUseCaseProvider
@@ -301,10 +318,16 @@ void main() {
 
       final blocksAfterSplit = List<Block>.from(testBlocks);
       expect(blocksAfterSplit.length, 2);
-      expect(blocksAfterSplit[0].id, 'block1',
-          reason: 'K1 ID should be stable',);
-      expect(blocksAfterSplit[1].id, isNot('block1'),
-          reason: 'K2 gets new UUID',);
+      expect(
+        blocksAfterSplit[0].id,
+        'block1',
+        reason: 'K1 ID should be stable',
+      );
+      expect(
+        blocksAfterSplit[1].id,
+        isNot('block1'),
+        reason: 'K2 gets new UUID',
+      );
 
       expect(document.nodeCount, 2);
       final node1 = document.first as TextNode;
@@ -344,7 +367,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2], testPage: testPage),
+      );
       await pumpUntilInitialized(tester);
 
       final element = tester.element(find.byType(SuperEditorHost));
@@ -381,8 +405,11 @@ void main() {
       // Need to execute the undo command
       final historyController =
           container.read(editorHistoryControllerProvider(pageId));
-      expect(historyController, isNotNull,
-          reason: 'History controller should be initialized',);
+      expect(
+        historyController,
+        isNotNull,
+        reason: 'History controller should be initialized',
+      );
       historyController!.undo();
       await tester.pump(const Duration(milliseconds: 350));
       await pumpUntilInitialized(tester);
@@ -396,8 +423,11 @@ void main() {
 
       final restoredNode2 = document.last as TextNode;
       expect(restoredNode2.id, node2Id);
-      expect(registry.blockIdForNode(restoredNode2.id), 'block2',
-          reason: 'Should restore from tombstone',);
+      expect(
+        registry.blockIdForNode(restoredNode2.id),
+        'block2',
+        reason: 'Should restore from tombstone',
+      );
       expect(blocksAfterUndo.last.id, 'block2');
 
       // Trigger Redo
@@ -445,7 +475,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2], testPage: testPage),
+      );
       await pumpUntilInitialized(tester);
 
       final hostState = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -566,11 +597,17 @@ void main() {
       // Check A: Super Editor conversion result
       final convertedNode = document.first;
       expect(convertedNode, isA<TaskNode>());
-      expect(convertedNode.id, node1Id,
-          reason: 'ID must remain stable across conversion',);
+      expect(
+        convertedNode.id,
+        node1Id,
+        reason: 'ID must remain stable across conversion',
+      );
       final taskNode = convertedNode as TaskNode;
-      expect(taskNode.text.toPlainText(), 'Test Checkbox',
-          reason: 'Text MUST be preserved during conversion',);
+      expect(
+        taskNode.text.toPlainText(),
+        'Test Checkbox',
+        reason: 'Text MUST be preserved during conversion',
+      );
 
       // Check C: Ketion Persistence logic via the flush
       final adapter = hostState.adapter as KetionSuperEditorAdapter;
@@ -579,15 +616,21 @@ void main() {
       final blocks = List<Block>.from(testBlocks);
       expect(blocks.length, 1);
       final persistedBlock = blocks.first;
-      expect(persistedBlock.id, 'block1',
-          reason: 'Ketion block ID should be preserved',);
+      expect(
+        persistedBlock.id,
+        'block1',
+        reason: 'Ketion block ID should be preserved',
+      );
 
       final data = jsonDecode(persistedBlock.data);
       expect(data['listType'], 'checklist');
       final spans = data['spans'] as List;
       expect(spans.isNotEmpty, true);
-      expect(spans[0]['text'], 'Test Checkbox',
-          reason: 'Ketion persistence MUST save the text',);
+      expect(
+        spans[0]['text'],
+        'Test Checkbox',
+        reason: 'Ketion persistence MUST save the text',
+      );
     });
   });
 }

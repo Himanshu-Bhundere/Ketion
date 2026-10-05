@@ -40,8 +40,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -72,14 +74,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -89,7 +95,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     final updatedBlocks =
         BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
@@ -146,8 +154,12 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data,
-          String? parentBlockId, double position,) async =>
+  Future<Result<void>> restoreBlock(
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async =>
       const Success(null);
 }
 
@@ -238,7 +250,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2], testPage: testPage),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(BlockEditorWidget), findsOneWidget);
@@ -276,7 +289,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2], testPage: testPage),
+      );
       await tester.pumpAndSettle();
 
       // Focus on the first block
@@ -370,7 +384,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2, block3], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2, block3], testPage: testPage),
+      );
       await tester.pumpAndSettle();
 
       // Focus on the second block (which is the empty one, block2)
@@ -455,7 +470,8 @@ void main() {
       );
 
       await tester.pumpWidget(
-          buildTestApp(blocks: [block1, block2], testPage: testPage),);
+        buildTestApp(blocks: [block1, block2], testPage: testPage),
+      );
       await tester.pumpAndSettle();
 
       // Focus on block2

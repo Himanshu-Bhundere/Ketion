@@ -127,7 +127,9 @@ void main() {
       expect(block1.data, 'Init ');
       expect(block2.data, 'B');
       expect(
-          block1.version, 3,); // 1 create + 1 coalesced update + 1 split update
+        block1.version,
+        3,
+      ); // 1 create + 1 coalesced update + 1 split update
     });
 
     test('failure handles cleanly without breaking subsequent mutations',

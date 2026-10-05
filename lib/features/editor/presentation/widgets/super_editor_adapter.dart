@@ -62,7 +62,8 @@ class KetionSuperEditorAdapter {
   }
 
   void _onMutationSuccess(
-      persistence_mutations.EditorPersistenceMutation mutation,) {
+    persistence_mutations.EditorPersistenceMutation mutation,
+  ) {
     for (final transition in mutation.versionTransitions) {
       if (transition.operation ==
           persistence_mutations.VersionChangeOperation.increment) {
@@ -120,8 +121,10 @@ class KetionSuperEditorAdapter {
           _registry.setBlockVersion(block.id, block.version);
           _registry.setBlockCreatedAt(block.id, block.createdAt);
           if (node is TextNode) {
-            _registry.setContentHash(node.id,
-                EditorIdentityRegistry.hashContent(_buildDataFromNode(node)),);
+            _registry.setContentHash(
+              node.id,
+              EditorIdentityRegistry.hashContent(_buildDataFromNode(node)),
+            );
           }
 
           if (pb.hiddenByAncestorId == null) {
@@ -252,50 +255,64 @@ class KetionSuperEditorAdapter {
             ][headingLevel - 1];
             metadata['blockType'] = type;
             return ParagraphNode(
-                id: nodeId, text: attributedText, metadata: metadata,);
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata,
+            );
           } else if (isQuote) {
             metadata['blockType'] = blockquoteAttribution;
             return ParagraphNode(
-                id: nodeId, text: attributedText, metadata: metadata,);
-          }
-          return ParagraphNode(
               id: nodeId,
               text: attributedText,
-              metadata: metadata.isNotEmpty ? metadata : null,);
+              metadata: metadata,
+            );
+          }
+          return ParagraphNode(
+            id: nodeId,
+            text: attributedText,
+            metadata: metadata.isNotEmpty ? metadata : null,
+          );
 
         case 'callout':
           final icon = data['icon'] as String? ?? '💡';
           final color = data['color'] as String? ?? 'grey';
           return KetionCalloutNode(
-              id: nodeId,
-              text: attributedText,
-              metadata: metadata,
-              icon: icon,
-              color: color,);
+            id: nodeId,
+            text: attributedText,
+            metadata: metadata,
+            icon: icon,
+            color: color,
+          );
 
         case 'list':
           final listType = data['listType'] as String? ?? 'bullet';
           if (listType == 'numbered') {
             return ListItemNode.ordered(
-                id: nodeId,
-                text: attributedText,
-                metadata: metadata.isNotEmpty ? metadata : null,);
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata.isNotEmpty ? metadata : null,
+            );
           } else if (listType == 'checklist') {
             return TaskNode(
-                id: nodeId,
-                text: attributedText,
-                isComplete: data['checked'] as bool? ?? false,
-                metadata: metadata.isNotEmpty ? metadata : null,);
+              id: nodeId,
+              text: attributedText,
+              isComplete: data['checked'] as bool? ?? false,
+              metadata: metadata.isNotEmpty ? metadata : null,
+            );
           } else if (listType == 'toggle') {
             metadata['blockType'] = const NamedAttribution('toggle');
             metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
             return ParagraphNode(
-                id: nodeId, text: attributedText, metadata: metadata,);
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata,
+            );
           } else {
             return ListItemNode.unordered(
-                id: nodeId,
-                text: attributedText,
-                metadata: metadata.isNotEmpty ? metadata : null,);
+              id: nodeId,
+              text: attributedText,
+              metadata: metadata.isNotEmpty ? metadata : null,
+            );
           }
 
         case 'code':
@@ -306,34 +323,50 @@ class KetionSuperEditorAdapter {
               data['showLineNumbers'] as bool? ?? false;
           metadata['wrapLines'] = data['wrapLines'] as bool? ?? true;
           return ParagraphNode(
-              id: nodeId, text: AttributedText(codeText), metadata: metadata,);
+            id: nodeId,
+            text: AttributedText(codeText),
+            metadata: metadata,
+          );
 
         case 'image':
           final attachmentId = data['attachmentId'] as String? ?? '';
           return ImageNode(
-              id: nodeId,
-              imageUrl: attachmentId,
-              metadata: metadata.isNotEmpty ? metadata : null,);
+            id: nodeId,
+            imageUrl: attachmentId,
+            metadata: metadata.isNotEmpty ? metadata : null,
+          );
 
         case 'video':
           final attachmentId = data['attachmentId'] as String? ?? '';
           return KetionVideoNode(
-              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
+            id: nodeId,
+            attachmentId: attachmentId,
+            metadata: metadata,
+          );
 
         case 'audio':
           final attachmentId = data['attachmentId'] as String? ?? '';
           return KetionAudioNode(
-              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
+            id: nodeId,
+            attachmentId: attachmentId,
+            metadata: metadata,
+          );
 
         case 'pdf':
           final attachmentId = data['attachmentId'] as String? ?? '';
           return KetionPdfNode(
-              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
+            id: nodeId,
+            attachmentId: attachmentId,
+            metadata: metadata,
+          );
 
         case 'file':
           final attachmentId = data['attachmentId'] as String? ?? '';
           return KetionFileNode(
-              id: nodeId, attachmentId: attachmentId, metadata: metadata,);
+            id: nodeId,
+            attachmentId: attachmentId,
+            metadata: metadata,
+          );
 
         case 'bookmark':
           final url = data['url'] as String? ?? '';
@@ -347,7 +380,10 @@ class KetionSuperEditorAdapter {
         case 'pageLink':
           final pageId = data['pageId'] as String? ?? '';
           return KetionPageLinkNode(
-              id: nodeId, pageId: pageId, metadata: metadata,);
+            id: nodeId,
+            pageId: pageId,
+            metadata: metadata,
+          );
 
         case 'webLink':
           final url = data['url'] as String? ?? '';
@@ -371,13 +407,16 @@ class KetionSuperEditorAdapter {
 
         case 'divider':
           return HorizontalRuleNode(
-              id: nodeId, metadata: metadata.isNotEmpty ? metadata : null,);
+            id: nodeId,
+            metadata: metadata.isNotEmpty ? metadata : null,
+          );
 
         default:
           return ParagraphNode(
-              id: nodeId,
-              text: attributedText,
-              metadata: metadata.isNotEmpty ? metadata : null,);
+            id: nodeId,
+            text: attributedText,
+            metadata: metadata.isNotEmpty ? metadata : null,
+          );
       }
     } catch (e) {
       return null;
@@ -398,7 +437,8 @@ class KetionSuperEditorAdapter {
   /// remains the authoritative source for structural mutations.
   void beginSemanticMutation(Set<String> nodeIds) {
     debugPrint(
-        'KETION: beginSemanticMutation for $nodeIds\n${StackTrace.current}',);
+      'KETION: beginSemanticMutation for $nodeIds\n${StackTrace.current}',
+    );
     _activeSemanticMutationNodeIds.addAll(nodeIds);
   }
 
@@ -431,7 +471,8 @@ class KetionSuperEditorAdapter {
 
     for (final change in log.changes) {
       debugPrint(
-          'KETION: _onDocumentChange change type: ${change.runtimeType}',);
+        'KETION: _onDocumentChange change type: ${change.runtimeType}',
+      );
       if (change is NodeChangeEvent) {
         if (_activeSemanticMutationNodeIds.contains(change.nodeId)) {
           debugPrint('KETION: Suppressed NodeChangeEvent for ${change.nodeId}');
@@ -441,7 +482,8 @@ class KetionSuperEditorAdapter {
         final node = document.getNodeById(change.nodeId);
         if (node is KetionTableNode) {
           debugPrint(
-              'KETION: Discarded generic NodeChangeEvent for KetionTableNode (must use semantic handler)',);
+            'KETION: Discarded generic NodeChangeEvent for KetionTableNode (must use semantic handler)',
+          );
           continue;
         }
 
@@ -450,17 +492,21 @@ class KetionSuperEditorAdapter {
       } else if (change is NodeInsertedEvent) {
         if (_activeSemanticMutationNodeIds.contains(change.nodeId)) {
           debugPrint(
-              'KETION: Suppressed NodeInsertedEvent for ${change.nodeId}',);
+            'KETION: Suppressed NodeInsertedEvent for ${change.nodeId}',
+          );
           continue;
         }
         debugPrint(
-            'KETION: Unsuppressed NodeInsertedEvent for ${change.nodeId}',);
+          'KETION: Unsuppressed NodeInsertedEvent for ${change.nodeId}',
+        );
 
         // Allocate identity if it's missing
         if (_registry.blockIdForNode(change.nodeId) == null) {
           final newBlockId = const Uuid().v7();
           _registry.registerPendingMapping(
-              nodeId: change.nodeId, blockId: newBlockId,);
+            nodeId: change.nodeId,
+            blockId: newBlockId,
+          );
         }
 
         _pendingInsertNodeIds.add(change.nodeId);
@@ -496,9 +542,11 @@ class KetionSuperEditorAdapter {
 
     final documentNodesInOrder = document.map((n) => n.id).toList();
     final sortedInsertNodeIds = insertNodeIdsToProcess.toList()
-      ..sort((a, b) => documentNodesInOrder
-          .indexOf(a)
-          .compareTo(documentNodesInOrder.indexOf(b)),);
+      ..sort(
+        (a, b) => documentNodesInOrder
+            .indexOf(a)
+            .compareTo(documentNodesInOrder.indexOf(b)),
+      );
 
     final insertMutationsToEnqueue =
         <persistence_mutations.InsertBlockMutation>[];
@@ -554,7 +602,8 @@ class KetionSuperEditorAdapter {
         coordinator.enqueue(mutation);
       } catch (e) {
         debugPrint(
-            'KETION: Flush enqueue failed for insert block ${mutation.blockId}: $e',);
+          'KETION: Flush enqueue failed for insert block ${mutation.blockId}: $e',
+        );
       }
     }
 
@@ -602,7 +651,8 @@ class KetionSuperEditorAdapter {
         coordinator.enqueue(mutation);
       } catch (e) {
         debugPrint(
-            'KETION: Flush enqueue failed for block ${mutation.blockId}: $e',);
+          'KETION: Flush enqueue failed for block ${mutation.blockId}: $e',
+        );
       }
     }
   }

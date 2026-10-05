@@ -36,14 +36,16 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
   @override
   Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
@@ -67,8 +69,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -94,14 +98,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -111,7 +119,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     return const Success([]);
   }
 
@@ -151,7 +161,11 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     return const Success(null);
   }
 }
@@ -165,7 +179,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -173,8 +188,10 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp(
-      {required List<Block> blocks, required page_entity.Page testPage,}) {
+  Widget buildTestApp({
+    required List<Block> blocks,
+    required page_entity.Page testPage,
+  }) {
     return ProviderScope(
       overrides: [
         getPageBlocksUseCaseProvider

@@ -20,8 +20,10 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           parentBlockId: mutation.parentBlockId ?? block.parentBlockId,
           position: mutation.position,
         );
-        final result = await repository.updateBlock(updated,
-            expectedVersion: mutation.expectedVersion,);
+        final result = await repository.updateBlock(
+          updated,
+          expectedVersion: mutation.expectedVersion,
+        );
         if (result.isError) {
           throw Exception(result.fold((_) => '', (f) => f.toString()));
         }
@@ -38,7 +40,9 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
             ? await _persistedBlock(mutation.nextBlockId!)
             : null;
         resolvedPosition = SiblingPositionManager.calculatePositionBetween(
-            prev?.position, next?.position,);
+          prev?.position,
+          next?.position,
+        );
       }
 
       final block = Block(
@@ -56,8 +60,10 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
         throw Exception(result.fold((_) => '', (f) => f.toString()));
       }
     } else if (mutation is DeleteBlockMutation) {
-      final result = await repository.deleteBlock(mutation.blockId,
-          expectedVersion: mutation.expectedVersion,);
+      final result = await repository.deleteBlock(
+        mutation.blockId,
+        expectedVersion: mutation.expectedVersion,
+      );
       if (result.isError) {
         throw Exception(result.fold((_) => '', (f) => f.toString()));
       }
@@ -123,8 +129,10 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           parentBlockId: mutation.parentBlockId,
           position: mutation.position,
         );
-        final result = await repository.updateBlock(updated,
-            expectedVersion: mutation.expectedVersion,);
+        final result = await repository.updateBlock(
+          updated,
+          expectedVersion: mutation.expectedVersion,
+        );
         if (result.isError) {
           throw Exception(result.fold((_) => '', (f) => f.toString()));
         }
@@ -136,8 +144,10 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
           type: mutation.newType,
           data: mutation.newData,
         );
-        final result = await repository.updateBlock(updated,
-            expectedVersion: mutation.expectedVersion,);
+        final result = await repository.updateBlock(
+          updated,
+          expectedVersion: mutation.expectedVersion,
+        );
         if (result.isError) {
           throw Exception(result.fold((_) => '', (f) => f.toString()));
         }

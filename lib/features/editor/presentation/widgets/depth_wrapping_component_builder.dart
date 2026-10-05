@@ -26,7 +26,7 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
 
     final node = document.getNodeById(componentViewModel.nodeId);
     final depth = node?.metadata['depth'] as int? ?? 0;
-    
+
     if (depth > 0) {
       return Padding(
         padding: EdgeInsets.only(left: depth * 24.0),

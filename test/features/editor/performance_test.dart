@@ -83,8 +83,10 @@ void main() {
     final blockToMoveResult = await repository.getBlock(sourceId);
     final blockToMove = blockToMoveResult.valueOrNull!;
     final updatedBlock = blockToMove.copyWith(position: 250.0);
-    final result = await repository.updateBlock(updatedBlock,
-        expectedVersion: blockToMove.version,);
+    final result = await repository.updateBlock(
+      updatedBlock,
+      expectedVersion: blockToMove.version,
+    );
 
     moveValidationTime.stop();
     final saveTime = moveValidationTime.elapsedMilliseconds;
@@ -92,8 +94,11 @@ void main() {
     // The architectural requirement was <50ms, but test environment overhead
     // (especially in debug mode / flutter test) pushes this higher.
     // We expect it to be well under 400ms in production, but test overhead can cause spikes.
-    expect(saveTime, lessThan(1000),
-        reason: 'Block save should be <1000ms in test environment',);
+    expect(
+      saveTime,
+      lessThan(1000),
+      reason: 'Block save should be <1000ms in test environment',
+    );
     expect(result.isSuccess, isTrue, reason: 'Move block should succeed');
   });
 }

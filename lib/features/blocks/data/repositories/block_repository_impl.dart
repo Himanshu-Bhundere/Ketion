@@ -78,8 +78,10 @@ class BlockRepositoryImpl implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> updateBlock(domain.Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    domain.Block block, {
+    required int expectedVersion,
+  }) async {
     try {
       await _db.transaction(() async {
         final newVersion = expectedVersion + 1;
@@ -95,7 +97,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (updatedRows == 0) {
           throw Exception(
-              'Concurrency conflict: expected version $expectedVersion for block ${block.id}',);
+            'Concurrency conflict: expected version $expectedVersion for block ${block.id}',
+          );
         }
 
         await _enqueueOrThrow(
@@ -120,8 +123,10 @@ class BlockRepositoryImpl implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     try {
       await _db.transaction(() async {
         final existingRecord = await (_db.select(_db.blocks)
@@ -134,7 +139,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (existingRecord.version != expectedVersion) {
           throw Exception(
-              'Concurrency conflict: expected version $expectedVersion for block $id',);
+            'Concurrency conflict: expected version $expectedVersion for block $id',
+          );
         }
 
         final newVersion = expectedVersion + 1;
@@ -153,7 +159,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (updatedRows == 0) {
           throw Exception(
-              'Concurrency conflict: expected version $expectedVersion for block $id',);
+            'Concurrency conflict: expected version $expectedVersion for block $id',
+          );
         }
 
         await _enqueueOrThrow(
@@ -203,7 +210,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
   @override
   Future<Result<List<domain.Block>>> getChildBlocks(
-      String parentBlockId,) async {
+    String parentBlockId,
+  ) async {
     try {
       final blocks = await (_db.select(_db.blocks)
             ..where((t) => t.parentBlockId.equals(parentBlockId))
@@ -242,7 +250,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (updatedRows == 0) {
           throw Exception(
-              'Concurrency conflict: expected version $originalExpectedVersion for block ${updatedOriginalBlock.id}',);
+            'Concurrency conflict: expected version $originalExpectedVersion for block ${updatedOriginalBlock.id}',
+          );
         }
 
         await _db.into(_db.blocks).insert(newBlock.toCompanion());
@@ -307,7 +316,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (survivorUpdatedRows == 0) {
           throw Exception(
-              'Concurrency conflict: expected version $survivorExpectedVersion for block ${mergedBlock.id}',);
+            'Concurrency conflict: expected version $survivorExpectedVersion for block ${mergedBlock.id}',
+          );
         }
 
         final victimNewVersion = victimExpectedVersion + 1;
@@ -326,7 +336,8 @@ class BlockRepositoryImpl implements BlockRepository {
 
         if (victimUpdatedRows == 0) {
           throw Exception(
-              'Concurrency conflict: expected version $victimExpectedVersion for block $deletedBlockId',);
+            'Concurrency conflict: expected version $victimExpectedVersion for block $deletedBlockId',
+          );
         }
 
         final batchId = const Uuid().v7();
@@ -373,7 +384,11 @@ class BlockRepositoryImpl implements BlockRepository {
 
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     try {
       await _db.transaction(() async {
         final existingRecord = await (_db.select(_db.blocks)
@@ -433,31 +448,38 @@ class BlockRepositoryImpl implements BlockRepository {
 
   @override
   Future<Result<List<domain.Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     try {
       final sourceBlockResult = await getBlock(sourceBlockId);
-      if (sourceBlockResult.isError) return Error((sourceBlockResult as Error).failure);
+      if (sourceBlockResult.isError)
+        return Error((sourceBlockResult as Error).failure);
       final sourceBlock = (sourceBlockResult as Success<domain.Block?>).value;
       if (sourceBlock == null) {
         return const Error(StorageFailure('Source block not found'));
       }
 
       final pageBlocksResult = await getBlocksForPage(sourceBlock.pageId);
-      if (pageBlocksResult.isError) return Error((pageBlocksResult as Error).failure);
+      if (pageBlocksResult.isError)
+        return Error((pageBlocksResult as Error).failure);
       final allBlocks = (pageBlocksResult as Success<List<domain.Block>>).value;
 
-      final updatedBlocks = BlockTreeService.moveBlock(sourceBlockId, intent, allBlocks);
+      final updatedBlocks =
+          BlockTreeService.moveBlock(sourceBlockId, intent, allBlocks);
       if (updatedBlocks.isEmpty) {
         return const Success([]);
       }
 
       final now = DateTime.now().toUtc();
-      final finalBlocks = updatedBlocks.map((b) => b.copyWith(
-        version: b.version + 1,
-        updatedAt: now,
-      ),).toList();
-
-
+      final finalBlocks = updatedBlocks
+          .map(
+            (b) => b.copyWith(
+              version: b.version + 1,
+              updatedAt: now,
+            ),
+          )
+          .toList();
 
       await _db.transaction(() async {
         for (final block in finalBlocks) {

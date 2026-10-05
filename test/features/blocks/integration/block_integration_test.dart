@@ -43,7 +43,9 @@ class FaultySyncQueueRepository implements SyncQueueRepository {
 
   @override
   Future<Result<SyncQueueItem?>> findPendingItem(
-          String table, String entityId,) =>
+    String table,
+    String entityId,
+  ) =>
       _inner.findPendingItem(table, entityId);
 
   @override
@@ -56,12 +58,15 @@ class FaultySyncQueueRepository implements SyncQueueRepository {
     DateTime? leaseUntil,
     String? lastError,
   }) =>
-      _inner.updateStatus(id, status,
-          attemptCount: attemptCount,
-          lastAttemptAt: lastAttemptAt,
-          nextRetryAt: nextRetryAt,
-          leaseUntil: leaseUntil,
-          lastError: lastError,);
+      _inner.updateStatus(
+        id,
+        status,
+        attemptCount: attemptCount,
+        lastAttemptAt: lastAttemptAt,
+        nextRetryAt: nextRetryAt,
+        leaseUntil: leaseUntil,
+        lastError: lastError,
+      );
 
   @override
   Future<Result<void>> clearCompleted() => _inner.clearCompleted();
@@ -141,9 +146,10 @@ void main() {
       final newB2 = createTestBlock('b2', 2000);
 
       final result = await repository.splitBlock(
-          updatedOriginalBlock: updatedB1,
-          originalExpectedVersion: updatedB1.version,
-          newBlock: newB2,);
+        updatedOriginalBlock: updatedB1,
+        originalExpectedVersion: updatedB1.version,
+        newBlock: newB2,
+      );
       expect(result.isSuccess, true);
 
       final queueItems = await database.select(database.syncQueue).get();
@@ -165,10 +171,11 @@ void main() {
 
       final merged = block1.copyWith(data: 'Merged');
       final result = await repository.mergeBlocks(
-          mergedBlock: merged,
-          survivorExpectedVersion: merged.version,
-          deletedBlockId: 'b2',
-          victimExpectedVersion: 1,);
+        mergedBlock: merged,
+        survivorExpectedVersion: merged.version,
+        deletedBlockId: 'b2',
+        victimExpectedVersion: 1,
+      );
       expect(result.isSuccess, true);
 
       final queueItems = await database.select(database.syncQueue).get();
@@ -193,9 +200,10 @@ void main() {
       final newB2 = createTestBlock('b2', 2000);
 
       final result = await repository.splitBlock(
-          updatedOriginalBlock: updatedB1,
-          originalExpectedVersion: updatedB1.version,
-          newBlock: newB2,);
+        updatedOriginalBlock: updatedB1,
+        originalExpectedVersion: updatedB1.version,
+        newBlock: newB2,
+      );
 
       expect(result.isError, true);
 
@@ -221,10 +229,11 @@ void main() {
 
       final merged = block1.copyWith(data: 'Merged');
       final result = await repository.mergeBlocks(
-          mergedBlock: merged,
-          survivorExpectedVersion: merged.version,
-          deletedBlockId: 'b2',
-          victimExpectedVersion: 1,);
+        mergedBlock: merged,
+        survivorExpectedVersion: merged.version,
+        deletedBlockId: 'b2',
+        victimExpectedVersion: 1,
+      );
 
       expect(result.isError, true);
 
@@ -281,7 +290,9 @@ void main() {
 
         // Move block 999 to before block 0
         final result = await repository.moveBlock(
-            'block_999', const DropIntent.before('block_0'),);
+          'block_999',
+          const DropIntent.before('block_0'),
+        );
         expect(result.isSuccess, true);
 
         stopwatch.stop();

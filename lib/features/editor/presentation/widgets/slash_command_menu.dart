@@ -91,8 +91,10 @@ class _SlashCommandMenuState extends State<SlashCommandMenu> {
                         return ListTile(
                           leading: Icon(option.icon),
                           title: Text(option.title),
-                          subtitle: Text(option.subtitle,
-                              style: const TextStyle(fontSize: 12),),
+                          subtitle: Text(
+                            option.subtitle,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                           onTap: () {
                             // SlashCommandMenu does not have context of nodeId.
                             // If this widget is used, it needs refactoring.

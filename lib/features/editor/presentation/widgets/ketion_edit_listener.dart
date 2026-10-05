@@ -47,7 +47,8 @@ class KetionEditListener extends EditListener {
   @override
   void onEdit(List<EditEvent> changeList) {
     debugPrint(
-        'KETION: EditListener.onEdit called. changeList length: ${changeList.length}',);
+      'KETION: EditListener.onEdit called. changeList length: ${changeList.length}',
+    );
     for (final change in changeList) {
       debugPrint('KETION: EditListener change event: ${change.runtimeType}');
     }
@@ -86,7 +87,8 @@ class KetionEditListener extends EditListener {
       currentParents[node.id] = node.metadata['parentBlockId'] as String?;
 
       currentContentHashes[node.id] = EditorIdentityRegistry.hashContent(
-          BlockDataSerializer.encodeDocumentNode(node),);
+        BlockDataSerializer.encodeDocumentNode(node),
+      );
     }
 
     final diff = registry.diffAgainstSnapshot(
@@ -130,7 +132,8 @@ class KetionEditListener extends EditListener {
     final restoredBlockId = registry.restoreFromTombstone(nodeId);
     if (restoredBlockId != null) {
       debugPrint(
-          'KETION: Restored node $nodeId from tombstone → block $restoredBlockId',);
+        'KETION: Restored node $nodeId from tombstone → block $restoredBlockId',
+      );
       // The block should still exist in SQLite (it was "deleted" but may still be there
       // depending on delete implementation). Re-create it if needed.
       _ensureBlockExists(nodeId, restoredBlockId);
@@ -157,7 +160,8 @@ class KetionEditListener extends EditListener {
     registry.removeContentHash(nodeId);
 
     debugPrint(
-        'KETION: Node $nodeId removed by undo. Tombstoned block $blockId.',);
+      'KETION: Node $nodeId removed by undo. Tombstoned block $blockId.',
+    );
 
     // Delete the block from Ketion
     _deleteBlock(blockId);
@@ -258,7 +262,8 @@ class KetionEditListener extends EditListener {
       registry.setContentHash(
         nodeId,
         EditorIdentityRegistry.hashContent(
-            BlockDataSerializer.encodeDocumentNode(node),),
+          BlockDataSerializer.encodeDocumentNode(node),
+        ),
       );
     } catch (e) {
       debugPrint('KETION: Failed to ensure block exists for node $nodeId: $e');
@@ -292,7 +297,8 @@ class KetionEditListener extends EditListener {
       registry.setContentHash(
         nodeId,
         EditorIdentityRegistry.hashContent(
-            BlockDataSerializer.encodeDocumentNode(node),),
+          BlockDataSerializer.encodeDocumentNode(node),
+        ),
       );
     } catch (e) {
       debugPrint('KETION: Failed to create block for node $nodeId: $e');

@@ -11,11 +11,11 @@ ExecutionInstruction splitToggleWhenEnterPressed({
       keyEvent.logicalKey != LogicalKeyboardKey.numpadEnter) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   final hardwareKeyboard = HardwareKeyboard.instance;
   if (hardwareKeyboard.isShiftPressed) {
     return ExecutionInstruction.continueExecution;
@@ -44,19 +44,19 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     final newNodeId = Editor.createNodeId();
     final isExpanded = node.metadata['isExpanded'] == true;
     final depth = node.metadata['depth'] as int? ?? 0;
-    
+
     // We insert a regular paragraph below the toggle with depth + 1
     // BUT wait, is the toggle expanded? If it's collapsed, it shouldn't be added as a child?
     // Actually, Notion expands the toggle and adds a child if it's collapsed.
-    
+
     final childDepth = depth + 1;
-    final parentBlockId = node.id; // super_editor_adapter usually figures it out by depth, but setting parentBlockId is good.
+    final parentBlockId = node
+        .id; // super_editor_adapter usually figures it out by depth, but setting parentBlockId is good.
 
     editContext.editor.execute([
       // First ensure the toggle is expanded
-      if (!isExpanded)
-        ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
-      
+      if (!isExpanded) ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
+
       // Then create a regular paragraph
       InsertNodeAfterNodeRequest(
         existingNodeId: node.id,
@@ -69,7 +69,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
           },
         ),
       ),
-      
+
       ChangeSelectionRequest(
         DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -97,11 +97,11 @@ ExecutionInstruction indentParagraphWhenTabPressed({
   if (keyEvent.logicalKey != LogicalKeyboardKey.tab) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   final hardwareKeyboard = HardwareKeyboard.instance;
   if (hardwareKeyboard.isShiftPressed) {
     return ExecutionInstruction.continueExecution;
@@ -132,11 +132,11 @@ ExecutionInstruction unindentParagraphWhenShiftTabPressed({
   if (keyEvent.logicalKey != LogicalKeyboardKey.tab) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   final hardwareKeyboard = HardwareKeyboard.instance;
   if (!hardwareKeyboard.isShiftPressed) {
     return ExecutionInstruction.continueExecution;
@@ -167,7 +167,7 @@ ExecutionInstruction unindentParagraphWhenBackspacePressed({
   if (keyEvent.logicalKey != LogicalKeyboardKey.backspace) {
     return ExecutionInstruction.continueExecution;
   }
-  
+
   if (keyEvent is! KeyDownEvent) {
     return ExecutionInstruction.continueExecution;
   }
@@ -198,5 +198,3 @@ ExecutionInstruction unindentParagraphWhenBackspacePressed({
 
   return ExecutionInstruction.haltExecution;
 }
-
-

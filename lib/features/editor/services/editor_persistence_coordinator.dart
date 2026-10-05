@@ -123,7 +123,9 @@ class EditorPersistenceCoordinator {
   }
 
   int? _getPreconditionVersion(
-      EditorPersistenceMutation mutation, String blockId,) {
+    EditorPersistenceMutation mutation,
+    String blockId,
+  ) {
     for (final pre in mutation.versionPreconditions) {
       if (pre.blockId == blockId) return pre.expectedVersion;
     }
@@ -142,7 +144,9 @@ class EditorPersistenceCoordinator {
   }
 
   bool _dependsOn(
-      EditorPersistenceMutation later, EditorPersistenceMutation earlier,) {
+    EditorPersistenceMutation later,
+    EditorPersistenceMutation earlier,
+  ) {
     return later.affectedBlockIds
         .intersection(earlier.affectedBlockIds)
         .isNotEmpty;
@@ -169,10 +173,10 @@ class EditorPersistenceCoordinator {
 
         final mutation = _queue.removeAt(0);
 
-
         if (_isBlocked(mutation)) {
           debugPrint(
-              'KETION: Mutation blocked due to dependencies: ${mutation.runtimeType}',);
+            'KETION: Mutation blocked due to dependencies: ${mutation.runtimeType}',
+          );
           _blocked.add(mutation);
           continue;
         }
@@ -182,13 +186,11 @@ class EditorPersistenceCoordinator {
 
           _successController.add(mutation);
         } catch (error) {
-
           debugPrint('KETION: Mutation failed: $error');
           _failed.add(mutation);
         }
       }
     } finally {
-
       _isProcessing = false;
       if (_queue.isNotEmpty || _pendingUpdates.isNotEmpty) {
         _scheduleProcessing();

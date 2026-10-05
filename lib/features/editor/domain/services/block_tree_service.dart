@@ -103,8 +103,10 @@ class BlockTreeService {
     DropIntent intent,
     List<Block> allBlocks,
   ) {
-    final sourceBlock = allBlocks.firstWhere((b) => b.id == sourceBlockId,
-        orElse: () => allBlocks.first,);
+    final sourceBlock = allBlocks.firstWhere(
+      (b) => b.id == sourceBlockId,
+      orElse: () => allBlocks.first,
+    );
     if (sourceBlock.id != sourceBlockId || sourceBlock.deleted) return [];
 
     final targetId = intent.when(
@@ -114,8 +116,10 @@ class BlockTreeService {
       unnest: (id) => id,
     );
 
-    final targetBlock = allBlocks.firstWhere((b) => b.id == targetId,
-        orElse: () => allBlocks.first,);
+    final targetBlock = allBlocks.firstWhere(
+      (b) => b.id == targetId,
+      orElse: () => allBlocks.first,
+    );
     if (targetBlock.id != targetId || targetBlock.deleted) return [];
 
     if (sourceBlock.pageId != targetBlock.pageId) {
@@ -296,8 +300,11 @@ class BlockTreeService {
   }
 
   static bool _isDepthValid(
-      String sourceBlockId, String newParentId, List<Block> allBlocks,
-      {int maxDepth = 20,}) {
+    String sourceBlockId,
+    String newParentId,
+    List<Block> allBlocks, {
+    int maxDepth = 20,
+  }) {
     final Map<String, Block> blockMap = {for (var b in allBlocks) b.id: b};
 
     // Calculate new parent depth
@@ -336,13 +343,15 @@ class BlockTreeService {
     required List<Block> currentBlocks,
   }) {
     final originalBlock = currentBlocks.firstWhere(
-        (b) => b.id == originalBlockId,
-        orElse: () => currentBlocks.first,);
+      (b) => b.id == originalBlockId,
+      orElse: () => currentBlocks.first,
+    );
     if (originalBlock.id != originalBlockId) return null;
 
     final targetSiblings = currentBlocks
         .where(
-            (b) => b.parentBlockId == originalBlock.parentBlockId && !b.deleted,)
+          (b) => b.parentBlockId == originalBlock.parentBlockId && !b.deleted,
+        )
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
 
@@ -383,12 +392,16 @@ class BlockTreeService {
     required List<Block> currentBlocks,
   }) {
     final survivorBlock = currentBlocks.firstWhere(
-        (b) => b.id == survivorBlockId,
-        orElse: () => currentBlocks.first,);
-    final victimBlock = currentBlocks.firstWhere((b) => b.id == victimBlockId,
-        orElse: () => currentBlocks.first,);
+      (b) => b.id == survivorBlockId,
+      orElse: () => currentBlocks.first,
+    );
+    final victimBlock = currentBlocks.firstWhere(
+      (b) => b.id == victimBlockId,
+      orElse: () => currentBlocks.first,
+    );
 
-    if (survivorBlock.id != survivorBlockId || victimBlock.id != victimBlockId) {
+    if (survivorBlock.id != survivorBlockId ||
+        victimBlock.id != victimBlockId) {
       return null;
     }
 
@@ -409,8 +422,10 @@ class BlockTreeService {
     required String blockId,
     required List<Block> currentBlocks,
   }) {
-    final block = currentBlocks.firstWhere((b) => b.id == blockId,
-        orElse: () => currentBlocks.first,);
+    final block = currentBlocks.firstWhere(
+      (b) => b.id == blockId,
+      orElse: () => currentBlocks.first,
+    );
     if (block.id != blockId) return null;
 
     return persistence_mutations.DeleteBlockMutation(
@@ -435,8 +450,10 @@ class BlockTreeService {
     String? parentBlockId;
 
     if (previousBlockId != null) {
-      previousBlock = currentBlocks.firstWhere((b) => b.id == previousBlockId,
-          orElse: () => currentBlocks.first,);
+      previousBlock = currentBlocks.firstWhere(
+        (b) => b.id == previousBlockId,
+        orElse: () => currentBlocks.first,
+      );
       if (previousBlock.id == previousBlockId) {
         parentBlockId = previousBlock.parentBlockId;
       } else {
@@ -445,8 +462,10 @@ class BlockTreeService {
     }
 
     if (nextBlockId != null) {
-      nextBlock = currentBlocks.firstWhere((b) => b.id == nextBlockId,
-          orElse: () => currentBlocks.first,);
+      nextBlock = currentBlocks.firstWhere(
+        (b) => b.id == nextBlockId,
+        orElse: () => currentBlocks.first,
+      );
       if (nextBlock.id == nextBlockId) {
         if (parentBlockId == null) {
           parentBlockId = nextBlock.parentBlockId;
@@ -460,7 +479,9 @@ class BlockTreeService {
     }
 
     final newPosition = SiblingPositionManager.calculatePositionBetweenBlocks(
-        previousBlock, nextBlock,);
+      previousBlock,
+      nextBlock,
+    );
 
     return persistence_mutations.InsertBlockMutation(
       pageId: pageId,
@@ -481,8 +502,10 @@ class BlockTreeService {
     required String? nextBlockId,
     required List<Block> currentBlocks,
   }) {
-    final block = currentBlocks.firstWhere((b) => b.id == blockId,
-        orElse: () => currentBlocks.first,);
+    final block = currentBlocks.firstWhere(
+      (b) => b.id == blockId,
+      orElse: () => currentBlocks.first,
+    );
     if (block.id != blockId) return null;
 
     Block? previousBlock;
@@ -490,8 +513,10 @@ class BlockTreeService {
     String? parentBlockId;
 
     if (previousBlockId != null) {
-      previousBlock = currentBlocks.firstWhere((b) => b.id == previousBlockId,
-          orElse: () => currentBlocks.first,);
+      previousBlock = currentBlocks.firstWhere(
+        (b) => b.id == previousBlockId,
+        orElse: () => currentBlocks.first,
+      );
       if (previousBlock.id == previousBlockId) {
         parentBlockId = previousBlock.parentBlockId;
       } else {
@@ -500,8 +525,10 @@ class BlockTreeService {
     }
 
     if (nextBlockId != null) {
-      nextBlock = currentBlocks.firstWhere((b) => b.id == nextBlockId,
-          orElse: () => currentBlocks.first,);
+      nextBlock = currentBlocks.firstWhere(
+        (b) => b.id == nextBlockId,
+        orElse: () => currentBlocks.first,
+      );
       if (nextBlock.id == nextBlockId) {
         if (parentBlockId == null) {
           parentBlockId = nextBlock.parentBlockId;
@@ -514,7 +541,9 @@ class BlockTreeService {
     }
 
     final newPosition = SiblingPositionManager.calculatePositionBetweenBlocks(
-        previousBlock, nextBlock,);
+      previousBlock,
+      nextBlock,
+    );
 
     return persistence_mutations.MoveBlockMutation(
       pageId: pageId,

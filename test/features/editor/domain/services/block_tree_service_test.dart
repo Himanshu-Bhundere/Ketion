@@ -124,7 +124,10 @@ void main() {
 
       // Try to move a block that is not in the current page
       final updated = BlockTreeService.moveBlock(
-          'unknown_block', const DropIntent.after('a'), blocks,);
+        'unknown_block',
+        const DropIntent.after('a'),
+        blocks,
+      );
       expect(updated, isEmpty);
     });
   });

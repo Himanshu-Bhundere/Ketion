@@ -84,13 +84,17 @@ class UpdateBlockMutation extends ContentMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: blockId, expectedVersion: expectedVersion,),
+          blockId: blockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.increment,),
+          blockId: blockId,
+          operation: VersionChangeOperation.increment,
+        ),
       ];
 
   @override
@@ -143,7 +147,9 @@ class InsertBlockMutation extends StructuralMutation {
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.create,),
+          blockId: blockId,
+          operation: VersionChangeOperation.create,
+        ),
       ];
 
   @override
@@ -182,13 +188,17 @@ class DeleteBlockMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: blockId, expectedVersion: expectedVersion,),
+          blockId: blockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.softDelete,),
+          blockId: blockId,
+          operation: VersionChangeOperation.softDelete,
+        ),
       ];
 
   @override
@@ -230,13 +240,17 @@ class RestoreBlockMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: blockId, expectedVersion: expectedVersion,),
+          blockId: blockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.increment,),
+          blockId: blockId,
+          operation: VersionChangeOperation.increment,
+        ),
       ];
 
   @override
@@ -292,16 +306,21 @@ class SplitBlockMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: originalBlockId, expectedVersion: expectedVersion,),
+          blockId: originalBlockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: originalBlockId,
-            operation: VersionChangeOperation.increment,),
+          blockId: originalBlockId,
+          operation: VersionChangeOperation.increment,
+        ),
         BlockVersionTransition(
-            blockId: newBlockId, operation: VersionChangeOperation.create,),
+          blockId: newBlockId,
+          operation: VersionChangeOperation.create,
+        ),
       ];
 
   @override
@@ -351,19 +370,25 @@ class MergeBlocksMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: survivorBlockId, expectedVersion: survivorExpectedVersion,),
+          blockId: survivorBlockId,
+          expectedVersion: survivorExpectedVersion,
+        ),
         BlockVersionPrecondition(
-            blockId: victimBlockId, expectedVersion: victimExpectedVersion,),
+          blockId: victimBlockId,
+          expectedVersion: victimExpectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: survivorBlockId,
-            operation: VersionChangeOperation.increment,),
+          blockId: survivorBlockId,
+          operation: VersionChangeOperation.increment,
+        ),
         BlockVersionTransition(
-            blockId: victimBlockId,
-            operation: VersionChangeOperation.softDelete,),
+          blockId: victimBlockId,
+          operation: VersionChangeOperation.softDelete,
+        ),
       ];
 
   @override
@@ -419,13 +444,17 @@ class MoveBlockMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: blockId, expectedVersion: expectedVersion,),
+          blockId: blockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.increment,),
+          blockId: blockId,
+          operation: VersionChangeOperation.increment,
+        ),
       ];
 
   @override
@@ -466,13 +495,17 @@ class ChangeBlockTypeMutation extends StructuralMutation {
   @override
   List<BlockVersionPrecondition> get versionPreconditions => [
         BlockVersionPrecondition(
-            blockId: blockId, expectedVersion: expectedVersion,),
+          blockId: blockId,
+          expectedVersion: expectedVersion,
+        ),
       ];
 
   @override
   List<BlockVersionTransition> get versionTransitions => [
         BlockVersionTransition(
-            blockId: blockId, operation: VersionChangeOperation.increment,),
+          blockId: blockId,
+          operation: VersionChangeOperation.increment,
+        ),
       ];
 
   @override

@@ -41,8 +41,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -73,14 +75,18 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -90,7 +96,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     final updatedBlocks =
         BlockTreeService.moveBlock(sourceBlockId, intent, testBlocks);
     for (final updatedBlock in updatedBlocks) {
@@ -147,8 +155,12 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
 
   @override
-  Future<Result<void>> restoreBlock(String id, String data,
-          String? parentBlockId, double position,) async =>
+  Future<Result<void>> restoreBlock(
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async =>
       const Success(null);
 }
 
@@ -164,8 +176,10 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     calls.add('updateBlock:${block.id}:v$expectedVersion');
     return super.updateBlock(block, expectedVersion: expectedVersion);
   }
@@ -185,8 +199,10 @@ class SpyBlockRepository extends DummyBlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     calls.add('deleteBlock:$id');
     return super.deleteBlock(id, expectedVersion: expectedVersion);
   }
@@ -201,7 +217,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -328,12 +345,18 @@ void main() {
           spyRepo.calls.where((c) => c.startsWith('updateBlock:')).toList();
 
       // Crucial part: it MUST create a block (InsertBlockMutation), not update.
-      expect(createdCalls.length, 1,
-          reason:
-              'Unowned insertion should create a block via InsertBlockMutation',);
-      expect(updateCalls.length, 0,
-          reason:
-              'Unowned insertion should not trigger an updateBlock for the new block',);
+      expect(
+        createdCalls.length,
+        1,
+        reason:
+            'Unowned insertion should create a block via InsertBlockMutation',
+      );
+      expect(
+        updateCalls.length,
+        0,
+        reason:
+            'Unowned insertion should not trigger an updateBlock for the new block',
+      );
 
       debugDefaultTargetPlatformOverride = null;
     });
@@ -390,8 +413,11 @@ void main() {
 
       final createdCalls =
           spyRepo.calls.where((c) => c.startsWith('createBlock:')).toList();
-      expect(createdCalls.length, 3,
-          reason: 'Three blocks should have been created',);
+      expect(
+        createdCalls.length,
+        3,
+        reason: 'Three blocks should have been created',
+      );
 
       // Check document order/positions.
       // Since they were inserted after the first block (position 100.0), their positions should be monotonically increasing.

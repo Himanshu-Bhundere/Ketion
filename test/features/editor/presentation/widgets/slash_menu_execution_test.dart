@@ -41,14 +41,16 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage, {String initialBlockType = 'text'}) async =>
+  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
+          {String initialBlockType = 'text'}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
   Future<Result<List<page_entity.Page>>> getPages() async => Success([page]);
   @override
   Future<Result<page_entity.Page>> updatePage(
-          page_entity.Page updatedPage,) async =>
+    page_entity.Page updatedPage,
+  ) async =>
       Success(updatedPage);
   @override
   Future<Result<List<page_entity.Page>>> getChildPages(String parentId) async =>
@@ -72,8 +74,10 @@ class DummyBlockRepository implements BlockRepository {
   }
 
   @override
-  Future<Result<void>> deleteBlock(String id,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> deleteBlock(
+    String id, {
+    required int expectedVersion,
+  }) async {
     testBlocks.removeWhere((b) => b.id == id);
     return const Success(null);
   }
@@ -91,14 +95,18 @@ class DummyBlockRepository implements BlockRepository {
       Success(testBlocks);
   @override
   Future<Result<List<Block>>> getChildBlocks(String parentBlockId) async {
-    return Success(testBlocks
-        .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
-        .toList(),);
+    return Success(
+      testBlocks
+          .where((b) => b.parentBlockId == parentBlockId && !b.deleted)
+          .toList(),
+    );
   }
 
   @override
-  Future<Result<void>> updateBlock(Block block,
-      {required int expectedVersion,}) async {
+  Future<Result<void>> updateBlock(
+    Block block, {
+    required int expectedVersion,
+  }) async {
     final index = testBlocks.indexWhere((b) => b.id == block.id);
     if (index != -1) {
       testBlocks[index] = block;
@@ -109,7 +117,9 @@ class DummyBlockRepository implements BlockRepository {
 
   @override
   Future<Result<List<Block>>> moveBlock(
-      String sourceBlockId, DropIntent intent,) async {
+    String sourceBlockId,
+    DropIntent intent,
+  ) async {
     return const Success([]);
   }
 
@@ -150,7 +160,11 @@ class DummyBlockRepository implements BlockRepository {
   Future<Result<void>> hardDeleteBlock(String id) async => const Success(null);
   @override
   Future<Result<void>> restoreBlock(
-      String id, String data, String? parentBlockId, double position,) async {
+    String id,
+    String data,
+    String? parentBlockId,
+    double position,
+  ) async {
     testBlocks.add(
       Block(
         id: id,
@@ -176,7 +190,8 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
   }
   if (attempts >= 50) {
     throw Exception(
-        'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',);
+      'pumpUntilInitialized timed out waiting for CircularProgressIndicator to disappear',
+    );
   }
   await tester.pump(const Duration(milliseconds: 50));
 }
@@ -184,8 +199,10 @@ Future<void> pumpUntilInitialized(WidgetTester tester) async {
 void main() {
   const pageId = 'test-page';
 
-  Widget buildTestApp(
-      {required List<Block> blocks, required page_entity.Page testPage,}) {
+  Widget buildTestApp({
+    required List<Block> blocks,
+    required page_entity.Page testPage,
+  }) {
     return ProviderScope(
       overrides: [
         getPageBlocksUseCaseProvider
@@ -260,8 +277,10 @@ void main() {
 
       final List<SlashCommandOption> options =
           hostState.getSlashOptionsForTesting('') as List<SlashCommandOption>;
-      final option = options.firstWhere((o) => o.title == optionName,
-          orElse: () => throw Exception('Option $optionName not found'),);
+      final option = options.firstWhere(
+        (o) => o.title == optionName,
+        orElse: () => throw Exception('Option $optionName not found'),
+      );
 
       if (!option.isSupported) return;
 
@@ -303,7 +322,8 @@ void main() {
           editor.execute(requests);
         } catch (e) {
           fail(
-              'Option "${option.title}" threw an exception during execution: $e',);
+            'Option "${option.title}" threw an exception during execution: $e',
+          );
         }
 
         // Use fixed pump instead of pumpAndSettle to prevent timeout from blinking caret
@@ -320,9 +340,12 @@ void main() {
             newBlockType != oldBlockType ||
             document.first.runtimeType != oldNodeType;
 
-        expect(mutated, isTrue,
-            reason:
-                'Option "${option.title}" executed but did not mutate the document as expected.',);
+        expect(
+          mutated,
+          isTrue,
+          reason:
+              'Option "${option.title}" executed but did not mutate the document as expected.',
+        );
       }
     });
   }
@@ -452,8 +475,10 @@ void main() {
 
     expect(document.nodeCount, 1, reason: 'No orphaned nodes should remain');
     expect(document.first is ParagraphNode, isTrue);
-    expect((document.first as ParagraphNode).metadata['blockType'],
-        header1Attribution,);
+    expect(
+      (document.first as ParagraphNode).metadata['blockType'],
+      header1Attribution,
+    );
   });
 
   testWidgets('S8: Numbered list item -> Bulleted List', (tester) async {
@@ -575,104 +600,109 @@ void main() {
   });
 
   testWidgets('Slash deletion, caret restoration, and undo/redo',
-        (WidgetTester tester) async {
-      const pageId = 'p1';
-      final testPage = page_entity.Page(
-        id: pageId,
-        title: 'Test',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      (WidgetTester tester) async {
+    const pageId = 'p1';
+    final testPage = page_entity.Page(
+      id: pageId,
+      title: 'Test',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
 
-      final initialBlock = Block(
-        id: 'b1',
-        pageId: pageId,
-        type: 'paragraph',
-        data: jsonEncode({
-          'spans': [
-            {'text': '/check'},
-          ],
-        }),
-        position: 1000,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+    final initialBlock = Block(
+      id: 'b1',
+      pageId: pageId,
+      type: 'paragraph',
+      data: jsonEncode({
+        'spans': [
+          {'text': '/check'},
+        ],
+      }),
+      position: 1000,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
 
-      await tester
-          .pumpWidget(buildTestApp(blocks: [initialBlock], testPage: testPage));
-      await pumpUntilInitialized(tester);
+    await tester
+        .pumpWidget(buildTestApp(blocks: [initialBlock], testPage: testPage));
+    await pumpUntilInitialized(tester);
 
-      final State state = tester.state(find.byType(SuperEditorHost));
-      final dynamic hostState = state;
-      final editor = hostState.editor as Editor;
-      final document = hostState.document as MutableDocument;
+    final State state = tester.state(find.byType(SuperEditorHost));
+    final dynamic hostState = state;
+    final editor = hostState.editor as Editor;
+    final document = hostState.document as MutableDocument;
 
-      final firstNodeId = document.first.id;
+    final firstNodeId = document.first.id;
 
-      // Select the word "/check"
-      editor.execute([
-        ChangeSelectionRequest(
-          DocumentSelection.collapsed(
-            position: DocumentPosition(
-              nodeId: firstNodeId,
-              nodePosition: const TextNodePosition(offset: 6),
-            ),
+    // Select the word "/check"
+    editor.execute([
+      ChangeSelectionRequest(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: firstNodeId,
+            nodePosition: const TextNodePosition(offset: 6),
           ),
-          SelectionChangeType.placeCaret,
-          SelectionReason.userInteraction,
         ),
+        SelectionChangeType.placeCaret,
+        SelectionReason.userInteraction,
+      ),
+    ]);
+
+    final options =
+        hostState.getSlashOptionsForTesting('check') as List<dynamic>;
+    final checklistOption = options.firstWhere((o) => o.title == 'Checklist');
+
+    final target = SlashCommandTarget(
+        nodeId: firstNodeId, slashStartIndex: 0, slashEndIndex: 6);
+    if (checklistOption is KetionSlashCommand) {
+      final innerRequests =
+          checklistOption.getEditRequestsWithDoc(firstNodeId, document);
+      editor.execute([
+        ConvertSlashCommandRequest(
+          target: target,
+          innerRequest: innerRequests.first,
+        ),
+        ...innerRequests.skip(1),
       ]);
-      
-      final options = hostState.getSlashOptionsForTesting('check') as List<dynamic>;
-      final checklistOption = options.firstWhere((o) => o.title == 'Checklist');
+    } else if (checklistOption is SuperEditorSlashCommandOption) {
+      final innerRequests = checklistOption.getEditRequests(firstNodeId);
+      editor.execute([
+        ConvertSlashCommandRequest(
+          target: target,
+          innerRequest: innerRequests.first,
+        ),
+        ...innerRequests.skip(1),
+      ]);
+    }
 
-      final target = SlashCommandTarget(nodeId: firstNodeId, slashStartIndex: 0, slashEndIndex: 6);
-      if (checklistOption is KetionSlashCommand) {
-        final innerRequests = checklistOption.getEditRequestsWithDoc(firstNodeId, document);
-        editor.execute([
-          ConvertSlashCommandRequest(
-            target: target,
-            innerRequest: innerRequests.first,
-          ),
-          ...innerRequests.skip(1),
-        ]);
-      } else if (checklistOption is SuperEditorSlashCommandOption) {
-        final innerRequests = checklistOption.getEditRequests(firstNodeId);
-        editor.execute([
-          ConvertSlashCommandRequest(
-            target: target,
-            innerRequest: innerRequests.first,
-          ),
-          ...innerRequests.skip(1),
-        ]);
-      }
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+    // After execution, the slash text should be deleted
+    // and replaced by a task node.
+    expect(document.nodeCount, 1);
+    expect(document.first is TaskNode, isTrue,
+        reason:
+            'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}');
 
-      // After execution, the slash text should be deleted
-      // and replaced by a task node.
-      expect(document.nodeCount, 1);
-      expect(document.first is TaskNode, isTrue, reason: 'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}');
-      
-      // Now undo
-      editor.undo();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+    // Now undo
+    editor.undo();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-      expect(document.first is ParagraphNode, isTrue);
-      expect((document.first as ParagraphNode).text.toPlainText(), '/check');
-      
-      // Check if selection is restored
-      final selection = editor.context.composer.selection;
-      expect(selection, isNotNull);
-      expect(selection!.extent.nodeId, document.first.id);
+    expect(document.first is ParagraphNode, isTrue);
+    expect((document.first as ParagraphNode).text.toPlainText(), '/check');
 
-      // Now redo
-      editor.redo();
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+    // Check if selection is restored
+    final selection = editor.context.composer.selection;
+    expect(selection, isNotNull);
+    expect(selection!.extent.nodeId, document.first.id);
 
-      expect(document.first is TaskNode, isTrue);
-    });
+    // Now redo
+    editor.redo();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(document.first is TaskNode, isTrue);
+  });
 }

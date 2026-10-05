@@ -522,8 +522,10 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     final settings = settingsAsync.value;
     final screenWidth = MediaQuery.of(context).size.width;
     final layoutConfig = settings != null
-        ? EditorLayoutConfig.fromAppearance(settings.editorAppearance,
-            screenWidth: screenWidth,)
+        ? EditorLayoutConfig.fromAppearance(
+            settings.editorAppearance,
+            screenWidth: screenWidth,
+          )
         : EditorLayoutConfig(
             contentWidth: 800,
             padding: EdgeInsets.symmetric(
@@ -625,7 +627,9 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
                               return _buildBlockWidget(
-                                  visibleBlocks[index], index,);
+                                visibleBlocks[index],
+                                index,
+                              );
                             },
                             childCount: visibleBlocks.length,
                           ),

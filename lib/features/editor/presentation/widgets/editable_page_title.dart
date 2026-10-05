@@ -68,7 +68,9 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
   void _onChanged(String _) {
     _debounce?.cancel();
     _debounce = Timer(
-        const Duration(milliseconds: 500), () => unawaited(_flushTitle()),);
+      const Duration(milliseconds: 500),
+      () => unawaited(_flushTitle()),
+    );
   }
 
   Future<void> _flushTitle() async {
@@ -83,8 +85,9 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content:
-                      Text('Could not save title. Your edit will be retried.'),),
+                content:
+                    Text('Could not save title. Your edit will be retried.'),
+              ),
             );
             _debounce = Timer(
               const Duration(seconds: 2),

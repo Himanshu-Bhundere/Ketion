@@ -97,7 +97,10 @@ class SplitBlockCommand implements EditorCommand {
   @override
   Future<void> execute(EditorStateNotifier controller) async {
     await controller.splitBlockDirectly(
-        updatedOriginalBlock, newBlock, index + 1,);
+      updatedOriginalBlock,
+      newBlock,
+      index + 1,
+    );
   }
 
   @override
@@ -127,7 +130,10 @@ class MergeBlocksCommand implements EditorCommand {
   @override
   Future<void> undo(EditorStateNotifier controller) async {
     await controller.splitBlockDirectly(
-        previousBlock, currentBlock, currentBlockIndex,);
+      previousBlock,
+      currentBlock,
+      currentBlockIndex,
+    );
   }
 }
 

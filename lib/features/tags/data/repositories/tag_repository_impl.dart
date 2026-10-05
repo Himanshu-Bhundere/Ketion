@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -165,6 +166,139 @@ class TagRepositoryImpl implements TagRepository {
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
       _logger.e('Failed to get all tags', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<domain.Tag>>> getTagsForPage(String pageId) async {
+    try {
+      final query = _db.select(_db.pageTags).join([
+        innerJoin(_db.tags, _db.tags.id.equalsExp(_db.pageTags.tagId)),
+      ])
+        ..where(
+          _db.pageTags.pageId.equals(pageId) & _db.tags.deleted.equals(false),
+        );
+      final rows = await query.get();
+      final tags = rows.map((r) => r.readTable(_db.tags).toDomain()).toList();
+      return Success(tags);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get tags for page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> assignTagToPage(String pageId, String tagId) async {
+    try {
+      await _db.transaction(() async {
+        await _db.into(_db.pageTags).insert(
+              PageTagsCompanion.insert(pageId: pageId, tagId: tagId),
+              mode: InsertMode.insertOrIgnore,
+            );
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'page_tags',
+            entityId: '$pageId:$tagId',
+            operation: 'create',
+            payload: jsonEncode({'pageId': pageId, 'tagId': tagId}),
+            batchId: null,
+            version: 1,
+            updatedAt: DateTime.now().toUtc(),
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to assign tag to page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> removeTagFromPage(String pageId, String tagId) async {
+    try {
+      await _db.transaction(() async {
+        await (_db.delete(_db.pageTags)
+              ..where((t) => t.pageId.equals(pageId) & t.tagId.equals(tagId)))
+            .go();
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'page_tags',
+            entityId: '$pageId:$tagId',
+            operation: 'delete',
+            payload: jsonEncode({'pageId': pageId, 'tagId': tagId}),
+            batchId: null,
+            version: 1,
+            updatedAt: DateTime.now().toUtc(),
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to remove tag from page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> setPageTags(String pageId, List<String> tagIds) async {
+    try {
+      await _db.transaction(() async {
+        final existingRecords = await (_db.select(_db.pageTags)
+              ..where((t) => t.pageId.equals(pageId)))
+            .get();
+        final currentTagIds = existingRecords.map((r) => r.tagId).toSet();
+        final targetTagIds = tagIds.toSet();
+
+        final toRemove = currentTagIds.difference(targetTagIds);
+        for (final tagId in toRemove) {
+          await (_db.delete(_db.pageTags)
+                ..where((t) => t.pageId.equals(pageId) & t.tagId.equals(tagId)))
+              .go();
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'page_tags',
+              entityId: '$pageId:$tagId',
+              operation: 'delete',
+              payload: jsonEncode({'pageId': pageId, 'tagId': tagId}),
+              batchId: null,
+              version: 1,
+              updatedAt: DateTime.now().toUtc(),
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
+        }
+
+        final toAdd = targetTagIds.difference(currentTagIds);
+        for (final tagId in toAdd) {
+          await _db.into(_db.pageTags).insert(
+                PageTagsCompanion.insert(pageId: pageId, tagId: tagId),
+                mode: InsertMode.insertOrIgnore,
+              );
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'page_tags',
+              entityId: '$pageId:$tagId',
+              operation: 'create',
+              payload: jsonEncode({'pageId': pageId, 'tagId': tagId}),
+              batchId: null,
+              version: 1,
+              updatedAt: DateTime.now().toUtc(),
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
+        }
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to set page tags', e, stackTrace);
       return Error(StorageFailure(e.toString()));
     }
   }

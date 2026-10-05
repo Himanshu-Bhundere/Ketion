@@ -10,6 +10,10 @@ import '../../domain/usecases/create_tag_usecase.dart';
 import '../../domain/usecases/delete_tag_usecase.dart';
 import '../../domain/usecases/get_tag_usecase.dart';
 import '../../domain/usecases/update_tag_usecase.dart';
+import '../../domain/usecases/get_page_tags_usecase.dart';
+import '../../domain/usecases/assign_tag_to_page_usecase.dart';
+import '../../domain/usecases/remove_tag_from_page_usecase.dart';
+import '../../domain/usecases/set_page_tags_usecase.dart';
 
 final tagRepositoryProvider = Provider<TagRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -37,9 +41,40 @@ final deleteTagUseCaseProvider = Provider<DeleteTagUseCase>((ref) {
   return DeleteTagUseCase(repository);
 });
 
+final getPageTagsUseCaseProvider = Provider<GetPageTagsUseCase>((ref) {
+  final repository = ref.watch(tagRepositoryProvider);
+  return GetPageTagsUseCase(repository);
+});
+
+final assignTagToPageUseCaseProvider = Provider<AssignTagToPageUseCase>((ref) {
+  final repository = ref.watch(tagRepositoryProvider);
+  return AssignTagToPageUseCase(repository);
+});
+
+final removeTagFromPageUseCaseProvider =
+    Provider<RemoveTagFromPageUseCase>((ref) {
+  final repository = ref.watch(tagRepositoryProvider);
+  return RemoveTagFromPageUseCase(repository);
+});
+
+final setPageTagsUseCaseProvider = Provider<SetPageTagsUseCase>((ref) {
+  final repository = ref.watch(tagRepositoryProvider);
+  return SetPageTagsUseCase(repository);
+});
+
 final tagsFutureProvider = FutureProvider<List<Tag>>((ref) async {
   final repository = ref.watch(tagRepositoryProvider);
   final result = await repository.getAllTags();
+  return result.fold<List<Tag>>(
+    (tags) => tags,
+    (failure) => throw Exception(failure.message),
+  );
+});
+
+final pageTagsFutureProvider =
+    FutureProvider.family<List<Tag>, String>((ref, pageId) async {
+  final getPageTags = ref.watch(getPageTagsUseCaseProvider);
+  final result = await getPageTags(pageId);
   return result.fold<List<Tag>>(
     (tags) => tags,
     (failure) => throw Exception(failure.message),

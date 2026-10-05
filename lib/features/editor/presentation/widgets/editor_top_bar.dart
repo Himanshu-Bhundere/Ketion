@@ -8,8 +8,6 @@ import 'package:ketion/features/editor/presentation/widgets/editor_history_contr
 import 'package:ketion/features/tags/presentation/widgets/tag_picker_sheet.dart';
 import 'package:ketion/features/collections/presentation/widgets/collection_picker_sheet.dart';
 import 'package:ketion/features/reminders/presentation/widgets/alarm_picker_sheet.dart';
-import 'package:ketion/features/tags/domain/entities/tag.dart';
-import 'package:ketion/features/collections/domain/entities/collection.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/features/blocks/presentation/providers/block_providers.dart';
 import 'package:ketion/features/import_export/presentation/providers/import_export_providers.dart';
@@ -135,23 +133,25 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                       }
                       break;
                     case 'tags':
-                      await showModalBottomSheet<Tag>(
+                      await showModalBottomSheet<void>(
                         context: context,
-                        builder: (context) => const TagPickerSheet(),
+                        isScrollControlled: true,
+                        builder: (context) => TagPickerSheet(pageId: pageId),
                       );
                       break;
                     case 'collections':
-                      await showModalBottomSheet<Collection>(
+                      await showModalBottomSheet<void>(
                         context: context,
-                        builder: (context) => const CollectionPickerSheet(),
+                        isScrollControlled: true,
+                        builder: (context) =>
+                            CollectionPickerSheet(pageId: pageId),
                       );
                       break;
                     case 'alarm':
                       await showModalBottomSheet<void>(
                         context: context,
                         isScrollControlled: true,
-                        builder: (context) =>
-                            AlarmPickerSheet(pageId: pageId),
+                        builder: (context) => AlarmPickerSheet(pageId: pageId),
                       );
                       break;
                     case 'export_md':
@@ -213,8 +213,10 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                   const PopupMenuDivider(),
                   const PopupMenuItem(
                     value: 'move_to_trash',
-                    child: Text('Move to Trash',
-                        style: TextStyle(color: Colors.red),),
+                    child: Text(
+                      'Move to Trash',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -165,6 +166,174 @@ class CollectionRepositoryImpl implements CollectionRepository {
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
       _logger.e('Failed to get all collections', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<domain.Collection>>> getCollectionsForPage(
+    String pageId,
+  ) async {
+    try {
+      final query = _db.select(_db.pageCollections).join([
+        innerJoin(
+          _db.collections,
+          _db.collections.id.equalsExp(_db.pageCollections.collectionId),
+        ),
+      ])
+        ..where(
+          _db.pageCollections.pageId.equals(pageId) &
+              _db.collections.deleted.equals(false),
+        );
+      final rows = await query.get();
+      final collections =
+          rows.map((r) => r.readTable(_db.collections).toDomain()).toList();
+      return Success(collections);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get collections for page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> assignCollectionToPage(
+    String pageId,
+    String collectionId,
+  ) async {
+    try {
+      await _db.transaction(() async {
+        await _db.into(_db.pageCollections).insert(
+              PageCollectionsCompanion.insert(
+                pageId: pageId,
+                collectionId: collectionId,
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'page_collections',
+            entityId: '$pageId:$collectionId',
+            operation: 'create',
+            payload:
+                jsonEncode({'pageId': pageId, 'collectionId': collectionId}),
+            batchId: null,
+            version: 1,
+            updatedAt: DateTime.now().toUtc(),
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to assign collection to page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> removeCollectionFromPage(
+    String pageId,
+    String collectionId,
+  ) async {
+    try {
+      await _db.transaction(() async {
+        await (_db.delete(_db.pageCollections)
+              ..where(
+                (t) =>
+                    t.pageId.equals(pageId) &
+                    t.collectionId.equals(collectionId),
+              ))
+            .go();
+        await _syncQueue.enqueueOrCoalesce(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'page_collections',
+            entityId: '$pageId:$collectionId',
+            operation: 'delete',
+            payload:
+                jsonEncode({'pageId': pageId, 'collectionId': collectionId}),
+            batchId: null,
+            version: 1,
+            updatedAt: DateTime.now().toUtc(),
+            createdAt: DateTime.now().toUtc(),
+          ),
+        );
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to remove collection from page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> setPageCollections(
+    String pageId,
+    List<String> collectionIds,
+  ) async {
+    try {
+      await _db.transaction(() async {
+        final existingRecords = await (_db.select(_db.pageCollections)
+              ..where((t) => t.pageId.equals(pageId)))
+            .get();
+        final currentCollectionIds =
+            existingRecords.map((r) => r.collectionId).toSet();
+        final targetCollectionIds = collectionIds.toSet();
+
+        final toRemove = currentCollectionIds.difference(targetCollectionIds);
+        for (final colId in toRemove) {
+          await (_db.delete(_db.pageCollections)
+                ..where(
+                  (t) => t.pageId.equals(pageId) & t.collectionId.equals(colId),
+                ))
+              .go();
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'page_collections',
+              entityId: '$pageId:$colId',
+              operation: 'delete',
+              payload: jsonEncode(
+                {'pageId': pageId, 'collectionId': colId},
+              ),
+              batchId: null,
+              version: 1,
+              updatedAt: DateTime.now().toUtc(),
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
+        }
+
+        final toAdd = targetCollectionIds.difference(currentCollectionIds);
+        for (final colId in toAdd) {
+          await _db.into(_db.pageCollections).insert(
+                PageCollectionsCompanion.insert(
+                  pageId: pageId,
+                  collectionId: colId,
+                ),
+                mode: InsertMode.insertOrIgnore,
+              );
+          await _syncQueue.enqueueOrCoalesce(
+            SyncQueueItem(
+              id: const Uuid().v7(),
+              entityTable: 'page_collections',
+              entityId: '$pageId:$colId',
+              operation: 'create',
+              payload: jsonEncode(
+                {'pageId': pageId, 'collectionId': colId},
+              ),
+              batchId: null,
+              version: 1,
+              updatedAt: DateTime.now().toUtc(),
+              createdAt: DateTime.now().toUtc(),
+            ),
+          );
+        }
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to set page collections', e, stackTrace);
       return Error(StorageFailure(e.toString()));
     }
   }

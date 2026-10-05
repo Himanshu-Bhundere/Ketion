@@ -10,6 +10,10 @@ import '../../domain/usecases/create_collection_usecase.dart';
 import '../../domain/usecases/delete_collection_usecase.dart';
 import '../../domain/usecases/get_collection_usecase.dart';
 import '../../domain/usecases/update_collection_usecase.dart';
+import '../../domain/usecases/get_page_collections_usecase.dart';
+import '../../domain/usecases/assign_collection_to_page_usecase.dart';
+import '../../domain/usecases/remove_collection_from_page_usecase.dart';
+import '../../domain/usecases/set_page_collections_usecase.dart';
 
 final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
@@ -40,9 +44,43 @@ final deleteCollectionUseCaseProvider =
   return DeleteCollectionUseCase(repository);
 });
 
+final getPageCollectionsUseCaseProvider =
+    Provider<GetPageCollectionsUseCase>((ref) {
+  final repository = ref.watch(collectionRepositoryProvider);
+  return GetPageCollectionsUseCase(repository);
+});
+
+final assignCollectionToPageUseCaseProvider =
+    Provider<AssignCollectionToPageUseCase>((ref) {
+  final repository = ref.watch(collectionRepositoryProvider);
+  return AssignCollectionToPageUseCase(repository);
+});
+
+final removeCollectionFromPageUseCaseProvider =
+    Provider<RemoveCollectionFromPageUseCase>((ref) {
+  final repository = ref.watch(collectionRepositoryProvider);
+  return RemoveCollectionFromPageUseCase(repository);
+});
+
+final setPageCollectionsUseCaseProvider =
+    Provider<SetPageCollectionsUseCase>((ref) {
+  final repository = ref.watch(collectionRepositoryProvider);
+  return SetPageCollectionsUseCase(repository);
+});
+
 final collectionsFutureProvider = FutureProvider<List<Collection>>((ref) async {
   final repository = ref.watch(collectionRepositoryProvider);
   final result = await repository.getAllCollections();
+  return result.fold<List<Collection>>(
+    (collections) => collections,
+    (failure) => throw Exception(failure.message),
+  );
+});
+
+final pageCollectionsFutureProvider =
+    FutureProvider.family<List<Collection>, String>((ref, pageId) async {
+  final getPageCollections = ref.watch(getPageCollectionsUseCaseProvider);
+  final result = await getPageCollections(pageId);
   return result.fold<List<Collection>>(
     (collections) => collections,
     (failure) => throw Exception(failure.message),

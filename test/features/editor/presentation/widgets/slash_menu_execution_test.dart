@@ -42,7 +42,7 @@ class _MockPageRepo implements PageRepository {
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
   Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text'}) async =>
+          {String initialBlockType = 'text',}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -653,7 +653,7 @@ void main() {
     final checklistOption = options.firstWhere((o) => o.title == 'Checklist');
 
     final target = SlashCommandTarget(
-        nodeId: firstNodeId, slashStartIndex: 0, slashEndIndex: 6);
+        nodeId: firstNodeId, slashStartIndex: 0, slashEndIndex: 6,);
     if (checklistOption is KetionSlashCommand) {
       final innerRequests =
           checklistOption.getEditRequestsWithDoc(firstNodeId, document);
@@ -683,7 +683,7 @@ void main() {
     expect(document.nodeCount, 1);
     expect(document.first is TaskNode, isTrue,
         reason:
-            'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}');
+            'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}',);
 
     // Now undo
     editor.undo();

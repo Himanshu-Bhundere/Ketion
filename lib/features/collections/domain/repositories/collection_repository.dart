@@ -9,9 +9,9 @@ abstract class CollectionRepository {
   Future<Result<List<Collection>>> getAllCollections();
   Future<Result<List<Collection>>> getCollectionsForPage(String pageId);
   Future<Result<void>> assignCollectionToPage(
-      String pageId, String collectionId);
+      String pageId, String collectionId,);
   Future<Result<void>> removeCollectionFromPage(
-      String pageId, String collectionId);
+      String pageId, String collectionId,);
   Future<Result<void>> setPageCollections(
-      String pageId, List<String> collectionIds);
+      String pageId, List<String> collectionIds,);
 }

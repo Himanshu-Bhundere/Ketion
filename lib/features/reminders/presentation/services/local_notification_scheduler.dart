@@ -24,7 +24,8 @@ class LocalNotificationScheduler implements ReminderScheduler {
   LocalNotificationScheduler(this.flutterLocalNotificationsPlugin);
 
   @override
-  Future<void> scheduleReminder(ReminderEntity reminder, {ReminderNotificationContent? content}) async {
+  Future<void> scheduleReminder(ReminderEntity reminder,
+      {ReminderNotificationContent? content,}) async {
     // Only schedule if the reminder time is in the future
     if (reminder.reminderTime.isBefore(DateTime.now())) {
       return;
@@ -38,7 +39,7 @@ class LocalNotificationScheduler implements ReminderScheduler {
         // Request permissions for Android 13+
         await androidPlugin.requestNotificationsPermission();
         await androidPlugin.requestExactAlarmsPermission();
-        
+
         // Request full-screen intent permission for Android 14+
         try {
           await androidPlugin.requestFullScreenIntentPermission();
@@ -93,10 +94,12 @@ class LocalNotificationScheduler implements ReminderScheduler {
     );
 
     final notificationDetails = NotificationDetails(
-      android: reminder.kind == ReminderKind.alarm ? alarmAndroidDetails : reminderAndroidDetails,
+      android: reminder.kind == ReminderKind.alarm
+          ? alarmAndroidDetails
+          : reminderAndroidDetails,
       iOS: iOSDetails,
     );
-    
+
     final payload = jsonEncode({
       'id': reminder.id,
       'type': reminder.kind.name,
@@ -105,16 +108,18 @@ class LocalNotificationScheduler implements ReminderScheduler {
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id: notificationIdFor(reminder.id),
-      title: content?.title ?? (reminder.title.isEmpty ? 'Ketion Reminder' : reminder.title),
-      body: content?.body ?? ReminderDisplayFormatter.formatNotificationBody(
-        reminder.reminderTime,
-        recurrenceRule: reminder.recurrenceRule,
-      ),
+      title: content?.title ??
+          (reminder.title.isEmpty ? 'Ketion Reminder' : reminder.title),
+      body: content?.body ??
+          ReminderDisplayFormatter.formatNotificationBody(
+            reminder.reminderTime,
+            recurrenceRule: reminder.recurrenceRule,
+          ),
       payload: payload,
       scheduledDate: tz.TZDateTime.from(reminder.reminderTime, tz.local),
       notificationDetails: notificationDetails,
-      androidScheduleMode: reminder.kind == ReminderKind.alarm 
-          ? AndroidScheduleMode.alarmClock 
+      androidScheduleMode: reminder.kind == ReminderKind.alarm
+          ? AndroidScheduleMode.alarmClock
           : AndroidScheduleMode.exactAllowWhileIdle,
     );
   }

@@ -6,34 +6,39 @@ void main() {
   group('ReminderDisplayFormatter', () {
     testWidgets('formatTime returns correct time using locale',
         (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (context) {
-            final dt = DateTime(2026, 9, 20, 15, 30); // 3:30 PM
-            final formatted = ReminderDisplayFormatter.formatTime(context, dt);
-            expect(formatted, contains('3:30'));
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              final dt = DateTime(2026, 9, 20, 15, 30); // 3:30 PM
+              final formatted =
+                  ReminderDisplayFormatter.formatTime(context, dt);
+              expect(formatted, contains('3:30'));
+              return const SizedBox();
+            },
+          ),
         ),
-      ),);
+      );
     });
 
     testWidgets('formatDueLabel formats today correctly',
         (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(
-          builder: (context) {
-            final now = DateTime.now();
-            final dt =
-                DateTime(now.year, now.month, now.day, 14, 0); // 2:00 PM today
-            final formatted =
-                ReminderDisplayFormatter.formatDueLabel(context, dt);
-            expect(formatted, contains('Due:'));
-            expect(formatted, contains('2:00'));
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              final now = DateTime.now();
+              final dt = DateTime(
+                  now.year, now.month, now.day, 14, 0,); // 2:00 PM today
+              final formatted =
+                  ReminderDisplayFormatter.formatDueLabel(context, dt);
+              expect(formatted, contains('Due:'));
+              expect(formatted, contains('2:00'));
+              return const SizedBox();
+            },
+          ),
         ),
-      ),);
+      );
     });
 
     test('formatNotificationBody formats tomorrow correctly', () {

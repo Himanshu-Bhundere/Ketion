@@ -73,8 +73,10 @@ void main() {
       }),
       version: 2,
     );
-    await blockRepository.updateBlock(updatedBlock,
-        expectedVersion: updatedBlock.version - 1,);
+    await blockRepository.updateBlock(
+      updatedBlock,
+      expectedVersion: updatedBlock.version - 1,
+    );
 
     // 5. Search for old text (should be gone)
     final result2 = await searchRepository.searchNotes('lifecycle');
@@ -189,12 +191,21 @@ void main() {
     // We expect 4 results. The order should be: Title, Heading, Body, Tag.
     expect(searchResults.length, 4);
 
-    expect(searchResults[0].entityId, 'page_title',
-        reason: 'Title should rank first',);
-    expect(searchResults[1].entityId, 'block_heading',
-        reason: 'Heading should rank second',);
-    expect(searchResults[2].entityId, 'block_body',
-        reason: 'Body should rank third',);
+    expect(
+      searchResults[0].entityId,
+      'page_title',
+      reason: 'Title should rank first',
+    );
+    expect(
+      searchResults[1].entityId,
+      'block_heading',
+      reason: 'Heading should rank second',
+    );
+    expect(
+      searchResults[2].entityId,
+      'block_body',
+      reason: 'Body should rank third',
+    );
     expect(searchResults[3].entityId, 'tag1', reason: 'Tag should rank fourth');
   });
 }

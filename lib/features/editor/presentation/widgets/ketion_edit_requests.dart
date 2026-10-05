@@ -87,13 +87,13 @@ class ReplaceSlashParagraphWithBlockCommand implements EditCommand {
 
     // Insert new node after existing node
     executor.executeCommand(InsertNodeAfterNodeCommand(
-        existingNodeId: request.existingNodeId, newNode: request.newNode));
+        existingNodeId: request.existingNodeId, newNode: request.newNode,),);
 
     // Insert an empty paragraph after the new node so the caret has a place to go
     final emptyParagraph =
         ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
     executor.executeCommand(InsertNodeAfterNodeCommand(
-        existingNodeId: request.newNode.id, newNode: emptyParagraph));
+        existingNodeId: request.newNode.id, newNode: emptyParagraph,),);
 
     // Delete the original slash command paragraph
     executor.executeCommand(DeleteNodeCommand(nodeId: request.existingNodeId));

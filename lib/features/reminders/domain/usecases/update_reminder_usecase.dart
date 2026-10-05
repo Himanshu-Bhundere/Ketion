@@ -32,9 +32,10 @@ class UpdateReminderUseCase {
 
       final content = ReminderNotificationContent(
         title: reminder.title.isEmpty ? 'Ketion Reminder' : reminder.title,
-        body: 'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
+        body:
+            'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
       );
-      
+
       await scheduler.scheduleReminder(reminder, content: content);
     } else {
       await scheduler.cancelReminder(reminder.id);
@@ -46,7 +47,8 @@ class UpdateReminderUseCase {
     if (reminder == null || reminder.deleted) return;
 
     if (completed) {
-      if (reminder.recurrenceRule != null && reminder.recurrenceRule!.isNotEmpty) {
+      if (reminder.recurrenceRule != null &&
+          reminder.recurrenceRule!.isNotEmpty) {
         // Advance recurrence instead of completing
         final nextTime = recurrenceCalculator.nextOccurrence(
           current: reminder.reminderTime,
@@ -78,17 +80,18 @@ class UpdateReminderUseCase {
 
   Future<void> _reschedule(ReminderEntity reminder) async {
     String pageTitle = 'Unknown Page';
-        final pageResult = await pageRepository.getPage(reminder.pageId);
-        if (pageResult.isSuccess) {
-          final page = pageResult.valueOrNull!;
-          pageTitle = page.title.isNotEmpty ? page.title : 'Untitled Page';
-        }
+    final pageResult = await pageRepository.getPage(reminder.pageId);
+    if (pageResult.isSuccess) {
+      final page = pageResult.valueOrNull!;
+      pageTitle = page.title.isNotEmpty ? page.title : 'Untitled Page';
+    }
 
     final content = ReminderNotificationContent(
       title: reminder.title.isEmpty ? 'Ketion Reminder' : reminder.title,
-      body: 'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
+      body:
+          'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
     );
-    
+
     await scheduler.scheduleReminder(reminder, content: content);
   }
 }

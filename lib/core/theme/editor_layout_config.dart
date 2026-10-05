@@ -12,8 +12,10 @@ class EditorLayoutConfig {
     required this.lineSpacing,
   });
 
-  factory EditorLayoutConfig.fromAppearance(EditorAppearance appearance,
-      {double? screenWidth,}) {
+  factory EditorLayoutConfig.fromAppearance(
+    EditorAppearance appearance, {
+    double? screenWidth,
+  }) {
     final bool isMobile = screenWidth != null && screenWidth < 600;
 
     switch (appearance) {

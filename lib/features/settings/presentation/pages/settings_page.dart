@@ -71,8 +71,10 @@ class SettingsPage extends ConsumerWidget {
                               (AccentColor value) {
                         return DropdownMenuItem<AccentColor>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() +
-                              value.name.substring(1),),
+                          child: Text(
+                            value.name[0].toUpperCase() +
+                                value.name.substring(1),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -94,8 +96,10 @@ class SettingsPage extends ConsumerWidget {
                               (FontSizePreference value) {
                         return DropdownMenuItem<FontSizePreference>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() +
-                              value.name.substring(1),),
+                          child: Text(
+                            value.name[0].toUpperCase() +
+                                value.name.substring(1),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -117,8 +121,10 @@ class SettingsPage extends ConsumerWidget {
                               (EditorAppearance value) {
                         return DropdownMenuItem<EditorAppearance>(
                           value: value,
-                          child: Text(value.name[0].toUpperCase() +
-                              value.name.substring(1),),
+                          child: Text(
+                            value.name[0].toUpperCase() +
+                                value.name.substring(1),
+                          ),
                         );
                       }).toList(),
                     ),

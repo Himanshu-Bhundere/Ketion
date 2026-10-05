@@ -453,16 +453,18 @@ class BlockRepositoryImpl implements BlockRepository {
   ) async {
     try {
       final sourceBlockResult = await getBlock(sourceBlockId);
-      if (sourceBlockResult.isError)
+      if (sourceBlockResult.isError) {
         return Error((sourceBlockResult as Error).failure);
+      }
       final sourceBlock = (sourceBlockResult as Success<domain.Block?>).value;
       if (sourceBlock == null) {
         return const Error(StorageFailure('Source block not found'));
       }
 
       final pageBlocksResult = await getBlocksForPage(sourceBlock.pageId);
-      if (pageBlocksResult.isError)
+      if (pageBlocksResult.isError) {
         return Error((pageBlocksResult as Error).failure);
+      }
       final allBlocks = (pageBlocksResult as Success<List<domain.Block>>).value;
 
       final updatedBlocks =

@@ -8,13 +8,15 @@ class ReminderSnoozeReconciler {
 
   /// Reconciles expired snoozes by setting `snoozeUntil` to null.
   /// Returns the updated list of reminders.
-  Future<List<ReminderEntity>> reconcileExpiredSnoozes(List<ReminderEntity> reminders) async {
+  Future<List<ReminderEntity>> reconcileExpiredSnoozes(
+      List<ReminderEntity> reminders,) async {
     final now = DateTime.now();
     final updatedList = <ReminderEntity>[];
 
     for (final reminder in reminders) {
       if (reminder.snoozeUntil != null && reminder.snoozeUntil!.isBefore(now)) {
-        final cleared = reminder.copyWith(snoozeUntil: null, updatedAt: now.toUtc());
+        final cleared =
+            reminder.copyWith(snoozeUntil: null, updatedAt: now.toUtc());
         await repository.updateReminder(cleared);
         updatedList.add(cleared);
       } else {

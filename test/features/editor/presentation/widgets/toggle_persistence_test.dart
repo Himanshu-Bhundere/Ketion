@@ -40,7 +40,7 @@ class _MockPageRepo implements PageRepository {
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
   Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text'}) async =>
+          {String initialBlockType = 'text',}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -280,13 +280,13 @@ void main() {
     final newNode = document.first;
     expect(newNode is ParagraphNode, isTrue);
     expect((newNode as ParagraphNode).metadata['blockType'],
-        const NamedAttribution('toggle'));
+        const NamedAttribution('toggle'),);
     expect(newNode.metadata['isExpanded'], true);
 
     // Verify SQLite block persistence (DummyBlockRepository)
     final updatedBlock = testBlocks.firstWhere((b) => b.id == 'b1');
     expect(updatedBlock.type,
-        'list'); // Toggle is stored as 'list' with 'listType': 'toggle'
+        'list',); // Toggle is stored as 'list' with 'listType': 'toggle'
 
     final data = jsonDecode(updatedBlock.data);
     expect(data['listType'], 'toggle');
@@ -342,7 +342,7 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
     expect((document.first as ParagraphNode).metadata['blockType'],
-        const NamedAttribution('toggle'));
+        const NamedAttribution('toggle'),);
 
     // Undo
     final BuildContext context = tester.element(find.byType(SuperEditorHost));
@@ -354,13 +354,13 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
     expect((document.first as ParagraphNode).metadata['blockType'],
-        isNot(const NamedAttribution('toggle')));
+        isNot(const NamedAttribution('toggle')),);
 
     // Redo
     historyController?.redo();
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
 
     expect((document.first as ParagraphNode).metadata['blockType'],
-        const NamedAttribution('toggle'));
+        const NamedAttribution('toggle'),);
   });
 }

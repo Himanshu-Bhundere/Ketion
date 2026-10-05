@@ -144,7 +144,7 @@ void main() {
 
       // 3. Simulate DropIntent (drag block2 before block1)
       final providerContainer = ProviderScope.containerOf(
-          tester.element(find.byType(SuperEditorHost)));
+          tester.element(find.byType(SuperEditorHost)),);
       await providerContainer
           .read(editorStateProvider(pageId).notifier)
           .handleDropIntent('block2', const DropIntent.before('block1'));
@@ -160,7 +160,7 @@ void main() {
             ..where((t) => t.pageId.equals(pageId))
             ..orderBy([
               (t) => drift.OrderingTerm(
-                  expression: t.position, mode: drift.OrderingMode.asc)
+                  expression: t.position, mode: drift.OrderingMode.asc,),
             ]))
           .get();
 
@@ -226,7 +226,7 @@ void main() {
       await pumpUntilInitialized(tester);
 
       final providerContainer = ProviderScope.containerOf(
-          tester.element(find.byType(SuperEditorHost)));
+          tester.element(find.byType(SuperEditorHost)),);
       await providerContainer
           .read(editorStateProvider(pageId).notifier)
           .handleDropIntent('block2', const DropIntent.child('block1'));
@@ -242,7 +242,7 @@ void main() {
             ..where((t) => t.pageId.equals(pageId))
             ..orderBy([
               (t) => drift.OrderingTerm(
-                  expression: t.position, mode: drift.OrderingMode.asc)
+                  expression: t.position, mode: drift.OrderingMode.asc,),
             ]))
           .get();
 
@@ -260,7 +260,7 @@ void main() {
       // Verify in Super Editor (Ketion displays children somehow - if it doesn't display visually yet,
       // the Block mapping still reflects it. We will verify via internal registry if needed).
       final newProviderContainer = ProviderScope.containerOf(
-          tester.element(find.byType(SuperEditorHost)));
+          tester.element(find.byType(SuperEditorHost)),);
       final restoredBlock2 = newProviderContainer
           .read(editorStateProvider(pageId))
           .value!

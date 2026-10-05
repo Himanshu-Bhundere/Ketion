@@ -29,7 +29,8 @@ final flutterLocalNotificationsPluginProvider =
 });
 
 // Provides the ReminderSnoozeReconciler
-final reminderSnoozeReconcilerProvider = Provider<ReminderSnoozeReconciler>((ref) {
+final reminderSnoozeReconcilerProvider =
+    Provider<ReminderSnoozeReconciler>((ref) {
   return ReminderSnoozeReconciler(ref.read(reminderRepositoryProvider));
 });
 
@@ -52,7 +53,8 @@ final createReminderUseCaseProvider = Provider<CreateReminderUseCase>((ref) {
   final repository = ref.read(reminderRepositoryProvider);
   final scheduler = ref.read(reminderSchedulerProvider);
   final pageRepository = ref.read(pageRepositoryProvider);
-  return CreateReminderUseCase(repository, scheduler, pageRepository, uuid: const Uuid());
+  return CreateReminderUseCase(repository, scheduler, pageRepository,
+      uuid: const Uuid(),);
 });
 
 // Provides the GetRemindersUseCase
@@ -62,7 +64,8 @@ final getRemindersUseCaseProvider = Provider<GetRemindersUseCase>((ref) {
 });
 
 // Provides a Future for a specific reminder
-final reminderFutureProvider = FutureProvider.family<ReminderEntity?, String>((ref, id) {
+final reminderFutureProvider =
+    FutureProvider.family<ReminderEntity?, String>((ref, id) {
   final usecase = ref.watch(getRemindersUseCaseProvider);
   return usecase.getReminder(id);
 });
@@ -78,7 +81,8 @@ final updateReminderUseCaseProvider = Provider<UpdateReminderUseCase>((ref) {
   final scheduler = ref.read(reminderSchedulerProvider);
   final pageRepository = ref.read(pageRepositoryProvider);
   final calculator = ref.read(recurrenceCalculatorProvider);
-  return UpdateReminderUseCase(repository, scheduler, pageRepository, calculator);
+  return UpdateReminderUseCase(
+      repository, scheduler, pageRepository, calculator,);
 });
 
 // Provides the DeleteReminderUseCase
@@ -122,9 +126,12 @@ final allActiveRemindersProvider = StreamProvider<List<ReminderEntity>>((ref) {
   });
 });
 
-final activeRemindersByKindProvider = Provider.family<AsyncValue<List<ReminderEntity>>, ReminderKind>((ref, kind) {
+final activeRemindersByKindProvider =
+    Provider.family<AsyncValue<List<ReminderEntity>>, ReminderKind>(
+        (ref, kind) {
   final allRemindersAsync = ref.watch(allActiveRemindersProvider);
-  return allRemindersAsync.whenData((reminders) => reminders.where((r) => r.kind == kind).toList());
+  return allRemindersAsync
+      .whenData((reminders) => reminders.where((r) => r.kind == kind).toList());
 });
 
 final todayRemindersProvider = StreamProvider<List<ReminderEntity>>((ref) {

@@ -13,8 +13,10 @@ import 'package:ketion/features/pages/presentation/providers/page_providers.dart
 import 'dart:async';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 import 'package:ketion/features/reminders/presentation/utils/reminder_display_formatter.dart';
-import 'package:ketion/features/reminders/domain/models/reminder_kind.dart' as ketion_kind;
-import 'package:ketion/features/reminders/domain/usecases/resolve_reminder_usecase.dart' as ketion_resolve;
+import 'package:ketion/features/reminders/domain/models/reminder_kind.dart'
+    as ketion_kind;
+import 'package:ketion/features/reminders/domain/usecases/resolve_reminder_usecase.dart'
+    as ketion_resolve;
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -92,10 +94,12 @@ class HomePage extends ConsumerWidget {
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   margin: const EdgeInsets.only(bottom: 8.0),
                   child: ListTile(
-                    leading: Icon(isAlarm ? Icons.alarm : Icons.notifications_active),
+                    leading: Icon(
+                        isAlarm ? Icons.alarm : Icons.notifications_active,),
                     title: Text(reminder.title),
                     subtitle: Text(
-                      ReminderDisplayFormatter.formatDueLabel(context, reminder.reminderTime),
+                      ReminderDisplayFormatter.formatDueLabel(
+                          context, reminder.reminderTime,),
                     ),
                     trailing: isAlarm
                         ? IconButton(
@@ -106,21 +110,25 @@ class HomePage extends ConsumerWidget {
                                 context: context,
                                 builder: (context) => AlertDialog(
                                   title: const Text('Delete Alarm'),
-                                  content: const Text('Are you sure you want to delete this alarm?'),
+                                  content: const Text(
+                                      'Are you sure you want to delete this alarm?',),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
                                       child: const Text('Cancel'),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.pop(context, true),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
                                       child: const Text('Delete'),
                                     ),
                                   ],
                                 ),
                               );
                               if (confirmed == true) {
-                                final deleteUseCase = ref.read(deleteReminderUseCaseProvider);
+                                final deleteUseCase =
+                                    ref.read(deleteReminderUseCaseProvider);
                                 await deleteUseCase.execute(reminder.id);
                               }
                             },
@@ -129,10 +137,12 @@ class HomePage extends ConsumerWidget {
                             icon: const Icon(Icons.check_circle_outline),
                             tooltip: 'Complete',
                             onPressed: () async {
-                              final resolveUseCase = ref.read(resolveReminderUseCaseProvider);
+                              final resolveUseCase =
+                                  ref.read(resolveReminderUseCaseProvider);
                               await resolveUseCase.execute(
                                 reminderId: reminder.id,
-                                action: ketion_resolve.ReminderResolutionAction.complete,
+                                action: ketion_resolve
+                                    .ReminderResolutionAction.complete,
                                 occurrenceTime: reminder.reminderTime,
                               );
                             },
@@ -248,8 +258,10 @@ class HomePage extends ConsumerWidget {
             if (width >= AppBreakpoints.medium) {
               ref.read(activePageIdProvider.notifier).state = page.id;
             } else {
-              context.pushNamed(Routes.editorName,
-                  pathParameters: {'pageId': page.id},);
+              context.pushNamed(
+                Routes.editorName,
+                pathParameters: {'pageId': page.id},
+              );
             }
           },
           child: Padding(

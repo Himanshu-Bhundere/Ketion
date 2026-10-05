@@ -97,7 +97,7 @@ class PageHeader extends StatelessWidget {
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Add Cover is coming soon!')),
+                              content: Text('Add Cover is coming soon!'),),
                         );
                       },
                       icon: const Icon(Icons.image_outlined, size: 16),

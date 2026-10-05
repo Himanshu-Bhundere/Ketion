@@ -41,7 +41,7 @@ class _MockPageRepo implements PageRepository {
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
   Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text'}) async =>
+          {String initialBlockType = 'text',}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);

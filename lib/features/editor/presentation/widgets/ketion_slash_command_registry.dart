@@ -38,7 +38,7 @@ class KetionSlashCommand extends SuperEditorSlashCommandOption {
 
 class KetionSlashCommandRegistry {
   static Map<String, dynamic> _getInheritedMetadata(
-      String nodeId, Document doc) {
+      String nodeId, Document doc,) {
     final node = doc.getNodeById(nodeId);
     if (node != null && node.metadata.containsKey('parentBlockId')) {
       return {'parentBlockId': node.metadata['parentBlockId']};
@@ -99,7 +99,7 @@ class KetionSlashCommandRegistry {
           existingNodeId: nodeId,
           newNode: HorizontalRuleNode(
               id: Editor
-                  .createNodeId()), // SuperEditor's HorizontalRuleNode doesn't explicitly expose metadata in its basic constructor sometimes, but wait...
+                  .createNodeId(),), // SuperEditor's HorizontalRuleNode doesn't explicitly expose metadata in its basic constructor sometimes, but wait...
         ),
       ],
     ),

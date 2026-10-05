@@ -46,11 +46,11 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
 
   Future<void> _handleAction(ReminderResolutionAction action) async {
     await ref.read(resolveReminderUseCaseProvider).execute(
-      reminderId: widget.reminderId,
-      action: action,
-      occurrenceTime: widget.occurrenceTime,
-    );
-    
+          reminderId: widget.reminderId,
+          action: action,
+          occurrenceTime: widget.occurrenceTime,
+        );
+
     await _audioPlayer.stop();
     if (mounted) {
       if (context.canPop()) {
@@ -64,7 +64,8 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
   @override
   Widget build(BuildContext buildContext) {
     // We try to watch the reminder to show details if we want
-    final reminderAsyncValue = ref.watch(reminderFutureProvider(widget.reminderId));
+    final reminderAsyncValue =
+        ref.watch(reminderFutureProvider(widget.reminderId));
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -98,11 +99,11 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                   ],
                 );
               },
-              loading: () => const CircularProgressIndicator(color: Colors.white),
+              loading: () =>
+                  const CircularProgressIndicator(color: Colors.white),
               error: (_, __) => const Text(
                 'Error loading alarm',
                 style: TextStyle(color: Colors.red),
@@ -121,9 +122,9 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
                       color: Colors.orange,
                       onPressed: () async {
                         await ref.read(snoozeReminderUseCaseProvider).execute(
-                          reminderId: widget.reminderId,
-                          occurrenceTime: widget.occurrenceTime,
-                        );
+                              reminderId: widget.reminderId,
+                              occurrenceTime: widget.occurrenceTime,
+                            );
                         await _audioPlayer.stop();
                         if (mounted) {
                           if (context.canPop()) {
@@ -144,7 +145,8 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
                       iconSize: 64,
                       icon: const Icon(Icons.stop_circle),
                       color: Colors.red,
-                      onPressed: () => _handleAction(ReminderResolutionAction.complete),
+                      onPressed: () =>
+                          _handleAction(ReminderResolutionAction.complete),
                     ),
                     const Text('Stop', style: TextStyle(color: Colors.white)),
                   ],

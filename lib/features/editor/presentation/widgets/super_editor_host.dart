@@ -278,17 +278,17 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final url = await UrlInputDialog.show(context, title: 'Add Bookmark');
     if (url != null && mounted) {
       _replaceSlashWithNode(
-          target, KetionBookmarkNode(id: Editor.createNodeId(), url: url));
+          target, KetionBookmarkNode(id: Editor.createNodeId(), url: url),);
       _focusNode.requestFocus();
     }
   }
 
   Future<void> _handleWebBookmarkSlashSelected(
-      SlashCommandTarget target) async {
+      SlashCommandTarget target,) async {
     final url = await UrlInputDialog.show(context, title: 'Add Web Bookmark');
     if (url != null && mounted) {
       _replaceSlashWithNode(
-          target, KetionWebLinkNode(id: Editor.createNodeId(), url: url));
+          target, KetionWebLinkNode(id: Editor.createNodeId(), url: url),);
       _focusNode.requestFocus();
     }
   }
@@ -300,7 +300,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     );
     if (page != null && mounted) {
       _replaceSlashWithNode(target,
-          KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id));
+          KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id),);
       _focusNode.requestFocus();
     }
   }
@@ -310,7 +310,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       FileType fileType,
       String mimePrefix,
       BlockNode Function(String, String) nodeBuilder,
-      {List<String>? allowedExtensions}) async {
+      {List<String>? allowedExtensions,}) async {
     final result = await FilePicker.platform
         .pickFiles(type: fileType, allowedExtensions: allowedExtensions);
     if (result != null && result.files.isNotEmpty && mounted) {
@@ -343,7 +343,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
   Future<void> _handleImageSlashSelected(SlashCommandTarget target) async {
     return _handleMediaSlashSelected(target, FileType.image, 'image',
-        (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId));
+        (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId),);
   }
 
   Future<void> _handleVideoSlashSelected(SlashCommandTarget target) async {
@@ -352,7 +352,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         FileType.video,
         'video',
         (id, attachmentId) =>
-            KetionVideoNode(id: id, attachmentId: attachmentId));
+            KetionVideoNode(id: id, attachmentId: attachmentId),);
   }
 
   Future<void> _handleAudioSlashSelected(SlashCommandTarget target) async {
@@ -361,7 +361,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         FileType.audio,
         'audio',
         (id, attachmentId) =>
-            KetionAudioNode(id: id, attachmentId: attachmentId));
+            KetionAudioNode(id: id, attachmentId: attachmentId),);
   }
 
   Future<void> _handleFileSlashSelected(SlashCommandTarget target) async {
@@ -648,7 +648,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   ...defaultComponentBuilders,
                 ]
                     .map((b) =>
-                        DepthWrappingComponentBuilder(b, _editor.document))
+                        DepthWrappingComponentBuilder(b, _editor.document),)
                     .toList(),
                 keyboardActions: [
                   indentParagraphWhenTabPressed,

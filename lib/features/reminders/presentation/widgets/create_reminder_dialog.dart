@@ -53,8 +53,9 @@ class _CreateReminderDialogState extends ConsumerState<CreateReminderDialog> {
     if (title.isEmpty || _selectedTime == null || _selectedPageId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text('Please enter a title, select a page, and choose a time'),),
+          content:
+              Text('Please enter a title, select a page, and choose a time'),
+        ),
       );
       return;
     }

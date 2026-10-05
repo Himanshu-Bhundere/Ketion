@@ -45,7 +45,9 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                   label: const Text('Reminders'),
                   selected: _filter == ReminderFilter.reminders,
                   onSelected: (selected) {
-                    if (selected) setState(() => _filter = ReminderFilter.reminders);
+                    if (selected) {
+                      setState(() => _filter = ReminderFilter.reminders);
+                    }
                   },
                 ),
                 const SizedBox(width: 8),
@@ -53,7 +55,9 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                   label: const Text('Alarms'),
                   selected: _filter == ReminderFilter.alarms,
                   onSelected: (selected) {
-                    if (selected) setState(() => _filter = ReminderFilter.alarms);
+                    if (selected) {
+                      setState(() => _filter = ReminderFilter.alarms);
+                    }
                   },
                 ),
               ],
@@ -64,8 +68,12 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
               data: (reminders) {
                 final filtered = reminders.where((r) {
                   if (_filter == ReminderFilter.all) return true;
-                  if (_filter == ReminderFilter.reminders) return r.kind == ReminderKind.reminder;
-                  if (_filter == ReminderFilter.alarms) return r.kind == ReminderKind.alarm;
+                  if (_filter == ReminderFilter.reminders) {
+                    return r.kind == ReminderKind.reminder;
+                  }
+                  if (_filter == ReminderFilter.alarms) {
+                    return r.kind == ReminderKind.alarm;
+                  }
                   return true;
                 }).toList();
 
@@ -80,9 +88,11 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                     final reminder = filtered[index];
                     final isAlarm = reminder.kind == ReminderKind.alarm;
                     return ListTile(
-                      leading: Icon(isAlarm ? Icons.alarm : Icons.notifications_active),
+                      leading: Icon(
+                          isAlarm ? Icons.alarm : Icons.notifications_active,),
                       title: Text(reminder.title),
-                      subtitle: Text(ReminderDisplayFormatter.formatDueLabel(context, reminder.reminderTime)),
+                      subtitle: Text(ReminderDisplayFormatter.formatDueLabel(
+                          context, reminder.reminderTime,),),
                       trailing: isAlarm
                           ? IconButton(
                               icon: const Icon(Icons.delete_outline),
@@ -92,21 +102,25 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: const Text('Delete Alarm'),
-                                    content: const Text('Are you sure you want to delete this alarm?'),
+                                    content: const Text(
+                                        'Are you sure you want to delete this alarm?',),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(context, false),
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
                                         child: const Text('Cancel'),
                                       ),
                                       TextButton(
-                                        onPressed: () => Navigator.pop(context, true),
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
                                         child: const Text('Delete'),
                                       ),
                                     ],
                                   ),
                                 );
                                 if (confirmed == true) {
-                                  final deleteUseCase = ref.read(deleteReminderUseCaseProvider);
+                                  final deleteUseCase =
+                                      ref.read(deleteReminderUseCaseProvider);
                                   await deleteUseCase.execute(reminder.id);
                                 }
                               },
@@ -115,7 +129,8 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                               icon: const Icon(Icons.check_circle_outline),
                               tooltip: 'Complete',
                               onPressed: () async {
-                                final resolveUseCase = ref.read(resolveReminderUseCaseProvider);
+                                final resolveUseCase =
+                                    ref.read(resolveReminderUseCaseProvider);
                                 await resolveUseCase.execute(
                                   reminderId: reminder.id,
                                   action: ReminderResolutionAction.complete,

@@ -206,7 +206,7 @@ class SplitCalloutCommand implements EditCommand {
     executor.logChanges([
       DocumentEdit(NodeChangeEvent(node.id)),
       DocumentEdit(
-          NodeInsertedEvent(newNode.id, document.getNodeIndexById(newNode.id))),
+          NodeInsertedEvent(newNode.id, document.getNodeIndexById(newNode.id)),),
     ]);
   }
 }

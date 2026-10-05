@@ -31,7 +31,9 @@ class _FailingSyncQueueRepository implements SyncQueueRepository {
 
   @override
   Future<Result<SyncQueueItem?>> findPendingItem(
-          String table, String entityId,) =>
+    String table,
+    String entityId,
+  ) =>
       throw UnimplementedError();
 
   @override

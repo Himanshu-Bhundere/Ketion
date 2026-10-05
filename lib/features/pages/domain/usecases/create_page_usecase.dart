@@ -35,7 +35,8 @@ class CreatePageUseCase {
       updatedAt: now,
     );
 
-    final result = await _repository.createPage(page, initialBlockType: initialBlockType);
+    final result =
+        await _repository.createPage(page, initialBlockType: initialBlockType);
     if (result is Success) {
       unawaited(
         _updateWidgetsUseCase().catchError((Object e, StackTrace s) {

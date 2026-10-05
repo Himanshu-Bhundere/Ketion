@@ -96,7 +96,7 @@ class _KetionPdfPlayerComponentState
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 12.0),
+                      horizontal: 16.0, vertical: 12.0,),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     border: Border.all(color: Theme.of(context).dividerColor),
@@ -108,7 +108,7 @@ class _KetionPdfPlayerComponentState
                   child: Row(
                     children: [
                       Icon(Icons.picture_as_pdf,
-                          color: Colors.red.shade700, size: 24),
+                          color: Colors.red.shade700, size: 24,),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(

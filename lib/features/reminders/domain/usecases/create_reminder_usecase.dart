@@ -54,7 +54,7 @@ class CreateReminderUseCase {
     );
 
     await repository.addReminder(reminder);
-    
+
     String pageTitle = 'Unknown Page';
     final pageResult = await pageRepository.getPage(pageId);
     if (pageResult.isSuccess) {
@@ -64,9 +64,10 @@ class CreateReminderUseCase {
 
     final content = ReminderNotificationContent(
       title: title.isEmpty ? 'Ketion Reminder' : title,
-      body: 'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
+      body:
+          'Page: $pageTitle\n${ReminderDisplayFormatter.formatNotificationBody(reminder.reminderTime, recurrenceRule: reminder.recurrenceRule)}',
     );
-    
+
     await scheduler.scheduleReminder(reminder, content: content);
 
     return reminder;

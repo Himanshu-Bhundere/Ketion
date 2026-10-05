@@ -801,7 +801,7 @@ class _PageLinkCard extends ConsumerWidget {
             child: InkWell(
               onTap: () {
                 context.pushNamed(Routes.editorName,
-                    pathParameters: {'pageId': pageId});
+                    pathParameters: {'pageId': pageId},);
               },
               borderRadius: BorderRadius.circular(8),
               child: Padding(

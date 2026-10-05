@@ -53,11 +53,13 @@ class NotificationActionDispatcher {
     if (payload == null || payload.isEmpty) return;
 
     if (!isConnected) {
-      _pendingActions.add(_PendingAction(
-        actionId: actionId,
-        payload: payload,
-        occurrenceTime: occurrenceTime,
-      ),);
+      _pendingActions.add(
+        _PendingAction(
+          actionId: actionId,
+          payload: payload,
+          occurrenceTime: occurrenceTime,
+        ),
+      );
       return;
     }
 
@@ -84,10 +86,11 @@ class NotificationActionDispatcher {
   ///
   /// Updates the `snoozeUntil` field on the entity (no schema change needed)
   /// and schedules a new notification at the snooze time.
-  Future<void> _snoozeReminder(String reminderId, DateTime? occurrenceTime) async {
+  Future<void> _snoozeReminder(
+      String reminderId, DateTime? occurrenceTime,) async {
     final reminder = await _repository!.getReminder(reminderId);
     if (reminder == null) return;
-    
+
     if (occurrenceTime != null && reminder.reminderTime != occurrenceTime) {
       // Stale event, ignore
       return;

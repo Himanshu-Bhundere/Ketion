@@ -79,12 +79,12 @@ class _CreateActionSheetState extends ConsumerState<CreateActionSheet> {
               if (_isCreating) return;
               setState(() => _isCreating = true);
               final messenger = ScaffoldMessenger.of(context);
-              
+
               final result = await ref.read(createPageUseCaseProvider)(
                 title: '',
                 initialBlockType: 'checklist',
               );
-              
+
               result.fold(
                 (page) {
                   ref.invalidate(recentPagesProvider);
@@ -99,7 +99,8 @@ class _CreateActionSheetState extends ConsumerState<CreateActionSheet> {
                     setState(() => _isCreating = false);
                   }
                   messenger.showSnackBar(
-                    SnackBar(content: Text('Failed to create checklist: $error')),
+                    SnackBar(
+                        content: Text('Failed to create checklist: $error'),),
                   );
                 },
               );
@@ -108,8 +109,10 @@ class _CreateActionSheetState extends ConsumerState<CreateActionSheet> {
           ListTile(
             leading: const Icon(Icons.file_upload),
             title: const Text('Import'),
-            subtitle: const Text('Coming Soon',
-                style: TextStyle(fontStyle: FontStyle.italic),),
+            subtitle: const Text(
+              'Coming Soon',
+              style: TextStyle(fontStyle: FontStyle.italic),
+            ),
             enabled: true,
             onTap: () {
               Navigator.of(context).pop();

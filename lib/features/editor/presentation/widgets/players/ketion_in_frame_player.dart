@@ -230,7 +230,7 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.error_outline,
-                  color: Colors.redAccent, size: 36),
+                  color: Colors.redAccent, size: 36,),
               const SizedBox(height: 8),
               Text(
                 _errorMessage!,

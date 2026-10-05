@@ -59,7 +59,8 @@ class NotificationBootstrap {
         onDidReceiveNotificationResponse: _onNotificationResponse,
       );
 
-      final notificationAppLaunchDetails = await plugin.getNotificationAppLaunchDetails();
+      final notificationAppLaunchDetails =
+          await plugin.getNotificationAppLaunchDetails();
       if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
         final response = notificationAppLaunchDetails!.notificationResponse;
         if (response != null) {

@@ -2,7 +2,8 @@ import '../../../../core/utils/result.dart';
 import '../entities/page.dart';
 
 abstract class PageRepository {
-  Future<Result<void>> createPage(Page page, {String initialBlockType = 'text'});
+  Future<Result<void>> createPage(Page page,
+      {String initialBlockType = 'text',});
   Future<Result<Page>> getPage(String id);
   Future<Result<void>> updatePage(Page page);
   Future<Result<void>> deletePage(String id);

@@ -29,7 +29,8 @@ class PageRepositoryImpl implements PageRepository {
   }
 
   @override
-  Future<Result<void>> createPage(domain.Page page, {String initialBlockType = 'text'}) async {
+  Future<Result<void>> createPage(domain.Page page,
+      {String initialBlockType = 'text',}) async {
     try {
       final now = DateTime.now().toUtc();
       final newPage = page.copyWith(
@@ -37,7 +38,7 @@ class PageRepositoryImpl implements PageRepository {
         createdAt: now,
         updatedAt: now,
       );
-      
+
       late final block_domain.Block initialBlock;
       if (initialBlockType == 'checklist') {
         initialBlock = block_domain.Block(

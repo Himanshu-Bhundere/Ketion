@@ -17,9 +17,10 @@ class SnoozeReminderUseCase {
   }) async {
     final reminder = await repository.getReminder(reminderId);
     if (reminder == null) return;
-    
+
     if (occurrenceTime != null && reminder.reminderTime != occurrenceTime) {
-      appLogger.d('SnoozeReminderUseCase: Stale event for $reminderId. Ignoring snooze.');
+      appLogger.d(
+          'SnoozeReminderUseCase: Stale event for $reminderId. Ignoring snooze.',);
       return;
     }
 

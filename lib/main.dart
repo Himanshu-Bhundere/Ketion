@@ -36,7 +36,7 @@ class _KetionAppState extends ConsumerState<KetionApp> {
     // Eagerly connect notification action dispatcher to Riverpod
     Future.microtask(() {
       ref.read(notificationActionDispatcherProvider);
-      
+
       // Handle pending cold-start navigation
       final pending = NotificationBootstrap.pendingNavigation;
       if (pending != null && pending.type == 'alarm') {

@@ -15,8 +15,11 @@ class ReminderEntity with _$ReminderEntity {
     @Default('') String title,
     required DateTime reminderTime,
     @Default('UTC') String timezone,
-    @JsonKey(defaultValue: ReminderKind.reminder, unknownEnumValue: ReminderKind.reminder)
-    @Default(ReminderKind.reminder) ReminderKind kind,
+    @JsonKey(
+        defaultValue: ReminderKind.reminder,
+        unknownEnumValue: ReminderKind.reminder,)
+    @Default(ReminderKind.reminder)
+    ReminderKind kind,
     String? recurrenceRule,
     DateTime? snoozeUntil,
     @Default(false) bool completed,

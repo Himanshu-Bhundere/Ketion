@@ -30,25 +30,31 @@ class ResolveReminderUseCase {
   }) async {
     final reminder = await repository.getReminder(reminderId);
     if (reminder == null || reminder.deleted) {
-      appLogger.d('ResolveReminderUseCase: Reminder $reminderId not found or already deleted');
+      appLogger.d(
+          'ResolveReminderUseCase: Reminder $reminderId not found or already deleted',);
       return;
     }
 
     // Stale Event Protection
     // Note: If occurrenceTime is null (e.g. from legacy actions without payload), we bypass the check
     if (occurrenceTime != null && reminder.reminderTime != occurrenceTime) {
-      appLogger.d('ResolveReminderUseCase: Stale event for $reminderId. Expected: ${reminder.reminderTime}, Got: $occurrenceTime');
+      appLogger.d(
+          'ResolveReminderUseCase: Stale event for $reminderId. Expected: ${reminder.reminderTime}, Got: $occurrenceTime',);
       // Just cancel the stale OS notification
       await scheduler.cancelReminder(reminderId);
       return;
     }
 
     // Validate Action Compatibility
-    if (action == ReminderResolutionAction.complete && reminder.kind == ReminderKind.alarm) {
-      appLogger.w('ResolveReminderUseCase: Cannot "complete" an alarm. Treating as dismiss.');
+    if (action == ReminderResolutionAction.complete &&
+        reminder.kind == ReminderKind.alarm) {
+      appLogger.w(
+          'ResolveReminderUseCase: Cannot "complete" an alarm. Treating as dismiss.',);
       action = ReminderResolutionAction.dismiss;
-    } else if (action == ReminderResolutionAction.dismiss && reminder.kind == ReminderKind.reminder) {
-      appLogger.w('ResolveReminderUseCase: Cannot "dismiss" a reminder via this usecase. Treating as complete.');
+    } else if (action == ReminderResolutionAction.dismiss &&
+        reminder.kind == ReminderKind.reminder) {
+      appLogger.w(
+          'ResolveReminderUseCase: Cannot "dismiss" a reminder via this usecase. Treating as complete.',);
       action = ReminderResolutionAction.complete;
     }
 
@@ -58,7 +64,7 @@ class ResolveReminderUseCase {
         current: reminder.reminderTime,
         rule: reminder.recurrenceRule,
       );
-      
+
       if (nextTime != null) {
         final updatedReminder = reminder.copyWith(
           reminderTime: nextTime,

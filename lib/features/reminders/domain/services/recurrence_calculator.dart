@@ -58,10 +58,11 @@ class RecurrenceCalculator {
     final lastDayOfNextMonth = DateTime(
       nextYear,
       nextMonth + 1,
-      0, 
+      0,
     ).day;
 
-    final nextDay = date.day > lastDayOfNextMonth ? lastDayOfNextMonth : date.day;
+    final nextDay =
+        date.day > lastDayOfNextMonth ? lastDayOfNextMonth : date.day;
 
     return DateTime(
       nextYear,

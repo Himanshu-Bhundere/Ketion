@@ -43,7 +43,7 @@ class _MockPageRepo implements PageRepository {
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
   Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text'}) async =>
+          {String initialBlockType = 'text',}) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -418,11 +418,11 @@ void main() {
             const SpanMarker(
                 attribution: boldAttribution,
                 offset: 5,
-                markerType: SpanMarkerType.start),
+                markerType: SpanMarkerType.start,),
             const SpanMarker(
                 attribution: boldAttribution,
                 offset: 8,
-                markerType: SpanMarkerType.end),
+                markerType: SpanMarkerType.end,),
           ],
         ),
       );
@@ -462,7 +462,7 @@ void main() {
 
       // Check attributes survived
       expect(callout.text.hasAttributionAt(5, attribution: boldAttribution),
-          isTrue);
+          isTrue,);
 
       final selection = composer.selection;
       expect((selection!.extent.nodePosition as TextNodePosition).offset, 15);
@@ -531,7 +531,7 @@ void main() {
       // Reload
       await tester.pumpWidget(const SizedBox()); // Clear
       await tester.pumpWidget(
-          buildTestApp(blocks: List.from(testBlocks), testPage: testPage));
+          buildTestApp(blocks: List.from(testBlocks), testPage: testPage),);
       await pumpUntilInitialized(tester);
 
       final State stateReopened = tester.state(find.byType(SuperEditorHost));

@@ -40,7 +40,7 @@ class _MockPageRepo implements PageRepository {
 
   @override
   Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text'}) async =>
+          {String initialBlockType = 'text',}) async =>
       Success(page);
 
   @override

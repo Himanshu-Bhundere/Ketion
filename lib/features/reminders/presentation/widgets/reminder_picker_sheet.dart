@@ -16,7 +16,8 @@ class ReminderPickerSheet extends ConsumerStatefulWidget {
 class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  final TextEditingController _titleController = TextEditingController(text: 'Ketion Reminder');
+  final TextEditingController _titleController =
+      TextEditingController(text: 'Ketion Reminder');
   bool _isLoading = false;
 
   @override
@@ -110,7 +111,9 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                               ref.read(createReminderUseCaseProvider);
                           await createReminder.execute(
                             pageId: widget.pageId,
-                            title: _titleController.text.isNotEmpty ? _titleController.text : 'Ketion Reminder',
+                            title: _titleController.text.isNotEmpty
+                                ? _titleController.text
+                                : 'Ketion Reminder',
                             reminderTime: dateTime,
                             kind: ReminderKind.reminder,
                           );
@@ -131,7 +134,8 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),)
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Text('Save Reminder'),
           ),
         ],

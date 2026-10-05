@@ -14,6 +14,7 @@ import 'ketion_edit_requests.dart';
 import 'players/ketion_video_player.dart';
 import 'players/ketion_audio_player.dart';
 import 'players/ketion_pdf_player.dart';
+
 abstract class KetionAttachmentComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
   final String? attachmentId;
@@ -27,121 +28,135 @@ abstract class KetionAttachmentComponentViewModel
 }
 
 class KetionVideoComponentViewModel extends KetionAttachmentComponentViewModel {
-  KetionVideoComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      super.attachmentId,});
+  KetionVideoComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    super.attachmentId,
+  });
   @override
   KetionVideoComponentViewModel copy() => KetionVideoComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      attachmentId: attachmentId,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        attachmentId: attachmentId,
+      );
 }
 
 class KetionAudioComponentViewModel extends KetionAttachmentComponentViewModel {
-  KetionAudioComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      super.attachmentId,});
+  KetionAudioComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    super.attachmentId,
+  });
   @override
   KetionAudioComponentViewModel copy() => KetionAudioComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      attachmentId: attachmentId,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        attachmentId: attachmentId,
+      );
 }
 
 class KetionPdfComponentViewModel extends KetionAttachmentComponentViewModel {
-  KetionPdfComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      super.attachmentId,});
+  KetionPdfComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    super.attachmentId,
+  });
   @override
   KetionPdfComponentViewModel copy() => KetionPdfComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      attachmentId: attachmentId,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        attachmentId: attachmentId,
+      );
 }
 
 class KetionFileComponentViewModel extends KetionAttachmentComponentViewModel {
-  KetionFileComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      super.attachmentId,});
+  KetionFileComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    super.attachmentId,
+  });
   @override
   KetionFileComponentViewModel copy() => KetionFileComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      attachmentId: attachmentId,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        attachmentId: attachmentId,
+      );
 }
 
 class KetionBookmarkComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
   final String? url;
-  KetionBookmarkComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      this.url,});
+  KetionBookmarkComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    this.url,
+  });
   @override
   KetionBookmarkComponentViewModel copy() => KetionBookmarkComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      url: url,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        url: url,
+      );
 }
 
 class KetionPageLinkComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
   final String? pageId;
-  KetionPageLinkComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      this.pageId,});
+  KetionPageLinkComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    this.pageId,
+  });
   @override
   KetionPageLinkComponentViewModel copy() => KetionPageLinkComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      pageId: pageId,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        pageId: pageId,
+      );
 }
 
 class KetionWebLinkComponentViewModel
     extends SingleColumnLayoutComponentViewModel {
   final String? url;
-  KetionWebLinkComponentViewModel(
-      {required super.nodeId,
-      super.maxWidth,
-      required super.padding,
-      required super.createdAt,
-      this.url,});
+  KetionWebLinkComponentViewModel({
+    required super.nodeId,
+    super.maxWidth,
+    required super.padding,
+    required super.createdAt,
+    this.url,
+  });
   @override
   KetionWebLinkComponentViewModel copy() => KetionWebLinkComponentViewModel(
-      nodeId: nodeId,
-      maxWidth: maxWidth,
-      padding: padding,
-      createdAt: createdAt,
-      url: url,);
+        nodeId: nodeId,
+        maxWidth: maxWidth,
+        padding: padding,
+        createdAt: createdAt,
+        url: url,
+      );
 }
 
 class KetionReminderComponentViewModel
@@ -183,19 +198,24 @@ class KetionVideoComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionVideoNode) return null;
     return KetionVideoComponentViewModel(
-        nodeId: node.id,
-        attachmentId: node.attachmentId,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        createdAt: null,);
+      nodeId: node.id,
+      attachmentId: node.attachmentId,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionVideoComponentViewModel) return null;
     return KetionVideoPlayerComponent(
       key: componentContext.componentKey,
@@ -209,19 +229,24 @@ class KetionAudioComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionAudioNode) return null;
     return KetionAudioComponentViewModel(
-        nodeId: node.id,
-        attachmentId: node.attachmentId,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        createdAt: null,);
+      nodeId: node.id,
+      attachmentId: node.attachmentId,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionAudioComponentViewModel) return null;
     return KetionAudioPlayerComponent(
       key: componentContext.componentKey,
@@ -235,19 +260,24 @@ class KetionPdfComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionPdfNode) return null;
     return KetionPdfComponentViewModel(
-        nodeId: node.id,
-        attachmentId: node.attachmentId,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        createdAt: null,);
+      nodeId: node.id,
+      attachmentId: node.attachmentId,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionPdfComponentViewModel) return null;
     return KetionPdfPlayerComponent(
       key: componentContext.componentKey,
@@ -261,19 +291,24 @@ class KetionFileComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionFileNode) return null;
     return KetionFileComponentViewModel(
-        nodeId: node.id,
-        attachmentId: node.attachmentId,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        createdAt: null,);
+      nodeId: node.id,
+      attachmentId: node.attachmentId,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionFileComponentViewModel) return null;
     return KetionAttachmentFileCard(
       key: componentContext.componentKey,
@@ -289,24 +324,30 @@ class KetionBookmarkComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionBookmarkNode) return null;
     return KetionBookmarkComponentViewModel(
-        nodeId: node.id,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        url: node.url,
-        createdAt: null,);
+      nodeId: node.id,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      url: node.url,
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionBookmarkComponentViewModel) return null;
     return _LinkCard(
-        icon: Icons.bookmark_border,
-        label: 'Bookmark',
-        url: componentViewModel.url ?? '',);
+      icon: Icons.bookmark_border,
+      label: 'Bookmark',
+      url: componentViewModel.url ?? '',
+    );
   }
 }
 
@@ -315,19 +356,24 @@ class KetionPageLinkComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionPageLinkNode) return null;
     return KetionPageLinkComponentViewModel(
-        nodeId: node.id,
-        pageId: node.pageId,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        createdAt: null,);
+      nodeId: node.id,
+      pageId: node.pageId,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionPageLinkComponentViewModel) return null;
     return _PageLinkCard(pageId: componentViewModel.pageId ?? '');
   }
@@ -338,24 +384,30 @@ class KetionWebLinkComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionWebLinkNode) return null;
     return KetionWebLinkComponentViewModel(
-        nodeId: node.id,
-        maxWidth: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
-        url: node.url,
-        createdAt: null,);
+      nodeId: node.id,
+      maxWidth: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
+      url: node.url,
+      createdAt: null,
+    );
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionWebLinkComponentViewModel) return null;
     return _LinkCard(
-        icon: Icons.public,
-        label: 'Web Bookmark',
-        url: componentViewModel.url ?? '',);
+      icon: Icons.public,
+      label: 'Web Bookmark',
+      url: componentViewModel.url ?? '',
+    );
   }
 }
 
@@ -366,7 +418,9 @@ class KetionReminderComponentBuilder implements ComponentBuilder {
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
-      Document document, DocumentNode node,) {
+    Document document,
+    DocumentNode node,
+  ) {
     if (node is! KetionReminderNode) return null;
     return KetionReminderComponentViewModel(
       nodeId: node.id,
@@ -390,11 +444,15 @@ class KetionReminderComponentBuilder implements ComponentBuilder {
   }
 
   @override
-  Widget? createComponent(SingleColumnDocumentComponentContext componentContext,
-      SingleColumnLayoutComponentViewModel componentViewModel,) {
+  Widget? createComponent(
+    SingleColumnDocumentComponentContext componentContext,
+    SingleColumnLayoutComponentViewModel componentViewModel,
+  ) {
     if (componentViewModel is! KetionReminderComponentViewModel) return null;
     return _ReminderCard(
-        viewModel: componentViewModel, context: componentContext,);
+      viewModel: componentViewModel,
+      context: componentContext,
+    );
   }
 }
 
@@ -491,7 +549,8 @@ class _KetionAttachmentFileCardState
         color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -508,20 +567,23 @@ class _KetionAttachmentFileCardState
                     color: isDark ? Colors.grey.shade800 : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: isDark
-                            ? Colors.grey.shade700
-                            : Colors.grey.shade200,),
+                      color:
+                          isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    ),
                   ),
                   child: isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),)
-                      : Icon(widget.icon,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          widget.icon,
                           size: 24,
                           color: isDark
                               ? Colors.grey.shade300
-                              : Colors.grey.shade700,),
+                              : Colors.grey.shade700,
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -590,12 +652,18 @@ class _MediaPlaceholder extends StatelessWidget {
         children: [
           Icon(icon, size: 32, color: Colors.grey),
           const SizedBox(height: 8),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.grey, fontWeight: FontWeight.bold,),),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          const Text('Coming Soon',
-              style: TextStyle(color: Colors.grey, fontSize: 12),),
+          const Text(
+            'Coming Soon',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -632,7 +700,8 @@ class _LinkCard extends StatelessWidget {
         color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -649,14 +718,15 @@ class _LinkCard extends StatelessWidget {
                     color: isDark ? Colors.grey.shade800 : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: isDark
-                            ? Colors.grey.shade700
-                            : Colors.grey.shade200,),
-                  ),
-                  child: Icon(icon,
-                      size: 24,
                       color:
-                          isDark ? Colors.grey.shade300 : Colors.grey.shade700,),
+                          isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 24,
+                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -667,7 +737,9 @@ class _LinkCard extends StatelessWidget {
                       Text(
                         url.isEmpty ? 'Empty $label' : url,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w500, fontSize: 14,),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -675,7 +747,9 @@ class _LinkCard extends StatelessWidget {
                       Text(
                         label,
                         style: TextStyle(
-                            color: Colors.grey.shade500, fontSize: 12,),
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -701,7 +775,9 @@ class _PageLinkCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (pageId.isEmpty) {
       return const _MediaPlaceholder(
-          icon: Icons.insert_link, label: 'Empty page link',);
+        icon: Icons.insert_link,
+        label: 'Empty page link',
+      );
     }
 
     final pageAsync = ref.watch(pageProvider(pageId));
@@ -717,13 +793,15 @@ class _PageLinkCard extends ConsumerWidget {
             color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-                color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+              color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+            ),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                context.pushNamed(Routes.editorName, pathParameters: {'pageId': pageId});
+                context.pushNamed(Routes.editorName,
+                    pathParameters: {'pageId': pageId});
               },
               borderRadius: BorderRadius.circular(8),
               child: Padding(
@@ -736,15 +814,18 @@ class _PageLinkCard extends ConsumerWidget {
                         color: isDark ? Colors.grey.shade800 : Colors.white,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: isDark
-                                ? Colors.grey.shade700
-                                : Colors.grey.shade200,),
-                      ),
-                      child: Icon(Icons.insert_drive_file_outlined,
-                          size: 24,
                           color: isDark
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade700,),
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade200,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.insert_drive_file_outlined,
+                        size: 24,
+                        color: isDark
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade700,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -755,7 +836,9 @@ class _PageLinkCard extends ConsumerWidget {
                           Text(
                             title.isEmpty ? 'Untitled' : title,
                             style: const TextStyle(
-                                fontWeight: FontWeight.w500, fontSize: 14,),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -763,7 +846,9 @@ class _PageLinkCard extends ConsumerWidget {
                           Text(
                             'Link to page',
                             style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 12,),
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -778,9 +863,13 @@ class _PageLinkCard extends ConsumerWidget {
         );
       },
       loading: () => const _MediaPlaceholder(
-          icon: Icons.insert_link, label: 'Loading page...',),
+        icon: Icons.insert_link,
+        label: 'Loading page...',
+      ),
       error: (e, st) => const _MediaPlaceholder(
-          icon: Icons.error_outline, label: 'Error loading page',),
+        icon: Icons.error_outline,
+        label: 'Error loading page',
+      ),
     );
   }
 }
@@ -832,7 +921,8 @@ class _ReminderCard extends StatelessWidget {
         color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-            color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,),
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -882,14 +972,15 @@ class _ReminderCard extends StatelessWidget {
                     color: isDark ? Colors.grey.shade800 : Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: isDark
-                            ? Colors.grey.shade700
-                            : Colors.grey.shade200,),
-                  ),
-                  child: Icon(Icons.access_time,
-                      size: 24,
                       color:
-                          isDark ? Colors.grey.shade300 : Colors.grey.shade700,),
+                          isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.access_time,
+                    size: 24,
+                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

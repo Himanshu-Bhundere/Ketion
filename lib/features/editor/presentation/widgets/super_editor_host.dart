@@ -654,6 +654,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   indentParagraphWhenTabPressed,
                   unindentParagraphWhenShiftTabPressed,
                   unindentParagraphWhenBackspacePressed,
+                  unindentParagraphWhenEnterPressedOnEmpty,
                   splitToggleWhenEnterPressed,
                   splitCalloutWhenEnterPressed,
                   convertCalloutToParagraphWhenBackspacePressed,

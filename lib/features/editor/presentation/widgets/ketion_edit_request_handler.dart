@@ -776,6 +776,14 @@ class _KetionDelegatingCommand extends EditCommand {
           final req = reqToCreate;
           final node = document.getNodeById(req.nodeId);
           if (node != null) {
+            final blockId = registry.blockIdForNode(req.nodeId);
+            if (blockId != null) {
+              if (req.isExpanded) {
+                adapter.restoreSubtree(blockId);
+              } else {
+                adapter.hideSubtree(blockId);
+              }
+            }
             return ChangeParagraphMetadataCommand(
               ChangeParagraphMetadataRequest(
                 nodeId: req.nodeId,
@@ -872,6 +880,15 @@ class _KetionDelegatingCommand extends EditCommand {
     final newData = BlockDataSerializer.encodeDocumentNode(newNode);
     final newType = BlockDataSerializer.blockTypeFor(newNode);
 
+    final rawParent = newNode.metadata['parentBlockId'] as String?;
+    final origParent = originalNode.metadata['parentBlockId'] as String?;
+    final rawFallback = origParent != null
+        ? (registry.blockIdForNode(origParent) ?? origParent)
+        : null;
+    final providedParentBlockId = rawParent != null
+        ? (registry.blockIdForNode(rawParent) ?? rawParent)
+        : rawFallback;
+
     return StructuralMutationBuilder.buildSplitMutation(
       pageId: pageId,
       originalBlockId: originalBlockId,
@@ -880,6 +897,7 @@ class _KetionDelegatingCommand extends EditCommand {
       newData: newData,
       newType: newType,
       snapshot: snapshot,
+      providedParentBlockId: providedParentBlockId,
     );
   }
 
@@ -945,6 +963,11 @@ class _KetionDelegatingCommand extends EditCommand {
     final nextBlockId =
         nextNodeId != null ? registry.blockIdForNode(nextNodeId) : null;
 
+    final rawParent = node.metadata['parentBlockId'] as String?;
+    final providedParentBlockId = rawParent != null
+        ? (registry.blockIdForNode(rawParent) ?? rawParent)
+        : null;
+
     return StructuralMutationBuilder.buildInsertMutation(
       pageId: pageId,
       blockId: newBlockId,
@@ -952,6 +975,7 @@ class _KetionDelegatingCommand extends EditCommand {
       type: type,
       previousBlockId: previousBlockId,
       nextBlockId: nextBlockId,
+      providedParentBlockId: providedParentBlockId,
       snapshot: snapshot,
     );
   }

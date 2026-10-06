@@ -87,8 +87,7 @@ class BlockTreeService {
           } catch (_) {}
         }
 
-        final nextHiddenBy =
-            hiddenByAncestorId ?? (!isExpanded ? child.id : null);
+        final nextHiddenBy = !isExpanded ? child.id : hiddenByAncestorId;
         traverse(child.id, actualDepth + 1, nextHiddenBy);
       }
     }

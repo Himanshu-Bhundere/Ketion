@@ -124,24 +124,24 @@ class StructuralMutationBuilder {
     String? parentBlockId = providedParentBlockId;
 
     if (previousBlockId != null) {
-      previousBlock = snapshot.getBlock(previousBlockId);
-      if (previousBlock != null && !previousBlock.deleted) {
-        parentBlockId ??= previousBlock.parentBlockId;
-      } else {
-        previousBlock = null;
+      final prev = snapshot.getBlock(previousBlockId);
+      if (prev != null && !prev.deleted) {
+        parentBlockId ??= prev.parentBlockId;
+        if (prev.blockId != parentBlockId && prev.parentBlockId == parentBlockId) {
+          previousBlock = prev;
+        }
       }
     }
 
     if (nextBlockId != null) {
-      nextBlock = snapshot.getBlock(nextBlockId);
-      if (nextBlock != null && !nextBlock.deleted) {
+      final next = snapshot.getBlock(nextBlockId);
+      if (next != null && !next.deleted) {
         if (parentBlockId == null) {
-          parentBlockId = nextBlock.parentBlockId;
-        } else if (parentBlockId != nextBlock.parentBlockId) {
-          nextBlock = null;
+          parentBlockId = next.parentBlockId;
+          nextBlock = next;
+        } else if (parentBlockId == next.parentBlockId) {
+          nextBlock = next;
         }
-      } else {
-        nextBlock = null;
       }
     }
 

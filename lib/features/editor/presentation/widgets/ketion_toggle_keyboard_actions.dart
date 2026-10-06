@@ -198,3 +198,47 @@ ExecutionInstruction unindentParagraphWhenBackspacePressed({
 
   return ExecutionInstruction.haltExecution;
 }
+
+ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+}) {
+  if (keyEvent.logicalKey != LogicalKeyboardKey.enter &&
+      keyEvent.logicalKey != LogicalKeyboardKey.numpadEnter) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (keyEvent is! KeyDownEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final hardwareKeyboard = HardwareKeyboard.instance;
+  if (hardwareKeyboard.isShiftPressed) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final selection = editContext.composer.selection;
+  if (selection == null || !selection.isCollapsed) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final node = editContext.document.getNodeById(selection.extent.nodeId);
+  if (node is! ParagraphNode) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final blockType = node.metadata['blockType'];
+  if (blockType is NamedAttribution && blockType.name == 'toggle') {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final depth = node.metadata['depth'] as int? ?? 0;
+  if (depth > 0 && node.text.isEmpty) {
+    editContext.editor.execute([
+      UnIndentParagraphRequest(node.id),
+    ]);
+    return ExecutionInstruction.haltExecution;
+  }
+
+  return ExecutionInstruction.continueExecution;
+}

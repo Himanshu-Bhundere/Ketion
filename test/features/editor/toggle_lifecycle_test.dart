@@ -209,5 +209,199 @@ void main() {
           adapter2.registry.blockIdForNode(restoredChildNode!.id);
       expect(childBlockId, 'child-1');
     });
+
+    test('nested toggles: expanding outer toggle preserves inner toggle collapsed state',
+        () async {
+      final snapshot = EditorPersistenceSnapshot('page-1', {});
+      final coordinator = MockPersistenceCoordinator();
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-1',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final outerToggle = Block(
+        id: 'toggle-outer',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [{'text': 'Outer Toggle'}],
+          'listType': 'toggle',
+          'isExpanded': false,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final innerToggle = Block(
+        id: 'toggle-inner',
+        pageId: 'page-1',
+        parentBlockId: 'toggle-outer',
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [{'text': 'Inner Toggle'}],
+          'listType': 'toggle',
+          'isExpanded': false,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final innerChild = Block(
+        id: 'inner-child',
+        pageId: 'page-1',
+        parentBlockId: 'toggle-inner',
+        position: 0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [{'text': 'Deep nested content'}],
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      // On initial document creation, both are collapsed so only outer toggle is visible
+      final document =
+          adapter.createDocument([outerToggle, innerToggle, innerChild]);
+      expect(document.nodeCount, 1);
+      expect(
+        (document.getNodeAt(0) as ParagraphNode).text.toPlainText(),
+        'Outer Toggle',
+      );
+
+      final editor = Editor(
+        editables: {Editor.documentKey: document},
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: MutableDocumentComposer(),
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+        ],
+      );
+      adapter.bind(document, editor);
+
+      // Expand outer toggle
+      editor.execute([
+        ToggleExpandedRequest(
+          nodeId: document.getNodeAt(0)!.id,
+          isExpanded: true,
+        ),
+      ]);
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      // Outer is expanded: now inner toggle is visible (2 nodes), BUT innerChild remains hidden!
+      expect(document.nodeCount, 2);
+      expect(
+        (document.getNodeAt(1) as ParagraphNode).text.toPlainText(),
+        'Inner Toggle',
+      );
+
+      // Expand inner toggle
+      editor.execute([
+        ToggleExpandedRequest(
+          nodeId: document.getNodeAt(1)!.id,
+          isExpanded: true,
+        ),
+      ]);
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      // Both expanded: all 3 nodes visible
+      expect(document.nodeCount, 3);
+      expect(
+        (document.getNodeAt(2) as ParagraphNode).text.toPlainText(),
+        'Deep nested content',
+      );
+    });
+
+    test('Insert child via InsertNodeAfterNodeRequest sets parentBlockId in persistence',
+        () async {
+      final snapshot = EditorPersistenceSnapshot('page-1', {});
+      final coordinator = MockPersistenceCoordinator();
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-1',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final toggle = Block(
+        id: 'toggle-p',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [{'text': 'Parent Toggle'}],
+          'listType': 'toggle',
+          'isExpanded': true,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final document = adapter.createDocument([toggle]);
+      final editor = Editor(
+        editables: {Editor.documentKey: document},
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: MutableDocumentComposer(),
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+        ],
+      );
+      adapter.bind(document, editor);
+
+      final childNodeId = Editor.createNodeId();
+      editor.execute([
+        InsertNodeAfterNodeRequest(
+          existingNodeId: document.getNodeAt(0)!.id,
+          newNode: ParagraphNode(
+            id: childNodeId,
+            text: AttributedText('New Child Content'),
+            metadata: {
+              'depth': 1,
+              'parentBlockId': document.getNodeAt(0)!.id,
+            },
+          ),
+        ),
+      ]);
+
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      final insertMutation = coordinator.mutations.lastWhere(
+        (m) => m is InsertBlockMutation,
+      ) as InsertBlockMutation;
+
+      expect(
+        insertMutation.parentBlockId,
+        'toggle-p',
+        reason: 'Child block must persist parentBlockId = toggle-p',
+      );
+    });
   });
 }

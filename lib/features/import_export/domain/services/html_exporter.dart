@@ -82,6 +82,22 @@ class HtmlExporter implements ExportRepository {
         divider: (d) {
           buffer.writeln('<hr/>');
         },
+        callout: (c) {
+          buffer.writeln(
+            '<div class="callout" style="border: 1px solid #e0e0e0; background: #f9f9f9; padding: 12px; border-radius: 6px; margin: 8px 0;"><span>${_escapeHtml(c.icon)}</span> ${_spansToHtml(c.spans)}</div>',
+          );
+        },
+        table: (t) {
+          buffer.writeln('<table border="1" style="border-collapse: collapse; width: 100%; margin: 8px 0;">');
+          for (final row in t.rows) {
+            buffer.writeln('<tr>');
+            for (final cell in row) {
+              buffer.writeln('<td style="padding: 8px; border: 1px solid #ddd;">${_escapeHtml(cell)}</td>');
+            }
+            buffer.writeln('</tr>');
+          }
+          buffer.writeln('</table>');
+        },
       );
     }
 

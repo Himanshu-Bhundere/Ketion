@@ -215,8 +215,22 @@ mixin _$DocumentNode {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) =>
@@ -228,8 +242,21 @@ mixin _$DocumentNode {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) =>
@@ -241,8 +268,21 @@ mixin _$DocumentNode {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -255,6 +295,8 @@ mixin _$DocumentNode {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) =>
@@ -266,6 +308,8 @@ mixin _$DocumentNode {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) =>
@@ -277,6 +321,8 @@ mixin _$DocumentNode {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -378,8 +424,22 @@ class _$DocParagraphImpl implements DocParagraph {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
@@ -394,8 +454,21 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
@@ -410,8 +483,21 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -430,6 +516,8 @@ class _$DocParagraphImpl implements DocParagraph {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -444,6 +532,8 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -458,6 +548,8 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -564,8 +656,22 @@ class _$DocHeadingImpl implements DocHeading {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
@@ -580,8 +686,21 @@ class _$DocHeadingImpl implements DocHeading {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
@@ -596,8 +715,21 @@ class _$DocHeadingImpl implements DocHeading {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -616,6 +748,8 @@ class _$DocHeadingImpl implements DocHeading {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -630,6 +764,8 @@ class _$DocHeadingImpl implements DocHeading {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -644,6 +780,8 @@ class _$DocHeadingImpl implements DocHeading {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -764,8 +902,22 @@ class _$DocListImpl implements DocList {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
@@ -780,8 +932,21 @@ class _$DocListImpl implements DocList {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
@@ -796,8 +961,21 @@ class _$DocListImpl implements DocList {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -816,6 +994,8 @@ class _$DocListImpl implements DocList {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -830,6 +1010,8 @@ class _$DocListImpl implements DocList {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -844,6 +1026,8 @@ class _$DocListImpl implements DocList {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -875,7 +1059,12 @@ abstract class _$$DocImageImplCopyWith<$Res> {
           _$DocImageImpl value, $Res Function(_$DocImageImpl) then) =
       __$$DocImageImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String attachmentId, String? caption});
+  $Res call(
+      {String attachmentId,
+      String? caption,
+      String? fileName,
+      Uint8List? imageBytes,
+      bool isAvailable});
 }
 
 /// @nodoc
@@ -891,6 +1080,9 @@ class __$$DocImageImplCopyWithImpl<$Res>
   $Res call({
     Object? attachmentId = null,
     Object? caption = freezed,
+    Object? fileName = freezed,
+    Object? imageBytes = freezed,
+    Object? isAvailable = null,
   }) {
     return _then(_$DocImageImpl(
       attachmentId: null == attachmentId
@@ -901,6 +1093,18 @@ class __$$DocImageImplCopyWithImpl<$Res>
           ? _value.caption
           : caption // ignore: cast_nullable_to_non_nullable
               as String?,
+      fileName: freezed == fileName
+          ? _value.fileName
+          : fileName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      imageBytes: freezed == imageBytes
+          ? _value.imageBytes
+          : imageBytes // ignore: cast_nullable_to_non_nullable
+              as Uint8List?,
+      isAvailable: null == isAvailable
+          ? _value.isAvailable
+          : isAvailable // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -908,16 +1112,28 @@ class __$$DocImageImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DocImageImpl implements DocImage {
-  const _$DocImageImpl({required this.attachmentId, this.caption});
+  const _$DocImageImpl(
+      {required this.attachmentId,
+      this.caption,
+      this.fileName,
+      this.imageBytes,
+      this.isAvailable = true});
 
   @override
   final String attachmentId;
   @override
   final String? caption;
+  @override
+  final String? fileName;
+  @override
+  final Uint8List? imageBytes;
+  @override
+  @JsonKey()
+  final bool isAvailable;
 
   @override
   String toString() {
-    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption)';
+    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, imageBytes: $imageBytes, isAvailable: $isAvailable)';
   }
 
   @override
@@ -927,11 +1143,18 @@ class _$DocImageImpl implements DocImage {
             other is _$DocImageImpl &&
             (identical(other.attachmentId, attachmentId) ||
                 other.attachmentId == attachmentId) &&
-            (identical(other.caption, caption) || other.caption == caption));
+            (identical(other.caption, caption) || other.caption == caption) &&
+            (identical(other.fileName, fileName) ||
+                other.fileName == fileName) &&
+            const DeepCollectionEquality()
+                .equals(other.imageBytes, imageBytes) &&
+            (identical(other.isAvailable, isAvailable) ||
+                other.isAvailable == isAvailable));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, attachmentId, caption);
+  int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
+      const DeepCollectionEquality().hash(imageBytes), isAvailable);
 
   @JsonKey(ignore: true)
   @override
@@ -947,12 +1170,26 @@ class _$DocImageImpl implements DocImage {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
-    return image(attachmentId, caption);
+    return image(attachmentId, caption, fileName, imageBytes, isAvailable);
   }
 
   @override
@@ -963,12 +1200,26 @@ class _$DocImageImpl implements DocImage {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
-    return image?.call(attachmentId, caption);
+    return image?.call(
+        attachmentId, caption, fileName, imageBytes, isAvailable);
   }
 
   @override
@@ -979,14 +1230,27 @@ class _$DocImageImpl implements DocImage {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
-      return image(attachmentId, caption);
+      return image(attachmentId, caption, fileName, imageBytes, isAvailable);
     }
     return orElse();
   }
@@ -999,6 +1263,8 @@ class _$DocImageImpl implements DocImage {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -1013,6 +1279,8 @@ class _$DocImageImpl implements DocImage {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -1027,6 +1295,8 @@ class _$DocImageImpl implements DocImage {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -1041,10 +1311,16 @@ class _$DocImageImpl implements DocImage {
 abstract class DocImage implements DocumentNode {
   const factory DocImage(
       {required final String attachmentId,
-      final String? caption}) = _$DocImageImpl;
+      final String? caption,
+      final String? fileName,
+      final Uint8List? imageBytes,
+      final bool isAvailable}) = _$DocImageImpl;
 
   String get attachmentId;
   String? get caption;
+  String? get fileName;
+  Uint8List? get imageBytes;
+  bool get isAvailable;
   @JsonKey(ignore: true)
   _$$DocImageImplCopyWith<_$DocImageImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -1056,7 +1332,14 @@ abstract class _$$DocFileImplCopyWith<$Res> {
           _$DocFileImpl value, $Res Function(_$DocFileImpl) then) =
       __$$DocFileImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({String attachmentId, String? caption});
+  $Res call(
+      {String attachmentId,
+      String? caption,
+      String? fileName,
+      String? mimeType,
+      int? fileSize,
+      String fileTypeLabel,
+      bool isAvailable});
 }
 
 /// @nodoc
@@ -1072,6 +1355,11 @@ class __$$DocFileImplCopyWithImpl<$Res>
   $Res call({
     Object? attachmentId = null,
     Object? caption = freezed,
+    Object? fileName = freezed,
+    Object? mimeType = freezed,
+    Object? fileSize = freezed,
+    Object? fileTypeLabel = null,
+    Object? isAvailable = null,
   }) {
     return _then(_$DocFileImpl(
       attachmentId: null == attachmentId
@@ -1082,6 +1370,26 @@ class __$$DocFileImplCopyWithImpl<$Res>
           ? _value.caption
           : caption // ignore: cast_nullable_to_non_nullable
               as String?,
+      fileName: freezed == fileName
+          ? _value.fileName
+          : fileName // ignore: cast_nullable_to_non_nullable
+              as String?,
+      mimeType: freezed == mimeType
+          ? _value.mimeType
+          : mimeType // ignore: cast_nullable_to_non_nullable
+              as String?,
+      fileSize: freezed == fileSize
+          ? _value.fileSize
+          : fileSize // ignore: cast_nullable_to_non_nullable
+              as int?,
+      fileTypeLabel: null == fileTypeLabel
+          ? _value.fileTypeLabel
+          : fileTypeLabel // ignore: cast_nullable_to_non_nullable
+              as String,
+      isAvailable: null == isAvailable
+          ? _value.isAvailable
+          : isAvailable // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -1089,16 +1397,35 @@ class __$$DocFileImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DocFileImpl implements DocFile {
-  const _$DocFileImpl({required this.attachmentId, this.caption});
+  const _$DocFileImpl(
+      {required this.attachmentId,
+      this.caption,
+      this.fileName,
+      this.mimeType,
+      this.fileSize,
+      this.fileTypeLabel = 'File',
+      this.isAvailable = true});
 
   @override
   final String attachmentId;
   @override
   final String? caption;
+  @override
+  final String? fileName;
+  @override
+  final String? mimeType;
+  @override
+  final int? fileSize;
+  @override
+  @JsonKey()
+  final String fileTypeLabel;
+  @override
+  @JsonKey()
+  final bool isAvailable;
 
   @override
   String toString() {
-    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption)';
+    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, mimeType: $mimeType, fileSize: $fileSize, fileTypeLabel: $fileTypeLabel, isAvailable: $isAvailable)';
   }
 
   @override
@@ -1108,11 +1435,22 @@ class _$DocFileImpl implements DocFile {
             other is _$DocFileImpl &&
             (identical(other.attachmentId, attachmentId) ||
                 other.attachmentId == attachmentId) &&
-            (identical(other.caption, caption) || other.caption == caption));
+            (identical(other.caption, caption) || other.caption == caption) &&
+            (identical(other.fileName, fileName) ||
+                other.fileName == fileName) &&
+            (identical(other.mimeType, mimeType) ||
+                other.mimeType == mimeType) &&
+            (identical(other.fileSize, fileSize) ||
+                other.fileSize == fileSize) &&
+            (identical(other.fileTypeLabel, fileTypeLabel) ||
+                other.fileTypeLabel == fileTypeLabel) &&
+            (identical(other.isAvailable, isAvailable) ||
+                other.isAvailable == isAvailable));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, attachmentId, caption);
+  int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
+      mimeType, fileSize, fileTypeLabel, isAvailable);
 
   @JsonKey(ignore: true)
   @override
@@ -1128,12 +1466,27 @@ class _$DocFileImpl implements DocFile {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
-    return file(attachmentId, caption);
+    return file(attachmentId, caption, fileName, mimeType, fileSize,
+        fileTypeLabel, isAvailable);
   }
 
   @override
@@ -1144,12 +1497,26 @@ class _$DocFileImpl implements DocFile {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
-    return file?.call(attachmentId, caption);
+    return file?.call(attachmentId, caption, fileName, mimeType, fileSize,
+        fileTypeLabel, isAvailable);
   }
 
   @override
@@ -1160,14 +1527,28 @@ class _$DocFileImpl implements DocFile {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
-      return file(attachmentId, caption);
+      return file(attachmentId, caption, fileName, mimeType, fileSize,
+          fileTypeLabel, isAvailable);
     }
     return orElse();
   }
@@ -1180,6 +1561,8 @@ class _$DocFileImpl implements DocFile {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -1194,6 +1577,8 @@ class _$DocFileImpl implements DocFile {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -1208,6 +1593,8 @@ class _$DocFileImpl implements DocFile {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -1222,12 +1609,503 @@ class _$DocFileImpl implements DocFile {
 abstract class DocFile implements DocumentNode {
   const factory DocFile(
       {required final String attachmentId,
-      final String? caption}) = _$DocFileImpl;
+      final String? caption,
+      final String? fileName,
+      final String? mimeType,
+      final int? fileSize,
+      final String fileTypeLabel,
+      final bool isAvailable}) = _$DocFileImpl;
 
   String get attachmentId;
   String? get caption;
+  String? get fileName;
+  String? get mimeType;
+  int? get fileSize;
+  String get fileTypeLabel;
+  bool get isAvailable;
   @JsonKey(ignore: true)
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DocCalloutImplCopyWith<$Res> {
+  factory _$$DocCalloutImplCopyWith(
+          _$DocCalloutImpl value, $Res Function(_$DocCalloutImpl) then) =
+      __$$DocCalloutImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({String icon, String color, List<DocumentTextSpan> spans});
+}
+
+/// @nodoc
+class __$$DocCalloutImplCopyWithImpl<$Res>
+    extends _$DocumentNodeCopyWithImpl<$Res, _$DocCalloutImpl>
+    implements _$$DocCalloutImplCopyWith<$Res> {
+  __$$DocCalloutImplCopyWithImpl(
+      _$DocCalloutImpl _value, $Res Function(_$DocCalloutImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? icon = null,
+    Object? color = null,
+    Object? spans = null,
+  }) {
+    return _then(_$DocCalloutImpl(
+      icon: null == icon
+          ? _value.icon
+          : icon // ignore: cast_nullable_to_non_nullable
+              as String,
+      color: null == color
+          ? _value.color
+          : color // ignore: cast_nullable_to_non_nullable
+              as String,
+      spans: null == spans
+          ? _value._spans
+          : spans // ignore: cast_nullable_to_non_nullable
+              as List<DocumentTextSpan>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DocCalloutImpl implements DocCallout {
+  const _$DocCalloutImpl(
+      {required this.icon,
+      required this.color,
+      required final List<DocumentTextSpan> spans})
+      : _spans = spans;
+
+  @override
+  final String icon;
+  @override
+  final String color;
+  final List<DocumentTextSpan> _spans;
+  @override
+  List<DocumentTextSpan> get spans {
+    if (_spans is EqualUnmodifiableListView) return _spans;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_spans);
+  }
+
+  @override
+  String toString() {
+    return 'DocumentNode.callout(icon: $icon, color: $color, spans: $spans)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocCalloutImpl &&
+            (identical(other.icon, icon) || other.icon == icon) &&
+            (identical(other.color, color) || other.color == color) &&
+            const DeepCollectionEquality().equals(other._spans, _spans));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, icon, color, const DeepCollectionEquality().hash(_spans));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
+      __$$DocCalloutImplCopyWithImpl<_$DocCalloutImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<DocumentTextSpan> spans) paragraph,
+    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)
+        list,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
+  }) {
+    return callout(icon, color, spans);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult? Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
+  }) {
+    return callout?.call(icon, color, spans);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
+    required TResult orElse(),
+  }) {
+    if (callout != null) {
+      return callout(icon, color, spans);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(DocParagraph value) paragraph,
+    required TResult Function(DocHeading value) heading,
+    required TResult Function(DocList value) list,
+    required TResult Function(DocImage value) image,
+    required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
+  }) {
+    return callout(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(DocParagraph value)? paragraph,
+    TResult? Function(DocHeading value)? heading,
+    TResult? Function(DocList value)? list,
+    TResult? Function(DocImage value)? image,
+    TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
+  }) {
+    return callout?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(DocParagraph value)? paragraph,
+    TResult Function(DocHeading value)? heading,
+    TResult Function(DocList value)? list,
+    TResult Function(DocImage value)? image,
+    TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
+    required TResult orElse(),
+  }) {
+    if (callout != null) {
+      return callout(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class DocCallout implements DocumentNode {
+  const factory DocCallout(
+      {required final String icon,
+      required final String color,
+      required final List<DocumentTextSpan> spans}) = _$DocCalloutImpl;
+
+  String get icon;
+  String get color;
+  List<DocumentTextSpan> get spans;
+  @JsonKey(ignore: true)
+  _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class _$$DocTableImplCopyWith<$Res> {
+  factory _$$DocTableImplCopyWith(
+          _$DocTableImpl value, $Res Function(_$DocTableImpl) then) =
+      __$$DocTableImplCopyWithImpl<$Res>;
+  @useResult
+  $Res call({int columnCount, List<List<String>> rows});
+}
+
+/// @nodoc
+class __$$DocTableImplCopyWithImpl<$Res>
+    extends _$DocumentNodeCopyWithImpl<$Res, _$DocTableImpl>
+    implements _$$DocTableImplCopyWith<$Res> {
+  __$$DocTableImplCopyWithImpl(
+      _$DocTableImpl _value, $Res Function(_$DocTableImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? columnCount = null,
+    Object? rows = null,
+  }) {
+    return _then(_$DocTableImpl(
+      columnCount: null == columnCount
+          ? _value.columnCount
+          : columnCount // ignore: cast_nullable_to_non_nullable
+              as int,
+      rows: null == rows
+          ? _value._rows
+          : rows // ignore: cast_nullable_to_non_nullable
+              as List<List<String>>,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DocTableImpl implements DocTable {
+  const _$DocTableImpl(
+      {required this.columnCount, required final List<List<String>> rows})
+      : _rows = rows;
+
+  @override
+  final int columnCount;
+  final List<List<String>> _rows;
+  @override
+  List<List<String>> get rows {
+    if (_rows is EqualUnmodifiableListView) return _rows;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_rows);
+  }
+
+  @override
+  String toString() {
+    return 'DocumentNode.table(columnCount: $columnCount, rows: $rows)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DocTableImpl &&
+            (identical(other.columnCount, columnCount) ||
+                other.columnCount == columnCount) &&
+            const DeepCollectionEquality().equals(other._rows, _rows));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, columnCount, const DeepCollectionEquality().hash(_rows));
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
+      __$$DocTableImplCopyWithImpl<_$DocTableImpl>(this, _$identity);
+
+  @override
+  @optionalTypeArgs
+  TResult when<TResult extends Object?>({
+    required TResult Function(List<DocumentTextSpan> spans) paragraph,
+    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)
+        list,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
+    required TResult Function() divider,
+    required TResult Function(String code, String language) code,
+  }) {
+    return table(columnCount, rows);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? whenOrNull<TResult extends Object?>({
+    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult? Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
+    TResult? Function()? divider,
+    TResult? Function(String code, String language)? code,
+  }) {
+    return table?.call(columnCount, rows);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeWhen<TResult extends Object?>({
+    TResult Function(List<DocumentTextSpan> spans)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
+    TResult Function(
+            String listType, bool checked, List<DocumentTextSpan> spans)?
+        list,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
+    TResult Function()? divider,
+    TResult Function(String code, String language)? code,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(columnCount, rows);
+    }
+    return orElse();
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult map<TResult extends Object?>({
+    required TResult Function(DocParagraph value) paragraph,
+    required TResult Function(DocHeading value) heading,
+    required TResult Function(DocList value) list,
+    required TResult Function(DocImage value) image,
+    required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
+    required TResult Function(DocDivider value) divider,
+    required TResult Function(DocCode value) code,
+  }) {
+    return table(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult? mapOrNull<TResult extends Object?>({
+    TResult? Function(DocParagraph value)? paragraph,
+    TResult? Function(DocHeading value)? heading,
+    TResult? Function(DocList value)? list,
+    TResult? Function(DocImage value)? image,
+    TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
+    TResult? Function(DocDivider value)? divider,
+    TResult? Function(DocCode value)? code,
+  }) {
+    return table?.call(this);
+  }
+
+  @override
+  @optionalTypeArgs
+  TResult maybeMap<TResult extends Object?>({
+    TResult Function(DocParagraph value)? paragraph,
+    TResult Function(DocHeading value)? heading,
+    TResult Function(DocList value)? list,
+    TResult Function(DocImage value)? image,
+    TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
+    TResult Function(DocDivider value)? divider,
+    TResult Function(DocCode value)? code,
+    required TResult orElse(),
+  }) {
+    if (table != null) {
+      return table(this);
+    }
+    return orElse();
+  }
+}
+
+abstract class DocTable implements DocumentNode {
+  const factory DocTable(
+      {required final int columnCount,
+      required final List<List<String>> rows}) = _$DocTableImpl;
+
+  int get columnCount;
+  List<List<String>> get rows;
+  @JsonKey(ignore: true)
+  _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -1274,8 +2152,22 @@ class _$DocDividerImpl implements DocDivider {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
@@ -1290,8 +2182,21 @@ class _$DocDividerImpl implements DocDivider {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
@@ -1306,8 +2211,21 @@ class _$DocDividerImpl implements DocDivider {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -1326,6 +2244,8 @@ class _$DocDividerImpl implements DocDivider {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -1340,6 +2260,8 @@ class _$DocDividerImpl implements DocDivider {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -1354,6 +2276,8 @@ class _$DocDividerImpl implements DocDivider {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),
@@ -1447,8 +2371,22 @@ class _$DocCodeImpl implements DocCode {
     required TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)
         list,
-    required TResult Function(String attachmentId, String? caption) image,
-    required TResult Function(String attachmentId, String? caption) file,
+    required TResult Function(String attachmentId, String? caption,
+            String? fileName, Uint8List? imageBytes, bool isAvailable)
+        image,
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)
+        file,
+    required TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans)
+        callout,
+    required TResult Function(int columnCount, List<List<String>> rows) table,
     required TResult Function() divider,
     required TResult Function(String code, String language) code,
   }) {
@@ -1463,8 +2401,21 @@ class _$DocCodeImpl implements DocCode {
     TResult? Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult? Function(String attachmentId, String? caption)? image,
-    TResult? Function(String attachmentId, String? caption)? file,
+    TResult? Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult? Function(int columnCount, List<List<String>> rows)? table,
     TResult? Function()? divider,
     TResult? Function(String code, String language)? code,
   }) {
@@ -1479,8 +2430,21 @@ class _$DocCodeImpl implements DocCode {
     TResult Function(
             String listType, bool checked, List<DocumentTextSpan> spans)?
         list,
-    TResult Function(String attachmentId, String? caption)? image,
-    TResult Function(String attachmentId, String? caption)? file,
+    TResult Function(String attachmentId, String? caption, String? fileName,
+            Uint8List? imageBytes, bool isAvailable)?
+        image,
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            String? mimeType,
+            int? fileSize,
+            String fileTypeLabel,
+            bool isAvailable)?
+        file,
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+        callout,
+    TResult Function(int columnCount, List<List<String>> rows)? table,
     TResult Function()? divider,
     TResult Function(String code, String language)? code,
     required TResult orElse(),
@@ -1499,6 +2463,8 @@ class _$DocCodeImpl implements DocCode {
     required TResult Function(DocList value) list,
     required TResult Function(DocImage value) image,
     required TResult Function(DocFile value) file,
+    required TResult Function(DocCallout value) callout,
+    required TResult Function(DocTable value) table,
     required TResult Function(DocDivider value) divider,
     required TResult Function(DocCode value) code,
   }) {
@@ -1513,6 +2479,8 @@ class _$DocCodeImpl implements DocCode {
     TResult? Function(DocList value)? list,
     TResult? Function(DocImage value)? image,
     TResult? Function(DocFile value)? file,
+    TResult? Function(DocCallout value)? callout,
+    TResult? Function(DocTable value)? table,
     TResult? Function(DocDivider value)? divider,
     TResult? Function(DocCode value)? code,
   }) {
@@ -1527,6 +2495,8 @@ class _$DocCodeImpl implements DocCode {
     TResult Function(DocList value)? list,
     TResult Function(DocImage value)? image,
     TResult Function(DocFile value)? file,
+    TResult Function(DocCallout value)? callout,
+    TResult Function(DocTable value)? table,
     TResult Function(DocDivider value)? divider,
     TResult Function(DocCode value)? code,
     required TResult orElse(),

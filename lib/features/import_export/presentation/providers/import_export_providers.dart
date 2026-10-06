@@ -10,6 +10,8 @@ import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart'
 import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 
+import 'package:ketion/features/media/data/repositories/attachment_repository_impl.dart';
+
 final exportRepositoriesProvider = Provider<List<ExportRepository>>((ref) {
   return [
     MarkdownExporter(),
@@ -19,7 +21,10 @@ final exportRepositoriesProvider = Provider<List<ExportRepository>>((ref) {
 });
 
 final exportUseCaseProvider = Provider<ExportUseCase>((ref) {
-  return ExportUseCase(ref.watch(exportRepositoriesProvider));
+  return ExportUseCase(
+    ref.watch(exportRepositoriesProvider),
+    ref.watch(attachmentRepositoryProvider),
+  );
 });
 
 final filePickerServiceProvider = Provider<FilePickerService>((ref) {

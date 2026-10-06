@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'document_model.freezed.dart';
@@ -32,12 +33,31 @@ sealed class DocumentNode with _$DocumentNode {
   const factory DocumentNode.image({
     required String attachmentId,
     String? caption,
+    String? fileName,
+    Uint8List? imageBytes,
+    @Default(true) bool isAvailable,
   }) = DocImage;
 
   const factory DocumentNode.file({
     required String attachmentId,
     String? caption,
+    String? fileName,
+    String? mimeType,
+    int? fileSize,
+    @Default('File') String fileTypeLabel,
+    @Default(true) bool isAvailable,
   }) = DocFile;
+
+  const factory DocumentNode.callout({
+    required String icon,
+    required String color,
+    required List<DocumentTextSpan> spans,
+  }) = DocCallout;
+
+  const factory DocumentNode.table({
+    required int columnCount,
+    required List<List<String>> rows,
+  }) = DocTable;
 
   const factory DocumentNode.divider() = DocDivider;
 

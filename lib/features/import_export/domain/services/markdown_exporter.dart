@@ -48,6 +48,22 @@ class MarkdownExporter implements ExportRepository {
           buffer.writeln('---');
           buffer.writeln();
         },
+        callout: (c) {
+          buffer.writeln('> ${c.icon} ${_spansToMarkdown(c.spans)}');
+          buffer.writeln();
+        },
+        table: (t) {
+          for (int r = 0; r < t.rows.length; r++) {
+            final row = t.rows[r];
+            buffer.writeln('| ${row.join(' | ')} |');
+            if (r == 0) {
+              final cols = t.columnCount > 0 ? t.columnCount : row.length;
+              final headerDivider = List.filled(cols, '---');
+              buffer.writeln('| ${headerDivider.join(' | ')} |');
+            }
+          }
+          buffer.writeln();
+        },
       );
     }
 

@@ -2,6 +2,7 @@ enum MatchType {
   pageTitle,
   blockContent,
   tag,
+  collection,
   attachment,
   ocr,
   bookmark,

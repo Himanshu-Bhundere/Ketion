@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration {
@@ -122,6 +122,28 @@ class AppDatabase extends _$AppDatabase {
             UPDATE search_fts 
             SET content = new.name 
             WHERE rowid = old.rowid * 10 + 3;
+          END;
+        ''');
+
+        // Collections Triggers
+        await customStatement('''
+          CREATE TRIGGER collections_ai AFTER INSERT ON collections WHEN new.deleted = 0 BEGIN
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              VALUES (new.rowid * 10 + 4, new.id, NULL, 'collection', new.name);
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER collections_ad AFTER DELETE ON collections BEGIN
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 4;
+          END;
+        ''');
+
+        await customStatement('''
+          CREATE TRIGGER collections_au AFTER UPDATE ON collections BEGIN
+            DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 4;
+            INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+              SELECT new.rowid * 10 + 4, new.id, NULL, 'collection', new.name WHERE new.deleted = 0;
           END;
         ''');
       },
@@ -533,6 +555,34 @@ class AppDatabase extends _$AppDatabase {
         if (from < 19) {
           await m.addColumn(reminders, reminders.kind);
         }
+        if (from < 20) {
+          await customStatement('DROP TRIGGER IF EXISTS collections_ai');
+          await customStatement('DROP TRIGGER IF EXISTS collections_ad');
+          await customStatement('DROP TRIGGER IF EXISTS collections_au');
+
+          await customStatement('''
+            CREATE TRIGGER collections_ai AFTER INSERT ON collections WHEN new.deleted = 0 BEGIN
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+                VALUES (new.rowid * 10 + 4, new.id, NULL, 'collection', new.name);
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER collections_ad AFTER DELETE ON collections BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 4;
+            END;
+          ''');
+
+          await customStatement('''
+            CREATE TRIGGER collections_au AFTER UPDATE ON collections BEGIN
+              DELETE FROM search_fts WHERE rowid = old.rowid * 10 + 4;
+              INSERT INTO search_fts(rowid, entityId, pageId, entityType, content) 
+                SELECT new.rowid * 10 + 4, new.id, NULL, 'collection', new.name WHERE new.deleted = 0;
+            END;
+          ''');
+
+          await rebuildSearchIndex();
+        }
       },
       beforeOpen: (details) async {
         // Enforce foreign keys
@@ -559,6 +609,11 @@ class AppDatabase extends _$AppDatabase {
     await customStatement('''
       INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
             SELECT rowid * 10 + 3, id, NULL, 'tag', name FROM tags;
+    ''');
+
+    await customStatement('''
+      INSERT INTO search_fts(rowid, entityId, pageId, entityType, content)
+            SELECT rowid * 10 + 4, id, NULL, 'collection', name FROM collections WHERE deleted = 0;
     ''');
   }
 

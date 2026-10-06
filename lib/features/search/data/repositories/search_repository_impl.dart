@@ -44,10 +44,11 @@ class SearchRepositoryImpl implements SearchRepository {
           snippet(search_fts, 3, '<mark>', '</mark>', '...', 64) as snippet,
           p.title as pageTitle,
           b.type as blockType,
-          COALESCE(b.updated_at, p.updated_at) as modifiedAt,
-          (SELECT name FROM collections WHERE id = (SELECT collection_id FROM page_collections WHERE page_id = s.pageId LIMIT 1)) as breadcrumb,
+          COALESCE(b.updated_at, p.updated_at, c.updated_at) as modifiedAt,
+          COALESCE(c.name, (SELECT name FROM collections WHERE id = (SELECT collection_id FROM page_collections WHERE page_id = s.pageId LIMIT 1))) as breadcrumb,
           CASE 
              WHEN s.entityType = 'page' THEN 100
+             WHEN s.entityType = 'collection' THEN 90
              WHEN s.entityType = 'block' AND b.type LIKE 'header%' THEN 80
              WHEN s.entityType = 'block' THEN 50
              WHEN s.entityType = 'tag' THEN 30
@@ -57,11 +58,13 @@ class SearchRepositoryImpl implements SearchRepository {
         FROM search_fts s
         LEFT JOIN pages p ON p.id = s.pageId
         LEFT JOIN blocks b ON b.id = s.entityId AND s.entityType = 'block'
+        LEFT JOIN collections c ON c.id = s.entityId AND s.entityType = 'collection'
         WHERE $whereClause
           AND (
             (s.entityType = 'page' AND p.deleted = 0 AND p.is_archived = 0) OR
             (s.entityType = 'block' AND p.deleted = 0 AND p.is_archived = 0 AND b.deleted = 0) OR
-            (s.entityType = 'tag')
+            (s.entityType = 'tag') OR
+            (s.entityType = 'collection' AND c.deleted = 0)
           )
         ORDER BY custom_rank DESC, fts_rank ASC
         LIMIT 100
@@ -81,6 +84,8 @@ class SearchRepositoryImpl implements SearchRepository {
           matchType = MatchType.blockContent;
         } else if (entityType == 'tag') {
           matchType = MatchType.tag;
+        } else if (entityType == 'collection') {
+          matchType = MatchType.collection;
         }
 
         return SearchResult(

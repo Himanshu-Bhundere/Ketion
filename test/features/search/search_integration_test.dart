@@ -208,4 +208,61 @@ void main() {
     );
     expect(searchResults[3].entityId, 'tag1', reason: 'Tag should rank fourth');
   });
+
+  test('Collection Search Lifecycle: Insert, search, rename, delete', () async {
+    // 1. Insert collection
+    await database.into(database.collections).insert(
+          CollectionsCompanion.insert(
+            id: 'col1',
+            name: 'Project Roadmap',
+            createdAt: const drift.Value.absent(),
+            updatedAt: const drift.Value.absent(),
+            deleted: const drift.Value(false),
+          ),
+        );
+
+    // 2. Search exact and prefix match
+    final resExact = await searchRepository.searchNotes('Roadmap');
+    expect(resExact, isA<Success<List<SearchResult>>>());
+    final exactMatches = (resExact as Success<List<SearchResult>>).value;
+    expect(exactMatches.length, 1);
+    expect(exactMatches.first.entityId, 'col1');
+    expect(exactMatches.first.matchType, MatchType.collection);
+    expect(exactMatches.first.breadcrumb, 'Project Roadmap');
+
+    final resPrefix = await searchRepository.searchNotes('Road');
+    expect(resPrefix, isA<Success<List<SearchResult>>>());
+    final prefixMatches = (resPrefix as Success<List<SearchResult>>).value;
+    expect(prefixMatches.length, 1);
+    expect(prefixMatches.first.entityId, 'col1');
+
+    // 3. Search with typeFilter
+    final resFilter = await searchRepository.searchNotes('Roadmap', typeFilter: 'collection');
+    expect(resFilter, isA<Success<List<SearchResult>>>());
+    expect((resFilter as Success<List<SearchResult>>).value.length, 1);
+
+    final resFilterMismatch = await searchRepository.searchNotes('Roadmap', typeFilter: 'page');
+    expect(resFilterMismatch, isA<Success<List<SearchResult>>>());
+    expect((resFilterMismatch as Success<List<SearchResult>>).value.length, 0);
+
+    // 4. Update collection name
+    await (database.update(database.collections)
+          ..where((tbl) => tbl.id.equals('col1')))
+        .write(const CollectionsCompanion(name: drift.Value('Product Backlog')));
+
+    final resOld = await searchRepository.searchNotes('Roadmap');
+    expect((resOld as Success<List<SearchResult>>).value.length, 0);
+
+    final resNew = await searchRepository.searchNotes('Backlog') as Success<List<SearchResult>>;
+    expect(resNew.value.length, 1);
+    expect(resNew.value.first.breadcrumb, 'Product Backlog');
+
+    // 5. Soft-delete collection
+    await (database.update(database.collections)
+          ..where((tbl) => tbl.id.equals('col1')))
+        .write(const CollectionsCompanion(deleted: drift.Value(true)));
+
+    final resDeleted = await searchRepository.searchNotes('Backlog');
+    expect((resDeleted as Success<List<SearchResult>>).value.length, 0);
+  });
 }

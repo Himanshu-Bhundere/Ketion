@@ -8,12 +8,14 @@ class KetionInFramePlayer extends StatefulWidget {
   final String filePath;
   final String? caption;
   final VideoPlayerController? controller;
+  final bool isFullscreen;
 
   const KetionInFramePlayer({
     super.key,
     required this.filePath,
     this.caption,
     this.controller,
+    this.isFullscreen = false,
   });
 
   @override
@@ -29,6 +31,7 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
   double _playbackSpeed = 1.0;
   String? _errorMessage;
   int _initToken = 0;
+  bool _isInFullScreen = false;
 
   static const List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -85,8 +88,10 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
         return;
       }
 
+      if (_playbackSpeed != 1.0) {
+        await controller.setPlaybackSpeed(_playbackSpeed);
+      }
       controller.addListener(_onControllerUpdate);
-      await controller.setPlaybackSpeed(_playbackSpeed);
 
       setState(() {
         _controller = controller;
@@ -166,9 +171,19 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
     }
   }
 
-  void _toggleFullScreen() {
+  Future<void> _toggleFullScreen() async {
     if (_controller == null || !_isInitialized) return;
-    Navigator.of(context).push(
+
+    if (widget.isFullscreen) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _isInFullScreen = true;
+    });
+
+    await Navigator.of(context).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
         builder: (context) {
@@ -183,12 +198,20 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
               child: KetionInFramePlayer(
                 filePath: widget.filePath,
                 caption: widget.caption,
+                controller: _controller,
+                isFullscreen: true,
               ),
             ),
           );
         },
       ),
     );
+
+    if (mounted) {
+      setState(() {
+        _isInFullScreen = false;
+      });
+    }
   }
 
   String _formatDuration(Duration d) {
@@ -217,7 +240,32 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
   @override
   Widget build(BuildContext context) {
     Widget playerWidget;
-    if (_errorMessage != null) {
+    if (_isInFullScreen) {
+      playerWidget = Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.fullscreen,
+                color: Colors.white70,
+                size: 36,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Playing in fullscreen',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else if (_errorMessage != null) {
       playerWidget = Container(
         height: 180,
         decoration: BoxDecoration(
@@ -401,8 +449,10 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
                               const SizedBox(width: 10),
                               GestureDetector(
                                 onTap: _toggleFullScreen,
-                                child: const Icon(
-                                  Icons.fullscreen,
+                                child: Icon(
+                                  widget.isFullscreen
+                                      ? Icons.fullscreen_exit
+                                      : Icons.fullscreen,
                                   color: Colors.white,
                                   size: 22,
                                 ),

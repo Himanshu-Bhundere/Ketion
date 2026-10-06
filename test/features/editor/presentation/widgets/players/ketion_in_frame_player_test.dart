@@ -148,5 +148,50 @@ void main() {
 
       expect(fakeController.value.playbackSpeed, 1.5);
     });
+
+    testWidgets(
+        'fullscreen transition preserves controller playback state and position seamlessly',
+        (tester) async {
+      final fakeController = FakeVideoPlayerController();
+      await fakeController.play();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 400,
+                child: KetionInFramePlayer(
+                  filePath: 'test/assets/sample.mp4',
+                  controller: fakeController,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(fakeController.value.isPlaying, isTrue);
+      expect(fakeController.value.position, const Duration(seconds: 42));
+
+      // Tap fullscreen icon to enter fullscreen
+      await tester.tap(find.byIcon(Icons.fullscreen));
+      await tester.pumpAndSettle();
+
+      // Fullscreen view is active, sharing the same controller
+      expect(fakeController.value.isPlaying, isTrue);
+      expect(fakeController.value.position, const Duration(seconds: 42));
+      expect(find.byIcon(Icons.fullscreen_exit), findsOneWidget);
+
+      // Tap exit fullscreen icon
+      await tester.tap(find.byIcon(Icons.fullscreen_exit));
+      await tester.pumpAndSettle();
+
+      // Returned to inline view; controller playback state remains untouched and active
+      expect(fakeController.value.isPlaying, isTrue);
+      expect(fakeController.value.position, const Duration(seconds: 42));
+      expect(find.byIcon(Icons.fullscreen), findsOneWidget);
+    });
   });
 }

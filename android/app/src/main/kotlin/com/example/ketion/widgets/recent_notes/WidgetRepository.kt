@@ -6,17 +6,33 @@ import java.io.File
 data class RecentNote(val id: String, val title: String, val date: String)
 
 class WidgetRepository(private val snapshotDbPath: String?) {
+    enum class RepositoryStatus {
+        SUCCESS,
+        EMPTY,
+        UNAVAILABLE,
+        ERROR
+    }
+
+    var status: RepositoryStatus = RepositoryStatus.UNAVAILABLE
+        private set
+
     fun getRecentNotes(): List<RecentNote> {
         val notes = mutableListOf<RecentNote>()
-        if (snapshotDbPath == null) return notes
+        if (snapshotDbPath == null) {
+            status = RepositoryStatus.UNAVAILABLE
+            return notes
+        }
 
         val file = File(snapshotDbPath)
-        if (!file.exists()) return notes
+        if (!file.exists()) {
+            status = RepositoryStatus.UNAVAILABLE
+            return notes
+        }
 
         var db: SQLiteDatabase? = null
         try {
             db = SQLiteDatabase.openDatabase(snapshotDbPath, null, SQLiteDatabase.OPEN_READONLY)
-            val cursor = db.rawQuery("SELECT id, title, updated_at FROM recent_pages ORDER BY updated_at DESC LIMIT 5", null)
+            val cursor = db.rawQuery("SELECT id, title, updated_at FROM recent_pages ORDER BY updated_at DESC LIMIT 10", null)
             
             while (cursor.moveToNext()) {
                 val id = cursor.getString(0) ?: ""
@@ -25,8 +41,10 @@ class WidgetRepository(private val snapshotDbPath: String?) {
                 notes.add(RecentNote(id, title, date))
             }
             cursor.close()
+            status = if (notes.isEmpty()) RepositoryStatus.EMPTY else RepositoryStatus.SUCCESS
         } catch (e: Exception) {
             e.printStackTrace()
+            status = RepositoryStatus.ERROR
         } finally {
             db?.close()
         }

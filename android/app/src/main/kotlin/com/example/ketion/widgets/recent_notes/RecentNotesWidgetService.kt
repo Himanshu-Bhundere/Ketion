@@ -5,7 +5,6 @@ import android.content.Intent
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.example.ketion.R
-import es.antonborri.home_widget.HomeWidgetPlugin
 import android.net.Uri
 
 class RecentNotesWidgetService : RemoteViewsService() {
@@ -36,15 +35,28 @@ class RecentNotesRemoteViewsFactory(private val context: Context) : RemoteViewsS
     override fun getCount(): Int = notes.size
 
     override fun getViewAt(position: Int): RemoteViews {
+        if (position !in notes.indices) {
+            return RemoteViews(context.packageName, R.layout.widget_recent_notes_item)
+        }
         val note = notes[position]
         val views = RemoteViews(context.packageName, R.layout.widget_recent_notes_item)
         views.setTextViewText(R.id.note_title, note.title)
-        views.setTextViewText(R.id.note_date, note.date)
+        
+        val formattedDate = try {
+            if (note.date.contains("T")) {
+                note.date.substringBefore("T")
+            } else {
+                note.date
+            }
+        } catch (e: Exception) {
+            note.date
+        }
+        views.setTextViewText(R.id.note_date, formattedDate)
 
         val fillInIntent = Intent().apply {
             data = Uri.parse("ketion://note/${note.id}")
         }
-        views.setOnClickFillInIntent(R.id.note_title, fillInIntent)
+        views.setOnClickFillInIntent(R.id.note_item_root, fillInIntent)
         return views
     }
 

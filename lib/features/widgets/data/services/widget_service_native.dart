@@ -11,6 +11,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ketion/core/errors/failures.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
+import 'package:drift/drift.dart';
+
 class WidgetServiceImpl implements WidgetService {
   final AppDatabase _db;
 
@@ -67,12 +69,12 @@ class WidgetServiceImpl implements WidgetService {
   @override
   Future<Result<void>> generateWidgetSnapshot() async {
     try {
-      // Get the 5 most recently updated pages
-      final recentPages = await _db
-          .customSelect(
-            'SELECT id, title, updated_at FROM pages WHERE is_trashed = 0 ORDER BY updated_at DESC LIMIT 5',
-          )
-          .get();
+      // Get the 10 most recently updated non-deleted pages
+      final recentPagesQuery = _db.select(_db.pages)
+        ..where((t) => t.deleted.equals(false) & t.isTemplate.equals(false))
+        ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])
+        ..limit(10);
+      final recentPages = await recentPagesQuery.get();
 
       final docsDir = await getApplicationDocumentsDirectory();
       final snapshotPath = p.join(docsDir.path, 'widget_snapshot.sqlite');
@@ -97,11 +99,11 @@ class WidgetServiceImpl implements WidgetService {
       final stmt = snapshotDb.prepare(
         'INSERT INTO recent_pages (id, title, updated_at) VALUES (?, ?, ?)',
       );
-      for (final row in recentPages) {
+      for (final page in recentPages) {
         stmt.execute([
-          row.read<String>('id'),
-          row.read<String>('title'),
-          row.read<String>('updated_at'),
+          page.id,
+          page.title.trim().isEmpty ? 'Untitled' : page.title.trim(),
+          page.updatedAt.toIso8601String(),
         ]);
       }
       stmt.dispose();
@@ -109,6 +111,7 @@ class WidgetServiceImpl implements WidgetService {
 
       // Pass the snapshot path to home_widget so the native code knows where to find it
       await updateSimpleWidgetData('snapshot_db_path', snapshotPath);
+      await updateSimpleWidgetData('snapshot_updated_at', DateTime.now().toIso8601String());
 
       return const Success(null);
     } catch (e) {

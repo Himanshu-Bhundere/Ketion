@@ -51,6 +51,10 @@ class BlockRepositoryImpl implements BlockRepository {
             createdAt: DateTime.now().toUtc(),
           ),
         );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(block.pageId))).write(
+          PagesCompanion(updatedAt: Value(DateTime.now().toUtc())),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -113,6 +117,10 @@ class BlockRepositoryImpl implements BlockRepository {
             updatedAt: newBlock.updatedAt,
             createdAt: DateTime.now().toUtc(),
           ),
+        );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(block.pageId))).write(
+          PagesCompanion(updatedAt: Value(DateTime.now().toUtc())),
         );
       });
       return const Success(null);
@@ -180,6 +188,10 @@ class BlockRepositoryImpl implements BlockRepository {
             updatedAt: now,
             createdAt: now,
           ),
+        );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(existingRecord.pageId))).write(
+          PagesCompanion(updatedAt: Value(now)),
         );
       });
       return const Success(null);
@@ -286,6 +298,10 @@ class BlockRepositoryImpl implements BlockRepository {
             createdAt: now,
           ),
         );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(newBlock.pageId))).write(
+          PagesCompanion(updatedAt: Value(DateTime.now().toUtc())),
+        );
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -373,6 +389,10 @@ class BlockRepositoryImpl implements BlockRepository {
             updatedAt: now,
             createdAt: now,
           ),
+        );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(updatedMergedBlock.pageId))).write(
+          PagesCompanion(updatedAt: Value(now)),
         );
       });
       return const Success(null);

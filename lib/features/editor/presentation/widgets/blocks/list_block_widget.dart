@@ -13,6 +13,7 @@ import '../slash_command_menu.dart';
 
 class ListBlockWidget extends ConsumerStatefulWidget {
   final Block block;
+  final int? listIndex;
   final ValueChanged<Block> onUpdate;
   final Future<void> Function(String before, String after) onSplit;
   final Future<void> Function(String textToMerge) onMergePrevious;
@@ -20,6 +21,7 @@ class ListBlockWidget extends ConsumerStatefulWidget {
   const ListBlockWidget({
     super.key,
     required this.block,
+    this.listIndex,
     required this.onUpdate,
     required this.onSplit,
     required this.onMergePrevious,
@@ -36,6 +38,7 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
   final LayerLink _layerLink = LayerLink();
   final GlobalKey _anchorKey = GlobalKey();
   late SlashCommandController _slashController;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -75,6 +78,7 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
       ref.read(focusedBlockIdProvider.notifier).state = widget.block.id;
     } else {
       _slashController.close();
+      _debounceTimer?.cancel();
       _saveChanges();
     }
   }
@@ -130,11 +134,27 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
   }
 
   void _saveChanges() {
+    _debounceTimer?.cancel();
     final text = _controller.text;
 
-    // Simple span creation for now
-    final newSpans = [TextSpanData(text: text)];
-    final newData = _blockData.copyWith(spans: newSpans);
+    List<TextSpanData> newSpans;
+    if (_blockData.spans.isEmpty) {
+      newSpans = [TextSpanData(text: text)];
+    } else if (_blockData.spans.length == 1) {
+      newSpans = [_blockData.spans.first.copyWith(text: text)];
+    } else {
+      final currentPlain = _blockData.spans.map((s) => s.text).join('');
+      if (text == currentPlain) {
+        newSpans = _blockData.spans;
+      } else {
+        newSpans = [_blockData.spans.first.copyWith(text: text)];
+      }
+    }
+
+    final newData = _blockData.copyWith(
+      spans: newSpans,
+      checked: _blockData.checked,
+    );
 
     final json = newData.toJson();
     json.remove('runtimeType');
@@ -150,6 +170,7 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
   }
 
   void _toggleChecked(bool? value) {
+    _debounceTimer?.cancel();
     final checked = value ?? false;
     final newData = _blockData.copyWith(checked: checked);
     final json = newData.toJson();
@@ -232,6 +253,8 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
   }
 
   void _handleEnter() {
+    _debounceTimer?.cancel();
+    _saveChanges();
     final selection = _controller.selection;
     final cursor =
         selection.isValid ? selection.start : _controller.text.length;
@@ -251,6 +274,8 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
       _slashController.selectCurrent();
       return true;
     }
+    _debounceTimer?.cancel();
+    _saveChanges();
     final before = value.substring(0, newline);
     final after = value.substring(newline + 1);
     _controller.value = TextEditingValue(
@@ -318,6 +343,7 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _slashController.dispose();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
@@ -336,10 +362,10 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
         );
         break;
       case 'numbered':
-        leadingWidget = const Padding(
-          padding: EdgeInsets.only(top: 4.0, right: 8.0),
-          child:
-              Text('1.', style: TextStyle(fontSize: 16)), // Hardcoded for now
+        final num = widget.listIndex ?? 1;
+        leadingWidget = Padding(
+          padding: const EdgeInsets.only(top: 4.0, right: 8.0),
+          child: Text('$num.', style: const TextStyle(fontSize: 16)),
         );
         break;
       case 'checklist':
@@ -386,7 +412,10 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
                 onChanged: (value) {
                   if (_handleImeNewline(value)) return;
                   _slashController.check(value);
-                  _saveChanges();
+                  _debounceTimer?.cancel();
+                  _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+                    _saveChanges();
+                  });
                 },
               ),
             ),

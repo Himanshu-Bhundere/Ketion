@@ -11,8 +11,14 @@ import '../../domain/models/drop_intent.dart';
 import '../../domain/services/block_tree_service.dart';
 import '../../domain/services/sibling_position_manager.dart';
 import '../../domain/usecases/move_block_use_case.dart';
+import '../../services/editor_persistence_coordinator.dart';
 
 final focusedBlockIdProvider = StateProvider<String?>((ref) => null);
+
+final editorCoordinatorProvider =
+    StateProvider.family<EditorPersistenceCoordinator?, String>(
+  (ref, pageId) => null,
+);
 
 class BlockFocusIntent {
   final String id;

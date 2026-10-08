@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
+import '../../../widgets/presentation/providers/widget_providers.dart';
 
 import '../../../../core/utils/result.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
@@ -120,6 +122,8 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         gateway:
             RepositoryEditorPersistenceGateway(repository: blockRepository),
       );
+      ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
+          _coordinator;
 
       final initialSnapshotMap = <String, BlockSnapshot>{};
       for (final block in blocks) {
@@ -413,6 +417,9 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _historyController.dispose();
       _adapter.dispose();
       _coordinator.close();
+      try {
+        ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
+      } catch (_) {}
     }
     _focusNode.dispose();
 
@@ -455,6 +462,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         setState(() => _isHandlingPop = true);
         await _adapter.flushPendingChanges();
         await _coordinator.flush();
+        unawaited(ref.read(updateWidgetsUseCaseProvider)());
         navigator.pop(result);
       },
       child: Column(

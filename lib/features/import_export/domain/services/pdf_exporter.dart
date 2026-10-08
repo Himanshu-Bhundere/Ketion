@@ -34,9 +34,11 @@ class PdfExporter implements ExportRepository {
           );
           widgets.add(pw.SizedBox(height: 16));
 
+          int numberedListIndex = 0;
           for (final node in document.nodes) {
             node.map(
               paragraph: (p) {
+                numberedListIndex = 0;
                 final text = _extractPlainText(p.spans);
                 if (text.isNotEmpty) {
                   widgets.add(
@@ -48,6 +50,7 @@ class PdfExporter implements ExportRepository {
                 }
               },
               heading: (h) {
+                numberedListIndex = 0;
                 final fontSize = 24.0 - (h.level * 2);
                 widgets.add(
                   pw.Header(
@@ -67,6 +70,12 @@ class PdfExporter implements ExportRepository {
                 // Skip empty list nodes so they do not produce stray bullet points
                 if (text.trim().isEmpty) {
                   return;
+                }
+
+                if (l.listType == 'numbered') {
+                  numberedListIndex++;
+                } else {
+                  numberedListIndex = 0;
                 }
 
                 pw.Widget bullet;
@@ -89,6 +98,14 @@ class PdfExporter implements ExportRepository {
                         fontSize: 11,
                         fontWeight: pw.FontWeight.bold,
                       ),
+                    ),
+                  );
+                } else if (l.listType == 'numbered') {
+                  bullet = pw.Container(
+                    margin: const pw.EdgeInsets.only(right: 6, top: 1),
+                    child: pw.Text(
+                      '$numberedListIndex.',
+                      style: const pw.TextStyle(fontSize: 11),
                     ),
                   );
                 } else {
@@ -120,6 +137,7 @@ class PdfExporter implements ExportRepository {
                 widgets.add(pw.SizedBox(height: 4));
               },
               image: (img) {
+                numberedListIndex = 0;
                 if (img.isAvailable && img.imageBytes != null && img.imageBytes!.isNotEmpty) {
                   try {
                     final provider = pw.MemoryImage(img.imageBytes!);
@@ -150,6 +168,7 @@ class PdfExporter implements ExportRepository {
                 }
               },
               file: (f) {
+                numberedListIndex = 0;
                 if (!f.isAvailable) {
                   widgets.add(_buildUnavailableAttachmentCard(f.fileTypeLabel, f.caption ?? f.fileName));
                 } else {
@@ -158,6 +177,7 @@ class PdfExporter implements ExportRepository {
                 widgets.add(pw.SizedBox(height: 6));
               },
               callout: (c) {
+                numberedListIndex = 0;
                 widgets.add(
                   pw.Container(
                     margin: const pw.EdgeInsets.symmetric(vertical: 6),
@@ -205,6 +225,7 @@ class PdfExporter implements ExportRepository {
                 );
               },
               table: (t) {
+                numberedListIndex = 0;
                 if (t.rows.isEmpty) return;
                 widgets.add(
                   pw.Container(

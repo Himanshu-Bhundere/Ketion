@@ -158,7 +158,24 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                     case 'export_html':
                     case 'export_pdf':
                       final ext = value.split('_')[1];
-                      final blocks = blocksAsync.valueOrNull;
+                      // 1. Unfocus any active editor widget/input to trigger pending updates
+                      FocusManager.instance.primaryFocus?.unfocus();
+
+                      // 2. Flush the persistence coordinator if available
+                      final coordinator =
+                          ref.read(editorCoordinatorProvider(pageId));
+                      if (coordinator != null) {
+                        await coordinator.flush();
+                      }
+
+                      // 3. Fetch latest persisted blocks directly to avoid reading stale state
+                      final getBlocksUseCase =
+                          ref.read(getPageBlocksUseCaseProvider);
+                      final blocksResult = await getBlocksUseCase(pageId);
+                      final blocks = blocksResult.isSuccess
+                          ? blocksResult.valueOrNull
+                          : blocksAsync.valueOrNull;
+
                       if (blocks != null) {
                         final useCase = ref.read(exportUseCaseProvider);
                         await useCase.exportAndShare(page, blocks, ext);

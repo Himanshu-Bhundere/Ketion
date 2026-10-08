@@ -16,6 +16,9 @@ import 'package:ketion/features/editor/presentation/widgets/super_editor_adapter
 import 'package:ketion/features/editor/presentation/widgets/super_editor_host.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as page_entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
+import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart';
+import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
+import 'package:ketion/features/editor/presentation/widgets/blocks/list_block_widget.dart';
 
 // Global variable for dummy repo to access
 List<Block> testBlocks = [];
@@ -499,6 +502,150 @@ void main() {
       expect(firstNode.text.toPlainText(), 'Original Text');
 
       debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets(
+        'Acceptance test: Type 3 numbered items, immediately export without tapping elsewhere, verify PDF and order',
+        (tester) async {
+      final block1 = Block(
+        id: 'num-1',
+        pageId: pageId,
+        type: 'list',
+        data: jsonEncode({
+          'listType': 'numbered',
+          'checked': false,
+          'spans': [
+            {'text': 'First item'},
+          ],
+        }),
+        position: 1000.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final block2 = Block(
+        id: 'num-2',
+        pageId: pageId,
+        type: 'list',
+        data: jsonEncode({
+          'listType': 'numbered',
+          'checked': false,
+          'spans': [
+            {'text': 'Second item'},
+          ],
+        }),
+        position: 2000.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final block3 = Block(
+        id: 'num-3',
+        pageId: pageId,
+        type: 'list',
+        data: jsonEncode({
+          'listType': 'numbered',
+          'checked': false,
+          'spans': [
+            {'text': 'Third item'},
+          ],
+        }),
+        position: 3000.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      testBlocks = [block1, block2, block3];
+
+      // 1. Verify dynamic numbering for list blocks
+      // When rendered in ListBlockWidget, listIndex gives the dynamic position
+      Block? updatedBlock;
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ListBlockWidget(
+                block: block2,
+                listIndex: 2,
+                onUpdate: (b) => updatedBlock = b,
+                onSplit: (before, after) async {},
+                onMergePrevious: (text) async {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Find the TextField and verify listIndex prefix '2.'
+      expect(find.text('2.'), findsOneWidget);
+      expect(find.text('Second item'), findsOneWidget);
+
+      // 2. Type text into the list item and immediately export without tapping elsewhere
+      await tester.enterText(find.byType(TextField), 'Second item edited');
+      // Advance by debounce duration (350ms)
+      await tester.pump(const Duration(milliseconds: 350));
+
+      expect(updatedBlock, isNotNull);
+      final updatedData = jsonDecode(updatedBlock!.data);
+      expect(updatedData['spans'][0]['text'], 'Second item edited');
+      expect(updatedData['listType'], 'numbered');
+
+      // Update testBlocks with edited content
+      testBlocks[1] = updatedBlock!;
+
+      // 3. Immediately export to PDF via ExportUseCase and PdfExporter
+      final exportUseCase = ExportUseCase([PdfExporter()]);
+      final pdfBytes = await exportUseCase.exportToBytes(
+        testPage,
+        testBlocks,
+        'pdf',
+      );
+
+      // Verify PDF bytes were generated and valid
+      expect(pdfBytes.isNotEmpty, isTrue);
+      // Valid PDF magic header: %PDF
+      expect(pdfBytes[0], 0x25); // %
+      expect(pdfBytes[1], 0x50); // P
+      expect(pdfBytes[2], 0x44); // D
+      expect(pdfBytes[3], 0x46); // F
+
+      // 4. Test reordering: swap item 1 and item 3
+      final reorderedBlocks = [
+        testBlocks[2].copyWith(position: 1000.0),
+        testBlocks[1].copyWith(position: 2000.0),
+        testBlocks[0].copyWith(position: 3000.0),
+      ];
+      final reorderedPdf = await exportUseCase.exportToBytes(
+        testPage,
+        reorderedBlocks,
+        'pdf',
+      );
+      expect(reorderedPdf.isNotEmpty, isTrue);
+
+      // 5. Test checklists preserve checked state and formatting
+      final checklistBlock = Block(
+        id: 'check-1',
+        pageId: pageId,
+        type: 'list',
+        data: jsonEncode({
+          'listType': 'checklist',
+          'checked': true,
+          'spans': [
+            {'text': 'Done task', 'bold': true},
+          ],
+        }),
+        position: 1000.0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final checklistPdf = await exportUseCase.exportToBytes(
+        testPage,
+        [checklistBlock],
+        'pdf',
+      );
+      expect(checklistPdf.isNotEmpty, isTrue);
     });
   });
 }

@@ -137,8 +137,36 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
     Widget content;
     switch (block.type) {
       case 'list':
+        int? listIndex;
+        try {
+          final data = jsonDecode(block.data) as Map<String, dynamic>;
+          if (data['listType'] == 'numbered') {
+            final visibleBlocks =
+                ref.read(visibleBlocksProvider(widget.pageId));
+            int count = 1;
+            for (int j = index - 1; j >= 0 && j < visibleBlocks.length; j--) {
+              final prev = visibleBlocks[j].block;
+              if (prev.parentBlockId != block.parentBlockId) break;
+              if (prev.type != 'list') break;
+              try {
+                final prevData =
+                    jsonDecode(prev.data) as Map<String, dynamic>;
+                if (prevData['listType'] == 'numbered') {
+                  count++;
+                } else {
+                  break;
+                }
+              } catch (_) {
+                break;
+              }
+            }
+            listIndex = count;
+          }
+        } catch (_) {}
+
         content = ListBlockWidget(
           block: block,
+          listIndex: listIndex,
           onUpdate: _handleBlockUpdate,
           onSplit: (before, after) => ref
               .read(editorStateProvider(widget.pageId).notifier)

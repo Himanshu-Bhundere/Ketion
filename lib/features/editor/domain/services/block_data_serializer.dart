@@ -37,7 +37,11 @@ class BlockDataSerializer {
       );
     }
     if (node is ParagraphNode) {
-      if (node.metadata['blockType'] == const NamedAttribution('toggle')) {
+      final blockType = node.metadata['blockType'];
+      final isToggle = blockType == const NamedAttribution('toggle') ||
+          blockType == 'toggle' ||
+          (blockType is NamedAttribution && blockType.name == 'toggle');
+      if (isToggle) {
         return BlockDataModel.list(
           spans: _spans(node),
           listType: 'toggle',
@@ -125,7 +129,10 @@ class BlockDataSerializer {
     if (node is KetionCalloutNode) return 'callout';
     if (node is ParagraphNode) {
       if (node.metadata['blockType'] == codeAttribution) return 'code';
-      if (node.metadata['blockType'] == const NamedAttribution('toggle')) {
+      final blockType = node.metadata['blockType'];
+      if (blockType == const NamedAttribution('toggle') ||
+          blockType == 'toggle' ||
+          (blockType is NamedAttribution && blockType.name == 'toggle')) {
         return 'list';
       }
     }

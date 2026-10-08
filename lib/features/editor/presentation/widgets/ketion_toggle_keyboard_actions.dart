@@ -32,32 +32,63 @@ ExecutionInstruction splitToggleWhenEnterPressed({
   }
 
   final blockType = node.metadata['blockType'];
-  if (blockType is! NamedAttribution || blockType.name != 'toggle') {
+  final isToggle = blockType == 'toggle' ||
+      blockType == const NamedAttribution('toggle') ||
+      (blockType is NamedAttribution && blockType.name == 'toggle');
+  if (!isToggle) {
     return ExecutionInstruction.continueExecution;
   }
 
-  // If we are at the end of the toggle, we insert a child block (depth + 1)
+  // If we are at the end of the toggle, we create or focus a child block inside that toggle
   final text = node.text;
   final position = selection.extent.nodePosition as TextNodePosition;
 
   if (position.offset == text.length) {
-    final newNodeId = Editor.createNodeId();
     final isExpanded = node.metadata['isExpanded'] == true;
     final depth = node.metadata['depth'] as int? ?? 0;
 
-    // We insert a regular paragraph below the toggle with depth + 1
-    // BUT wait, is the toggle expanded? If it's collapsed, it shouldn't be added as a child?
-    // Actually, Notion expands the toggle and adds a child if it's collapsed.
+    // First ensure the toggle is expanded if currently collapsed
+    if (!isExpanded) {
+      editContext.editor.execute([
+        ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
+      ]);
+    }
 
+    final doc = editContext.document;
+    final toggleIndex = doc.getNodeIndexById(node.id);
+    DocumentNode? firstChild;
+    final parentBlockId = node.metadata['blockId'] as String? ?? node.id;
+    if (toggleIndex != -1 && toggleIndex + 1 < doc.nodeCount) {
+      final nextNode = doc.getNodeAt(toggleIndex + 1);
+      final nextDepth = nextNode?.metadata['depth'] as int? ?? 0;
+      final nextParent = nextNode?.metadata['parentBlockId'] as String?;
+      if (nextDepth > depth || nextParent == parentBlockId || nextParent == node.id) {
+        firstChild = nextNode;
+      }
+    }
+
+    if (firstChild != null) {
+      // Focus existing child block inside the toggle
+      editContext.editor.execute([
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: firstChild.id,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionChangeType.placeCaret,
+          SelectionReason.userInteraction,
+        ),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+
+    // No children exist: insert a new regular paragraph below the toggle with depth + 1
+    final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
-    final parentBlockId = node
-        .id; // super_editor_adapter usually figures it out by depth, but setting parentBlockId is good.
 
     editContext.editor.execute([
-      // First ensure the toggle is expanded
-      if (!isExpanded) ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
-
-      // Then create a regular paragraph
       InsertNodeAfterNodeRequest(
         existingNodeId: node.id,
         newNode: ParagraphNode(
@@ -69,7 +100,6 @@ ExecutionInstruction splitToggleWhenEnterPressed({
           },
         ),
       ),
-
       ChangeSelectionRequest(
         DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -228,7 +258,10 @@ ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
   }
 
   final blockType = node.metadata['blockType'];
-  if (blockType is NamedAttribution && blockType.name == 'toggle') {
+  final isToggle = blockType == 'toggle' ||
+      blockType == const NamedAttribution('toggle') ||
+      (blockType is NamedAttribution && blockType.name == 'toggle');
+  if (isToggle) {
     return ExecutionInstruction.continueExecution;
   }
 

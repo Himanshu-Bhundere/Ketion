@@ -31,7 +31,11 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
     Document document,
     DocumentNode node,
   ) {
-    if (node is! ParagraphNode || node.metadata['blockType'] != 'toggle') {
+    final blockType = node.metadata['blockType'];
+    final isToggle = blockType == 'toggle' ||
+        blockType == const NamedAttribution('toggle') ||
+        (blockType is NamedAttribution && blockType.name == 'toggle');
+    if (node is! ParagraphNode || !isToggle) {
       return null;
     }
 

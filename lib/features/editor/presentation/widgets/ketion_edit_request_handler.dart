@@ -698,14 +698,23 @@ class _KetionDelegatingCommand extends EditCommand {
         }
         if (reqToCreate is ConvertListItemToParagraphRequest) {
           final req = reqToCreate;
+          final node = document.getNodeById(req.nodeId);
+          final metadata = <String, dynamic>{
+            if (node != null) ...node.metadata,
+            if (req.paragraphMetadata != null) ...req.paragraphMetadata!,
+          };
           return ConvertListItemToParagraphCommand(
             nodeId: req.nodeId,
-            paragraphMetadata: req.paragraphMetadata,
+            paragraphMetadata: metadata,
           );
         }
         if (reqToCreate is ConvertTaskToParagraphRequest) {
           final req = reqToCreate;
-          return ConvertTaskToParagraphCommand(nodeId: req.nodeId);
+          final node = document.getNodeById(req.nodeId);
+          return ConvertTaskToParagraphCommand(
+            nodeId: req.nodeId,
+            paragraphMetadata: node != null ? Map<String, dynamic>.from(node.metadata) : null,
+          );
         }
         if (reqToCreate is ChangeListItemTypeRequest) {
           final req = reqToCreate;

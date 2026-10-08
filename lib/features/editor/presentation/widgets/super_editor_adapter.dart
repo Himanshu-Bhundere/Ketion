@@ -237,6 +237,7 @@ class KetionSuperEditorAdapter {
 
       final nodeId = Editor.createNodeId();
       final metadata = <String, dynamic>{};
+      metadata['blockId'] = block.id;
       if (block.parentBlockId != null) {
         metadata['parentBlockId'] = block.parentBlockId;
       }

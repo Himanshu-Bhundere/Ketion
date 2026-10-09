@@ -291,6 +291,30 @@ class SuperEditorSlashCommandController {
 
     if (target != null) {
       action(target.nodeId);
+      final currentSelection = composer.selection;
+      if (currentSelection == null) {
+        final node = document.getNodeById(target.nodeId);
+        if (node is TextNode) {
+          composer.setSelectionWithReason(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: node.id,
+                nodePosition:
+                    TextNodePosition(offset: node.text.toPlainText().length),
+              ),
+            ),
+          );
+        } else if (node != null) {
+          composer.setSelectionWithReason(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: node.id,
+                nodePosition: const UpstreamDownstreamNodePosition.downstream(),
+              ),
+            ),
+          );
+        }
+      }
     }
   }
 

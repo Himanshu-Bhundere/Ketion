@@ -655,8 +655,14 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   KetionReminderComponentBuilder(_editor),
                   ...defaultComponentBuilders,
                 ]
-                    .map((b) =>
-                        DepthWrappingComponentBuilder(b, _editor.document),)
+                    .map(
+                      (b) => DepthWrappingComponentBuilder(
+                        b,
+                        _editor.document,
+                        editor: _editor,
+                        composer: _composer,
+                      ),
+                    )
                     .toList(),
                 keyboardActions: [
                   indentParagraphWhenTabPressed,

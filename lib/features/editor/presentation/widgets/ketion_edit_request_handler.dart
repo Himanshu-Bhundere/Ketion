@@ -50,7 +50,7 @@ EditRequestHandler createKetionRequestHandler({
     }
 
     // Verify identity can be determined before executing
-    final identityError = _validateIdentity(mutation, registry);
+    final identityError = _validateIdentity(mutation, registry, snapshot);
     if (identityError != null) {
       debugPrint('KETION: Cannot execute structural request: $identityError');
       return _FizzleCommand(reason: identityError);
@@ -263,6 +263,7 @@ SemanticMutation? _translateRequest(
 String? _validateIdentity(
   SemanticMutation mutation,
   EditorIdentityRegistry registry,
+  EditorPersistenceSnapshot snapshot,
 ) {
   switch (mutation) {
     case SplitBlockMutation(:final originalNodeId):
@@ -299,10 +300,27 @@ String? _validateIdentity(
       if (!registry.containsNode(nodeId)) {
         return 'Cannot indent: no mapping for $nodeId';
       }
+      final blockId = registry.blockIdForNode(nodeId);
+      final block = blockId != null ? snapshot.getBlock(blockId) : null;
+      if (block != null) {
+        final targetSiblings = snapshot.activeBlocks
+            .where((b) => b.parentBlockId == block.parentBlockId)
+            .toList()
+          ..sort((a, b) => a.position.compareTo(b.position));
+        final targetIndex = targetSiblings.indexWhere((b) => b.blockId == blockId);
+        if (targetIndex <= 0) {
+          return 'Cannot indent: no preceding sibling to become parent';
+        }
+      }
       return null;
     case UnindentBlockMutation(:final nodeId):
       if (!registry.containsNode(nodeId)) {
         return 'Cannot unindent: no mapping for $nodeId';
+      }
+      final blockId = registry.blockIdForNode(nodeId);
+      final block = blockId != null ? snapshot.getBlock(blockId) : null;
+      if (block != null && block.parentBlockId == null) {
+        return 'Cannot unindent: already at root level';
       }
       return null;
     case ToggleBlockExpandedMutation(:final nodeId):
@@ -335,6 +353,14 @@ class _FizzleCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     debugPrint('KETION: Fizzled structural command: $reason');
   }
+}
+
+class _KetionNoOpNodeCommand extends EditCommand {
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {}
 }
 
 class _KetionDelegatingCommand extends EditCommand {
@@ -537,7 +563,7 @@ class _KetionDelegatingCommand extends EditCommand {
         }
       }
 
-      persistToKetionSynchronously();
+      persistToKetionSynchronously(executor);
 
       if (request is InsertReminderRequest) {
         final newNodeId = (mutation as InsertBlockMutation).newNodeId;
@@ -757,26 +783,36 @@ class _KetionDelegatingCommand extends EditCommand {
         return null;
 
       case IndentBlockMutation():
-        if (reqToCreate is IndentListItemRequest) {
-          return IndentListItemCommand(nodeId: reqToCreate.nodeId);
+        final nodeId = (mutation as IndentBlockMutation).nodeId;
+        final targetNode = document.getNodeById(nodeId);
+        if (targetNode is ListItemNode) {
+          return IndentListItemCommand(nodeId: nodeId);
         }
-        if (reqToCreate is IndentTaskRequest) {
-          return IndentTaskCommand(reqToCreate.nodeId);
+        if (targetNode is TaskNode) {
+          return IndentTaskCommand(nodeId);
         }
-        if (reqToCreate is IndentParagraphRequest) {
-          return IndentParagraphCommand(reqToCreate.nodeId);
+        if (targetNode is ParagraphNode) {
+          return IndentParagraphCommand(nodeId);
+        }
+        if (targetNode != null) {
+          return _KetionNoOpNodeCommand();
         }
         return null;
 
       case UnindentBlockMutation():
-        if (reqToCreate is UnIndentListItemRequest) {
-          return UnIndentListItemCommand(nodeId: reqToCreate.nodeId);
+        final nodeId = (mutation as UnindentBlockMutation).nodeId;
+        final targetNode = document.getNodeById(nodeId);
+        if (targetNode is ListItemNode) {
+          return UnIndentListItemCommand(nodeId: nodeId);
         }
-        if (reqToCreate is UnIndentTaskRequest) {
-          return UnIndentTaskCommand(reqToCreate.nodeId);
+        if (targetNode is TaskNode) {
+          return UnIndentTaskCommand(nodeId);
         }
-        if (reqToCreate is UnIndentParagraphRequest) {
-          return UnIndentParagraphCommand(reqToCreate.nodeId);
+        if (targetNode is ParagraphNode) {
+          return UnIndentParagraphCommand(nodeId);
+        }
+        if (targetNode != null) {
+          return _KetionNoOpNodeCommand();
         }
         return null;
 
@@ -826,7 +862,7 @@ class _KetionDelegatingCommand extends EditCommand {
     }
   }
 
-  void persistToKetionSynchronously() {
+  void persistToKetionSynchronously(CommandExecutor executor) {
     persistence_mutations.EditorPersistenceMutation? persistenceMutation;
     try {
       switch (mutation) {
@@ -861,14 +897,149 @@ class _KetionDelegatingCommand extends EditCommand {
       return;
     }
 
+    debugPrint(
+      'KETION: In persistToKetionSynchronously for ${mutation.runtimeType}, payload=$persistenceMutation',
+    );
     if (persistenceMutation == null) return;
 
     if (coordinator.enqueue(persistenceMutation)) {
       snapshot.applyMutation(persistenceMutation);
+
+      if (mutation is IndentBlockMutation || mutation is UnindentBlockMutation) {
+        final nodeId = mutation is IndentBlockMutation
+            ? (mutation as IndentBlockMutation).nodeId
+            : (mutation as UnindentBlockMutation).nodeId;
+        final node = document.getNodeById(nodeId);
+        final blockId = registry.blockIdForNode(nodeId);
+        if (node != null && blockId != null) {
+          final block = snapshot.getBlock(blockId);
+          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+          _updateDocumentNodeMetadata(node, newDepth, block);
+
+          _updateDescendantDepths(blockId, newDepth, executor);
+
+          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+
+          if (block?.parentBlockId != null) {
+            final parentBlock = snapshot.getBlock(block!.parentBlockId!);
+            if (parentBlock != null && parentBlock.type == 'toggle') {
+              final parentNodeId = registry.nodeIdForBlock(parentBlock.blockId);
+              if (parentNodeId != null) {
+                final parentNode = document.getNodeById(parentNodeId);
+                if (parentNode != null && parentNode.metadata['isExpanded'] == false) {
+                  adapter.restoreSubtree(parentBlock.blockId);
+                  parentNode.metadata['isExpanded'] = true;
+                  executor.logChanges([
+                    DocumentEdit(NodeChangeEvent(parentNode.id)),
+                  ]);
+                }
+              }
+            }
+          }
+        }
+      }
     } else {
       debugPrint(
         'KETION: Coordinator rejected mutation ${mutation.runtimeType}',
       );
+    }
+  }
+
+  void _updateDocumentNodeMetadata(
+    DocumentNode node,
+    int newDepth,
+    BlockSnapshot? block,
+  ) {
+    final newMetadata = <String, dynamic>{
+      ...node.metadata,
+      'depth': newDepth,
+      if (block?.parentBlockId != null) 'parentBlockId': block!.parentBlockId,
+      if (block != null) 'position': block.position,
+    };
+    if (block?.parentBlockId == null) {
+      newMetadata.remove('parentBlockId');
+    }
+
+    if (node is ParagraphNode) {
+      document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+    } else if (node is ListItemNode) {
+      final replacement = node.type == ListItemType.ordered
+          ? ListItemNode.ordered(
+              id: node.id,
+              text: node.text,
+              indent: node.indent,
+              metadata: newMetadata,
+            )
+          : ListItemNode.unordered(
+              id: node.id,
+              text: node.text,
+              indent: node.indent,
+              metadata: newMetadata,
+            );
+      document.replaceNodeById(node.id, replacement);
+    } else if (node is TaskNode) {
+      final replacement = TaskNode(
+        id: node.id,
+        text: node.text,
+        isComplete: node.isComplete,
+        metadata: newMetadata,
+      );
+      document.replaceNodeById(node.id, replacement);
+    } else if (node is KetionTableNode) {
+      document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+    } else {
+      try {
+        node.metadata['depth'] = newDepth;
+        if (block?.parentBlockId != null) {
+          node.metadata['parentBlockId'] = block!.parentBlockId;
+        } else {
+          node.metadata.remove('parentBlockId');
+        }
+      } catch (_) {}
+    }
+  }
+
+  int _calculateDepth(
+    String? parentBlockId,
+    EditorPersistenceSnapshot snapshot,
+  ) {
+    int depth = 0;
+    String? currentParentId = parentBlockId;
+    final visited = <String>{};
+    while (currentParentId != null && !visited.contains(currentParentId)) {
+      visited.add(currentParentId);
+      depth++;
+      final parent = snapshot.getBlock(currentParentId);
+      currentParentId = parent?.parentBlockId;
+    }
+    return depth;
+  }
+
+  void _updateDescendantDepths(
+    String parentBlockId,
+    int parentDepth,
+    CommandExecutor executor,
+  ) {
+    final children = snapshot.activeBlocks
+        .where((b) => b.parentBlockId == parentBlockId)
+        .toList();
+    for (final child in children) {
+      final childNodeId = registry.nodeIdForBlock(child.blockId);
+      if (childNodeId != null) {
+        final childNode = document.getNodeById(childNodeId);
+        if (childNode != null) {
+          final childDepth = parentDepth + 1;
+          _updateDocumentNodeMetadata(childNode, childDepth, child);
+          executor.logChanges([DocumentEdit(NodeChangeEvent(childNode.id))]);
+          _updateDescendantDepths(child.blockId, childDepth, executor);
+        }
+      }
     }
   }
 

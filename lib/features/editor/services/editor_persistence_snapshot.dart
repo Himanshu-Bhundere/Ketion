@@ -28,6 +28,7 @@ class BlockSnapshot {
   BlockSnapshot copyWith({
     int? version,
     String? parentBlockId,
+    bool resetParentBlockId = false,
     double? position,
     String? type,
     String? contentHash,
@@ -37,7 +38,7 @@ class BlockSnapshot {
       blockId: blockId,
       pageId: pageId,
       version: version ?? this.version,
-      parentBlockId: parentBlockId ?? this.parentBlockId,
+      parentBlockId: resetParentBlockId ? null : (parentBlockId ?? this.parentBlockId),
       position: position ?? this.position,
       type: type ?? this.type,
       createdAt: createdAt,
@@ -106,6 +107,7 @@ class EditorPersistenceSnapshot {
         updateBlock(
           block.copyWith(
             parentBlockId: mutation.parentBlockId,
+            resetParentBlockId: mutation.parentBlockId == null,
             position: mutation.position,
           ),
         );

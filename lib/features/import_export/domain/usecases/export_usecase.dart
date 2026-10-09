@@ -9,6 +9,7 @@ import 'package:ketion/features/import_export/domain/services/export_repository.
 import 'package:ketion/features/media/domain/entities/attachment.dart';
 import 'package:ketion/features/media/domain/repositories/attachment_repository.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart';
+import 'package:ketion/features/editor/domain/services/block_tree_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExportUseCase {
@@ -69,7 +70,18 @@ class ExportUseCase {
   Future<ExportDocument> _mapToDocument(Page page, List<Block> blocks) async {
     final nodes = <DocumentNode>[];
 
-    for (final block in blocks) {
+    // Pre-order tree traversal to ensure ExportDocument has the exact hierarchical visual order
+    final treeBlocks = BlockTreeService.buildVisibleTree(blocks)
+        .map((vb) => vb.block)
+        .toList();
+    final visitedIds = treeBlocks.map((b) => b.id).toSet();
+    final unvisited = blocks
+        .where((b) => !b.deleted && !visitedIds.contains(b.id))
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final blocksToProcess = [...treeBlocks, ...unvisited];
+
+    for (final block in blocksToProcess) {
       final json = Map<String, dynamic>.from(
         jsonDecode(block.data) as Map<String, dynamic>,
       );

@@ -19,6 +19,7 @@ import 'package:ketion/features/pages/presentation/providers/page_providers.dart
 import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart';
 import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
 import 'package:ketion/features/editor/presentation/widgets/blocks/list_block_widget.dart';
+import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
 
 // Global variable for dummy repo to access
 List<Block> testBlocks = [];
@@ -646,6 +647,191 @@ void main() {
         'pdf',
       );
       expect(checklistPdf.isNotEmpty, isTrue);
+    });
+
+    testWidgets(
+        'Indentation: swipe-right indents beneath preceding block and swipe-left unindents',
+        (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+
+      final block1 = makeTextBlock('block-1', 'First block', position: 100.0);
+      final block2 = makeTextBlock('block-2', 'Second block', position: 200.0);
+
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block1, block2],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
+      await pumpUntilInitialized(tester);
+
+      final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
+      final editor = state.editor as Editor;
+      final adapter = state.adapter as KetionSuperEditorAdapter;
+      final doc = state.document as MutableDocument;
+
+      final node1 = doc.getNodeAt(0)!;
+      final node2 = doc.getNodeAt(1)!;
+
+      spyRepo.calls.clear();
+
+      // 1. Indent node 2 (swipe right behavior)
+      editor.execute([
+        IndentParagraphRequest(node2.id),
+      ]);
+      await tester.pump(const Duration(milliseconds: 100));
+      await adapter.flushPendingChanges();
+
+      // Node 2 should be child of block-1 with depth 1
+      final indentedNode2 = doc.getNodeById(node2.id)!;
+      expect(indentedNode2.metadata['depth'], 1);
+      expect(indentedNode2.metadata['parentBlockId'], 'block-1');
+
+      final updateCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:block-2')).toList();
+      expect(updateCalls.isNotEmpty, isTrue);
+
+      // Verify persistence in testBlocks
+      final persistedBlock2 = testBlocks.firstWhere((b) => b.id == 'block-2');
+      expect(persistedBlock2.parentBlockId, 'block-1');
+
+      spyRepo.calls.clear();
+
+      // 2. Unindent node 2 (swipe left behavior)
+      editor.execute([
+        UnIndentParagraphRequest(node2.id),
+      ]);
+      await tester.pump(const Duration(milliseconds: 100));
+      await adapter.flushPendingChanges();
+
+      // Node 2 should be back at root level with depth 0
+      final unindentedNode2 = doc.getNodeById(node2.id)!;
+      expect(unindentedNode2.metadata['depth'], 0);
+      expect(unindentedNode2.metadata['parentBlockId'], isNull);
+
+      final unindentCalls =
+          spyRepo.calls.where((c) => c.startsWith('updateBlock:block-2')).toList();
+      expect(unindentCalls.isNotEmpty, isTrue);
+
+      final unindentedBlock2 = testBlocks.firstWhere((b) => b.id == 'block-2');
+      expect(unindentedBlock2.parentBlockId, isNull);
+
+      // 3. Hierarchy validation: attempting to indent node 1 (root, first child) must fizzle
+      spyRepo.calls.clear();
+      editor.execute([
+        IndentParagraphRequest(node1.id),
+      ]);
+      await tester.pump(const Duration(milliseconds: 100));
+      await adapter.flushPendingChanges();
+
+      final rootNode1 = doc.getNodeById(node1.id)!;
+      expect(rootNode1.metadata['depth'] ?? 0, 0);
+      expect(rootNode1.metadata['parentBlockId'], isNull);
+      expect(
+        spyRepo.calls.where((c) => c.startsWith('updateBlock:block-1')).isEmpty,
+        isTrue,
+        reason: 'Indenting without preceding sibling must fizzle',
+      );
+
+      // 4. Hierarchy validation: attempting to unindent when already at root must fizzle
+      spyRepo.calls.clear();
+      editor.execute([
+        UnIndentParagraphRequest(node1.id),
+      ]);
+      await tester.pump(const Duration(milliseconds: 100));
+      await adapter.flushPendingChanges();
+
+      expect(node1.metadata['depth'] ?? 0, 0);
+      expect(node1.metadata['parentBlockId'], isNull);
+      expect(
+        spyRepo.calls.where((c) => c.startsWith('updateBlock:block-1')).isEmpty,
+        isTrue,
+        reason: 'Unindenting at root level must fizzle',
+      );
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    testWidgets(
+        'Swipe gesture and slash insertion: active block focus and touch gesture handling',
+        (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+
+      final block1 = makeTextBlock('block-1', 'Heading item', position: 100.0);
+      final block2 = makeTextBlock('block-2', 'Paragraph item', position: 200.0);
+
+      await tester.pumpWidget(
+        buildTestAppWithSpy(
+          blocks: [block1, block2],
+          testPage: testPage,
+          spy: spyRepo,
+        ),
+      );
+      await pumpUntilInitialized(tester);
+
+      final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
+      final doc = state.document as MutableDocument;
+      final composer = state.composer as MutableDocumentComposer;
+
+      final node2 = doc.getNodeAt(1)!;
+
+      // Verify SwipeIndentationWrapper is present around node content
+      expect(find.byType(SwipeIndentationWrapper), findsWidgets);
+
+      // Verify gesture does not trigger when selection is expanded
+      composer.setSelectionWithReason(
+        DocumentSelection(
+          base: DocumentPosition(
+            nodeId: node2.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+          extent: DocumentPosition(
+            nodeId: node2.id,
+            nodePosition: const TextNodePosition(offset: 5),
+          ),
+        ),
+      );
+
+      // Finding SwipeIndentationWrapper for node2
+      final wrapperFinder = find.byWidgetPredicate(
+        (w) => w is SwipeIndentationWrapper && w.nodeId == node2.id,
+      );
+      expect(wrapperFinder, findsOneWidget);
+
+      // Swipe gesture while selection is expanded should not trigger indent
+      await tester.drag(wrapperFinder, const Offset(100.0, 0.0));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(node2.metadata['depth'] ?? 0, 0);
+
+      // Collapse selection
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: node2.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        ),
+      );
+
+      // Swipe right on wrapper with collapsed selection triggers indent
+      await tester.drag(wrapperFinder, const Offset(100.0, 0.0));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final swipedNode2 = doc.getNodeById(node2.id)!;
+      expect(swipedNode2.metadata['depth'], 1);
+      expect(swipedNode2.metadata['parentBlockId'], 'block-1');
+
+      // Swipe left on wrapper triggers unindent
+      await tester.drag(wrapperFinder, const Offset(-100.0, 0.0));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final unswipedNode2 = doc.getNodeById(node2.id)!;
+      expect(unswipedNode2.metadata['depth'], 0);
+      expect(unswipedNode2.metadata['parentBlockId'], isNull);
+
+      debugDefaultTargetPlatformOverride = null;
     });
   });
 }

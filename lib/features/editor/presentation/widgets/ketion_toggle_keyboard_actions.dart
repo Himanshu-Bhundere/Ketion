@@ -54,40 +54,11 @@ ExecutionInstruction splitToggleWhenEnterPressed({
       ]);
     }
 
-    final doc = editContext.document;
-    final toggleIndex = doc.getNodeIndexById(node.id);
-    DocumentNode? firstChild;
     final parentBlockId = node.metadata['blockId'] as String? ?? node.id;
-    if (toggleIndex != -1 && toggleIndex + 1 < doc.nodeCount) {
-      final nextNode = doc.getNodeAt(toggleIndex + 1);
-      final nextDepth = nextNode?.metadata['depth'] as int? ?? 0;
-      final nextParent = nextNode?.metadata['parentBlockId'] as String?;
-      if (nextDepth > depth || nextParent == parentBlockId || nextParent == node.id) {
-        firstChild = nextNode;
-      }
-    }
-
-    if (firstChild != null) {
-      // Focus existing child block inside the toggle
-      editContext.editor.execute([
-        ChangeSelectionRequest(
-          DocumentSelection.collapsed(
-            position: DocumentPosition(
-              nodeId: firstChild.id,
-              nodePosition: const TextNodePosition(offset: 0),
-            ),
-          ),
-          SelectionChangeType.placeCaret,
-          SelectionReason.userInteraction,
-        ),
-      ]);
-      return ExecutionInstruction.haltExecution;
-    }
-
-    // No children exist: insert a new regular paragraph below the toggle with depth + 1
     final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
 
+    // Always create a new child block inside the toggle hierarchy
     editContext.editor.execute([
       InsertNodeAfterNodeRequest(
         existingNodeId: node.id,

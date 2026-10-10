@@ -584,12 +584,12 @@ void main() {
 
       // Now document should have 2 nodes: the toggle and the newly created child
       expect(document.nodeCount, 2);
-      final childNode = document.getNodeAt(1)!;
-      expect(childNode.metadata['depth'], 1);
-      expect(childNode.metadata['parentBlockId'], 'toggle-alone');
-      expect(composer.selection?.extent.nodeId, childNode.id);
+      final firstChildNode = document.getNodeAt(1)!;
+      expect(firstChildNode.metadata['depth'], 1);
+      expect(firstChildNode.metadata['parentBlockId'], 'toggle-alone');
+      expect(composer.selection?.extent.nodeId, firstChildNode.id);
 
-      // Press Enter again at the end of the toggle - should focus existing child
+      // Press Enter again at the end of the toggle - should insert another child node
       editor.execute([
         ChangeSelectionRequest(
           DocumentSelection.collapsed(
@@ -608,7 +608,14 @@ void main() {
         keyEvent: enterEvent,
       );
       expect(secondInstruction, ExecutionInstruction.haltExecution);
-      expect(composer.selection?.extent.nodeId, childNode.id);
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      await adapter.flushPendingChanges();
+
+      expect(document.nodeCount, 3);
+      final secondChildNode = document.getNodeAt(1)!;
+      expect(secondChildNode.metadata['depth'], 1);
+      expect(secondChildNode.metadata['parentBlockId'], 'toggle-alone');
+      expect(composer.selection?.extent.nodeId, secondChildNode.id);
     } finally {
       debugDefaultTargetPlatformOverride = null;
     }

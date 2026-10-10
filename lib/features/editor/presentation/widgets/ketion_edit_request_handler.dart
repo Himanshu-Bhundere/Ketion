@@ -937,6 +937,26 @@ class _KetionDelegatingCommand extends EditCommand {
             }
           }
         }
+      } else if (mutation is SplitBlockMutation) {
+        final newNodeId = (mutation as SplitBlockMutation).newNodeId;
+        final node = document.getNodeById(newNodeId);
+        final blockId = registry.blockIdForNode(newNodeId);
+        if (node != null && blockId != null) {
+          final block = snapshot.getBlock(blockId);
+          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+          _updateDocumentNodeMetadata(node, newDepth, block);
+          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+        }
+      } else if (mutation is InsertBlockMutation) {
+        final newNodeId = (mutation as InsertBlockMutation).newNodeId;
+        final node = document.getNodeById(newNodeId);
+        final blockId = registry.blockIdForNode(newNodeId);
+        if (node != null && blockId != null) {
+          final block = snapshot.getBlock(blockId);
+          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+          _updateDocumentNodeMetadata(node, newDepth, block);
+          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+        }
       }
     } else {
       debugPrint(
@@ -953,6 +973,7 @@ class _KetionDelegatingCommand extends EditCommand {
     final newMetadata = <String, dynamic>{
       ...node.metadata,
       'depth': newDepth,
+      if (block != null) 'blockId': block.blockId,
       if (block?.parentBlockId != null) 'parentBlockId': block!.parentBlockId,
       if (block != null) 'position': block.position,
     };

@@ -48,19 +48,38 @@ class EditorPersistenceCoordinator {
       if (existing != null) {
         // Coalescing is the replacement of a queued mutation.
         // It does NOT consume a new version transition.
-        _pendingUpdates[mutation.blockId] = UpdateBlockMutation(
-          pageId: mutation.pageId,
-          blockId: mutation.blockId,
-          data: mutation.data,
-          type: mutation.type,
-          parentBlockId: mutation.parentBlockId,
-          position: mutation.position,
-          expectedVersion:
-              existing.expectedVersion, // Keep original expected version
-          blockCreatedAt: existing.blockCreatedAt,
-          contentHash: mutation.contentHash,
-          createdAt: mutation.createdAt,
-        );
+        final isExpanded = mutation is UpdateToggleMutation
+            ? mutation.isExpanded
+            : (existing is UpdateToggleMutation ? existing.isExpanded : null);
+        if (isExpanded != null) {
+          _pendingUpdates[mutation.blockId] = UpdateToggleMutation(
+            pageId: mutation.pageId,
+            blockId: mutation.blockId,
+            data: mutation.data,
+            type: mutation.type,
+            parentBlockId: mutation.parentBlockId,
+            position: mutation.position,
+            expectedVersion: existing.expectedVersion,
+            blockCreatedAt: existing.blockCreatedAt,
+            contentHash: mutation.contentHash,
+            createdAt: mutation.createdAt,
+            isExpanded: isExpanded,
+          );
+        } else {
+          _pendingUpdates[mutation.blockId] = UpdateBlockMutation(
+            pageId: mutation.pageId,
+            blockId: mutation.blockId,
+            data: mutation.data,
+            type: mutation.type,
+            parentBlockId: mutation.parentBlockId,
+            position: mutation.position,
+            expectedVersion:
+                existing.expectedVersion, // Keep original expected version
+            blockCreatedAt: existing.blockCreatedAt,
+            contentHash: mutation.contentHash,
+            createdAt: mutation.createdAt,
+          );
+        }
       } else {
         // Look for the last mutation in _queue affecting this block
         EditorPersistenceMutation? lastQueued;
@@ -76,19 +95,40 @@ class EditorPersistenceCoordinator {
         if (lastQueued != null && lastQueued is UpdateBlockMutation) {
           // Coalescing is the replacement of a queued mutation.
           // It does NOT consume a new version transition.
-          _queue[lastQueuedIndex] = UpdateBlockMutation(
-            pageId: mutation.pageId,
-            blockId: mutation.blockId,
-            data: mutation.data,
-            type: mutation.type,
-            parentBlockId: mutation.parentBlockId,
-            position: mutation.position,
-            expectedVersion:
-                lastQueued.expectedVersion, // Keep original expected version
-            blockCreatedAt: lastQueued.blockCreatedAt,
-            contentHash: mutation.contentHash,
-            createdAt: mutation.createdAt,
-          );
+          final isExpanded = mutation is UpdateToggleMutation
+              ? mutation.isExpanded
+              : (lastQueued is UpdateToggleMutation
+                  ? lastQueued.isExpanded
+                  : null);
+          if (isExpanded != null) {
+            _queue[lastQueuedIndex] = UpdateToggleMutation(
+              pageId: mutation.pageId,
+              blockId: mutation.blockId,
+              data: mutation.data,
+              type: mutation.type,
+              parentBlockId: mutation.parentBlockId,
+              position: mutation.position,
+              expectedVersion: lastQueued.expectedVersion,
+              blockCreatedAt: lastQueued.blockCreatedAt,
+              contentHash: mutation.contentHash,
+              createdAt: mutation.createdAt,
+              isExpanded: isExpanded,
+            );
+          } else {
+            _queue[lastQueuedIndex] = UpdateBlockMutation(
+              pageId: mutation.pageId,
+              blockId: mutation.blockId,
+              data: mutation.data,
+              type: mutation.type,
+              parentBlockId: mutation.parentBlockId,
+              position: mutation.position,
+              expectedVersion:
+                  lastQueued.expectedVersion, // Keep original expected version
+              blockCreatedAt: lastQueued.blockCreatedAt,
+              contentHash: mutation.contentHash,
+              createdAt: mutation.createdAt,
+            );
+          }
         } else {
           final rebased =
               mutation.rebase(_pendingVersionState) as UpdateBlockMutation;

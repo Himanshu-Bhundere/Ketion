@@ -42,6 +42,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
 import 'depth_wrapping_component_builder.dart';
+import 'ketion_list_item_component.dart';
 
 class SuperEditorHost extends ConsumerStatefulWidget {
   final String pageId;
@@ -653,6 +654,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   const KetionPageLinkComponentBuilder(),
                   const KetionWebLinkComponentBuilder(),
                   KetionReminderComponentBuilder(_editor),
+                  const KetionListItemComponentBuilder(),
                   ...defaultComponentBuilders,
                 ]
                     .map(

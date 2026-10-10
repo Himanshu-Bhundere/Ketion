@@ -39,6 +39,7 @@ class KetionTaskComponentBuilder implements ComponentBuilder {
           textDirection == TextDirection.ltr ? TextAlign.left : TextAlign.right,
       textStyleBuilder: noStyleBuilder,
       selectionColor: const Color(0x00000000),
+      indentCalculator: (textStyle, indent) => 0.0,
     );
   }
 

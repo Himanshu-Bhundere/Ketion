@@ -16,6 +16,8 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
   final Editor? editor;
   final DocumentComposer? composer;
 
+  static const double kIndentPerLevel = 16.0;
+
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
     Document document,
@@ -39,7 +41,7 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
     Widget content = widget;
     if (depth > 0) {
       content = Padding(
-        padding: EdgeInsets.only(left: depth * 24.0),
+        padding: EdgeInsets.only(left: depth * kIndentPerLevel),
         child: content,
       );
     }

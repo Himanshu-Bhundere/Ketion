@@ -17,17 +17,20 @@ class ExportDocument with _$ExportDocument {
 sealed class DocumentNode with _$DocumentNode {
   const factory DocumentNode.paragraph({
     required List<DocumentTextSpan> spans,
+    @Default(0) int depth,
   }) = DocParagraph;
 
   const factory DocumentNode.heading({
     required int level,
     required List<DocumentTextSpan> spans,
+    @Default(0) int depth,
   }) = DocHeading;
 
   const factory DocumentNode.list({
     required String listType, // 'bullet', 'numbered', 'checklist', 'toggle'
     required bool checked,
     required List<DocumentTextSpan> spans,
+    @Default(0) int depth,
   }) = DocList;
 
   const factory DocumentNode.image({
@@ -36,6 +39,7 @@ sealed class DocumentNode with _$DocumentNode {
     String? fileName,
     Uint8List? imageBytes,
     @Default(true) bool isAvailable,
+    @Default(0) int depth,
   }) = DocImage;
 
   const factory DocumentNode.file({
@@ -46,24 +50,30 @@ sealed class DocumentNode with _$DocumentNode {
     int? fileSize,
     @Default('File') String fileTypeLabel,
     @Default(true) bool isAvailable,
+    @Default(0) int depth,
   }) = DocFile;
 
   const factory DocumentNode.callout({
     required String icon,
     required String color,
     required List<DocumentTextSpan> spans,
+    @Default(0) int depth,
   }) = DocCallout;
 
   const factory DocumentNode.table({
     required int columnCount,
     required List<List<String>> rows,
+    @Default(0) int depth,
   }) = DocTable;
 
-  const factory DocumentNode.divider() = DocDivider;
+  const factory DocumentNode.divider({
+    @Default(0) int depth,
+  }) = DocDivider;
 
   const factory DocumentNode.code({
     required String code,
     required String language,
+    @Default(0) int depth,
   }) = DocCode;
 }
 

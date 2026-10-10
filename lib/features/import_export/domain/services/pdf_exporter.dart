@@ -34,33 +34,33 @@ class PdfExporter implements ExportRepository {
           );
           widgets.add(pw.SizedBox(height: 16));
 
-          int numberedListIndex = 0;
+          final Map<int, int> numberingByDepth = {};
+
           for (final node in document.nodes) {
+            final nodeDepth = node.depth;
+            pw.Widget? renderedWidget;
+
             node.map(
               paragraph: (p) {
-                numberedListIndex = 0;
+                numberingByDepth.clear();
                 final text = _extractPlainText(p.spans);
                 if (text.isNotEmpty) {
-                  widgets.add(
-                    pw.Paragraph(
-                      text: text,
-                      style: const pw.TextStyle(fontSize: 11),
-                    ),
+                  renderedWidget = pw.Paragraph(
+                    text: text,
+                    style: const pw.TextStyle(fontSize: 11),
                   );
                 }
               },
               heading: (h) {
-                numberedListIndex = 0;
+                numberingByDepth.clear();
                 final fontSize = 24.0 - (h.level * 2);
-                widgets.add(
-                  pw.Header(
-                    level: h.level,
-                    child: pw.Text(
-                      _extractPlainText(h.spans),
-                      style: pw.TextStyle(
-                        fontSize: fontSize > 10 ? fontSize : 10,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+                renderedWidget = pw.Header(
+                  level: h.level,
+                  child: pw.Text(
+                    _extractPlainText(h.spans),
+                    style: pw.TextStyle(
+                      fontSize: fontSize > 10 ? fontSize : 10,
+                      fontWeight: pw.FontWeight.bold,
                     ),
                   ),
                 );
@@ -68,14 +68,16 @@ class PdfExporter implements ExportRepository {
               list: (l) {
                 final text = _extractPlainText(l.spans);
                 // Skip empty list nodes so they do not produce stray bullet points
-                if (text.trim().isEmpty) {
+                if (text.trim().isEmpty && l.listType != 'toggle') {
                   return;
                 }
 
                 if (l.listType == 'numbered') {
-                  numberedListIndex++;
+                  final currentNum = (numberingByDepth[nodeDepth] ?? 0) + 1;
+                  numberingByDepth[nodeDepth] = currentNum;
+                  numberingByDepth.removeWhere((k, v) => k > nodeDepth);
                 } else {
-                  numberedListIndex = 0;
+                  numberingByDepth.removeWhere((k, v) => k >= nodeDepth);
                 }
 
                 pw.Widget bullet;
@@ -85,9 +87,25 @@ class PdfExporter implements ExportRepository {
                     height: 10,
                     margin: const pw.EdgeInsets.only(right: 6, top: 2),
                     decoration: pw.BoxDecoration(
-                      border: pw.Border.all(width: 1),
-                      color: l.checked ? PdfColors.black : PdfColors.white,
+                      border: pw.Border.all(color: PdfColors.grey800, width: 1),
+                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                      color: l.checked ? PdfColors.grey900 : PdfColors.white,
                     ),
+                    child: l.checked
+                        ? pw.Center(
+                            child: pw.CustomPaint(
+                              size: const PdfPoint(6, 6),
+                              painter: (PdfGraphics canvas, PdfPoint size) {
+                                canvas.setColor(PdfColors.white);
+                                canvas.setLineWidth(1.2);
+                                canvas.moveTo(1, 3);
+                                canvas.lineTo(2.5, 1);
+                                canvas.lineTo(5, 5);
+                                canvas.strokePath();
+                              },
+                            ),
+                          )
+                        : null,
                   );
                 } else if (l.listType == 'toggle') {
                   bullet = pw.Container(
@@ -101,10 +119,11 @@ class PdfExporter implements ExportRepository {
                     ),
                   );
                 } else if (l.listType == 'numbered') {
+                  final num = numberingByDepth[nodeDepth] ?? 1;
                   bullet = pw.Container(
                     margin: const pw.EdgeInsets.only(right: 6, top: 1),
                     child: pw.Text(
-                      '$numberedListIndex.',
+                      '$num.',
                       style: const pw.TextStyle(fontSize: 11),
                     ),
                   );
@@ -120,170 +139,193 @@ class PdfExporter implements ExportRepository {
                   );
                 }
 
-                widgets.add(
-                  pw.Row(
+                renderedWidget = pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Row(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        bullet,
+                        pw.Expanded(
+                          child: pw.Text(
+                            text,
+                            style: const pw.TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 4),
+                  ],
+                );
+              },
+              image: (img) {
+                numberingByDepth.clear();
+                if (img.isAvailable && img.imageBytes != null && img.imageBytes!.isNotEmpty) {
+                  try {
+                    final provider = pw.MemoryImage(img.imageBytes!);
+                    renderedWidget = pw.Column(
+                      children: [
+                        pw.Center(
+                          child: pw.Image(provider),
+                        ),
+                        if (img.caption != null && img.caption!.isNotEmpty)
+                          pw.Center(
+                            child: pw.Text(
+                              img.caption!,
+                              style: const pw.TextStyle(
+                                fontSize: 10,
+                                color: PdfColors.grey700,
+                              ),
+                            ),
+                          ),
+                        pw.SizedBox(height: 12),
+                      ],
+                    );
+                  } catch (e) {
+                    renderedWidget = _buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName);
+                  }
+                } else {
+                  renderedWidget = _buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName);
+                }
+              },
+              file: (f) {
+                numberingByDepth.clear();
+                renderedWidget = pw.Column(
+                  children: [
+                    if (!f.isAvailable)
+                      _buildUnavailableAttachmentCard(f.fileTypeLabel, f.caption ?? f.fileName)
+                    else
+                      _buildAttachmentCard(f),
+                    pw.SizedBox(height: 6),
+                  ],
+                );
+              },
+              callout: (c) {
+                numberingByDepth.clear();
+                renderedWidget = pw.Container(
+                  margin: const pw.EdgeInsets.symmetric(vertical: 6),
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                    border: pw.Border.all(color: PdfColors.grey300),
+                  ),
+                  child: pw.Row(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      bullet,
+                      if (c.icon.isNotEmpty && c.icon.runes.every((r) => r <= 255))
+                        pw.Text(c.icon, style: const pw.TextStyle(fontSize: 14))
+                      else
+                        pw.Container(
+                          width: 16,
+                          height: 16,
+                          margin: const pw.EdgeInsets.only(top: 1),
+                          decoration: const pw.BoxDecoration(
+                            shape: pw.BoxShape.circle,
+                            color: PdfColors.blue700,
+                          ),
+                          child: pw.Center(
+                            child: pw.Text(
+                              'i',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                color: PdfColors.white,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      pw.SizedBox(width: 8),
                       pw.Expanded(
                         child: pw.Text(
-                          text,
+                          _extractPlainText(c.spans),
                           style: const pw.TextStyle(fontSize: 11),
                         ),
                       ),
                     ],
                   ),
                 );
-                widgets.add(pw.SizedBox(height: 4));
-              },
-              image: (img) {
-                numberedListIndex = 0;
-                if (img.isAvailable && img.imageBytes != null && img.imageBytes!.isNotEmpty) {
-                  try {
-                    final provider = pw.MemoryImage(img.imageBytes!);
-                    widgets.add(
-                      pw.Center(
-                        child: pw.Image(provider),
-                      ),
-                    );
-                    if (img.caption != null && img.caption!.isNotEmpty) {
-                      widgets.add(
-                        pw.Center(
-                          child: pw.Text(
-                            img.caption!,
-                            style: const pw.TextStyle(
-                              fontSize: 10,
-                              color: PdfColors.grey700,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    widgets.add(pw.SizedBox(height: 12));
-                  } catch (e) {
-                    widgets.add(_buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName));
-                  }
-                } else {
-                  widgets.add(_buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName));
-                }
-              },
-              file: (f) {
-                numberedListIndex = 0;
-                if (!f.isAvailable) {
-                  widgets.add(_buildUnavailableAttachmentCard(f.fileTypeLabel, f.caption ?? f.fileName));
-                } else {
-                  widgets.add(_buildAttachmentCard(f));
-                }
-                widgets.add(pw.SizedBox(height: 6));
-              },
-              callout: (c) {
-                numberedListIndex = 0;
-                widgets.add(
-                  pw.Container(
-                    margin: const pw.EdgeInsets.symmetric(vertical: 6),
-                    padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.grey100,
-                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-                      border: pw.Border.all(color: PdfColors.grey300),
-                    ),
-                    child: pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        if (c.icon.isNotEmpty && c.icon.runes.every((r) => r <= 255))
-                          pw.Text(c.icon, style: const pw.TextStyle(fontSize: 14))
-                        else
-                          pw.Container(
-                            width: 16,
-                            height: 16,
-                            margin: const pw.EdgeInsets.only(top: 1),
-                            decoration: const pw.BoxDecoration(
-                              shape: pw.BoxShape.circle,
-                              color: PdfColors.blue700,
-                            ),
-                            child: pw.Center(
-                              child: pw.Text(
-                                'i',
-                                style: pw.TextStyle(
-                                  fontSize: 10,
-                                  color: PdfColors.white,
-                                  fontWeight: pw.FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        pw.SizedBox(width: 8),
-                        pw.Expanded(
-                          child: pw.Text(
-                            _extractPlainText(c.spans),
-                            style: const pw.TextStyle(fontSize: 11),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
               },
               table: (t) {
-                numberedListIndex = 0;
+                numberingByDepth.clear();
                 if (t.rows.isEmpty) return;
-                widgets.add(
-                  pw.Container(
-                    margin: const pw.EdgeInsets.symmetric(vertical: 8),
-                    child: pw.Table(
-                      border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
-                      children: t.rows.asMap().entries.map((entry) {
-                        final rowIndex = entry.key;
-                        final row = entry.value;
-                        final isHeader = rowIndex == 0;
-                        return pw.TableRow(
-                          decoration: isHeader
-                              ? const pw.BoxDecoration(color: PdfColors.grey200)
-                              : null,
-                          children: row.map((cellText) {
-                            return pw.Padding(
-                              padding: const pw.EdgeInsets.all(6),
-                              child: pw.Text(
-                                cellText,
-                                style: pw.TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: isHeader
-                                      ? pw.FontWeight.bold
-                                      : pw.FontWeight.normal,
-                                ),
+                renderedWidget = pw.Container(
+                  margin: const pw.EdgeInsets.symmetric(vertical: 8),
+                  child: pw.Table(
+                    border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+                    children: t.rows.asMap().entries.map((entry) {
+                      final rowIndex = entry.key;
+                      final row = entry.value;
+                      final isHeader = rowIndex == 0;
+                      return pw.TableRow(
+                        decoration: isHeader
+                            ? const pw.BoxDecoration(color: PdfColors.grey200)
+                            : null,
+                        children: row.map((cellText) {
+                          return pw.Padding(
+                            padding: const pw.EdgeInsets.all(6),
+                            child: pw.Text(
+                              cellText,
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: isHeader
+                                    ? pw.FontWeight.bold
+                                    : pw.FontWeight.normal,
                               ),
-                            );
-                          }).toList(),
-                        );
-                      }).toList(),
-                    ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    }).toList(),
                   ),
                 );
               },
               code: (c) {
-                widgets.add(
-                  pw.Container(
-                    margin: const pw.EdgeInsets.symmetric(vertical: 4),
-                    decoration: const pw.BoxDecoration(
-                      color: PdfColors.grey200,
-                      borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
-                    ),
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text(
-                      c.code,
-                      style: const pw.TextStyle(
-                        fontSize: 9,
+                numberingByDepth.clear();
+                renderedWidget = pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Container(
+                      margin: const pw.EdgeInsets.symmetric(vertical: 4),
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey200,
+                        borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                      ),
+                      padding: const pw.EdgeInsets.all(8),
+                      child: pw.Text(
+                        c.code,
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                        ),
                       ),
                     ),
-                  ),
+                    pw.SizedBox(height: 6),
+                  ],
                 );
-                widgets.add(pw.SizedBox(height: 6));
               },
               divider: (d) {
-                widgets.add(pw.Divider(color: PdfColors.grey400));
-                widgets.add(pw.SizedBox(height: 8));
+                numberingByDepth.clear();
+                renderedWidget = pw.Column(
+                  children: [
+                    pw.Divider(color: PdfColors.grey400),
+                    pw.SizedBox(height: 8),
+                  ],
+                );
               },
             );
+
+            if (renderedWidget != null) {
+              if (nodeDepth > 0) {
+                widgets.add(
+                  pw.Padding(
+                    padding: pw.EdgeInsets.only(left: nodeDepth * 16.0),
+                    child: renderedWidget!,
+                  ),
+                );
+              } else {
+                widgets.add(renderedWidget!);
+              }
+            }
           }
 
           return widgets;

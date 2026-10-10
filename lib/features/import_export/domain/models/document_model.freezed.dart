@@ -208,15 +208,24 @@ abstract class _ExportDocument implements ExportDocument {
 
 /// @nodoc
 mixin _$DocumentNode {
+  int get depth => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -225,25 +234,29 @@ mixin _$DocumentNode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -252,24 +265,28 @@ mixin _$DocumentNode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -278,13 +295,16 @@ mixin _$DocumentNode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -328,6 +348,10 @@ mixin _$DocumentNode {
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $DocumentNodeCopyWith<DocumentNode> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
@@ -335,6 +359,8 @@ abstract class $DocumentNodeCopyWith<$Res> {
   factory $DocumentNodeCopyWith(
           DocumentNode value, $Res Function(DocumentNode) then) =
       _$DocumentNodeCopyWithImpl<$Res, DocumentNode>;
+  @useResult
+  $Res call({int depth});
 }
 
 /// @nodoc
@@ -346,15 +372,30 @@ class _$DocumentNodeCopyWithImpl<$Res, $Val extends DocumentNode>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? depth = null,
+  }) {
+    return _then(_value.copyWith(
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
 }
 
 /// @nodoc
-abstract class _$$DocParagraphImplCopyWith<$Res> {
+abstract class _$$DocParagraphImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocParagraphImplCopyWith(
           _$DocParagraphImpl value, $Res Function(_$DocParagraphImpl) then) =
       __$$DocParagraphImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({List<DocumentTextSpan> spans});
+  $Res call({List<DocumentTextSpan> spans, int depth});
 }
 
 /// @nodoc
@@ -369,12 +410,17 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? spans = null,
+    Object? depth = null,
   }) {
     return _then(_$DocParagraphImpl(
       spans: null == spans
           ? _value._spans
           : spans // ignore: cast_nullable_to_non_nullable
               as List<DocumentTextSpan>,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -382,7 +428,8 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DocParagraphImpl implements DocParagraph {
-  const _$DocParagraphImpl({required final List<DocumentTextSpan> spans})
+  const _$DocParagraphImpl(
+      {required final List<DocumentTextSpan> spans, this.depth = 0})
       : _spans = spans;
 
   final List<DocumentTextSpan> _spans;
@@ -394,8 +441,12 @@ class _$DocParagraphImpl implements DocParagraph {
   }
 
   @override
+  @JsonKey()
+  final int depth;
+
+  @override
   String toString() {
-    return 'DocumentNode.paragraph(spans: $spans)';
+    return 'DocumentNode.paragraph(spans: $spans, depth: $depth)';
   }
 
   @override
@@ -403,12 +454,13 @@ class _$DocParagraphImpl implements DocParagraph {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$DocParagraphImpl &&
-            const DeepCollectionEquality().equals(other._spans, _spans));
+            const DeepCollectionEquality().equals(other._spans, _spans) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, const DeepCollectionEquality().hash(_spans));
+  int get hashCode => Object.hash(
+      runtimeType, const DeepCollectionEquality().hash(_spans), depth);
 
   @JsonKey(ignore: true)
   @override
@@ -419,13 +471,21 @@ class _$DocParagraphImpl implements DocParagraph {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -434,28 +494,32 @@ class _$DocParagraphImpl implements DocParagraph {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return paragraph(spans);
+    return paragraph(spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -464,27 +528,31 @@ class _$DocParagraphImpl implements DocParagraph {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return paragraph?.call(spans);
+    return paragraph?.call(spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -493,17 +561,20 @@ class _$DocParagraphImpl implements DocParagraph {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (paragraph != null) {
-      return paragraph(spans);
+      return paragraph(spans, depth);
     }
     return orElse();
   }
@@ -562,22 +633,28 @@ class _$DocParagraphImpl implements DocParagraph {
 }
 
 abstract class DocParagraph implements DocumentNode {
-  const factory DocParagraph({required final List<DocumentTextSpan> spans}) =
-      _$DocParagraphImpl;
+  const factory DocParagraph(
+      {required final List<DocumentTextSpan> spans,
+      final int depth}) = _$DocParagraphImpl;
 
   List<DocumentTextSpan> get spans;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocParagraphImplCopyWith<_$DocParagraphImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocHeadingImplCopyWith<$Res> {
+abstract class _$$DocHeadingImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocHeadingImplCopyWith(
           _$DocHeadingImpl value, $Res Function(_$DocHeadingImpl) then) =
       __$$DocHeadingImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({int level, List<DocumentTextSpan> spans});
+  $Res call({int level, List<DocumentTextSpan> spans, int depth});
 }
 
 /// @nodoc
@@ -593,6 +670,7 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
   $Res call({
     Object? level = null,
     Object? spans = null,
+    Object? depth = null,
   }) {
     return _then(_$DocHeadingImpl(
       level: null == level
@@ -603,6 +681,10 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
           ? _value._spans
           : spans // ignore: cast_nullable_to_non_nullable
               as List<DocumentTextSpan>,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -611,7 +693,9 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
 
 class _$DocHeadingImpl implements DocHeading {
   const _$DocHeadingImpl(
-      {required this.level, required final List<DocumentTextSpan> spans})
+      {required this.level,
+      required final List<DocumentTextSpan> spans,
+      this.depth = 0})
       : _spans = spans;
 
   @override
@@ -625,8 +709,12 @@ class _$DocHeadingImpl implements DocHeading {
   }
 
   @override
+  @JsonKey()
+  final int depth;
+
+  @override
   String toString() {
-    return 'DocumentNode.heading(level: $level, spans: $spans)';
+    return 'DocumentNode.heading(level: $level, spans: $spans, depth: $depth)';
   }
 
   @override
@@ -635,12 +723,13 @@ class _$DocHeadingImpl implements DocHeading {
         (other.runtimeType == runtimeType &&
             other is _$DocHeadingImpl &&
             (identical(other.level, level) || other.level == level) &&
-            const DeepCollectionEquality().equals(other._spans, _spans));
+            const DeepCollectionEquality().equals(other._spans, _spans) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, level, const DeepCollectionEquality().hash(_spans));
+      runtimeType, level, const DeepCollectionEquality().hash(_spans), depth);
 
   @JsonKey(ignore: true)
   @override
@@ -651,13 +740,21 @@ class _$DocHeadingImpl implements DocHeading {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -666,28 +763,32 @@ class _$DocHeadingImpl implements DocHeading {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return heading(level, spans);
+    return heading(level, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -696,27 +797,31 @@ class _$DocHeadingImpl implements DocHeading {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return heading?.call(level, spans);
+    return heading?.call(level, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -725,17 +830,20 @@ class _$DocHeadingImpl implements DocHeading {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (heading != null) {
-      return heading(level, spans);
+      return heading(level, spans, depth);
     }
     return orElse();
   }
@@ -796,22 +904,29 @@ class _$DocHeadingImpl implements DocHeading {
 abstract class DocHeading implements DocumentNode {
   const factory DocHeading(
       {required final int level,
-      required final List<DocumentTextSpan> spans}) = _$DocHeadingImpl;
+      required final List<DocumentTextSpan> spans,
+      final int depth}) = _$DocHeadingImpl;
 
   int get level;
   List<DocumentTextSpan> get spans;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocHeadingImplCopyWith<_$DocHeadingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocListImplCopyWith<$Res> {
+abstract class _$$DocListImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocListImplCopyWith(
           _$DocListImpl value, $Res Function(_$DocListImpl) then) =
       __$$DocListImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({String listType, bool checked, List<DocumentTextSpan> spans});
+  $Res call(
+      {String listType, bool checked, List<DocumentTextSpan> spans, int depth});
 }
 
 /// @nodoc
@@ -828,6 +943,7 @@ class __$$DocListImplCopyWithImpl<$Res>
     Object? listType = null,
     Object? checked = null,
     Object? spans = null,
+    Object? depth = null,
   }) {
     return _then(_$DocListImpl(
       listType: null == listType
@@ -842,6 +958,10 @@ class __$$DocListImplCopyWithImpl<$Res>
           ? _value._spans
           : spans // ignore: cast_nullable_to_non_nullable
               as List<DocumentTextSpan>,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -852,7 +972,8 @@ class _$DocListImpl implements DocList {
   const _$DocListImpl(
       {required this.listType,
       required this.checked,
-      required final List<DocumentTextSpan> spans})
+      required final List<DocumentTextSpan> spans,
+      this.depth = 0})
       : _spans = spans;
 
   @override
@@ -869,8 +990,12 @@ class _$DocListImpl implements DocList {
   }
 
   @override
+  @JsonKey()
+  final int depth;
+
+  @override
   String toString() {
-    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans)';
+    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans, depth: $depth)';
   }
 
   @override
@@ -881,12 +1006,13 @@ class _$DocListImpl implements DocList {
             (identical(other.listType, listType) ||
                 other.listType == listType) &&
             (identical(other.checked, checked) || other.checked == checked) &&
-            const DeepCollectionEquality().equals(other._spans, _spans));
+            const DeepCollectionEquality().equals(other._spans, _spans) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, listType, checked,
-      const DeepCollectionEquality().hash(_spans));
+      const DeepCollectionEquality().hash(_spans), depth);
 
   @JsonKey(ignore: true)
   @override
@@ -897,13 +1023,21 @@ class _$DocListImpl implements DocList {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -912,28 +1046,32 @@ class _$DocListImpl implements DocList {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return list(listType, checked, spans);
+    return list(listType, checked, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -942,27 +1080,31 @@ class _$DocListImpl implements DocList {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return list?.call(listType, checked, spans);
+    return list?.call(listType, checked, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -971,17 +1113,20 @@ class _$DocListImpl implements DocList {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (list != null) {
-      return list(listType, checked, spans);
+      return list(listType, checked, spans, depth);
     }
     return orElse();
   }
@@ -1043,28 +1188,35 @@ abstract class DocList implements DocumentNode {
   const factory DocList(
       {required final String listType,
       required final bool checked,
-      required final List<DocumentTextSpan> spans}) = _$DocListImpl;
+      required final List<DocumentTextSpan> spans,
+      final int depth}) = _$DocListImpl;
 
   String get listType; // 'bullet', 'numbered', 'checklist', 'toggle'
   bool get checked;
   List<DocumentTextSpan> get spans;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocListImplCopyWith<_$DocListImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocImageImplCopyWith<$Res> {
+abstract class _$$DocImageImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocImageImplCopyWith(
           _$DocImageImpl value, $Res Function(_$DocImageImpl) then) =
       __$$DocImageImplCopyWithImpl<$Res>;
+  @override
   @useResult
   $Res call(
       {String attachmentId,
       String? caption,
       String? fileName,
       Uint8List? imageBytes,
-      bool isAvailable});
+      bool isAvailable,
+      int depth});
 }
 
 /// @nodoc
@@ -1083,6 +1235,7 @@ class __$$DocImageImplCopyWithImpl<$Res>
     Object? fileName = freezed,
     Object? imageBytes = freezed,
     Object? isAvailable = null,
+    Object? depth = null,
   }) {
     return _then(_$DocImageImpl(
       attachmentId: null == attachmentId
@@ -1105,6 +1258,10 @@ class __$$DocImageImplCopyWithImpl<$Res>
           ? _value.isAvailable
           : isAvailable // ignore: cast_nullable_to_non_nullable
               as bool,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -1117,7 +1274,8 @@ class _$DocImageImpl implements DocImage {
       this.caption,
       this.fileName,
       this.imageBytes,
-      this.isAvailable = true});
+      this.isAvailable = true,
+      this.depth = 0});
 
   @override
   final String attachmentId;
@@ -1130,10 +1288,13 @@ class _$DocImageImpl implements DocImage {
   @override
   @JsonKey()
   final bool isAvailable;
+  @override
+  @JsonKey()
+  final int depth;
 
   @override
   String toString() {
-    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, imageBytes: $imageBytes, isAvailable: $isAvailable)';
+    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, imageBytes: $imageBytes, isAvailable: $isAvailable, depth: $depth)';
   }
 
   @override
@@ -1149,12 +1310,13 @@ class _$DocImageImpl implements DocImage {
             const DeepCollectionEquality()
                 .equals(other.imageBytes, imageBytes) &&
             (identical(other.isAvailable, isAvailable) ||
-                other.isAvailable == isAvailable));
+                other.isAvailable == isAvailable) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
-      const DeepCollectionEquality().hash(imageBytes), isAvailable);
+      const DeepCollectionEquality().hash(imageBytes), isAvailable, depth);
 
   @JsonKey(ignore: true)
   @override
@@ -1165,13 +1327,21 @@ class _$DocImageImpl implements DocImage {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -1180,28 +1350,33 @@ class _$DocImageImpl implements DocImage {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return image(attachmentId, caption, fileName, imageBytes, isAvailable);
+    return image(
+        attachmentId, caption, fileName, imageBytes, isAvailable, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1210,28 +1385,32 @@ class _$DocImageImpl implements DocImage {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
     return image?.call(
-        attachmentId, caption, fileName, imageBytes, isAvailable);
+        attachmentId, caption, fileName, imageBytes, isAvailable, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -1240,17 +1419,21 @@ class _$DocImageImpl implements DocImage {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (image != null) {
-      return image(attachmentId, caption, fileName, imageBytes, isAvailable);
+      return image(
+          attachmentId, caption, fileName, imageBytes, isAvailable, depth);
     }
     return orElse();
   }
@@ -1314,23 +1497,29 @@ abstract class DocImage implements DocumentNode {
       final String? caption,
       final String? fileName,
       final Uint8List? imageBytes,
-      final bool isAvailable}) = _$DocImageImpl;
+      final bool isAvailable,
+      final int depth}) = _$DocImageImpl;
 
   String get attachmentId;
   String? get caption;
   String? get fileName;
   Uint8List? get imageBytes;
   bool get isAvailable;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocImageImplCopyWith<_$DocImageImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocFileImplCopyWith<$Res> {
+abstract class _$$DocFileImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocFileImplCopyWith(
           _$DocFileImpl value, $Res Function(_$DocFileImpl) then) =
       __$$DocFileImplCopyWithImpl<$Res>;
+  @override
   @useResult
   $Res call(
       {String attachmentId,
@@ -1339,7 +1528,8 @@ abstract class _$$DocFileImplCopyWith<$Res> {
       String? mimeType,
       int? fileSize,
       String fileTypeLabel,
-      bool isAvailable});
+      bool isAvailable,
+      int depth});
 }
 
 /// @nodoc
@@ -1360,6 +1550,7 @@ class __$$DocFileImplCopyWithImpl<$Res>
     Object? fileSize = freezed,
     Object? fileTypeLabel = null,
     Object? isAvailable = null,
+    Object? depth = null,
   }) {
     return _then(_$DocFileImpl(
       attachmentId: null == attachmentId
@@ -1390,6 +1581,10 @@ class __$$DocFileImplCopyWithImpl<$Res>
           ? _value.isAvailable
           : isAvailable // ignore: cast_nullable_to_non_nullable
               as bool,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -1404,7 +1599,8 @@ class _$DocFileImpl implements DocFile {
       this.mimeType,
       this.fileSize,
       this.fileTypeLabel = 'File',
-      this.isAvailable = true});
+      this.isAvailable = true,
+      this.depth = 0});
 
   @override
   final String attachmentId;
@@ -1422,10 +1618,13 @@ class _$DocFileImpl implements DocFile {
   @override
   @JsonKey()
   final bool isAvailable;
+  @override
+  @JsonKey()
+  final int depth;
 
   @override
   String toString() {
-    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, mimeType: $mimeType, fileSize: $fileSize, fileTypeLabel: $fileTypeLabel, isAvailable: $isAvailable)';
+    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, mimeType: $mimeType, fileSize: $fileSize, fileTypeLabel: $fileTypeLabel, isAvailable: $isAvailable, depth: $depth)';
   }
 
   @override
@@ -1445,12 +1644,13 @@ class _$DocFileImpl implements DocFile {
             (identical(other.fileTypeLabel, fileTypeLabel) ||
                 other.fileTypeLabel == fileTypeLabel) &&
             (identical(other.isAvailable, isAvailable) ||
-                other.isAvailable == isAvailable));
+                other.isAvailable == isAvailable) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
-      mimeType, fileSize, fileTypeLabel, isAvailable);
+      mimeType, fileSize, fileTypeLabel, isAvailable, depth);
 
   @JsonKey(ignore: true)
   @override
@@ -1461,13 +1661,21 @@ class _$DocFileImpl implements DocFile {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -1476,29 +1684,33 @@ class _$DocFileImpl implements DocFile {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
     return file(attachmentId, caption, fileName, mimeType, fileSize,
-        fileTypeLabel, isAvailable);
+        fileTypeLabel, isAvailable, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1507,28 +1719,32 @@ class _$DocFileImpl implements DocFile {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
     return file?.call(attachmentId, caption, fileName, mimeType, fileSize,
-        fileTypeLabel, isAvailable);
+        fileTypeLabel, isAvailable, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -1537,18 +1753,21 @@ class _$DocFileImpl implements DocFile {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (file != null) {
       return file(attachmentId, caption, fileName, mimeType, fileSize,
-          fileTypeLabel, isAvailable);
+          fileTypeLabel, isAvailable, depth);
     }
     return orElse();
   }
@@ -1614,7 +1833,8 @@ abstract class DocFile implements DocumentNode {
       final String? mimeType,
       final int? fileSize,
       final String fileTypeLabel,
-      final bool isAvailable}) = _$DocFileImpl;
+      final bool isAvailable,
+      final int depth}) = _$DocFileImpl;
 
   String get attachmentId;
   String? get caption;
@@ -1623,18 +1843,24 @@ abstract class DocFile implements DocumentNode {
   int? get fileSize;
   String get fileTypeLabel;
   bool get isAvailable;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocCalloutImplCopyWith<$Res> {
+abstract class _$$DocCalloutImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocCalloutImplCopyWith(
           _$DocCalloutImpl value, $Res Function(_$DocCalloutImpl) then) =
       __$$DocCalloutImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({String icon, String color, List<DocumentTextSpan> spans});
+  $Res call(
+      {String icon, String color, List<DocumentTextSpan> spans, int depth});
 }
 
 /// @nodoc
@@ -1651,6 +1877,7 @@ class __$$DocCalloutImplCopyWithImpl<$Res>
     Object? icon = null,
     Object? color = null,
     Object? spans = null,
+    Object? depth = null,
   }) {
     return _then(_$DocCalloutImpl(
       icon: null == icon
@@ -1665,6 +1892,10 @@ class __$$DocCalloutImplCopyWithImpl<$Res>
           ? _value._spans
           : spans // ignore: cast_nullable_to_non_nullable
               as List<DocumentTextSpan>,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -1675,7 +1906,8 @@ class _$DocCalloutImpl implements DocCallout {
   const _$DocCalloutImpl(
       {required this.icon,
       required this.color,
-      required final List<DocumentTextSpan> spans})
+      required final List<DocumentTextSpan> spans,
+      this.depth = 0})
       : _spans = spans;
 
   @override
@@ -1691,8 +1923,12 @@ class _$DocCalloutImpl implements DocCallout {
   }
 
   @override
+  @JsonKey()
+  final int depth;
+
+  @override
   String toString() {
-    return 'DocumentNode.callout(icon: $icon, color: $color, spans: $spans)';
+    return 'DocumentNode.callout(icon: $icon, color: $color, spans: $spans, depth: $depth)';
   }
 
   @override
@@ -1702,12 +1938,13 @@ class _$DocCalloutImpl implements DocCallout {
             other is _$DocCalloutImpl &&
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.color, color) || other.color == color) &&
-            const DeepCollectionEquality().equals(other._spans, _spans));
+            const DeepCollectionEquality().equals(other._spans, _spans) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, icon, color, const DeepCollectionEquality().hash(_spans));
+  int get hashCode => Object.hash(runtimeType, icon, color,
+      const DeepCollectionEquality().hash(_spans), depth);
 
   @JsonKey(ignore: true)
   @override
@@ -1718,13 +1955,21 @@ class _$DocCalloutImpl implements DocCallout {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -1733,28 +1978,32 @@ class _$DocCalloutImpl implements DocCallout {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return callout(icon, color, spans);
+    return callout(icon, color, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1763,27 +2012,31 @@ class _$DocCalloutImpl implements DocCallout {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return callout?.call(icon, color, spans);
+    return callout?.call(icon, color, spans, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -1792,17 +2045,20 @@ class _$DocCalloutImpl implements DocCallout {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (callout != null) {
-      return callout(icon, color, spans);
+      return callout(icon, color, spans, depth);
     }
     return orElse();
   }
@@ -1864,23 +2120,29 @@ abstract class DocCallout implements DocumentNode {
   const factory DocCallout(
       {required final String icon,
       required final String color,
-      required final List<DocumentTextSpan> spans}) = _$DocCalloutImpl;
+      required final List<DocumentTextSpan> spans,
+      final int depth}) = _$DocCalloutImpl;
 
   String get icon;
   String get color;
   List<DocumentTextSpan> get spans;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocTableImplCopyWith<$Res> {
+abstract class _$$DocTableImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocTableImplCopyWith(
           _$DocTableImpl value, $Res Function(_$DocTableImpl) then) =
       __$$DocTableImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({int columnCount, List<List<String>> rows});
+  $Res call({int columnCount, List<List<String>> rows, int depth});
 }
 
 /// @nodoc
@@ -1896,6 +2158,7 @@ class __$$DocTableImplCopyWithImpl<$Res>
   $Res call({
     Object? columnCount = null,
     Object? rows = null,
+    Object? depth = null,
   }) {
     return _then(_$DocTableImpl(
       columnCount: null == columnCount
@@ -1906,6 +2169,10 @@ class __$$DocTableImplCopyWithImpl<$Res>
           ? _value._rows
           : rows // ignore: cast_nullable_to_non_nullable
               as List<List<String>>,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -1914,7 +2181,9 @@ class __$$DocTableImplCopyWithImpl<$Res>
 
 class _$DocTableImpl implements DocTable {
   const _$DocTableImpl(
-      {required this.columnCount, required final List<List<String>> rows})
+      {required this.columnCount,
+      required final List<List<String>> rows,
+      this.depth = 0})
       : _rows = rows;
 
   @override
@@ -1928,8 +2197,12 @@ class _$DocTableImpl implements DocTable {
   }
 
   @override
+  @JsonKey()
+  final int depth;
+
+  @override
   String toString() {
-    return 'DocumentNode.table(columnCount: $columnCount, rows: $rows)';
+    return 'DocumentNode.table(columnCount: $columnCount, rows: $rows, depth: $depth)';
   }
 
   @override
@@ -1939,12 +2212,13 @@ class _$DocTableImpl implements DocTable {
             other is _$DocTableImpl &&
             (identical(other.columnCount, columnCount) ||
                 other.columnCount == columnCount) &&
-            const DeepCollectionEquality().equals(other._rows, _rows));
+            const DeepCollectionEquality().equals(other._rows, _rows) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, columnCount, const DeepCollectionEquality().hash(_rows));
+  int get hashCode => Object.hash(runtimeType, columnCount,
+      const DeepCollectionEquality().hash(_rows), depth);
 
   @JsonKey(ignore: true)
   @override
@@ -1955,13 +2229,21 @@ class _$DocTableImpl implements DocTable {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -1970,28 +2252,32 @@ class _$DocTableImpl implements DocTable {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return table(columnCount, rows);
+    return table(columnCount, rows, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2000,27 +2286,31 @@ class _$DocTableImpl implements DocTable {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return table?.call(columnCount, rows);
+    return table?.call(columnCount, rows, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -2029,17 +2319,20 @@ class _$DocTableImpl implements DocTable {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (table != null) {
-      return table(columnCount, rows);
+      return table(columnCount, rows, depth);
     }
     return orElse();
   }
@@ -2100,20 +2393,28 @@ class _$DocTableImpl implements DocTable {
 abstract class DocTable implements DocumentNode {
   const factory DocTable(
       {required final int columnCount,
-      required final List<List<String>> rows}) = _$DocTableImpl;
+      required final List<List<String>> rows,
+      final int depth}) = _$DocTableImpl;
 
   int get columnCount;
   List<List<String>> get rows;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocDividerImplCopyWith<$Res> {
+abstract class _$$DocDividerImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocDividerImplCopyWith(
           _$DocDividerImpl value, $Res Function(_$DocDividerImpl) then) =
       __$$DocDividerImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({int depth});
 }
 
 /// @nodoc
@@ -2123,37 +2424,70 @@ class __$$DocDividerImplCopyWithImpl<$Res>
   __$$DocDividerImplCopyWithImpl(
       _$DocDividerImpl _value, $Res Function(_$DocDividerImpl) _then)
       : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? depth = null,
+  }) {
+    return _then(_$DocDividerImpl(
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
 }
 
 /// @nodoc
 
 class _$DocDividerImpl implements DocDivider {
-  const _$DocDividerImpl();
+  const _$DocDividerImpl({this.depth = 0});
+
+  @override
+  @JsonKey()
+  final int depth;
 
   @override
   String toString() {
-    return 'DocumentNode.divider()';
+    return 'DocumentNode.divider(depth: $depth)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other.runtimeType == runtimeType && other is _$DocDividerImpl);
+        (other.runtimeType == runtimeType &&
+            other is _$DocDividerImpl &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode => Object.hash(runtimeType, depth);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DocDividerImplCopyWith<_$DocDividerImpl> get copyWith =>
+      __$$DocDividerImplCopyWithImpl<_$DocDividerImpl>(this, _$identity);
 
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -2162,28 +2496,32 @@ class _$DocDividerImpl implements DocDivider {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return divider();
+    return divider(depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2192,27 +2530,31 @@ class _$DocDividerImpl implements DocDivider {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return divider?.call();
+    return divider?.call(depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -2221,17 +2563,20 @@ class _$DocDividerImpl implements DocDivider {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (divider != null) {
-      return divider();
+      return divider(depth);
     }
     return orElse();
   }
@@ -2290,16 +2635,25 @@ class _$DocDividerImpl implements DocDivider {
 }
 
 abstract class DocDivider implements DocumentNode {
-  const factory DocDivider() = _$DocDividerImpl;
+  const factory DocDivider({final int depth}) = _$DocDividerImpl;
+
+  @override
+  int get depth;
+  @override
+  @JsonKey(ignore: true)
+  _$$DocDividerImplCopyWith<_$DocDividerImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class _$$DocCodeImplCopyWith<$Res> {
+abstract class _$$DocCodeImplCopyWith<$Res>
+    implements $DocumentNodeCopyWith<$Res> {
   factory _$$DocCodeImplCopyWith(
           _$DocCodeImpl value, $Res Function(_$DocCodeImpl) then) =
       __$$DocCodeImplCopyWithImpl<$Res>;
+  @override
   @useResult
-  $Res call({String code, String language});
+  $Res call({String code, String language, int depth});
 }
 
 /// @nodoc
@@ -2315,6 +2669,7 @@ class __$$DocCodeImplCopyWithImpl<$Res>
   $Res call({
     Object? code = null,
     Object? language = null,
+    Object? depth = null,
   }) {
     return _then(_$DocCodeImpl(
       code: null == code
@@ -2325,6 +2680,10 @@ class __$$DocCodeImplCopyWithImpl<$Res>
           ? _value.language
           : language // ignore: cast_nullable_to_non_nullable
               as String,
+      depth: null == depth
+          ? _value.depth
+          : depth // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -2332,16 +2691,20 @@ class __$$DocCodeImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DocCodeImpl implements DocCode {
-  const _$DocCodeImpl({required this.code, required this.language});
+  const _$DocCodeImpl(
+      {required this.code, required this.language, this.depth = 0});
 
   @override
   final String code;
   @override
   final String language;
+  @override
+  @JsonKey()
+  final int depth;
 
   @override
   String toString() {
-    return 'DocumentNode.code(code: $code, language: $language)';
+    return 'DocumentNode.code(code: $code, language: $language, depth: $depth)';
   }
 
   @override
@@ -2351,11 +2714,12 @@ class _$DocCodeImpl implements DocCode {
             other is _$DocCodeImpl &&
             (identical(other.code, code) || other.code == code) &&
             (identical(other.language, language) ||
-                other.language == language));
+                other.language == language) &&
+            (identical(other.depth, depth) || other.depth == depth));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, code, language);
+  int get hashCode => Object.hash(runtimeType, code, language, depth);
 
   @JsonKey(ignore: true)
   @override
@@ -2366,13 +2730,21 @@ class _$DocCodeImpl implements DocCode {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans) paragraph,
-    required TResult Function(int level, List<DocumentTextSpan> spans) heading,
+    required TResult Function(List<DocumentTextSpan> spans, int depth)
+        paragraph,
     required TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)
+            int level, List<DocumentTextSpan> spans, int depth)
+        heading,
+    required TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)
         list,
-    required TResult Function(String attachmentId, String? caption,
-            String? fileName, Uint8List? imageBytes, bool isAvailable)
+    required TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth)
         image,
     required TResult Function(
             String attachmentId,
@@ -2381,28 +2753,32 @@ class _$DocCodeImpl implements DocCode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)
+            bool isAvailable,
+            int depth)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans)
+            String icon, String color, List<DocumentTextSpan> spans, int depth)
         callout,
-    required TResult Function(int columnCount, List<List<String>> rows) table,
-    required TResult Function() divider,
-    required TResult Function(String code, String language) code,
+    required TResult Function(
+            int columnCount, List<List<String>> rows, int depth)
+        table,
+    required TResult Function(int depth) divider,
+    required TResult Function(String code, String language, int depth) code,
   }) {
-    return code(this.code, language);
+    return code(this.code, language, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult? Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult? Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2411,27 +2787,31 @@ class _$DocCodeImpl implements DocCode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult? Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult? Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows)? table,
-    TResult? Function()? divider,
-    TResult? Function(String code, String language)? code,
+    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult? Function(int depth)? divider,
+    TResult? Function(String code, String language, int depth)? code,
   }) {
-    return code?.call(this.code, language);
+    return code?.call(this.code, language, depth);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans)? heading,
-    TResult Function(
-            String listType, bool checked, List<DocumentTextSpan> spans)?
+    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+        heading,
+    TResult Function(String listType, bool checked,
+            List<DocumentTextSpan> spans, int depth)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable)?
+            Uint8List? imageBytes, bool isAvailable, int depth)?
         image,
     TResult Function(
             String attachmentId,
@@ -2440,17 +2820,20 @@ class _$DocCodeImpl implements DocCode {
             String? mimeType,
             int? fileSize,
             String fileTypeLabel,
-            bool isAvailable)?
+            bool isAvailable,
+            int depth)?
         file,
-    TResult Function(String icon, String color, List<DocumentTextSpan> spans)?
+    TResult Function(
+            String icon, String color, List<DocumentTextSpan> spans, int depth)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows)? table,
-    TResult Function()? divider,
-    TResult Function(String code, String language)? code,
+    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+        table,
+    TResult Function(int depth)? divider,
+    TResult Function(String code, String language, int depth)? code,
     required TResult orElse(),
   }) {
     if (code != null) {
-      return code(this.code, language);
+      return code(this.code, language, depth);
     }
     return orElse();
   }
@@ -2511,10 +2894,14 @@ class _$DocCodeImpl implements DocCode {
 abstract class DocCode implements DocumentNode {
   const factory DocCode(
       {required final String code,
-      required final String language}) = _$DocCodeImpl;
+      required final String language,
+      final int depth}) = _$DocCodeImpl;
 
   String get code;
   String get language;
+  @override
+  int get depth;
+  @override
   @JsonKey(ignore: true)
   _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>
       throw _privateConstructorUsedError;

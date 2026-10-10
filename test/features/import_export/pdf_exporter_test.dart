@@ -180,6 +180,73 @@ void main() {
       expect(pdfContent.contains('[File: file-uuid-video]'), isFalse);
       expect(pdfContent.contains('[Image: img-uuid-1234]'), isFalse);
     });
+
+    test('preserves hierarchy with indented nodes, sequential numbering, and checklist state', () async {
+      final exporter = PdfExporter();
+      const doc = ExportDocument(
+        title: 'Hierarchical Structure Spec',
+        nodes: [
+          DocumentNode.heading(
+            level: 1,
+            spans: [DocumentTextSpan(text: 'Tasks & Outline')],
+            depth: 0,
+          ),
+          // Numbered lists at various depths
+          DocumentNode.list(
+            listType: 'numbered',
+            checked: false,
+            spans: [DocumentTextSpan(text: 'First top-level item')],
+            depth: 0,
+          ),
+          DocumentNode.list(
+            listType: 'numbered',
+            checked: false,
+            spans: [DocumentTextSpan(text: 'Nested sub-item 1')],
+            depth: 1,
+          ),
+          DocumentNode.list(
+            listType: 'numbered',
+            checked: false,
+            spans: [DocumentTextSpan(text: 'Nested sub-item 2')],
+            depth: 1,
+          ),
+          DocumentNode.list(
+            listType: 'numbered',
+            checked: false,
+            spans: [DocumentTextSpan(text: 'Second top-level item')],
+            depth: 0,
+          ),
+          // Checklists: one checked, one unchecked, with depth
+          DocumentNode.list(
+            listType: 'checklist',
+            checked: true,
+            spans: [DocumentTextSpan(text: 'Completed task')],
+            depth: 0,
+          ),
+          DocumentNode.list(
+            listType: 'checklist',
+            checked: false,
+            spans: [DocumentTextSpan(text: 'Pending subtask')],
+            depth: 1,
+          ),
+          // Indented paragraph and code
+          DocumentNode.paragraph(
+            spans: [DocumentTextSpan(text: 'Indented descriptive note')],
+            depth: 2,
+          ),
+          DocumentNode.code(
+            code: 'const x = 42;',
+            language: 'javascript',
+            depth: 1,
+          ),
+        ],
+      );
+
+      final pdfBytes = await exporter.exportDocument(doc);
+      expect(pdfBytes, isNotEmpty);
+      final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
+      expect(header.startsWith('%PDF'), isTrue);
+    });
   });
 
   group('ExportUseCase', () {

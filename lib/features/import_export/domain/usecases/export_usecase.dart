@@ -71,17 +71,20 @@ class ExportUseCase {
     final nodes = <DocumentNode>[];
 
     // Pre-order tree traversal to ensure ExportDocument has the exact hierarchical visual order
-    final treeBlocks = BlockTreeService.buildVisibleTree(blocks)
-        .map((vb) => vb.block)
-        .toList();
-    final visitedIds = treeBlocks.map((b) => b.id).toSet();
+    final visibleTree = BlockTreeService.buildVisibleTree(blocks);
+    final visitedIds = visibleTree.map((vb) => vb.block.id).toSet();
     final unvisited = blocks
         .where((b) => !b.deleted && !visitedIds.contains(b.id))
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
-    final blocksToProcess = [...treeBlocks, ...unvisited];
+    final itemsToProcess = [
+      ...visibleTree.map((vb) => (block: vb.block, depth: vb.depth)),
+      ...unvisited.map((b) => (block: b, depth: 0)),
+    ];
 
-    for (final block in blocksToProcess) {
+    for (final item in itemsToProcess) {
+      final block = item.block;
+      final depth = item.depth;
       final json = Map<String, dynamic>.from(
         jsonDecode(block.data) as Map<String, dynamic>,
       );
@@ -97,12 +100,14 @@ class ExportUseCase {
               DocumentNode.heading(
                 level: textBlock.headingLevel,
                 spans: _mapSpans(textBlock.spans),
+                depth: depth,
               ),
             );
           } else {
             nodes.add(
               DocumentNode.paragraph(
                 spans: _mapSpans(textBlock.spans),
+                depth: depth,
               ),
             );
           }
@@ -120,6 +125,7 @@ class ExportUseCase {
               listType: listBlock.listType,
               checked: listBlock.checked,
               spans: _mapSpans(listBlock.spans),
+              depth: depth,
             ),
           );
         },
@@ -129,6 +135,7 @@ class ExportUseCase {
               icon: calloutBlock.icon,
               color: calloutBlock.color,
               spans: _mapSpans(calloutBlock.spans),
+              depth: depth,
             ),
           );
         },
@@ -141,17 +148,19 @@ class ExportUseCase {
             DocumentNode.table(
               columnCount: tableBlock.columnCount,
               rows: rows,
+              depth: depth,
             ),
           );
         },
         divider: (DividerBlockData dividerBlock) async {
-          nodes.add(const DocumentNode.divider());
+          nodes.add(DocumentNode.divider(depth: depth));
         },
         code: (CodeBlockData codeBlock) async {
           nodes.add(
             DocumentNode.code(
               language: codeBlock.language,
               code: codeBlock.code,
+              depth: depth,
             ),
           );
         },
@@ -179,6 +188,7 @@ class ExportUseCase {
               fileName: resolved.fileName,
               imageBytes: imageBytes,
               isAvailable: resolved.isAvailable && imageBytes != null,
+              depth: depth,
             ),
           );
         },
@@ -197,6 +207,7 @@ class ExportUseCase {
               mimeType: resolved.mimeType,
               fileTypeLabel: 'Video',
               isAvailable: resolved.isAvailable,
+              depth: depth,
             ),
           );
         },
@@ -215,6 +226,7 @@ class ExportUseCase {
               mimeType: resolved.mimeType,
               fileTypeLabel: 'Audio',
               isAvailable: resolved.isAvailable,
+              depth: depth,
             ),
           );
         },
@@ -233,6 +245,7 @@ class ExportUseCase {
               mimeType: resolved.mimeType,
               fileTypeLabel: 'PDF Document',
               isAvailable: resolved.isAvailable,
+              depth: depth,
             ),
           );
         },
@@ -251,6 +264,7 @@ class ExportUseCase {
               mimeType: resolved.mimeType,
               fileTypeLabel: 'File Attachment',
               isAvailable: resolved.isAvailable,
+              depth: depth,
             ),
           );
         },
@@ -264,6 +278,7 @@ class ExportUseCase {
                   bold: true,
                 ),
               ],
+              depth: depth,
             ),
           );
         },
@@ -276,6 +291,7 @@ class ExportUseCase {
                   link: webLinkBlock.url,
                 ),
               ],
+              depth: depth,
             ),
           );
         },
@@ -287,6 +303,7 @@ class ExportUseCase {
                   text: '⏰ ${reminderBlock.title} (${reminderBlock.dueAt})',
                 ),
               ],
+              depth: depth,
             ),
           );
         },

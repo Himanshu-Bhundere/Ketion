@@ -54,12 +54,19 @@ class RecentNotesWidgetProvider : HomeWidgetProvider() {
                 setViewVisibility(R.id.header_layout, View.VISIBLE)
             }
 
-            val newNoteIntent = HomeWidgetLaunchIntent.getActivity(
+            val newNoteIntent = Intent(context, MainActivity::class.java).apply {
+                action = "es.antonborri.home_widget.action.LAUNCH"
+                data = Uri.parse("ketion://new-note")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val newNotePendingIntent = PendingIntent.getActivity(
                 context,
-                MainActivity::class.java,
-                Uri.parse("ketion://new-note")
+                1002,
+                newNoteIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            setOnClickPendingIntent(R.id.btn_header_new_note, newNoteIntent)
+            setOnClickPendingIntent(R.id.btn_header_new_note, newNotePendingIntent)
+            setOnClickPendingIntent(R.id.empty_view, newNotePendingIntent)
 
             val intent = Intent(context, RecentNotesWidgetService::class.java).apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -80,10 +87,10 @@ class RecentNotesWidgetProvider : HomeWidgetProvider() {
                     setTextViewText(R.id.empty_view, "Error loading notes")
                 }
                 WidgetRepository.RepositoryStatus.EMPTY -> {
-                    setTextViewText(R.id.empty_view, "No recent notes")
+                    setTextViewText(R.id.empty_view, "No recent notes\nTap to create one")
                 }
                 WidgetRepository.RepositoryStatus.SUCCESS -> {
-                    setTextViewText(R.id.empty_view, "No recent notes")
+                    setTextViewText(R.id.empty_view, "No recent notes\nTap to create one")
                 }
             }
 
@@ -92,7 +99,7 @@ class RecentNotesWidgetProvider : HomeWidgetProvider() {
                 action = HomeWidgetLaunchIntent.HOME_WIDGET_LAUNCH_ACTION
             }
             val clickPendingIntent = PendingIntent.getActivity(
-                context, 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                context, 1003, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             )
             setPendingIntentTemplate(R.id.recent_notes_list, clickPendingIntent)
         }

@@ -8,6 +8,7 @@ import 'package:ketion/core/router/app_router.dart';
 import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
+import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 
 void main() async {
@@ -31,7 +32,20 @@ class _KetionAppState extends ConsumerState<KetionApp> {
   @override
   void initState() {
     super.initState();
-    WidgetBootstrap.listenToDeepLinks();
+    WidgetBootstrap.listenToDeepLinks(
+      onCreatePage: () async {
+        final result = await ref.read(createPageUseCaseProvider)(title: '');
+        return result.fold(
+          (page) {
+            ref.invalidate(recentPagesProvider);
+            ref.invalidate(favoritePagesProvider);
+            ref.invalidate(pageProvider(page.id));
+            return page.id;
+          },
+          (error) => null,
+        );
+      },
+    );
 
     // Eagerly connect notification action dispatcher to Riverpod
     Future.microtask(() {

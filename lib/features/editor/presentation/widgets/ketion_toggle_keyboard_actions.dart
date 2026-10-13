@@ -16,9 +16,12 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  final hardwareKeyboard = HardwareKeyboard.instance;
-  if (hardwareKeyboard.isShiftPressed) {
-    return ExecutionInstruction.continueExecution;
+  try {
+    if (HardwareKeyboard.instance.isShiftPressed) {
+      return ExecutionInstruction.continueExecution;
+    }
+  } catch (_) {
+    // HardwareKeyboard not initialized in some test environments
   }
 
   final selection = editContext.composer.selection;
@@ -58,7 +61,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
 
-    // Always create a new child block inside the toggle hierarchy
+    // Create a new child block inside the toggle hierarchy
     editContext.editor.execute([
       InsertNodeAfterNodeRequest(
         existingNodeId: node.id,

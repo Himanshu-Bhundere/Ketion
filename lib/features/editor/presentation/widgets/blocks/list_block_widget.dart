@@ -378,6 +378,23 @@ class _ListBlockWidgetState extends ConsumerState<ListBlockWidget> {
           ),
         );
         break;
+      case 'toggle':
+        final isExpanded = _blockData.isExpanded;
+        leadingWidget = GestureDetector(
+          onTap: () {
+            final newData = _blockData.copyWith(isExpanded: !isExpanded);
+            final json = newData.toJson()..remove('runtimeType');
+            widget.onUpdate(widget.block.copyWith(data: jsonEncode(json)));
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2.0, right: 4.0),
+            child: Icon(
+              isExpanded ? Icons.arrow_drop_down : Icons.arrow_right,
+              size: 24,
+            ),
+          ),
+        );
+        break;
       default:
         leadingWidget = const SizedBox(width: 16);
     }

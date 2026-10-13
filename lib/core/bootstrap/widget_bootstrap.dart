@@ -30,12 +30,34 @@ class WidgetBootstrap {
   ]) =>
       _launchedFromWidget(uri, onCreatePage);
 
+  @visibleForTesting
+  static Future<void> handleWarmStart(
+    Uri? uri, [
+    Future<String?> Function()? onCreatePage,
+  ]) =>
+      _launchedFromWidget(uri, onCreatePage);
+
+  @visibleForTesting
+  static Future<void> handleColdStart([
+    Future<String?> Function()? onCreatePage,
+    Future<Uri?> Function()? initialUriProvider,
+  ]) async {
+    final uri = initialUriProvider != null
+        ? await initialUriProvider()
+        : await HomeWidget.initiallyLaunchedFromHomeWidget();
+    if (uri != null) {
+      await _launchedFromWidget(uri, onCreatePage);
+    }
+  }
+
   static Future<void> _launchedFromWidget(
     Uri? uri, [
     Future<String?> Function()? onCreatePage,
   ]) async {
     if (uri != null && uri.scheme == 'ketion') {
-      if (uri.host == 'new-note' || uri.host == 'quick_note') {
+      if (uri.host == 'new-note' ||
+          uri.host == 'quick_note' ||
+          uri.host == 'quick-note') {
         final pageId = (onCreatePage != null ? await onCreatePage() : null) ??
             const Uuid().v7();
         unawaited(
@@ -45,8 +67,13 @@ class WidgetBootstrap {
             extra: const {'focusTitle': true},
           ),
         );
-      } else if (uri.host == 'note' && uri.pathSegments.isNotEmpty) {
-        final pageId = uri.pathSegments.first;
+      } else if ((uri.host == 'note' || uri.host == 'page') &&
+          uri.pathSegments.isNotEmpty) {
+        final pageId = uri.pathSegments.first.trim();
+        // Ignore invalid / empty note IDs
+        if (pageId.isEmpty || pageId == 'null' || pageId == 'undefined') {
+          return;
+        }
         unawaited(
           appRouter.pushNamed(
             Routes.editorName,
@@ -54,7 +81,11 @@ class WidgetBootstrap {
           ),
         );
       } else if (uri.host == 'settings') {
-        unawaited(appRouter.push(Routes.settings));
+        if (uri.pathSegments.contains('sync') || uri.path == '/sync') {
+          unawaited(appRouter.push(Routes.settingsSync));
+        } else {
+          unawaited(appRouter.push(Routes.settings));
+        }
       }
     }
   }

@@ -27,6 +27,7 @@ class SyncStatusWidgetProvider : HomeWidgetProvider() {
                     android.net.Uri.parse("ketion://settings/sync")
                 )
                 setOnClickPendingIntent(R.id.sync_status_title, intent)
+                setOnClickPendingIntent(R.id.widget_root, intent)
             }
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

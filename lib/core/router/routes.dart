@@ -6,6 +6,7 @@ class Routes {
   static const String notes = '/notes';
   static const String reminders = '/reminders';
   static const String settings = '/settings';
+  static const String settingsSync = '/settings/sync';
 
   static const String editorName = 'editor';
   static const String editor = '/editor/:pageId';

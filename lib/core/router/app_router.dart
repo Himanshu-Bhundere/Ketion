@@ -64,6 +64,13 @@ final appRouter = GoRouter(
             GoRoute(
               path: Routes.settings,
               builder: (context, state) => const SettingsPage(),
+              routes: [
+                GoRoute(
+                  path: 'sync',
+                  builder: (context, state) =>
+                      const SettingsPage(scrollToSync: true),
+                ),
+              ],
             ),
           ],
         ),

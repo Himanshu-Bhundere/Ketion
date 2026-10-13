@@ -6,7 +6,9 @@ import '../../../sync/presentation/providers/sync_providers.dart';
 import 'package:go_router/go_router.dart';
 
 class SettingsPage extends ConsumerWidget {
-  const SettingsPage({super.key});
+  final bool scrollToSync;
+
+  const SettingsPage({super.key, this.scrollToSync = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -291,6 +291,7 @@ class KetionSuperEditorAdapter {
             return ListItemNode.ordered(
               id: nodeId,
               text: attributedText,
+              indent: depth,
               metadata: metadata.isNotEmpty ? metadata : null,
             );
           } else if (listType == 'checklist') {
@@ -312,6 +313,7 @@ class KetionSuperEditorAdapter {
             return ListItemNode.unordered(
               id: nodeId,
               text: attributedText,
+              indent: depth,
               metadata: metadata.isNotEmpty ? metadata : null,
             );
           }

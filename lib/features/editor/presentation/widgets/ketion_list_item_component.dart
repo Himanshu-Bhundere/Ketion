@@ -4,6 +4,44 @@ import 'package:super_editor/super_editor.dart';
 /// A component builder for [ListItemNode]s that uses a fixed prefix width (24.0)
 /// for bullets and numbers, delegating all per-level indentation to
 /// [DepthWrappingComponentBuilder] to maintain a single unified indentation model.
+/// Computes the 1-based ordinal value for an ordered [ListItemNode].
+/// Numbering is scoped to the item's sibling group (same depth and parent)
+/// in document order. Preceding items with deeper depth (nested descendants)
+/// are skipped so they do not break the sibling sequence.
+/// Preceding siblings that are ordered list items increment the count.
+/// Any non-ordered sibling at the same level, or reaching a shallower depth,
+/// terminates the sequence.
+int computeKetionListItemOrdinalValue(ListItemNode node, Document document) {
+  int count = 1;
+  final nodeDepth = node.metadata['depth'] as int? ?? node.indent;
+  final nodeParentId = node.metadata['parentBlockId'] as String?;
+
+  DocumentNode? prev = document.getNodeBeforeById(node.id);
+  while (prev != null) {
+    final prevDepth = prev.metadata['depth'] as int? ??
+        (prev is ListItemNode ? prev.indent : 0);
+    final prevParentId = prev.metadata['parentBlockId'] as String?;
+
+    if (prevDepth < nodeDepth) {
+      // Reached an ancestor level or parent
+      break;
+    }
+
+    if (prevDepth == nodeDepth && prevParentId == nodeParentId) {
+      if (prev is ListItemNode && prev.type == ListItemType.ordered) {
+        count++;
+      } else {
+        // A non-ordered sibling at the same level resets list sequence
+        break;
+      }
+    }
+
+    prev = document.getNodeBeforeById(prev.id);
+  }
+
+  return count;
+}
+
 class KetionListItemComponentBuilder implements ComponentBuilder {
   const KetionListItemComponentBuilder();
 
@@ -20,7 +58,7 @@ class KetionListItemComponentBuilder implements ComponentBuilder {
 
     int? ordinalValue;
     if (node.type == ListItemType.ordered) {
-      ordinalValue = computeListItemOrdinalValue(node, document);
+      ordinalValue = computeKetionListItemOrdinalValue(node, document);
     }
 
     final textDirection = getParagraphDirection(node.text.toPlainText());

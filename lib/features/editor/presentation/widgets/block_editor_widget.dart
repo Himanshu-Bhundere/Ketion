@@ -144,20 +144,35 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
             final visibleBlocks =
                 ref.read(visibleBlocksProvider(widget.pageId));
             int count = 1;
+            final nodeDepth = visibleBlock.depth;
+            final nodeParentId = block.parentBlockId;
             for (int j = index - 1; j >= 0 && j < visibleBlocks.length; j--) {
-              final prev = visibleBlocks[j].block;
-              if (prev.parentBlockId != block.parentBlockId) break;
-              if (prev.type != 'list') break;
-              try {
-                final prevData =
-                    jsonDecode(prev.data) as Map<String, dynamic>;
-                if (prevData['listType'] == 'numbered') {
-                  count++;
+              final prevVisible = visibleBlocks[j];
+              final prev = prevVisible.block;
+              final prevDepth = prevVisible.depth;
+              final prevParentId = prev.parentBlockId;
+
+              if (prevDepth < nodeDepth) {
+                // Reached an ancestor level or parent
+                break;
+              }
+
+              if (prevDepth == nodeDepth && prevParentId == nodeParentId) {
+                if (prev.type == 'list') {
+                  try {
+                    final prevData =
+                        jsonDecode(prev.data) as Map<String, dynamic>;
+                    if (prevData['listType'] == 'numbered') {
+                      count++;
+                    } else {
+                      break;
+                    }
+                  } catch (_) {
+                    break;
+                  }
                 } else {
                   break;
                 }
-              } catch (_) {
-                break;
               }
             }
             listIndex = count;

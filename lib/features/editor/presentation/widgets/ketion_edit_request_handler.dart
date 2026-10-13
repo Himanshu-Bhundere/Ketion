@@ -991,13 +991,13 @@ class _KetionDelegatingCommand extends EditCommand {
           ? ListItemNode.ordered(
               id: node.id,
               text: node.text,
-              indent: node.indent,
+              indent: newDepth,
               metadata: newMetadata,
             )
           : ListItemNode.unordered(
               id: node.id,
               text: node.text,
-              indent: node.indent,
+              indent: newDepth,
               metadata: newMetadata,
             );
       document.replaceNodeById(node.id, replacement);

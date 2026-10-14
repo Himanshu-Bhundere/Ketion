@@ -38,9 +38,11 @@ class BlockDataSerializer {
     }
     if (node is ParagraphNode) {
       final blockType = node.metadata['blockType'];
+      final listType = node.metadata['listType'];
       final isToggle = blockType == const NamedAttribution('toggle') ||
           blockType == 'toggle' ||
-          (blockType is NamedAttribution && blockType.name == 'toggle');
+          (blockType is NamedAttribution && blockType.name == 'toggle') ||
+          listType == 'toggle';
       if (isToggle) {
         return BlockDataModel.list(
           spans: _spans(node),
@@ -130,9 +132,11 @@ class BlockDataSerializer {
     if (node is ParagraphNode) {
       if (node.metadata['blockType'] == codeAttribution) return 'code';
       final blockType = node.metadata['blockType'];
+      final listType = node.metadata['listType'];
       if (blockType == const NamedAttribution('toggle') ||
           blockType == 'toggle' ||
-          (blockType is NamedAttribution && blockType.name == 'toggle')) {
+          (blockType is NamedAttribution && blockType.name == 'toggle') ||
+          listType == 'toggle') {
         return 'list';
       }
     }

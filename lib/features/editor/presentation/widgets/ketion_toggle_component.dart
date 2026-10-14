@@ -26,17 +26,22 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
 
   final Editor editor;
 
+  static bool isToggleNode(DocumentNode node) {
+    if (node is! TextNode) return false;
+    final blockType = node.metadata['blockType'];
+    final listType = node.metadata['listType'];
+    return blockType == 'toggle' ||
+        blockType == const NamedAttribution('toggle') ||
+        (blockType is NamedAttribution && blockType.name == 'toggle') ||
+        (listType == 'toggle');
+  }
+
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
     Document document,
     DocumentNode node,
   ) {
-    final blockType = node.metadata['blockType'];
-    final isToggle = blockType == 'toggle' ||
-        blockType == const NamedAttribution('toggle') ||
-        (blockType is NamedAttribution && blockType.name == 'toggle') ||
-        (node.metadata['listType'] == 'toggle');
-    if (node is! TextNode || !isToggle) {
+    if (!isToggleNode(node) || node is! TextNode) {
       return null;
     }
 

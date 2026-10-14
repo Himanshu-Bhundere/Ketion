@@ -78,10 +78,10 @@ class BlockTreeService {
         );
 
         bool isExpanded = true;
-        if (child.type == 'list') {
+        if (child.type == 'list' || child.type == 'toggle') {
           try {
             final data = jsonDecode(child.data) as Map<String, dynamic>;
-            if (data['listType'] == 'toggle') {
+            if (data['listType'] == 'toggle' || child.type == 'toggle') {
               isExpanded = data['isExpanded'] as bool? ?? false;
             }
           } catch (_) {}

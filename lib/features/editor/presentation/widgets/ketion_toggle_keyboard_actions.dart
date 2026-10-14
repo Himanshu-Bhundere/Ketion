@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
 
 import 'ketion_edit_requests.dart';
+import 'ketion_toggle_component.dart';
 
 ExecutionInstruction splitToggleWhenEnterPressed({
   required SuperEditorContext editContext,
@@ -34,11 +35,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  final blockType = node.metadata['blockType'];
-  final isToggle = blockType == 'toggle' ||
-      blockType == const NamedAttribution('toggle') ||
-      (blockType is NamedAttribution && blockType.name == 'toggle');
-  if (!isToggle) {
+  if (!KetionToggleComponentBuilder.isToggleNode(node)) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -231,11 +228,7 @@ ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
     return ExecutionInstruction.continueExecution;
   }
 
-  final blockType = node.metadata['blockType'];
-  final isToggle = blockType == 'toggle' ||
-      blockType == const NamedAttribution('toggle') ||
-      (blockType is NamedAttribution && blockType.name == 'toggle');
-  if (isToggle) {
+  if (KetionToggleComponentBuilder.isToggleNode(node)) {
     return ExecutionInstruction.continueExecution;
   }
 

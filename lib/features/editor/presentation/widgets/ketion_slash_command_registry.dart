@@ -174,6 +174,7 @@ class KetionSlashCommandRegistry {
         return [
           ..._getParagraphMetadataRequests(nodeId, doc, {
             'blockType': const NamedAttribution('toggle'),
+            'listType': 'toggle',
             'isExpanded': true,
           }),
           InsertNodeAfterNodeRequest(

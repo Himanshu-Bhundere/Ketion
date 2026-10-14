@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
 import 'package:ketion/core/router/app_router.dart';
@@ -143,6 +144,67 @@ void main() {
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
       expect(appRouter.routeInformationProvider.value.uri.path, currentPath);
+    });
+
+    test('failed note creation triggers onError and does not navigate to fabricated UUID', () async {
+      final initialPath = appRouter.routeInformationProvider.value.uri.path;
+      String? errorMessage;
+
+      await WidgetBootstrap.handleDeepLink(
+        Uri.parse('ketion://new-note'),
+        () async => null, // Failed creation returns null
+        (err) => errorMessage = err,
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(errorMessage, 'Failed to create note. Please try again.');
+      expect(appRouter.routeInformationProvider.value.uri.path, initialPath);
+    });
+
+    test('repeated rapid widget taps are locked and execute onCreatePage only once', () async {
+      int creationCount = 0;
+      final completer = Completer<String?>();
+
+      // Fire first tap
+      final future1 = WidgetBootstrap.handleDeepLink(
+        Uri.parse('ketion://new-note'),
+        () async {
+          creationCount++;
+          return completer.future;
+        },
+      );
+
+      // Fire rapid second tap while first is in-flight
+      final future2 = WidgetBootstrap.handleDeepLink(
+        Uri.parse('ketion://new-note'),
+        () async {
+          creationCount++;
+          return 'second-id';
+        },
+      );
+
+      // Resolve in-flight creation
+      completer.complete('first-page-id');
+      await Future.wait([future1, future2]);
+
+      expect(creationCount, 1);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(appRouter.routeInformationProvider.value.uri.path, contains('first-page-id'));
+    });
+
+    test('cold start with failed creation does not open fabricated UUID', () async {
+      final initialPath = appRouter.routeInformationProvider.value.uri.path;
+      String? reportedError;
+
+      await WidgetBootstrap.handleColdStart(
+        () async => null,
+        () async => Uri.parse('ketion://new-note'),
+        (err) => reportedError = err,
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(reportedError, isNotNull);
+      expect(appRouter.routeInformationProvider.value.uri.path, initialPath);
     });
   });
 }

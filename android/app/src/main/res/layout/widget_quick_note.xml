@@ -15,4 +15,14 @@
         android:src="@android:drawable/ic_menu_edit"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="New Note" />
+
+    <TextView
+        android:id="@+id/quick_note_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="New Note"
+        android:textColor="@android:color/black"
+        android:textSize="12sp"
+        android:visibility="gone" />
 </LinearLayout>

@@ -12,6 +12,7 @@ import 'package:ketion/features/reminders/presentation/pages/alarm_ringing_page.
 import 'package:ketion/features/editor/domain/models/editor_open_target.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,

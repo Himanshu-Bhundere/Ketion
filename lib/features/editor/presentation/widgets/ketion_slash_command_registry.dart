@@ -169,8 +169,13 @@ class KetionSlashCommandRegistry {
       aliases: const ['toggle', 'expand'],
       isSupported: true,
       getRequestsWithDoc: (nodeId, doc) {
+        final node = doc.getNodeById(nodeId);
+        final toggleDepth = node?.metadata['depth'] as int? ??
+            (node is ListItemNode
+                ? node.indent
+                : (node is TaskNode ? node.indent : 0));
+        final parentBlockId = node?.metadata['blockId'] as String? ?? nodeId;
         final newChildId = Editor.createNodeId();
-        final metadata = _getInheritedMetadata(nodeId, doc);
         return [
           ..._getParagraphMetadataRequests(nodeId, doc, {
             'blockType': const NamedAttribution('toggle'),
@@ -182,7 +187,10 @@ class KetionSlashCommandRegistry {
             newNode: ParagraphNode(
               id: newChildId,
               text: AttributedText(),
-              metadata: {'parentBlockId': nodeId, ...metadata},
+              metadata: {
+                'parentBlockId': parentBlockId,
+                'depth': toggleDepth + 1,
+              },
             ),
           ),
           ExecuteCommandRequest(

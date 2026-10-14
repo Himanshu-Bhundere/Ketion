@@ -169,14 +169,16 @@ class KetionSuperEditorAdapter {
     if (toggleIndex == -1) return;
 
     final toggleNode = document.getNodeAt(toggleIndex);
-    final toggleDepth = toggleNode?.metadata['depth'] as int? ?? 0;
+    final toggleDepth = toggleNode?.metadata['depth'] as int? ??
+        (toggleNode is ListItemNode ? toggleNode.indent : (toggleNode is TaskNode ? toggleNode.indent : 0));
 
     final descendants = <DocumentNode>[];
 
     for (int i = toggleIndex + 1; i < document.nodeCount; i++) {
       final node = document.getNodeAt(i);
       if (node == null) continue;
-      final depth = node.metadata['depth'] as int? ?? 0;
+      final depth = node.metadata['depth'] as int? ??
+          (node is ListItemNode ? node.indent : (node is TaskNode ? node.indent : 0));
       if (depth <= toggleDepth) {
         break; // Reached next sibling or higher ancestor
       }
@@ -299,10 +301,12 @@ class KetionSuperEditorAdapter {
               id: nodeId,
               text: attributedText,
               isComplete: data['checked'] as bool? ?? false,
+              indent: depth,
               metadata: metadata.isNotEmpty ? metadata : null,
             );
           } else if (listType == 'toggle') {
             metadata['blockType'] = const NamedAttribution('toggle');
+            metadata['listType'] = 'toggle';
             metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
             return ParagraphNode(
               id: nodeId,
@@ -317,6 +321,16 @@ class KetionSuperEditorAdapter {
               metadata: metadata.isNotEmpty ? metadata : null,
             );
           }
+
+        case 'toggle':
+          metadata['blockType'] = const NamedAttribution('toggle');
+          metadata['listType'] = 'toggle';
+          metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
+          return ParagraphNode(
+            id: nodeId,
+            text: attributedText,
+            metadata: metadata,
+          );
 
         case 'code':
           final codeText = data['code'] as String? ?? '';
@@ -574,7 +588,7 @@ class KetionSuperEditorAdapter {
           nextNode != null ? _registry.blockIdForNode(nextNode.id) : null;
 
       String? providedParent = node.metadata['parentBlockId'] as String?;
-      if (providedParent != null && !providedParent.contains('-')) {
+      if (providedParent != null) {
         final mappedBlockId = _registry.blockIdForNode(providedParent);
         if (mappedBlockId != null) {
           providedParent = mappedBlockId;

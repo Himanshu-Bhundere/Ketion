@@ -440,5 +440,157 @@ void main() {
       expect(unindentMutation!.parentBlockId, isNull);
       expect(unindentMutation.position > 10.0, isTrue);
     });
+
+    test('Nested list ordinals restart within each parent group', () {
+      // 1. Parent 1
+      //    1. Child 1.1
+      //    2. Child 1.2
+      // 2. Parent 2
+      //    1. Child 2.1 (restarts!)
+      //    2. Child 2.2
+      final p1 = ListItemNode.ordered(
+        id: 'p1',
+        text: AttributedText('Parent 1'),
+        indent: 0,
+        metadata: const {'depth': 0},
+      );
+      final c11 = ListItemNode.ordered(
+        id: 'c11',
+        text: AttributedText('Child 1.1'),
+        indent: 1,
+        metadata: const {'depth': 1, 'parentBlockId': 'p1'},
+      );
+      final c12 = ListItemNode.ordered(
+        id: 'c12',
+        text: AttributedText('Child 1.2'),
+        indent: 1,
+        metadata: const {'depth': 1, 'parentBlockId': 'p1'},
+      );
+      final p2 = ListItemNode.ordered(
+        id: 'p2',
+        text: AttributedText('Parent 2'),
+        indent: 0,
+        metadata: const {'depth': 0},
+      );
+      final c21 = ListItemNode.ordered(
+        id: 'c21',
+        text: AttributedText('Child 2.1'),
+        indent: 1,
+        metadata: const {'depth': 1, 'parentBlockId': 'p2'},
+      );
+      final c22 = ListItemNode.ordered(
+        id: 'c22',
+        text: AttributedText('Child 2.2'),
+        indent: 1,
+        metadata: const {'depth': 1, 'parentBlockId': 'p2'},
+      );
+
+      final document = MutableDocument(nodes: [p1, c11, c12, p2, c21, c22]);
+
+      expect(computeKetionListItemOrdinalValue(p1, document), 1);
+      expect(computeKetionListItemOrdinalValue(c11, document), 1);
+      expect(computeKetionListItemOrdinalValue(c12, document), 2);
+      expect(computeKetionListItemOrdinalValue(p2, document), 2);
+      expect(computeKetionListItemOrdinalValue(c21, document), 1); // restarted!
+      expect(computeKetionListItemOrdinalValue(c22, document), 2);
+    });
+
+    test('Unindenting multiple consecutive children preserves sibling order', () {
+      // Parent at 10.0, Child 1 under Parent, Child 2 under Parent, OtherBlock at 40.0
+      final snapshot = EditorPersistenceSnapshot('page-1', {
+        'parent': BlockSnapshot(
+          blockId: 'parent',
+          pageId: 'page-1',
+          type: 'paragraph',
+          parentBlockId: null,
+          position: 10.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+        'c1': BlockSnapshot(
+          blockId: 'c1',
+          pageId: 'page-1',
+          type: 'list',
+          parentBlockId: 'parent',
+          position: 10.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+        'c2': BlockSnapshot(
+          blockId: 'c2',
+          pageId: 'page-1',
+          type: 'list',
+          parentBlockId: 'parent',
+          position: 20.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+        'other': BlockSnapshot(
+          blockId: 'other',
+          pageId: 'page-1',
+          type: 'paragraph',
+          parentBlockId: null,
+          position: 40.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+      });
+
+      final documentBlockOrder = ['parent', 'c1', 'c2', 'other'];
+
+      // Unindent c1
+      final unindentC1 = StructuralMutationBuilder.buildUnindentMutation(
+        pageId: 'page-1',
+        blockId: 'c1',
+        snapshot: snapshot,
+        documentBlockOrder: documentBlockOrder,
+      );
+      expect(unindentC1, isNotNull);
+      expect(unindentC1!.parentBlockId, isNull);
+      snapshot.applyMutation(unindentC1);
+
+      // Unindent c2
+      final unindentC2 = StructuralMutationBuilder.buildUnindentMutation(
+        pageId: 'page-1',
+        blockId: 'c2',
+        snapshot: snapshot,
+        documentBlockOrder: documentBlockOrder,
+      );
+      expect(unindentC2, isNotNull);
+      expect(unindentC2!.parentBlockId, isNull);
+
+      // Sibling ordering must be preserved: parent < c1 < c2 < other
+      expect(unindentC1.position > 10.0, isTrue);
+      expect(unindentC2.position > unindentC1.position, isTrue,
+          reason: 'c2 must be placed after c1 in document order',);
+      expect(unindentC2.position < 40.0, isTrue);
+    });
+
+    test('getNodeDepth correctly reads indent from TaskNode, ListItemNode, and metadata', () {
+      final taskNode = TaskNode(
+        id: 't1',
+        text: AttributedText('Task item'),
+        isComplete: false,
+        indent: 2,
+      );
+      final listNode = ListItemNode.unordered(
+        id: 'l1',
+        text: AttributedText('List item'),
+        indent: 3,
+      );
+      final pNode = ParagraphNode(
+        id: 'p1',
+        text: AttributedText('Paragraph'),
+        metadata: const {'depth': 1},
+      );
+
+      expect(getNodeDepth(taskNode), 2);
+      expect(getNodeDepth(listNode), 3);
+      expect(getNodeDepth(pNode), 1);
+    });
   });
 }

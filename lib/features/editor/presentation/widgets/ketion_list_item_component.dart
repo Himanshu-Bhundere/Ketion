@@ -19,7 +19,9 @@ int computeKetionListItemOrdinalValue(ListItemNode node, Document document) {
   DocumentNode? prev = document.getNodeBeforeById(node.id);
   while (prev != null) {
     final prevDepth = prev.metadata['depth'] as int? ??
-        (prev is ListItemNode ? prev.indent : 0);
+        (prev is ListItemNode
+            ? prev.indent
+            : (prev is TaskNode ? prev.indent : 0));
     final prevParentId = prev.metadata['parentBlockId'] as String?;
 
     if (prevDepth < nodeDepth) {
@@ -27,7 +29,14 @@ int computeKetionListItemOrdinalValue(ListItemNode node, Document document) {
       break;
     }
 
-    if (prevDepth == nodeDepth && prevParentId == nodeParentId) {
+    if (prevDepth == nodeDepth) {
+      // If both explicitly declare parents and they differ, they aren't siblings
+      if (nodeParentId != null &&
+          prevParentId != null &&
+          nodeParentId != prevParentId) {
+        break;
+      }
+
       if (prev is ListItemNode && prev.type == ListItemType.ordered) {
         count++;
       } else {

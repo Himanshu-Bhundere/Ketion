@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
 import '../table/ketion_table_node.dart';
+import 'ketion_toggle_component.dart';
+
+/// Gets the effective depth of a node from metadata or indent property.
+int getNodeDepth(DocumentNode? node) {
+  if (node == null) return 0;
+  final depth = node.metadata['depth'];
+  if (depth is int) return depth;
+  if (node is ListItemNode) return node.indent;
+  if (node is TaskNode) return node.indent;
+  return 0;
+}
 
 /// Checks whether [node] is nested inside a toggle block.
 bool isNodeInsideToggle(DocumentNode node, Document document) {
@@ -12,12 +23,7 @@ bool isNodeInsideToggle(DocumentNode node, Document document) {
     final visited = <String>{};
     while (curr != null && !visited.contains(curr.id)) {
       visited.add(curr.id);
-      final blockType = curr.metadata['blockType'];
-      final isToggle = blockType == 'toggle' ||
-          blockType == const NamedAttribution('toggle') ||
-          (blockType is NamedAttribution && blockType.name == 'toggle') ||
-          (curr.metadata['listType'] == 'toggle');
-      if (isToggle) {
+      if (KetionToggleComponentBuilder.isToggleNode(curr)) {
         return true;
       }
       final nextParentId = curr.metadata['parentBlockId'] as String?;
@@ -27,31 +33,31 @@ bool isNodeInsideToggle(DocumentNode node, Document document) {
   }
 
   // 2. Preceding ancestor check by depth
-  final nodeDepth = node.metadata['depth'] as int? ??
-      (node is ListItemNode ? node.indent : 0);
-  if (nodeDepth > 0) {
-    DocumentNode? prev = document.getNodeBeforeById(node.id);
+  int currDepth = getNodeDepth(node);
+  DocumentNode? curr = node;
+  while (currDepth > 0 && curr != null) {
+    DocumentNode? prev = document.getNodeBeforeById(curr.id);
+    DocumentNode? immediateParent;
     while (prev != null) {
-      final prevDepth = prev.metadata['depth'] as int? ??
-          (prev is ListItemNode ? prev.indent : 0);
-      if (prevDepth < nodeDepth) {
-        final blockType = prev.metadata['blockType'];
-        final isToggle = blockType == 'toggle' ||
-            blockType == const NamedAttribution('toggle') ||
-            (blockType is NamedAttribution && blockType.name == 'toggle') ||
-            (prev.metadata['listType'] == 'toggle');
-        if (isToggle) {
-          return true;
-        }
+      final prevDepth = getNodeDepth(prev);
+      if (prevDepth < currDepth) {
+        immediateParent = prev;
+        break;
       }
       prev = document.getNodeBeforeById(prev.id);
     }
+    if (immediateParent == null) break;
+    if (KetionToggleComponentBuilder.isToggleNode(immediateParent)) {
+      return true;
+    }
+    curr = immediateParent;
+    currDepth = getNodeDepth(immediateParent);
   }
 
   return false;
 }
 
-/// Finds the root toggle block that contains [node].
+/// Finds the enclosing toggle block that contains [node].
 DocumentNode? findParentToggleNode(DocumentNode node, Document document) {
   final parentBlockId = node.metadata['parentBlockId'] as String?;
   if (parentBlockId != null) {
@@ -59,12 +65,7 @@ DocumentNode? findParentToggleNode(DocumentNode node, Document document) {
     final visited = <String>{};
     while (curr != null && !visited.contains(curr.id)) {
       visited.add(curr.id);
-      final blockType = curr.metadata['blockType'];
-      final isToggle = blockType == 'toggle' ||
-          blockType == const NamedAttribution('toggle') ||
-          (blockType is NamedAttribution && blockType.name == 'toggle') ||
-          (curr.metadata['listType'] == 'toggle');
-      if (isToggle) {
+      if (KetionToggleComponentBuilder.isToggleNode(curr)) {
         return curr;
       }
       final nextParentId = curr.metadata['parentBlockId'] as String?;
@@ -73,23 +74,25 @@ DocumentNode? findParentToggleNode(DocumentNode node, Document document) {
     }
   }
 
-  final nodeDepth = node.metadata['depth'] as int? ??
-      (node is ListItemNode ? node.indent : 0);
-  DocumentNode? prev = document.getNodeBeforeById(node.id);
-  while (prev != null) {
-    final prevDepth = prev.metadata['depth'] as int? ??
-        (prev is ListItemNode ? prev.indent : 0);
-    if (prevDepth < nodeDepth) {
-      final blockType = prev.metadata['blockType'];
-      final isToggle = blockType == 'toggle' ||
-          blockType == const NamedAttribution('toggle') ||
-          (blockType is NamedAttribution && blockType.name == 'toggle') ||
-          (prev.metadata['listType'] == 'toggle');
-      if (isToggle) {
-        return prev;
+  int currDepth = getNodeDepth(node);
+  DocumentNode? curr = node;
+  while (currDepth > 0 && curr != null) {
+    DocumentNode? prev = document.getNodeBeforeById(curr.id);
+    DocumentNode? immediateParent;
+    while (prev != null) {
+      final prevDepth = getNodeDepth(prev);
+      if (prevDepth < currDepth) {
+        immediateParent = prev;
+        break;
       }
+      prev = document.getNodeBeforeById(prev.id);
     }
-    prev = document.getNodeBeforeById(prev.id);
+    if (immediateParent == null) break;
+    if (KetionToggleComponentBuilder.isToggleNode(immediateParent)) {
+      return immediateParent;
+    }
+    curr = immediateParent;
+    currDepth = getNodeDepth(immediateParent);
   }
 
   return null;
@@ -107,15 +110,13 @@ void exitToggle({
   final toggleNode = findParentToggleNode(node, document);
   if (toggleNode == null) return;
 
-  final toggleDepth = toggleNode.metadata['depth'] as int? ??
-      (toggleNode is ListItemNode ? toggleNode.indent : 0);
+  final toggleDepth = getNodeDepth(toggleNode);
 
   // Find the last descendant of toggleNode in the document
   DocumentNode lastDescendant = toggleNode;
   DocumentNode? candidate = document.getNodeAfterById(toggleNode.id);
   while (candidate != null) {
-    final candidateDepth = candidate.metadata['depth'] as int? ??
-        (candidate is ListItemNode ? candidate.indent : 0);
+    final candidateDepth = getNodeDepth(candidate);
     if (candidateDepth <= toggleDepth) {
       break;
     }
@@ -146,7 +147,7 @@ void exitToggle({
         newNode: ParagraphNode(
           id: newParagraphId,
           text: AttributedText(),
-          metadata: const {'depth': 0},
+          metadata: {'depth': toggleDepth},
         ),
       ),
       ChangeSelectionRequest(
@@ -196,7 +197,7 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
     if (widget == null) return null;
 
     final node = document.getNodeById(componentViewModel.nodeId);
-    final depth = node?.metadata['depth'] as int? ?? 0;
+    final depth = getNodeDepth(node);
 
     Widget content = widget;
     if (depth > 0) {

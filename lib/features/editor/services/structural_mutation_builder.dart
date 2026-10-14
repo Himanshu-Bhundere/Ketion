@@ -289,6 +289,7 @@ class StructuralMutationBuilder {
     required String pageId,
     required String blockId,
     required EditorPersistenceSnapshot snapshot,
+    List<String>? documentBlockOrder,
   }) {
     final block = snapshot.getBlock(blockId);
     if (block == null || block.deleted) return null;
@@ -304,20 +305,50 @@ class StructuralMutationBuilder {
     final newParentId = parentBlock.parentBlockId;
 
     final targetSiblings = snapshot.activeBlocks
-        .where((b) => b.parentBlockId == newParentId)
+        .where((b) => b.parentBlockId == newParentId && b.blockId != blockId)
         .toList()
       ..sort((a, b) => a.position.compareTo(b.position));
 
     final parentIndex = targetSiblings.indexWhere((b) => b.blockId == parentId);
+    if (parentIndex < 0) return null;
 
-    BlockSnapshot? blockAfterParent;
-    if (parentIndex >= 0 && parentIndex < targetSiblings.length - 1) {
-      blockAfterParent = targetSiblings[parentIndex + 1];
+    BlockSnapshot? precedingSibling;
+    BlockSnapshot? succeedingSibling;
+
+    if (documentBlockOrder != null && documentBlockOrder.contains(blockId)) {
+      final myDocIndex = documentBlockOrder.indexOf(blockId);
+
+      for (final sibling in targetSiblings) {
+        final siblingDocIndex = documentBlockOrder.indexOf(sibling.blockId);
+        if (siblingDocIndex != -1) {
+          if (siblingDocIndex < myDocIndex) {
+            if (precedingSibling == null ||
+                documentBlockOrder.indexOf(precedingSibling.blockId) <
+                    siblingDocIndex) {
+              precedingSibling = sibling;
+            }
+          } else if (siblingDocIndex > myDocIndex) {
+            if (succeedingSibling == null ||
+                documentBlockOrder.indexOf(succeedingSibling.blockId) >
+                    siblingDocIndex) {
+              succeedingSibling = sibling;
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback if document order was not available or could not determine sibling
+    if (precedingSibling == null) {
+      precedingSibling = parentBlock;
+      if (parentIndex < targetSiblings.length - 1) {
+        succeedingSibling ??= targetSiblings[parentIndex + 1];
+      }
     }
 
     final newPosition = SiblingPositionManager.calculatePositionBetween(
-      parentBlock.position,
-      blockAfterParent?.position,
+      precedingSibling.position,
+      succeedingSibling?.position,
     );
 
     return MoveBlockMutation(

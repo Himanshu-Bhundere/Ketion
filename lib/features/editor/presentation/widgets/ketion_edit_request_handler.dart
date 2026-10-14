@@ -18,6 +18,7 @@ import '../../domain/commands/change_paragraph_metadata.dart';
 import '../../domain/models/media_nodes.dart';
 import '../../domain/commands/insert_reminder_request.dart';
 import 'ketion_edit_requests.dart';
+import 'ketion_toggle_component.dart';
 import '../table/ketion_table_node.dart';
 
 /// Creates the Ketion semantic EditRequestHandler.
@@ -48,6 +49,8 @@ EditRequestHandler createKetionRequestHandler({
       // Non-structural request → let default handler chain process it
       return null;
     }
+
+    adapter.flushPendingChanges();
 
     // Verify identity can be determined before executing
     final identityError = _validateIdentity(mutation, registry, snapshot);
@@ -922,11 +925,17 @@ class _KetionDelegatingCommand extends EditCommand {
 
           if (block?.parentBlockId != null) {
             final parentBlock = snapshot.getBlock(block!.parentBlockId!);
-            if (parentBlock != null && parentBlock.type == 'toggle') {
+            if (parentBlock != null) {
               final parentNodeId = registry.nodeIdForBlock(parentBlock.blockId);
-              if (parentNodeId != null) {
-                final parentNode = document.getNodeById(parentNodeId);
-                if (parentNode != null && parentNode.metadata['isExpanded'] == false) {
+              final parentNode = parentNodeId != null
+                  ? document.getNodeById(parentNodeId)
+                  : null;
+              final isToggle = parentBlock.type == 'toggle' ||
+                  (parentNode != null &&
+                      KetionToggleComponentBuilder.isToggleNode(parentNode));
+              if (isToggle) {
+                if (parentNode != null &&
+                    parentNode.metadata['isExpanded'] == false) {
                   adapter.restoreSubtree(parentBlock.blockId);
                   parentNode.metadata['isExpanded'] = true;
                   executor.logChanges([
@@ -1006,6 +1015,7 @@ class _KetionDelegatingCommand extends EditCommand {
         id: node.id,
         text: node.text,
         isComplete: node.isComplete,
+        indent: newDepth,
         metadata: newMetadata,
       );
       document.replaceNodeById(node.id, replacement);
@@ -1247,10 +1257,16 @@ class _KetionDelegatingCommand extends EditCommand {
     final node = document.getNodeById(nodeId);
     if (node == null) return null;
 
+    final documentBlockOrder = document
+        .map((n) => registry.blockIdForNode(n.id))
+        .whereType<String>()
+        .toList();
+
     return StructuralMutationBuilder.buildUnindentMutation(
       pageId: pageId,
       blockId: blockId,
       snapshot: snapshot,
+      documentBlockOrder: documentBlockOrder,
     );
   }
 

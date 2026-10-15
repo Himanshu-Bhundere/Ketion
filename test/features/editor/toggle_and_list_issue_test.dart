@@ -592,5 +592,140 @@ void main() {
       expect(getNodeDepth(listNode), 3);
       expect(getNodeDepth(pNode), 1);
     });
+
+    test('Backspace on nested bullet at offset 0 outdents bullet', () {
+      final nestedBullet = ListItemNode.unordered(
+        id: 'b-nested',
+        text: AttributedText('Nested item'),
+        indent: 1,
+      );
+      final document = MutableDocument(nodes: [nestedBullet]);
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'b-nested',
+            nodePosition: TextNodePosition(offset: 0),
+          ),
+        ),
+      );
+      final executedRequests = <EditRequest>[];
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          (ed, req) {
+            executedRequests.add(req);
+            return null;
+          },
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = unindentParagraphWhenBackspacePressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.backspace,
+          logicalKey: LogicalKeyboardKey.backspace,
+          timeStamp: Duration.zero,
+        ),
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(executedRequests.any((r) => r is UnIndentListItemRequest), isTrue);
+    });
+
+    test('Backspace on first-level empty bullet at offset 0 converts to paragraph', () {
+      final emptyBullet = ListItemNode.unordered(
+        id: 'b-empty',
+        text: AttributedText(),
+        indent: 0,
+      );
+      final document = MutableDocument(nodes: [emptyBullet]);
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'b-empty',
+            nodePosition: TextNodePosition(offset: 0),
+          ),
+        ),
+      );
+      final executedRequests = <EditRequest>[];
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          (ed, req) {
+            executedRequests.add(req);
+            return null;
+          },
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = unindentParagraphWhenBackspacePressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.backspace,
+          logicalKey: LogicalKeyboardKey.backspace,
+          timeStamp: Duration.zero,
+        ),
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(executedRequests.any((r) => r is ConvertListItemToParagraphRequest), isTrue);
+    });
+
+    test('Backspace on non-empty bullet at offset > 0 continues execution for normal deletion', () {
+      final bullet = ListItemNode.unordered(
+        id: 'b-text',
+        text: AttributedText('Hello'),
+        indent: 0,
+      );
+      final document = MutableDocument(nodes: [bullet]);
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'b-text',
+            nodePosition: TextNodePosition(offset: 3),
+          ),
+        ),
+      );
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+      );
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = unindentParagraphWhenBackspacePressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.backspace,
+          logicalKey: LogicalKeyboardKey.backspace,
+          timeStamp: Duration.zero,
+        ),
+      );
+
+      expect(result, ExecutionInstruction.continueExecution);
+    });
   });
 }

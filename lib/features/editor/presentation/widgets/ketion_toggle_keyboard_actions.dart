@@ -58,7 +58,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
 
-    // Create a new child block inside the toggle hierarchy
+    // Create a new child block inside the toggle hierarchy, placed directly after the toggle
     editContext.editor.execute([
       InsertNodeAfterNodeRequest(
         existingNodeId: node.id,
@@ -180,24 +180,62 @@ ExecutionInstruction unindentParagraphWhenBackspacePressed({
 
   final position = selection.extent.nodePosition;
   if (position is! TextNodePosition || position.offset > 0) {
+    // Non-empty item where Backspace should delete text
     return ExecutionInstruction.continueExecution;
   }
 
   final node = editContext.document.getNodeById(selection.extent.nodeId);
-  if (node is! ParagraphNode) {
+  if (node == null) {
     return ExecutionInstruction.continueExecution;
   }
 
-  final depth = node.metadata['depth'] as int? ?? 0;
-  if (depth == 0) {
+  if (node is ListItemNode) {
+    final indent = node.metadata['depth'] as int? ?? node.indent;
+    if (indent > 0) {
+      // Nested bullet that should first outdent
+      editContext.editor.execute([
+        UnIndentListItemRequest(nodeId: node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    } else if (node.text.isEmpty) {
+      // First-level empty bullet converts to normal paragraph
+      editContext.editor.execute([
+        ConvertListItemToParagraphRequest(nodeId: node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
     return ExecutionInstruction.continueExecution;
   }
 
-  editContext.editor.execute([
-    UnIndentParagraphRequest(node.id),
-  ]);
+  if (node is TaskNode) {
+    final indent = node.metadata['depth'] as int? ?? node.indent;
+    if (indent > 0) {
+      // Nested task that should first outdent
+      editContext.editor.execute([
+        UnIndentTaskRequest(node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    } else if (node.text.isEmpty) {
+      // First-level empty task converts to normal paragraph
+      editContext.editor.execute([
+        ConvertTaskToParagraphRequest(nodeId: node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+    return ExecutionInstruction.continueExecution;
+  }
 
-  return ExecutionInstruction.haltExecution;
+  if (node is ParagraphNode) {
+    final depth = node.metadata['depth'] as int? ?? 0;
+    if (depth > 0) {
+      editContext.editor.execute([
+        UnIndentParagraphRequest(node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+  }
+
+  return ExecutionInstruction.continueExecution;
 }
 
 ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({

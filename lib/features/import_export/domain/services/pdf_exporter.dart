@@ -34,15 +34,13 @@ class PdfExporter implements ExportRepository {
           );
           widgets.add(pw.SizedBox(height: 16));
 
-          final Map<int, int> numberingByDepth = {};
-
-          for (final node in document.nodes) {
+          for (int i = 0; i < document.nodes.length; i++) {
+            final node = document.nodes[i];
             final nodeDepth = node.depth;
             pw.Widget? renderedWidget;
 
             node.map(
               paragraph: (p) {
-                numberingByDepth.clear();
                 final text = _extractPlainText(p.spans);
                 if (text.isNotEmpty) {
                   renderedWidget = pw.Paragraph(
@@ -52,7 +50,6 @@ class PdfExporter implements ExportRepository {
                 }
               },
               heading: (h) {
-                numberingByDepth.clear();
                 final fontSize = 24.0 - (h.level * 2);
                 renderedWidget = pw.Header(
                   level: h.level,
@@ -70,14 +67,6 @@ class PdfExporter implements ExportRepository {
                 // Skip empty list nodes so they do not produce stray bullet points
                 if (text.trim().isEmpty && l.listType != 'toggle') {
                   return;
-                }
-
-                if (l.listType == 'numbered') {
-                  final currentNum = (numberingByDepth[nodeDepth] ?? 0) + 1;
-                  numberingByDepth[nodeDepth] = currentNum;
-                  numberingByDepth.removeWhere((k, v) => k > nodeDepth);
-                } else {
-                  numberingByDepth.removeWhere((k, v) => k >= nodeDepth);
                 }
 
                 pw.Widget bullet;
@@ -119,7 +108,7 @@ class PdfExporter implements ExportRepository {
                     ),
                   );
                 } else if (l.listType == 'numbered') {
-                  final num = numberingByDepth[nodeDepth] ?? 1;
+                  final num = _computeNumberedListOrdinal(i, document.nodes);
                   bullet = pw.Container(
                     margin: const pw.EdgeInsets.only(right: 6, top: 1),
                     child: pw.Text(
@@ -159,7 +148,6 @@ class PdfExporter implements ExportRepository {
                 );
               },
               image: (img) {
-                numberingByDepth.clear();
                 if (img.isAvailable && img.imageBytes != null && img.imageBytes!.isNotEmpty) {
                   try {
                     final provider = pw.MemoryImage(img.imageBytes!);
@@ -189,7 +177,6 @@ class PdfExporter implements ExportRepository {
                 }
               },
               file: (f) {
-                numberingByDepth.clear();
                 renderedWidget = pw.Column(
                   children: [
                     if (!f.isAvailable)
@@ -201,7 +188,6 @@ class PdfExporter implements ExportRepository {
                 );
               },
               callout: (c) {
-                numberingByDepth.clear();
                 renderedWidget = pw.Container(
                   margin: const pw.EdgeInsets.symmetric(vertical: 6),
                   padding: const pw.EdgeInsets.all(10),
@@ -247,7 +233,6 @@ class PdfExporter implements ExportRepository {
                 );
               },
               table: (t) {
-                numberingByDepth.clear();
                 if (t.rows.isEmpty) return;
                 renderedWidget = pw.Container(
                   margin: const pw.EdgeInsets.symmetric(vertical: 8),
@@ -281,7 +266,6 @@ class PdfExporter implements ExportRepository {
                 );
               },
               code: (c) {
-                numberingByDepth.clear();
                 renderedWidget = pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
@@ -304,7 +288,6 @@ class PdfExporter implements ExportRepository {
                 );
               },
               divider: (d) {
-                numberingByDepth.clear();
                 renderedWidget = pw.Column(
                   children: [
                     pw.Divider(color: PdfColors.grey400),
@@ -444,5 +427,34 @@ class PdfExporter implements ExportRepository {
 
   String _extractPlainText(List<DocumentTextSpan> spans) {
     return spans.map((e) => e.text).join('');
+  }
+
+  int _computeNumberedListOrdinal(int index, List<DocumentNode> nodes) {
+    final currentNode = nodes[index];
+    final nodeDepth = currentNode.depth;
+    int count = 1;
+
+    for (int j = index - 1; j >= 0; j--) {
+      final prev = nodes[j];
+      final prevDepth = prev.depth;
+
+      if (prevDepth < nodeDepth) {
+        // Reached an ancestor level or parent
+        break;
+      }
+
+      if (prevDepth == nodeDepth) {
+        if (prev is DocList && prev.listType == 'numbered') {
+          count++;
+        } else {
+          // A non-numbered sibling at the same level resets list sequence
+          break;
+        }
+      }
+      // If prevDepth > nodeDepth, it's a descendant of a previous sibling at this depth.
+      // Descendants are skipped so they do not break the sibling sequence.
+    }
+
+    return count;
   }
 }

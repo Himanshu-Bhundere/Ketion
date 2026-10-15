@@ -113,6 +113,16 @@ class WidgetServiceImpl implements WidgetService {
       await updateSimpleWidgetData('snapshot_db_path', snapshotPath);
       await updateSimpleWidgetData('snapshot_updated_at', DateTime.now().toIso8601String());
 
+      if (recentPages.isNotEmpty) {
+        final latest = recentPages.first;
+        final title = latest.title.trim().isEmpty ? 'Untitled' : latest.title.trim();
+        await updateSimpleWidgetData('latest_note_id', latest.id);
+        await updateSimpleWidgetData('latest_note_title', title);
+      } else {
+        await updateSimpleWidgetData('latest_note_id', '');
+        await updateSimpleWidgetData('latest_note_title', '');
+      }
+
       return const Success(null);
     } catch (e) {
       appLogger.e('Failed to generate widget snapshot', e);

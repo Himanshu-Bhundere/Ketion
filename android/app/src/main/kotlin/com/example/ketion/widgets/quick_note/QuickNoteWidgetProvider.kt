@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.example.ketion.MainActivity
 import com.example.ketion.R
+import com.example.ketion.widgets.recent_notes.WidgetRepository
 import es.antonborri.home_widget.HomeWidgetProvider
 
 class QuickNoteWidgetProvider : HomeWidgetProvider() {
@@ -21,7 +22,7 @@ class QuickNoteWidgetProvider : HomeWidgetProvider() {
     ) {
         for (appWidgetId in appWidgetIds) {
             val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
-            updateWidget(context, appWidgetManager, appWidgetId, options)
+            updateWidget(context, appWidgetManager, appWidgetId, widgetData, options)
         }
     }
 
@@ -32,39 +33,80 @@ class QuickNoteWidgetProvider : HomeWidgetProvider() {
         newOptions: Bundle
     ) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        updateWidget(context, appWidgetManager, appWidgetId, newOptions)
+        val widgetData = context.getSharedPreferences("HomeWidgetPreferences", Context.MODE_PRIVATE)
+        updateWidget(context, appWidgetManager, appWidgetId, widgetData, newOptions)
     }
 
     private fun updateWidget(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int,
+        widgetData: android.content.SharedPreferences,
         options: Bundle?
     ) {
         val views = RemoteViews(context.packageName, R.layout.widget_quick_note).apply {
             val minHeight = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 60
             val minWidth = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 60
 
-            // Responsive layout: show label when dimensions exceed standard 1x1 cell (~70dp)
-            if (minHeight >= 90 && minWidth >= 90) {
-                setViewVisibility(R.id.quick_note_label, View.VISIBLE)
-            } else {
-                setViewVisibility(R.id.quick_note_label, View.GONE)
-            }
+            val is2x2OrLarger = minHeight >= 90 && minWidth >= 90
 
-            val intent = Intent(context, MainActivity::class.java).apply {
+            val newNoteIntent = Intent(context, MainActivity::class.java).apply {
                 action = "es.antonborri.home_widget.action.LAUNCH"
                 data = Uri.parse("ketion://new-note")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
-            val pendingIntent = PendingIntent.getActivity(
+            val newNotePendingIntent = PendingIntent.getActivity(
                 context,
                 1001,
-                intent,
+                newNoteIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-            setOnClickPendingIntent(R.id.btn_quick_note, pendingIntent)
+
+            // Direct button tap always creates note
+            setOnClickPendingIntent(R.id.btn_quick_note, newNotePendingIntent)
+
+            if (is2x2OrLarger) {
+                setViewVisibility(R.id.quick_note_label, View.VISIBLE)
+
+                var latestId = widgetData.getString("latest_note_id", null)
+                var latestTitle = widgetData.getString("latest_note_title", null)
+
+                if (latestId.isNullOrEmpty()) {
+                    val snapshotDbPath = widgetData.getString("snapshot_db_path", null)
+                    val repo = WidgetRepository(snapshotDbPath)
+                    val recent = repo.getRecentNotes()
+                    if (recent.isNotEmpty()) {
+                        latestId = recent.first().id
+                        latestTitle = recent.first().title
+                    }
+                }
+
+                if (!latestId.isNullOrEmpty() && !latestTitle.isNullOrEmpty()) {
+                    setViewVisibility(R.id.latest_note_container, View.VISIBLE)
+                    setTextViewText(R.id.latest_note_title, latestTitle)
+
+                    val openNoteIntent = Intent(context, MainActivity::class.java).apply {
+                        action = "es.antonborri.home_widget.action.LAUNCH"
+                        data = Uri.parse("ketion://note/$latestId")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    val openNotePendingIntent = PendingIntent.getActivity(
+                        context,
+                        1003,
+                        openNoteIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setOnClickPendingIntent(R.id.latest_note_container, openNotePendingIntent)
+                    setOnClickPendingIntent(R.id.widget_root, newNotePendingIntent)
+                } else {
+                    setViewVisibility(R.id.latest_note_container, View.GONE)
+                    setOnClickPendingIntent(R.id.widget_root, newNotePendingIntent)
+                }
+            } else {
+                setViewVisibility(R.id.quick_note_label, View.GONE)
+                setViewVisibility(R.id.latest_note_container, View.GONE)
+                setOnClickPendingIntent(R.id.widget_root, newNotePendingIntent)
+            }
         }
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }

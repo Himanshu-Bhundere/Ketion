@@ -246,22 +246,24 @@ class KetionSuperEditorAdapter {
       metadata['depth'] = depth;
       metadata['position'] = block.position;
 
+      final isToggle = block.type == 'toggle' ||
+          data['listType'] == 'toggle' ||
+          data['blockType'] == 'toggle' ||
+          data['type'] == 'toggle';
+      if (isToggle) {
+        metadata['blockType'] = const NamedAttribution('toggle');
+        metadata['listType'] = 'toggle';
+        metadata['type'] = 'toggle';
+        metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
+        return ParagraphNode(
+          id: nodeId,
+          text: attributedText,
+          metadata: metadata,
+        );
+      }
+
       switch (block.type) {
         case 'text':
-          final isToggle = data['listType'] == 'toggle' ||
-              data['blockType'] == 'toggle' ||
-              data['type'] == 'toggle' ||
-              block.type == 'toggle';
-          if (isToggle) {
-            metadata['blockType'] = const NamedAttribution('toggle');
-            metadata['listType'] = 'toggle';
-            metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
-            return ParagraphNode(
-              id: nodeId,
-              text: attributedText,
-              metadata: metadata,
-            );
-          }
           final headingLevel = data['headingLevel'] as int? ?? 0;
           final isQuote = data['quote'] as bool? ?? false;
           if (headingLevel > 0 && headingLevel <= 3) {

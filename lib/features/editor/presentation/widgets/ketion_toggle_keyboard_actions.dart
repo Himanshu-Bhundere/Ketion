@@ -31,7 +31,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
   }
 
   final node = editContext.document.getNodeById(selection.extent.nodeId);
-  if (node is! ParagraphNode) {
+  if (node is! TextNode) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -262,6 +262,30 @@ ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
   }
 
   final node = editContext.document.getNodeById(selection.extent.nodeId);
+  if (node == null) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (node is TaskNode) {
+    final indent = node.metadata['depth'] as int? ?? node.indent;
+    if (indent > 0 && node.text.isEmpty) {
+      editContext.editor.execute([
+        UnIndentTaskRequest(node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+  }
+
+  if (node is ListItemNode) {
+    final indent = node.metadata['depth'] as int? ?? node.indent;
+    if (indent > 0 && node.text.isEmpty) {
+      editContext.editor.execute([
+        UnIndentListItemRequest(nodeId: node.id),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+  }
+
   if (node is! ParagraphNode) {
     return ExecutionInstruction.continueExecution;
   }

@@ -15,7 +15,25 @@ import 'attribution_converter.dart';
 class BlockDataSerializer {
   const BlockDataSerializer._();
 
+  static bool _isToggle(DocumentNode node) {
+    final blockType = node.metadata['blockType'];
+    final listType = node.metadata['listType'];
+    final type = node.metadata['type'];
+    return blockType == 'toggle' ||
+        blockType == const NamedAttribution('toggle') ||
+        (blockType is NamedAttribution && blockType.name == 'toggle') ||
+        (listType == 'toggle') ||
+        (type == 'toggle');
+  }
+
   static BlockDataModel fromDocumentNode(DocumentNode node) {
+    if (_isToggle(node)) {
+      return BlockDataModel.list(
+        spans: node is TextNode ? _spans(node) : [],
+        listType: 'toggle',
+        isExpanded: node.metadata['isExpanded'] as bool? ?? false,
+      );
+    }
     if (node is KetionCalloutNode) {
       return BlockDataModel.callout(
         spans: _spans(node),
@@ -37,19 +55,6 @@ class BlockDataSerializer {
       );
     }
     if (node is ParagraphNode) {
-      final blockType = node.metadata['blockType'];
-      final listType = node.metadata['listType'];
-      final isToggle = blockType == const NamedAttribution('toggle') ||
-          blockType == 'toggle' ||
-          (blockType is NamedAttribution && blockType.name == 'toggle') ||
-          listType == 'toggle';
-      if (isToggle) {
-        return BlockDataModel.list(
-          spans: _spans(node),
-          listType: 'toggle',
-          isExpanded: node.metadata['isExpanded'] as bool? ?? false,
-        );
-      }
       if (node.metadata['blockType'] == codeAttribution) {
         return BlockDataModel.code(
           code: node.text.toPlainText(),
@@ -116,6 +121,7 @@ class BlockDataSerializer {
       jsonEncode(fromDocumentNode(node).toJson());
 
   static String blockTypeFor(DocumentNode node) {
+    if (_isToggle(node)) return 'list';
     if (node is TaskNode || node is ListItemNode) return 'list';
     if (node is HorizontalRuleNode) return 'divider';
     if (node is ImageNode) return 'image';
@@ -131,14 +137,6 @@ class BlockDataSerializer {
     if (node is KetionCalloutNode) return 'callout';
     if (node is ParagraphNode) {
       if (node.metadata['blockType'] == codeAttribution) return 'code';
-      final blockType = node.metadata['blockType'];
-      final listType = node.metadata['listType'];
-      if (blockType == const NamedAttribution('toggle') ||
-          blockType == 'toggle' ||
-          (blockType is NamedAttribution && blockType.name == 'toggle') ||
-          listType == 'toggle') {
-        return 'list';
-      }
     }
     return 'text';
   }

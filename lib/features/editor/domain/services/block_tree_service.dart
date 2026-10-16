@@ -78,14 +78,16 @@ class BlockTreeService {
         );
 
         bool isExpanded = true;
-        if (child.type == 'list' || child.type == 'toggle') {
-          try {
-            final data = jsonDecode(child.data) as Map<String, dynamic>;
-            if (data['listType'] == 'toggle' || child.type == 'toggle') {
-              isExpanded = data['isExpanded'] as bool? ?? false;
-            }
-          } catch (_) {}
-        }
+        try {
+          final data = jsonDecode(child.data) as Map<String, dynamic>;
+          final isToggle = child.type == 'toggle' ||
+              data['listType'] == 'toggle' ||
+              data['blockType'] == 'toggle' ||
+              data['type'] == 'toggle';
+          if (isToggle) {
+            isExpanded = data['isExpanded'] as bool? ?? false;
+          }
+        } catch (_) {}
 
         final nextHiddenBy = !isExpanded ? child.id : hiddenByAncestorId;
         traverse(child.id, actualDepth + 1, nextHiddenBy);

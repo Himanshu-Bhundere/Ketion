@@ -252,9 +252,9 @@ void main() {
       final viewModel = builder.createViewModel(reloadedDoc, reloadedNode)
           as KetionToggleComponentViewModel?;
       expect(viewModel, isNotNull,
-          reason: 'ViewModel must be created for toggle');
+          reason: 'ViewModel must be created for toggle',);
       expect(viewModel!.isExpanded, isTrue,
-          reason: 'Toggle was saved as expanded');
+          reason: 'Toggle was saved as expanded',);
 
       final editContext = TestSuperEditorContext(
         editor: editor,
@@ -273,7 +273,7 @@ void main() {
 
       expect(keyResult, ExecutionInstruction.haltExecution);
       expect(reloadedDoc.nodeCount, 2,
-          reason: 'Enter must insert a child node under toggle');
+          reason: 'Enter must insert a child node under toggle',);
 
       final childNode = reloadedDoc.getNodeAt(1)!;
       expect(childNode.metadata['parentBlockId'], 'block-toggle-1');
@@ -281,7 +281,7 @@ void main() {
       expect(composer.selection?.extent.nodeId, childNode.id);
       expect(
           (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0);
+          0,);
     });
   });
 
@@ -302,7 +302,7 @@ void main() {
           'runtimeType': 'list',
           'listType': 'bullet',
           'spans': [
-            {'text': 'Parent item'}
+            {'text': 'Parent item'},
           ],
         }),
         createdAt: DateTime.now(),
@@ -319,7 +319,7 @@ void main() {
           'runtimeType': 'list',
           'listType': 'bullet',
           'spans': [
-            {'text': 'Bullet item to indent'}
+            {'text': 'Bullet item to indent'},
           ],
         }),
         createdAt: DateTime.now(),
@@ -337,7 +337,7 @@ void main() {
           'listType': 'checklist',
           'checked': false,
           'spans': [
-            {'text': 'Task item to indent'}
+            {'text': 'Task item to indent'},
           ],
         }),
         createdAt: DateTime.now(),
@@ -495,7 +495,7 @@ void main() {
             'listType': 'toggle',
             'isExpanded': true,
             'spans': [
-              {'text': 'Section Toggle'}
+              {'text': 'Section Toggle'},
             ],
           }),
           createdAt: now,
@@ -512,7 +512,7 @@ void main() {
             'runtimeType': 'text',
             'headingLevel': 0,
             'spans': [
-              {'text': 'Nested paragraph inside toggle'}
+              {'text': 'Nested paragraph inside toggle'},
             ],
           }),
           createdAt: now,
@@ -529,7 +529,7 @@ void main() {
             'runtimeType': 'list',
             'listType': 'bullet',
             'spans': [
-              {'text': 'Main Bullet Point'}
+              {'text': 'Main Bullet Point'},
             ],
           }),
           createdAt: now,
@@ -546,7 +546,7 @@ void main() {
             'runtimeType': 'list',
             'listType': 'bullet',
             'spans': [
-              {'text': 'Indented Sub-bullet'}
+              {'text': 'Indented Sub-bullet'},
             ],
           }),
           createdAt: now,
@@ -564,7 +564,7 @@ void main() {
             'listType': 'checklist',
             'checked': true,
             'spans': [
-              {'text': 'Completed nested task'}
+              {'text': 'Completed nested task'},
             ],
           }),
           createdAt: now,
@@ -601,7 +601,7 @@ void main() {
 
       final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
       expect(header.startsWith('%PDF'), isTrue,
-          reason: 'Export must produce a valid PDF document');
+          reason: 'Export must produce a valid PDF document',);
     });
   });
 }

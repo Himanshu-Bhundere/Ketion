@@ -74,8 +74,92 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Verification Criterion 1: Toggle Save, Reload, Arrow Visibility & Child Creation', () {
-    test('Create toggle, save to block, reload into editor: arrow is visible and Enter creates child', () async {
+  group(
+      'Verification Criterion 1: Toggle Save, Reload, Arrow Visibility & Child Creation',
+      () {
+    test(
+        'IME newline request inserts a persisted child instead of a sibling paragraph',
+        () async {
+      final toggleNode = ParagraphNode(
+        id: 'toggle-ime-node',
+        text: AttributedText('Toggle'),
+        metadata: const {
+          'blockId': 'toggle-ime-block',
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'depth': 0,
+        },
+      );
+      final document = MutableDocument(nodes: [toggleNode]);
+      final composer = MutableDocumentComposer(
+        initialSelection: DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: toggleNode.id,
+            nodePosition: const TextNodePosition(offset: 6),
+          ),
+        ),
+      );
+      final coordinator = TestPersistenceCoordinator();
+      final snapshot = EditorPersistenceSnapshot('page-ime', {
+        'toggle-ime-block': BlockSnapshot(
+          blockId: 'toggle-ime-block',
+          pageId: 'page-ime',
+          type: 'list',
+          parentBlockId: null,
+          position: 1,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+      });
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-ime',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+      adapter.registry.registerMapping(
+        nodeId: toggleNode.id,
+        blockId: 'toggle-ime-block',
+      );
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-ime',
+            document: document,
+            composer: composer,
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      adapter.bind(document, editor);
+
+      // This is the route used by Android's soft keyboard; no KeyEvent is sent.
+      editor.execute([InsertNewlineAtCaretRequest('toggle-ime-child')]);
+
+      expect(document.nodeCount, 2);
+      final child = document.getNodeById('toggle-ime-child') as ParagraphNode;
+      expect(child.metadata['parentBlockId'], 'toggle-ime-block');
+      expect(child.metadata['depth'], 1);
+      expect(composer.selection?.extent.nodeId, 'toggle-ime-child');
+
+      // The adapter observes the document insertion and persists the actual
+      // block relationship, rather than leaving this as editor-only state.
+      await adapter.flushPendingChanges();
+      final inserted = coordinator.mutations.whereType<InsertBlockMutation>().single;
+      expect(inserted.parentBlockId, 'toggle-ime-block');
+    });
+
+    test(
+        'Create toggle, save to block, reload into editor: arrow is visible and Enter creates child',
+        () async {
       // 1. Initial toggle node in editor
       final toggleNode = ParagraphNode(
         id: 'toggle-node-1',
@@ -167,8 +251,10 @@ void main() {
       final builder = KetionToggleComponentBuilder(editor);
       final viewModel = builder.createViewModel(reloadedDoc, reloadedNode)
           as KetionToggleComponentViewModel?;
-      expect(viewModel, isNotNull, reason: 'ViewModel must be created for toggle');
-      expect(viewModel!.isExpanded, isTrue, reason: 'Toggle was saved as expanded');
+      expect(viewModel, isNotNull,
+          reason: 'ViewModel must be created for toggle');
+      expect(viewModel!.isExpanded, isTrue,
+          reason: 'Toggle was saved as expanded');
 
       final editContext = TestSuperEditorContext(
         editor: editor,
@@ -186,18 +272,25 @@ void main() {
       );
 
       expect(keyResult, ExecutionInstruction.haltExecution);
-      expect(reloadedDoc.nodeCount, 2, reason: 'Enter must insert a child node under toggle');
+      expect(reloadedDoc.nodeCount, 2,
+          reason: 'Enter must insert a child node under toggle');
 
       final childNode = reloadedDoc.getNodeAt(1)!;
       expect(childNode.metadata['parentBlockId'], 'block-toggle-1');
       expect(childNode.metadata['depth'], 1);
       expect(composer.selection?.extent.nodeId, childNode.id);
-      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+      expect(
+          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+          0);
     });
   });
 
-  group('Verification Criterion 2: Swipe-indent Bullet & Checklist Item, Save & Reload', () {
-    test('Indent bullet and checklist item, save to blocks, reload: indentation is fully preserved', () async {
+  group(
+      'Verification Criterion 2: Swipe-indent Bullet & Checklist Item, Save & Reload',
+      () {
+    test(
+        'Indent bullet and checklist item, save to blocks, reload: indentation is fully preserved',
+        () async {
       // 1. Initial blocks: bullet and checklist at depth 0
       final rootBlock = Block(
         id: 'block-root',
@@ -208,7 +301,9 @@ void main() {
         data: jsonEncode({
           'runtimeType': 'list',
           'listType': 'bullet',
-          'spans': [{'text': 'Parent item'}],
+          'spans': [
+            {'text': 'Parent item'}
+          ],
         }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -223,7 +318,9 @@ void main() {
         data: jsonEncode({
           'runtimeType': 'list',
           'listType': 'bullet',
-          'spans': [{'text': 'Bullet item to indent'}],
+          'spans': [
+            {'text': 'Bullet item to indent'}
+          ],
         }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -239,7 +336,9 @@ void main() {
           'runtimeType': 'list',
           'listType': 'checklist',
           'checked': false,
-          'spans': [{'text': 'Task item to indent'}],
+          'spans': [
+            {'text': 'Task item to indent'}
+          ],
         }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -285,7 +384,8 @@ void main() {
         snapshot: snapshot,
       );
 
-      final document = adapter.createDocument([rootBlock, bulletBlock, taskBlock]);
+      final document =
+          adapter.createDocument([rootBlock, bulletBlock, taskBlock]);
       final composer = MutableDocumentComposer();
       final editor = Editor(
         editables: {
@@ -324,19 +424,23 @@ void main() {
       expect(indentedTaskNode.metadata['parentBlockId'], 'block-root');
 
       // 3. Verify persistence mutation was generated and applied to snapshot
-      final bulletUpdate = coordinator.mutations.whereType<MoveBlockMutation>().firstWhere(
-        (m) => m.blockId == 'block-bullet',
-      );
+      final bulletUpdate =
+          coordinator.mutations.whereType<MoveBlockMutation>().firstWhere(
+                (m) => m.blockId == 'block-bullet',
+              );
       expect(bulletUpdate.parentBlockId, 'block-root');
 
-      final taskUpdate = coordinator.mutations.whereType<MoveBlockMutation>().firstWhere(
-        (m) => m.blockId == 'block-task',
-      );
+      final taskUpdate =
+          coordinator.mutations.whereType<MoveBlockMutation>().firstWhere(
+                (m) => m.blockId == 'block-task',
+              );
       expect(taskUpdate.parentBlockId, 'block-root');
 
       // 4. Simulate saving and reopening the note from persisted blocks
-      final updatedBulletBlock = bulletBlock.copyWith(parentBlockId: bulletUpdate.parentBlockId);
-      final updatedTaskBlock = taskBlock.copyWith(parentBlockId: taskUpdate.parentBlockId);
+      final updatedBulletBlock =
+          bulletBlock.copyWith(parentBlockId: bulletUpdate.parentBlockId);
+      final updatedTaskBlock =
+          taskBlock.copyWith(parentBlockId: taskUpdate.parentBlockId);
 
       final adapterReloaded = KetionSuperEditorAdapter(
         pageId: 'page-1',
@@ -365,8 +469,11 @@ void main() {
     });
   });
 
-  group('Verification Criterion 3: PDF Hierarchy Matches Editor Indentation', () {
-    test('Export nested hierarchy to PDF: visible tree depth and export document match editor indentation', () async {
+  group('Verification Criterion 3: PDF Hierarchy Matches Editor Indentation',
+      () {
+    test(
+        'Export nested hierarchy to PDF: visible tree depth and export document match editor indentation',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-export-1',
@@ -387,7 +494,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Section Toggle'}],
+            'spans': [
+              {'text': 'Section Toggle'}
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -402,7 +511,9 @@ void main() {
           data: jsonEncode({
             'runtimeType': 'text',
             'headingLevel': 0,
-            'spans': [{'text': 'Nested paragraph inside toggle'}],
+            'spans': [
+              {'text': 'Nested paragraph inside toggle'}
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -417,7 +528,9 @@ void main() {
           data: jsonEncode({
             'runtimeType': 'list',
             'listType': 'bullet',
-            'spans': [{'text': 'Main Bullet Point'}],
+            'spans': [
+              {'text': 'Main Bullet Point'}
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -432,7 +545,9 @@ void main() {
           data: jsonEncode({
             'runtimeType': 'list',
             'listType': 'bullet',
-            'spans': [{'text': 'Indented Sub-bullet'}],
+            'spans': [
+              {'text': 'Indented Sub-bullet'}
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -448,7 +563,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'checklist',
             'checked': true,
-            'spans': [{'text': 'Completed nested task'}],
+            'spans': [
+              {'text': 'Completed nested task'}
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -483,7 +600,8 @@ void main() {
       expect(pdfBytes.length, greaterThan(100));
 
       final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
-      expect(header.startsWith('%PDF'), isTrue, reason: 'Export must produce a valid PDF document');
+      expect(header.startsWith('%PDF'), isTrue,
+          reason: 'Export must produce a valid PDF document');
     });
   });
 }

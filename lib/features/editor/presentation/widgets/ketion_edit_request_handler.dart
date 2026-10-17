@@ -42,6 +42,16 @@ EditRequestHandler createKetionRequestHandler({
   void Function(String, KetionReminderNode)? onReminderInserted,
 }) {
   return (Editor editor, EditRequest request) {
+    // Android IMEs submit Enter as InsertNewlineAtCaretRequest, without a
+    // hardware KeyEvent. The keyboard action in ketion_toggle_keyboard_actions
+    // therefore cannot see that path. Intercept it here, before SuperEditor
+    // falls back to splitting the toggle into an ordinary sibling paragraph.
+    final toggleChildCommand =
+        _buildToggleChildInsertionCommand(editor, request);
+    if (toggleChildCommand != null) {
+      return toggleChildCommand;
+    }
+
     // Let all requests pass through to semantic translation
 
     final mutation = _translateRequest(request, registry);
@@ -74,6 +84,85 @@ EditRequestHandler createKetionRequestHandler({
       onReminderInserted: onReminderInserted,
     );
   };
+}
+
+/// Handles the IME newline path for a toggle header.
+///
+/// The inserted child deliberately carries the persisted *block* ID (not the
+/// SuperEditor node ID) as its parent. The adapter observes the insertion and
+/// persists it through the normal structural-insert flow.
+EditCommand? _buildToggleChildInsertionCommand(
+  Editor editor,
+  EditRequest request,
+) {
+  if (request is! InsertNewlineAtCaretRequest) return null;
+
+  final selection = editor.composer.selection;
+  if (selection == null || !selection.isCollapsed) return null;
+
+  final position = selection.extent.nodePosition;
+  if (position is! TextNodePosition) return null;
+
+  final node = editor.document.getNodeById(selection.extent.nodeId);
+  if (node is! TextNode ||
+      !KetionToggleComponentBuilder.isToggleNode(node) ||
+      position.offset != node.text.length) {
+    return null;
+  }
+
+  final toggleBlockId = node.metadata['blockId'] as String?;
+  if (toggleBlockId == null || toggleBlockId.isEmpty) return null;
+
+  final depth = node.metadata['depth'] as int? ?? 0;
+  return _InsertToggleChildCommand(
+    toggleNodeId: node.id,
+    childNode: ParagraphNode(
+      id: request.newNodeId,
+      text: AttributedText(),
+      metadata: {
+        'depth': depth + 1,
+        'parentBlockId': toggleBlockId,
+      },
+    ),
+  );
+}
+
+class _InsertToggleChildCommand extends EditCommand {
+  _InsertToggleChildCommand({
+    required this.toggleNodeId,
+    required this.childNode,
+  });
+
+  final String toggleNodeId;
+  final ParagraphNode childNode;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final toggleNode = context.document.getNodeById(toggleNodeId);
+    if (toggleNode == null) return;
+
+    executor.executeCommand(
+      InsertNodeAfterNodeCommand(
+        existingNodeId: toggleNodeId,
+        newNode: childNode,
+      ),
+    );
+    executor.executeCommand(
+      ChangeSelectionCommand(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: childNode.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        ),
+        SelectionChangeType.placeCaret,
+        SelectionReason.userInteraction,
+      ),
+    );
+  }
 }
 
 EditCommand? executeCommandRequestHandler(Editor editor, EditRequest request) {
@@ -310,7 +399,8 @@ String? _validateIdentity(
             .where((b) => b.parentBlockId == block.parentBlockId)
             .toList()
           ..sort((a, b) => a.position.compareTo(b.position));
-        final targetIndex = targetSiblings.indexWhere((b) => b.blockId == blockId);
+        final targetIndex =
+            targetSiblings.indexWhere((b) => b.blockId == blockId);
         if (targetIndex <= 0) {
           return 'Cannot indent: no preceding sibling to become parent';
         }
@@ -742,7 +832,8 @@ class _KetionDelegatingCommand extends EditCommand {
           final node = document.getNodeById(req.nodeId);
           return ConvertTaskToParagraphCommand(
             nodeId: req.nodeId,
-            paragraphMetadata: node != null ? Map<String, dynamic>.from(node.metadata) : null,
+            paragraphMetadata:
+                node != null ? Map<String, dynamic>.from(node.metadata) : null,
           );
         }
         if (reqToCreate is ChangeListItemTypeRequest) {
@@ -908,7 +999,8 @@ class _KetionDelegatingCommand extends EditCommand {
     if (coordinator.enqueue(persistenceMutation)) {
       snapshot.applyMutation(persistenceMutation);
 
-      if (mutation is IndentBlockMutation || mutation is UnindentBlockMutation) {
+      if (mutation is IndentBlockMutation ||
+          mutation is UnindentBlockMutation) {
         final nodeId = mutation is IndentBlockMutation
             ? (mutation as IndentBlockMutation).nodeId
             : (mutation as UnindentBlockMutation).nodeId;

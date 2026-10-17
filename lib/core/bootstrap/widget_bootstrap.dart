@@ -84,12 +84,14 @@ class WidgetBootstrap {
           }
 
           if (pageId != null && pageId.isNotEmpty) {
-            unawaited(
-              appRouter.pushNamed(
-                Routes.editorName,
-                pathParameters: {'pageId': pageId},
-                extra: const {'focusTitle': true},
-              ),
+            // A launcher deep link is a destination, not another editor on
+            // top of whichever page happened to be in the task. `goNamed`
+            // also updates the route state before the root Navigator is
+            // attached on a cold start, unlike an unobserved push future.
+            appRouter.goNamed(
+              Routes.editorName,
+              pathParameters: {'pageId': pageId},
+              extra: const {'focusTitle': true},
             );
           } else {
             // Failed creation: show an error rather than opening a fabricated page ID!
@@ -118,11 +120,9 @@ class WidgetBootstrap {
         if (pageId.isEmpty || pageId == 'null' || pageId == 'undefined') {
           return;
         }
-        unawaited(
-          appRouter.pushNamed(
-            Routes.editorName,
-            pathParameters: {'pageId': pageId},
-          ),
+        appRouter.goNamed(
+          Routes.editorName,
+          pathParameters: {'pageId': pageId},
         );
       } else if (uri.host == 'settings') {
         if (uri.pathSegments.contains('sync') || uri.path == '/sync') {

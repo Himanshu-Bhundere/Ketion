@@ -92,7 +92,7 @@ class QuickNoteWidgetProvider : HomeWidgetProvider() {
                     }
                     val openNotePendingIntent = PendingIntent.getActivity(
                         context,
-                        1003,
+                        1004,
                         openNoteIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )

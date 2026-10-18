@@ -57,6 +57,8 @@ class RecentNotesRemoteViewsFactory(private val context: Context) : RemoteViewsS
             data = Uri.parse("ketion://note/${note.id}")
         }
         views.setOnClickFillInIntent(R.id.note_item_root, fillInIntent)
+        views.setOnClickFillInIntent(R.id.note_title, fillInIntent)
+        views.setOnClickFillInIntent(R.id.note_date, fillInIntent)
         return views
     }
 

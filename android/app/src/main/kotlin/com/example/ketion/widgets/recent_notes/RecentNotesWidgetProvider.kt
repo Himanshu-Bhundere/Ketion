@@ -97,6 +97,7 @@ class RecentNotesWidgetProvider : HomeWidgetProvider() {
             // PendingIntent template for list items using HomeWidgetLaunchIntent
             val clickIntent = Intent(context, MainActivity::class.java).apply {
                 action = HomeWidgetLaunchIntent.HOME_WIDGET_LAUNCH_ACTION
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             val clickPendingIntent = PendingIntent.getActivity(
                 context, 1003, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE

@@ -38,12 +38,11 @@ class CreatePageUseCase {
     final result =
         await _repository.createPage(page, initialBlockType: initialBlockType);
     if (result is Success) {
-      unawaited(
-        _updateWidgetsUseCase().catchError((Object e, StackTrace s) {
-          debugPrint('Widget refresh failed: $e');
-          return const Success<void>(null);
-        }),
-      );
+      try {
+        await _updateWidgetsUseCase();
+      } catch (e) {
+        debugPrint('Widget refresh failed: $e');
+      }
     }
     return result.fold(
       (_) => Success(page),

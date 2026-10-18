@@ -88,7 +88,10 @@ class ExportUseCase {
       final json = Map<String, dynamic>.from(
         jsonDecode(block.data) as Map<String, dynamic>,
       );
-      if (!json.containsKey('runtimeType')) {
+      if (block.type == 'toggle' || json['listType'] == 'toggle') {
+        json['runtimeType'] = 'list';
+        json['listType'] = 'toggle';
+      } else if (!json.containsKey('runtimeType')) {
         json['runtimeType'] = block.type;
       }
       final blockDataModel = BlockDataModel.fromJson(json);

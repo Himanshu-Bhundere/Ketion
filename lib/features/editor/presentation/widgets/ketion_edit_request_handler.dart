@@ -19,6 +19,7 @@ import '../../domain/models/media_nodes.dart';
 import '../../domain/commands/insert_reminder_request.dart';
 import 'ketion_edit_requests.dart';
 import 'ketion_toggle_component.dart';
+import 'depth_wrapping_component_builder.dart';
 import '../table/ketion_table_node.dart';
 
 /// Creates the Ketion semantic EditRequestHandler.
@@ -47,7 +48,7 @@ EditRequestHandler createKetionRequestHandler({
     // therefore cannot see that path. Intercept it here, before SuperEditor
     // falls back to splitting the toggle into an ordinary sibling paragraph.
     final toggleChildCommand =
-        _buildToggleChildInsertionCommand(editor, request);
+        _buildToggleChildInsertionCommand(editor, request, registry);
     if (toggleChildCommand != null) {
       return toggleChildCommand;
     }
@@ -94,6 +95,7 @@ EditRequestHandler createKetionRequestHandler({
 EditCommand? _buildToggleChildInsertionCommand(
   Editor editor,
   EditRequest request,
+  EditorIdentityRegistry registry,
 ) {
   if (request is! InsertNewlineAtCaretRequest) return null;
 
@@ -110,10 +112,29 @@ EditCommand? _buildToggleChildInsertionCommand(
     return null;
   }
 
-  final toggleBlockId = node.metadata['blockId'] as String?;
-  if (toggleBlockId == null || toggleBlockId.isEmpty) return null;
+  var toggleBlockId = node.metadata['blockId'] as String? ??
+      registry.blockIdForNode(node.id);
+  if (toggleBlockId == null || toggleBlockId.isEmpty) {
+    toggleBlockId = const Uuid().v7();
+    registry.registerPendingMapping(nodeId: node.id, blockId: toggleBlockId);
+    node.metadata['blockId'] = toggleBlockId;
+  }
 
   final depth = node.metadata['depth'] as int? ?? 0;
+
+  // Check if toggle already has an immediate child paragraph that is empty
+  final nextNode = editor.document.getNodeAfterById(node.id);
+  final isNextChild = nextNode != null &&
+      (nextNode.metadata['parentBlockId'] == toggleBlockId ||
+          getNodeDepth(nextNode) > depth);
+
+  if (isNextChild && nextNode is ParagraphNode && nextNode.text.isEmpty) {
+    return _FocusNodeCommand(
+      nodeId: nextNode.id,
+      position: const TextNodePosition(offset: 0),
+    );
+  }
+
   return _InsertToggleChildCommand(
     toggleNodeId: node.id,
     childNode: ParagraphNode(
@@ -125,6 +146,35 @@ EditCommand? _buildToggleChildInsertionCommand(
       },
     ),
   );
+}
+
+class _FocusNodeCommand extends EditCommand {
+  _FocusNodeCommand({
+    required this.nodeId,
+    required this.position,
+  });
+
+  final String nodeId;
+  final NodePosition position;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    executor.executeCommand(
+      ChangeSelectionCommand(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: nodeId,
+            nodePosition: position,
+          ),
+        ),
+        SelectionChangeType.placeCaret,
+        SelectionReason.userInteraction,
+      ),
+    );
+  }
 }
 
 class _InsertToggleChildCommand extends EditCommand {
@@ -162,6 +212,196 @@ class _InsertToggleChildCommand extends EditCommand {
         SelectionReason.userInteraction,
       ),
     );
+  }
+}
+
+class _KetionIndentNodeCommand extends EditCommand {
+  _KetionIndentNodeCommand({required this.nodeId});
+
+  final String nodeId;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final node = context.document.getNodeById(nodeId);
+    if (node == null) return;
+
+    if (node is ListItemNode) {
+      final newIndent = node.indent + 1;
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newIndent,
+      };
+      final replacement = node.type == ListItemType.ordered
+          ? ListItemNode.ordered(
+              id: node.id,
+              text: node.text,
+              indent: newIndent,
+              metadata: newMetadata,
+            )
+          : ListItemNode.unordered(
+              id: node.id,
+              text: node.text,
+              indent: newIndent,
+              metadata: newMetadata,
+            );
+      context.document.replaceNodeById(node.id, replacement);
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else if (node is TaskNode) {
+      final newIndent = node.indent + 1;
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newIndent,
+      };
+      final replacement = TaskNode(
+        id: node.id,
+        text: node.text,
+        isComplete: node.isComplete,
+        indent: newIndent,
+        metadata: newMetadata,
+      );
+      context.document.replaceNodeById(node.id, replacement);
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else if (node is ParagraphNode) {
+      final currentDepth = node.metadata['depth'] as int? ?? 0;
+      final newDepth = currentDepth + 1;
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newDepth,
+      };
+      context.document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    }
+  }
+}
+
+class _KetionUnindentNodeCommand extends EditCommand {
+  _KetionUnindentNodeCommand({required this.nodeId});
+
+  final String nodeId;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final node = context.document.getNodeById(nodeId);
+    if (node == null) return;
+
+    if (node is ListItemNode) {
+      final newIndent = (node.indent - 1).clamp(0, 99);
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newIndent,
+      };
+      final replacement = node.type == ListItemType.ordered
+          ? ListItemNode.ordered(
+              id: node.id,
+              text: node.text,
+              indent: newIndent,
+              metadata: newMetadata,
+            )
+          : ListItemNode.unordered(
+              id: node.id,
+              text: node.text,
+              indent: newIndent,
+              metadata: newMetadata,
+            );
+      context.document.replaceNodeById(node.id, replacement);
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else if (node is TaskNode) {
+      final newIndent = (node.indent - 1).clamp(0, 99);
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newIndent,
+      };
+      final replacement = TaskNode(
+        id: node.id,
+        text: node.text,
+        isComplete: node.isComplete,
+        indent: newIndent,
+        metadata: newMetadata,
+      );
+      context.document.replaceNodeById(node.id, replacement);
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else if (node is ParagraphNode) {
+      final currentDepth = node.metadata['depth'] as int? ?? 0;
+      final newDepth = (currentDepth - 1).clamp(0, 99);
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newDepth,
+      };
+      context.document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    }
+  }
+}
+
+class _MoveSubtreeCommand extends EditCommand {
+  _MoveSubtreeCommand({
+    required this.nodeId,
+    required this.newIndex,
+  });
+
+  final String nodeId;
+  final int newIndex;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final document = context.document;
+    final oldIndex = document.getNodeIndexById(nodeId);
+    if (oldIndex == -1) return;
+
+    final parentNode = document.getNodeAt(oldIndex);
+    if (parentNode == null) return;
+    final parentDepth = getNodeDepth(parentNode);
+
+    // Collect all contiguous descendants in document order
+    final subtreeNodes = <DocumentNode>[parentNode];
+    for (int i = oldIndex + 1; i < document.nodeCount; i++) {
+      final candidate = document.getNodeAt(i);
+      if (candidate == null) break;
+      final depth = getNodeDepth(candidate);
+      if (depth <= parentDepth) break;
+      subtreeNodes.add(candidate);
+    }
+
+    // Remove subtree nodes from document
+    for (final node in subtreeNodes) {
+      document.deleteNode(node.id);
+    }
+
+    // Calculate insertion index
+    int insertIndex = newIndex;
+    if (newIndex > oldIndex) {
+      insertIndex = newIndex - subtreeNodes.length + 1;
+    }
+    insertIndex = insertIndex.clamp(0, document.nodeCount);
+
+    // Insert all subtree nodes at target index
+    for (int i = 0; i < subtreeNodes.length; i++) {
+      document.insertNodeAt(insertIndex + i, subtreeNodes[i]);
+      executor.logChanges([
+        DocumentEdit(
+          NodeMovedEvent(
+            nodeId: subtreeNodes[i].id,
+            from: oldIndex + i,
+            to: insertIndex + i,
+          ),
+        ),
+      ]);
+    }
   }
 }
 
@@ -446,14 +686,6 @@ class _FizzleCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     debugPrint('KETION: Fizzled structural command: $reason');
   }
-}
-
-class _KetionNoOpNodeCommand extends EditCommand {
-  @override
-  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
-
-  @override
-  void execute(EditContext context, CommandExecutor executor) {}
 }
 
 class _KetionDelegatingCommand extends EditCommand {
@@ -792,7 +1024,7 @@ class _KetionDelegatingCommand extends EditCommand {
       case MoveBlockMutation():
         if (reqToCreate is MoveNodeRequest) {
           final req = reqToCreate;
-          return MoveNodeCommand(nodeId: req.nodeId, newIndex: req.newIndex);
+          return _MoveSubtreeCommand(nodeId: req.nodeId, newIndex: req.newIndex);
         }
         return null;
 
@@ -878,37 +1110,11 @@ class _KetionDelegatingCommand extends EditCommand {
 
       case IndentBlockMutation():
         final nodeId = (mutation as IndentBlockMutation).nodeId;
-        final targetNode = document.getNodeById(nodeId);
-        if (targetNode is ListItemNode) {
-          return IndentListItemCommand(nodeId: nodeId);
-        }
-        if (targetNode is TaskNode) {
-          return IndentTaskCommand(nodeId);
-        }
-        if (targetNode is ParagraphNode) {
-          return IndentParagraphCommand(nodeId);
-        }
-        if (targetNode != null) {
-          return _KetionNoOpNodeCommand();
-        }
-        return null;
+        return _KetionIndentNodeCommand(nodeId: nodeId);
 
       case UnindentBlockMutation():
         final nodeId = (mutation as UnindentBlockMutation).nodeId;
-        final targetNode = document.getNodeById(nodeId);
-        if (targetNode is ListItemNode) {
-          return UnIndentListItemCommand(nodeId: nodeId);
-        }
-        if (targetNode is TaskNode) {
-          return UnIndentTaskCommand(nodeId);
-        }
-        if (targetNode is ParagraphNode) {
-          return UnIndentParagraphCommand(nodeId);
-        }
-        if (targetNode != null) {
-          return _KetionNoOpNodeCommand();
-        }
-        return null;
+        return _KetionUnindentNodeCommand(nodeId: nodeId);
 
       case ToggleBlockExpandedMutation():
         if (reqToCreate is ToggleExpandedRequest) {
@@ -1058,6 +1264,17 @@ class _KetionDelegatingCommand extends EditCommand {
           _updateDocumentNodeMetadata(node, newDepth, block);
           executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
         }
+      } else if (mutation is MoveBlockMutation) {
+        final nodeId = (mutation as MoveBlockMutation).nodeId;
+        final node = document.getNodeById(nodeId);
+        final blockId = registry.blockIdForNode(nodeId);
+        if (node != null && blockId != null) {
+          final block = snapshot.getBlock(blockId);
+          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+          _updateDocumentNodeMetadata(node, newDepth, block);
+          _updateDescendantDepths(blockId, newDepth, executor);
+          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+        }
       }
     } else {
       debugPrint(
@@ -1147,12 +1364,18 @@ class _KetionDelegatingCommand extends EditCommand {
   void _updateDescendantDepths(
     String parentBlockId,
     int parentDepth,
-    CommandExecutor executor,
-  ) {
+    CommandExecutor executor, [
+    Set<String>? visited,
+  ]) {
+    final seen = visited ?? <String>{};
+    if (seen.contains(parentBlockId)) return;
+    seen.add(parentBlockId);
+
     final children = snapshot.activeBlocks
         .where((b) => b.parentBlockId == parentBlockId)
         .toList();
     for (final child in children) {
+      if (seen.contains(child.blockId)) continue;
       final childNodeId = registry.nodeIdForBlock(child.blockId);
       if (childNodeId != null) {
         final childNode = document.getNodeById(childNodeId);
@@ -1160,7 +1383,7 @@ class _KetionDelegatingCommand extends EditCommand {
           final childDepth = parentDepth + 1;
           _updateDocumentNodeMetadata(childNode, childDepth, child);
           executor.logChanges([DocumentEdit(NodeChangeEvent(childNode.id))]);
-          _updateDescendantDepths(child.blockId, childDepth, executor);
+          _updateDescendantDepths(child.blockId, childDepth, executor, seen);
         }
       }
     }

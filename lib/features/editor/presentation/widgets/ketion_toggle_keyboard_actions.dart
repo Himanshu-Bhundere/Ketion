@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
 
+import 'depth_wrapping_component_builder.dart';
 import 'ketion_edit_requests.dart';
 import 'ketion_toggle_component.dart';
 
@@ -55,8 +56,31 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     }
 
     final parentBlockId = node.metadata['blockId'] as String? ?? node.id;
-    final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
+
+    // Check if toggle already has an immediate child paragraph that is empty
+    final nextNode = editContext.document.getNodeAfterById(node.id);
+    final isNextChild = nextNode != null &&
+        (nextNode.metadata['parentBlockId'] == parentBlockId ||
+            getNodeDepth(nextNode) > depth);
+
+    if (isNextChild && nextNode is ParagraphNode && nextNode.text.isEmpty) {
+      editContext.editor.execute([
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: nextNode.id,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionChangeType.placeCaret,
+          SelectionReason.userInteraction,
+        ),
+      ]);
+      return ExecutionInstruction.haltExecution;
+    }
+
+    final newNodeId = Editor.createNodeId();
 
     // Create a new child block inside the toggle hierarchy, placed directly after the toggle
     editContext.editor.execute([

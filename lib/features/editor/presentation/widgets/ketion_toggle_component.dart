@@ -158,20 +158,26 @@ class _KetionToggleComponentState extends State<KetionToggleComponent>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 4, top: 2),
+              padding: const EdgeInsets.only(right: 4, top: 0),
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => widget.onToggle(!widget.isExpanded),
-                  child: Icon(
-                    widget.isExpanded
-                        ? Icons.arrow_drop_down
-                        : Icons.arrow_right,
-                    size: 24,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.6),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      widget.isExpanded
+                          ? Icons.arrow_drop_down
+                          : Icons.arrow_right,
+                      size: 24,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.8),
+                    ),
                   ),
                 ),
               ),

@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
 import '../table/ketion_table_node.dart';
+import '../../domain/services/block_tree_service.dart';
 import 'ketion_toggle_component.dart';
 
-/// Gets the effective depth of a node from metadata or indent property.
+/// Gets the effective depth of a node from its canonical indent property or metadata.
 int getNodeDepth(DocumentNode? node) {
   if (node == null) return 0;
-  final depth = node.metadata['depth'];
-  if (depth is int) return depth;
   if (node is ListItemNode) return node.indent;
   if (node is TaskNode) return node.indent;
+  final depth = node.metadata['depth'];
+  if (depth is int) return depth;
   return 0;
 }
 
@@ -112,17 +113,12 @@ void exitToggle({
 
   final toggleDepth = getNodeDepth(toggleNode);
 
-  // Find the last descendant of toggleNode in the document
-  DocumentNode lastDescendant = toggleNode;
-  DocumentNode? candidate = document.getNodeAfterById(toggleNode.id);
-  while (candidate != null) {
-    final candidateDepth = getNodeDepth(candidate);
-    if (candidateDepth <= toggleDepth) {
-      break;
-    }
-    lastDescendant = candidate;
-    candidate = document.getNodeAfterById(candidate.id);
-  }
+  // Find the last descendant of toggleNode in the document using unified hierarchy service
+  final lastDescendant = BlockTreeService.findLastDescendant(
+    document,
+    toggleNode,
+    getNodeDepth,
+  );
 
   final outsideNode = document.getNodeAfterById(lastDescendant.id);
   if (outsideNode != null) {

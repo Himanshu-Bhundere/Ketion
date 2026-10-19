@@ -4,6 +4,7 @@ import '../../services/editor_persistence_mutations.dart'
     as persistence_mutations;
 import '../models/visible_block.dart';
 import '../models/drop_intent.dart';
+import 'package:super_editor/super_editor.dart';
 import 'sibling_position_manager.dart';
 
 class BlockTreeService {
@@ -555,5 +556,115 @@ class BlockTreeService {
       createdAt: DateTime.now().toUtc(),
       blockCreatedAt: block.createdAt,
     );
+  }
+
+  // --- Hierarchy Query & Traversal Service Methods ---
+
+  /// Returns the effective depth of [blockId] derived from its persisted parent chain.
+  static int effectiveDepth(String blockId, List<Block> allBlocks) {
+    final blockMap = {for (var b in allBlocks) b.id: b};
+    int depth = 0;
+    String? currentId = blockMap[blockId]?.parentBlockId;
+    final visited = <String>{};
+    while (currentId != null && !visited.contains(currentId)) {
+      visited.add(currentId);
+      depth++;
+      currentId = blockMap[currentId]?.parentBlockId;
+    }
+    return depth;
+  }
+
+  /// Returns the parent block of [blockId], or null if at root.
+  static Block? parentOf(String blockId, List<Block> allBlocks) {
+    final block = allBlocks.firstWhere(
+      (b) => b.id == blockId,
+      orElse: () => allBlocks.first,
+    );
+    if (block.id != blockId || block.parentBlockId == null) return null;
+    final parentId = block.parentBlockId!;
+    return allBlocks.firstWhere(
+      (b) => b.id == parentId,
+      orElse: () => block,
+    );
+  }
+
+  /// Returns immediate non-deleted children of [blockId] sorted by position.
+  static List<Block> childrenOf(String blockId, List<Block> allBlocks) {
+    return allBlocks
+        .where((b) => b.parentBlockId == blockId && !b.deleted)
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+  }
+
+  /// Returns non-deleted siblings of [blockId] (including [blockId]) sorted by position.
+  static List<Block> siblingsOf(String blockId, List<Block> allBlocks) {
+    final block = allBlocks.firstWhere(
+      (b) => b.id == blockId,
+      orElse: () => allBlocks.first,
+    );
+    if (block.id != blockId) return [];
+    return allBlocks
+        .where((b) => b.parentBlockId == block.parentBlockId && !b.deleted)
+        .toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+  }
+
+  /// Returns the last descendant block in the visible tree under [blockId].
+  static Block? lastDescendantOf(String blockId, List<Block> allBlocks) {
+    final children = childrenOf(blockId, allBlocks);
+    if (children.isEmpty) return null;
+    final lastChild = children.last;
+    final deeper = lastDescendantOf(lastChild.id, allBlocks);
+    return deeper ?? lastChild;
+  }
+
+  /// Returns the final node belonging to [root]'s contiguous descendant subtree.
+  ///
+  /// The caller must ensure that the document's effective depth is derived
+  /// consistently from its persisted hierarchy.
+  static DocumentNode findLastDescendant(
+    Document document,
+    DocumentNode root,
+    int Function(DocumentNode node) effectiveDepth,
+  ) {
+    var last = root;
+    var candidate = document.getNodeAfterById(root.id);
+    final rootDepth = effectiveDepth(root);
+    final rootBlockId = root.metadata['blockId'] as String? ?? root.id;
+
+    DocumentNode? findNode(String id) {
+      final byId = document.getNodeById(id);
+      if (byId != null) return byId;
+      for (final n in document) {
+        if (n.metadata['blockId'] == id) return n;
+      }
+      return null;
+    }
+
+    while (candidate != null && effectiveDepth(candidate) > rootDepth) {
+      final candidateParentId = candidate.metadata['parentBlockId'] as String?;
+      if (candidateParentId != null &&
+          candidateParentId != rootBlockId &&
+          candidateParentId != root.id) {
+        bool isDescendant = false;
+        String? currentParentId = candidateParentId;
+        final visited = <String>{};
+        while (currentParentId != null && !visited.contains(currentParentId)) {
+          visited.add(currentParentId);
+          if (currentParentId == rootBlockId || currentParentId == root.id) {
+            isDescendant = true;
+            break;
+          }
+          final parentNode = findNode(currentParentId);
+          currentParentId = parentNode?.metadata['parentBlockId'] as String?;
+        }
+        if (!isDescendant) break;
+      }
+
+      last = candidate;
+      candidate = document.getNodeAfterById(candidate.id);
+    }
+
+    return last;
   }
 }

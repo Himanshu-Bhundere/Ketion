@@ -723,7 +723,7 @@ void main() {
 
       expect(handled, ExecutionInstruction.haltExecution);
       expect(doc.nodeCount, 3);
-      final newChild = doc.getNodeAt(1) as ParagraphNode;
+      final newChild = doc.getNodeAt(2) as ParagraphNode;
       expect(newChild.metadata['depth'], 1);
       expect(newChild.metadata['parentBlockId'], 'b-toggle-2');
       expect(composer.selection?.extent.nodeId, newChild.id);

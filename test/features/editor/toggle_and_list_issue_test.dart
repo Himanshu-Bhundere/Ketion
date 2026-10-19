@@ -211,7 +211,7 @@ void main() {
 
       expect(result, ExecutionInstruction.haltExecution);
       expect(document.nodeCount, 3);
-      final newChild = document.getNodeAt(1)!;
+      final newChild = document.getNodeAt(2)!;
       expect(newChild.metadata['depth'], 1);
       expect(newChild.metadata['parentBlockId'], 'toggle-1');
       expect(composer.selection?.extent.nodeId, newChild.id);

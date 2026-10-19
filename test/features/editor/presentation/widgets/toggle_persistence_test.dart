@@ -612,7 +612,7 @@ void main() {
       await adapter.flushPendingChanges();
 
       expect(document.nodeCount, 3);
-      final secondChildNode = document.getNodeAt(1)!;
+      final secondChildNode = document.getNodeAt(2)!;
       expect(secondChildNode.metadata['depth'], 1);
       expect(secondChildNode.metadata['parentBlockId'], 'toggle-alone');
       expect(composer.selection?.extent.nodeId, secondChildNode.id);

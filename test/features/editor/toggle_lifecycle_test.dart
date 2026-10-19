@@ -11,6 +11,7 @@ import 'package:ketion/features/editor/presentation/widgets/ketion_edit_request_
 import 'package:super_editor/super_editor.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
+import 'package:ketion/features/editor/domain/services/block_tree_service.dart';
 
 class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   final List<EditorPersistenceMutation> mutations = [];
@@ -574,6 +575,256 @@ void main() {
       expect(outsideNode.metadata['depth'], 0);
       expect(outsideNode.metadata['parentBlockId'], isNull);
       expect(composer.selection?.extent.nodeId, outsideNode.id);
+    });
+
+    test(
+        'InsertNewlineAtCaretRequest at end of toggle with existing children appends new child to end of subtree',
+        () async {
+      final snapshot = EditorPersistenceSnapshot('page-1', {});
+      final coordinator = MockPersistenceCoordinator();
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-1',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final toggle = Block(
+        id: 'toggle-multi',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Parent Toggle'},
+          ],
+          'listType': 'toggle',
+          'isExpanded': true,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final child1 = Block(
+        id: 'child-1',
+        pageId: 'page-1',
+        parentBlockId: 'toggle-multi',
+        position: 0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'First child'},
+          ],
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final child2 = Block(
+        id: 'child-2',
+        pageId: 'page-1',
+        parentBlockId: 'toggle-multi',
+        position: 1,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Second child'},
+          ],
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final document = adapter.createDocument([toggle, child1, child2]);
+      final composer = MutableDocumentComposer();
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: composer,
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      adapter.bind(document, editor);
+
+      // Place caret at end of toggle heading
+      final toggleNode = document.getNodeAt(0)! as ParagraphNode;
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: toggleNode.id,
+            nodePosition: TextNodePosition(offset: toggleNode.text.length),
+          ),
+        ),
+      );
+
+      // Execute newline at end of toggle heading
+      editor.execute([
+        InsertNewlineAtCaretRequest(),
+      ]);
+
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      // Total nodes should now be 4: toggle, child1, child2, child3
+      expect(document.nodeCount, 4);
+      final firstChildInDoc = document.getNodeAt(1)! as ParagraphNode;
+      expect(firstChildInDoc.text.toPlainText(), 'First child');
+
+      final secondChildInDoc = document.getNodeAt(2)! as ParagraphNode;
+      expect(secondChildInDoc.text.toPlainText(), 'Second child');
+
+      // The new child must be at index 3 (end of subtree, NOT index 1)
+      final newChild = document.getNodeAt(3)! as ParagraphNode;
+      expect(newChild.metadata['depth'], 1);
+      expect(newChild.metadata['parentBlockId'], 'toggle-multi');
+      expect(composer.selection?.extent.nodeId, newChild.id);
+    });
+
+    test('BlockTreeService.findLastDescendant finds the final node in a multi-level subtree', () {
+      final rootToggle = ParagraphNode(
+        id: 'root-toggle',
+        text: AttributedText('Root'),
+        metadata: const {
+          'blockId': 'b-root',
+          'blockType': NamedAttribution('toggle'),
+          'isExpanded': true,
+          'depth': 0,
+        },
+      );
+      final c1 = ParagraphNode(
+        id: 'c1',
+        text: AttributedText('Child 1'),
+        metadata: const {
+          'blockId': 'b-c1',
+          'parentBlockId': 'b-root',
+          'depth': 1,
+        },
+      );
+      final c1Nested = ParagraphNode(
+        id: 'c1-nested',
+        text: AttributedText('Grandchild 1.1'),
+        metadata: const {
+          'blockId': 'b-c1-nested',
+          'parentBlockId': 'b-c1',
+          'depth': 2,
+        },
+      );
+      final c2 = ParagraphNode(
+        id: 'c2',
+        text: AttributedText('Child 2'),
+        metadata: const {
+          'blockId': 'b-c2',
+          'parentBlockId': 'b-root',
+          'depth': 1,
+        },
+      );
+      final sibling = ParagraphNode(
+        id: 'outside-sibling',
+        text: AttributedText('Outside sibling'),
+        metadata: const {
+          'blockId': 'b-outside',
+          'depth': 0,
+        },
+      );
+
+      final doc = MutableDocument(nodes: [rootToggle, c1, c1Nested, c2, sibling]);
+
+      final last = BlockTreeService.findLastDescendant(
+        doc,
+        rootToggle,
+        getNodeDepth,
+      );
+
+      // Must be c2 (final contiguous descendant before depth drops back to 0)
+      expect(last.id, 'c2');
+    });
+
+    test('BlockTreeService hierarchy queries accurately report depth, parent, children, siblings', () {
+      final now = DateTime.now();
+      final bRoot = Block(
+        id: 'b-root',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: '{}',
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+      final bChild1 = Block(
+        id: 'b-child-1',
+        pageId: 'page-1',
+        parentBlockId: 'b-root',
+        position: 0,
+        type: 'text',
+        data: '{}',
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+      final bChild2 = Block(
+        id: 'b-child-2',
+        pageId: 'page-1',
+        parentBlockId: 'b-root',
+        position: 1,
+        type: 'text',
+        data: '{}',
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+      final bGrandchild = Block(
+        id: 'b-grandchild',
+        pageId: 'page-1',
+        parentBlockId: 'b-child-1',
+        position: 0,
+        type: 'text',
+        data: '{}',
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final blocks = [bRoot, bChild1, bChild2, bGrandchild];
+
+      expect(BlockTreeService.effectiveDepth('b-root', blocks), 0);
+      expect(BlockTreeService.effectiveDepth('b-child-1', blocks), 1);
+      expect(BlockTreeService.effectiveDepth('b-grandchild', blocks), 2);
+
+      expect(BlockTreeService.parentOf('b-root', blocks), isNull);
+      expect(BlockTreeService.parentOf('b-child-1', blocks)?.id, 'b-root');
+      expect(BlockTreeService.parentOf('b-grandchild', blocks)?.id, 'b-child-1');
+
+      final rootChildren = BlockTreeService.childrenOf('b-root', blocks);
+      expect(rootChildren.map((b) => b.id).toList(), ['b-child-1', 'b-child-2']);
+
+      final childSiblings = BlockTreeService.siblingsOf('b-child-1', blocks);
+      expect(childSiblings.map((b) => b.id).toList(), ['b-child-1', 'b-child-2']);
+
+      expect(BlockTreeService.lastDescendantOf('b-root', blocks)?.id, 'b-child-2');
     });
   });
 }

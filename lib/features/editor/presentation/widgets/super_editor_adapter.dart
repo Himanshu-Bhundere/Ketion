@@ -555,7 +555,11 @@ class KetionSuperEditorAdapter {
   }
 
   Future<void> flushPendingChanges() {
-    if (_activeFlush != null) return _activeFlush!;
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
+    if (_activeFlush != null) {
+      return _activeFlush!.then((_) => flushPendingChanges());
+    }
     _activeFlush =
         _flushPendingChangesInternal().whenComplete(() => _activeFlush = null);
     return _activeFlush!;

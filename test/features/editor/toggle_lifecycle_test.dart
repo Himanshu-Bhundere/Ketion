@@ -10,6 +10,7 @@ import 'package:ketion/features/editor/presentation/widgets/ketion_edit_requests
 import 'package:ketion/features/editor/presentation/widgets/ketion_edit_request_handler.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
+import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
 
 class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   final List<EditorPersistenceMutation> mutations = [];
@@ -402,6 +403,177 @@ void main() {
         'toggle-p',
         reason: 'Child block must persist parentBlockId = toggle-p',
       );
+    });
+
+    test('InsertNewlineAtCaretRequest at end of collapsed toggle expands it and inserts child',
+        () async {
+      final snapshot = EditorPersistenceSnapshot('page-1', {});
+      final coordinator = MockPersistenceCoordinator();
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-1',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final toggle = Block(
+        id: 'toggle-collapsed',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Heading'},
+          ],
+          'listType': 'toggle',
+          'isExpanded': false,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final document = adapter.createDocument([toggle]);
+      final composer = MutableDocumentComposer();
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: composer,
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      adapter.bind(document, editor);
+
+      // Place caret at end of toggle heading
+      final toggleNode = document.getNodeAt(0)! as ParagraphNode;
+      composer.setSelectionWithReason(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: toggleNode.id,
+            nodePosition: TextNodePosition(offset: toggleNode.text.length),
+          ),
+        ),
+      );
+
+      // Press Enter (software IME or hardware)
+      editor.execute([
+        InsertNewlineAtCaretRequest(),
+      ]);
+
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      // Should expand toggle and insert new child block
+      expect(document.getNodeById(toggleNode.id)!.metadata['isExpanded'], isTrue);
+      expect(document.nodeCount, 2);
+
+      final childNode = document.getNodeAt(1)! as ParagraphNode;
+      expect(childNode.metadata['parentBlockId'], 'toggle-collapsed');
+      expect(childNode.metadata['depth'], 1);
+
+      // Caret should be inside new child
+      expect(composer.selection?.extent.nodeId, childNode.id);
+    });
+
+    test('exitToggle exits descendant to outside sibling or creates new outside paragraph',
+        () async {
+      final snapshot = EditorPersistenceSnapshot('page-1', {});
+      final coordinator = MockPersistenceCoordinator();
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-1',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final toggle = Block(
+        id: 'toggle-exit',
+        pageId: 'page-1',
+        parentBlockId: null,
+        position: 0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Parent'},
+          ],
+          'listType': 'toggle',
+          'isExpanded': true,
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final child = Block(
+        id: 'child-exit',
+        pageId: 'page-1',
+        parentBlockId: 'toggle-exit',
+        position: 0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Child item'},
+          ],
+        }),
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        version: 1,
+        deleted: false,
+      );
+
+      final document = adapter.createDocument([toggle, child]);
+      final composer = MutableDocumentComposer();
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-1',
+            document: document,
+            composer: composer,
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      adapter.bind(document, editor);
+
+      final childNode = document.getNodeAt(1)!;
+      // Call exitToggle on the child node
+      exitToggle(
+        editor: editor,
+        document: document,
+        nodeId: childNode.id,
+      );
+
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      // Since child was last node in doc, a new sibling paragraph outside the toggle was created
+      expect(document.nodeCount, 3);
+      final outsideNode = document.getNodeAt(2)! as ParagraphNode;
+      expect(outsideNode.metadata['depth'], 0);
+      expect(outsideNode.metadata['parentBlockId'], isNull);
+      expect(composer.selection?.extent.nodeId, outsideNode.id);
     });
   });
 }

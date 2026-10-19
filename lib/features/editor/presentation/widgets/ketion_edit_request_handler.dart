@@ -122,17 +122,12 @@ EditCommand? _buildToggleChildInsertionCommand(
 
   final depth = node.metadata['depth'] as int? ?? 0;
 
-  // Check if toggle already has an immediate child paragraph that is empty
-  final nextNode = editor.document.getNodeAfterById(node.id);
-  final isNextChild = nextNode != null &&
-      (nextNode.metadata['parentBlockId'] == toggleBlockId ||
-          getNodeDepth(nextNode) > depth);
-
-  if (isNextChild && nextNode is ParagraphNode && nextNode.text.isEmpty) {
-    return _FocusNodeCommand(
-      nodeId: nextNode.id,
-      position: const TextNodePosition(offset: 0),
-    );
+  // Ensure toggle is expanded when adding a child
+  final isExpanded = node.metadata['isExpanded'] == true;
+  if (!isExpanded) {
+    editor.execute([
+      ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
+    ]);
   }
 
   return _InsertToggleChildCommand(
@@ -146,35 +141,6 @@ EditCommand? _buildToggleChildInsertionCommand(
       },
     ),
   );
-}
-
-class _FocusNodeCommand extends EditCommand {
-  _FocusNodeCommand({
-    required this.nodeId,
-    required this.position,
-  });
-
-  final String nodeId;
-  final NodePosition position;
-
-  @override
-  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
-
-  @override
-  void execute(EditContext context, CommandExecutor executor) {
-    executor.executeCommand(
-      ChangeSelectionCommand(
-        DocumentSelection.collapsed(
-          position: DocumentPosition(
-            nodeId: nodeId,
-            nodePosition: position,
-          ),
-        ),
-        SelectionChangeType.placeCaret,
-        SelectionReason.userInteraction,
-      ),
-    );
-  }
 }
 
 class _InsertToggleChildCommand extends EditCommand {
@@ -193,6 +159,20 @@ class _InsertToggleChildCommand extends EditCommand {
   void execute(EditContext context, CommandExecutor executor) {
     final toggleNode = context.document.getNodeById(toggleNodeId);
     if (toggleNode == null) return;
+
+    if (toggleNode.metadata['isExpanded'] == false) {
+      executor.executeCommand(
+        ChangeParagraphMetadataCommand(
+          ChangeParagraphMetadataRequest(
+            nodeId: toggleNodeId,
+            metadata: {
+              ...toggleNode.metadata,
+              'isExpanded': true,
+            },
+          ),
+        ),
+      );
+    }
 
     executor.executeCommand(
       InsertNodeAfterNodeCommand(

@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
 
+import '../../domain/services/block_tree_service.dart';
+import 'depth_wrapping_component_builder.dart';
 import 'ketion_edit_requests.dart';
 import 'ketion_toggle_component.dart';
 
@@ -58,10 +60,16 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
 
-    // Create a new child block inside the toggle hierarchy, placed directly after the toggle
+    final lastDescendant = BlockTreeService.findLastDescendant(
+      editContext.document,
+      node,
+      getNodeDepth,
+    );
+
+    // Create a new child block inside the toggle hierarchy, placed at the end of the toggle subtree
     editContext.editor.execute([
       InsertNodeAfterNodeRequest(
-        existingNodeId: node.id,
+        existingNodeId: lastDescendant.id,
         newNode: ParagraphNode(
           id: newNodeId,
           text: AttributedText(),

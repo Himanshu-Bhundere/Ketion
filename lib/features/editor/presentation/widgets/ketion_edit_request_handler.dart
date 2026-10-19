@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'ketion_callout_node.dart';
 
 import '../../domain/services/block_data_serializer.dart';
+import '../../domain/services/block_tree_service.dart';
 
 import '../../services/editor_persistence_coordinator.dart';
 import '../../services/editor_persistence_mutations.dart'
@@ -174,9 +175,15 @@ class _InsertToggleChildCommand extends EditCommand {
       );
     }
 
+    final lastDescendant = BlockTreeService.findLastDescendant(
+      context.document,
+      toggleNode,
+      getNodeDepth,
+    );
+
     executor.executeCommand(
       InsertNodeAfterNodeCommand(
-        existingNodeId: toggleNodeId,
+        existingNodeId: lastDescendant.id,
         newNode: childNode,
       ),
     );

@@ -417,6 +417,13 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _slashController.dispose();
       _historyController.dispose();
       _adapter.dispose();
+      unawaited(
+        _coordinator.flush().then((_) {
+          try {
+            ref.read(updateWidgetsUseCaseProvider)();
+          } catch (_) {}
+        }),
+      );
       _coordinator.close();
       try {
         ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
@@ -683,4 +690,5 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       ),
     );
   }
+
 }

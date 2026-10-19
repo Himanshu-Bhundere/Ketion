@@ -25,6 +25,7 @@ class SyncNowUseCase {
         DateTime.now().toUtc().toIso8601String(),
       );
       await widgetService.updateSimpleWidgetData('sync_status', 'Success');
+      await widgetService.generateWidgetSnapshot();
       await widgetService.triggerWidgetUpdate();
     } else {
       await widgetService.updateSimpleWidgetData('sync_status', 'Failed');

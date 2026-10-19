@@ -58,16 +58,6 @@
                 <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
             </intent-filter>
         </receiver>
-        
-        <receiver android:name=".widgets.sync_status.SyncStatusWidgetProvider" android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_info_sync_status" />
-            <intent-filter>
-                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
-            </intent-filter>
-        </receiver>
 
         <receiver android:name=".widgets.recent_notes.RecentNotesWidgetProvider" android:exported="true">
             <intent-filter>

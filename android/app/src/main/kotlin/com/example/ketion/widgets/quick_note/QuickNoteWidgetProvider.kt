@@ -48,7 +48,8 @@ class QuickNoteWidgetProvider : HomeWidgetProvider() {
             val minHeight = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 60
             val minWidth = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 60
 
-            val is2x2OrLarger = minHeight >= 90 && minWidth >= 90
+            val is2x2OrLarger = minHeight >= 90 && minWidth >= 90 &&
+                (minWidth.toFloat() / minHeight.toFloat()).let { it in 0.6f..1.65f }
 
             val newNoteIntent = Intent(context, MainActivity::class.java).apply {
                 action = "es.antonborri.home_widget.action.LAUNCH"

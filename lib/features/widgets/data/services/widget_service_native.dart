@@ -51,11 +51,6 @@ class WidgetServiceImpl implements WidgetService {
       );
       await HomeWidget.updateWidget(
         androidName:
-            'com.example.ketion.widgets.sync_status.SyncStatusWidgetProvider',
-        iOSName: 'SyncStatusWidget',
-      );
-      await HomeWidget.updateWidget(
-        androidName:
             'com.example.ketion.widgets.recent_notes.RecentNotesWidgetProvider',
         iOSName: 'RecentNotesWidget',
       );
@@ -68,6 +63,11 @@ class WidgetServiceImpl implements WidgetService {
 
   @override
   Future<Result<void>> generateWidgetSnapshot() async {
+    final docsDir = await getApplicationDocumentsDirectory();
+    final snapshotPath = p.join(docsDir.path, 'widget_snapshot.sqlite');
+    final tempSnapshotPath = p.join(docsDir.path, 'widget_snapshot.sqlite.tmp');
+    final tempFile = File(tempSnapshotPath);
+
     try {
       // Get the 10 most recently updated non-deleted pages
       final recentPagesQuery = _db.select(_db.pages)
@@ -76,17 +76,15 @@ class WidgetServiceImpl implements WidgetService {
         ..limit(10);
       final recentPages = await recentPagesQuery.get();
 
-      final docsDir = await getApplicationDocumentsDirectory();
-      final snapshotPath = p.join(docsDir.path, 'widget_snapshot.sqlite');
-
-      // Delete old snapshot if it exists
-      final snapshotFile = File(snapshotPath);
-      if (snapshotFile.existsSync()) {
-        snapshotFile.deleteSync();
+      // Clean up any stale temporary file from a prior interrupted attempt
+      if (tempFile.existsSync()) {
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
       }
 
-      // Create a fresh SQLite database for the snapshot
-      final snapshotDb = sqlite.sqlite3.open(snapshotPath);
+      // Create a fresh SQLite database in the temporary file
+      final snapshotDb = sqlite.sqlite3.open(tempSnapshotPath);
 
       snapshotDb.execute('''
         CREATE TABLE recent_pages (
@@ -109,6 +107,17 @@ class WidgetServiceImpl implements WidgetService {
       stmt.dispose();
       snapshotDb.dispose();
 
+      // Atomically replace the published snapshot file so native widget reads are never concurrent with writes
+      final snapshotFile = File(snapshotPath);
+      try {
+        tempFile.renameSync(snapshotPath);
+      } catch (_) {
+        if (snapshotFile.existsSync()) {
+          snapshotFile.deleteSync();
+        }
+        tempFile.renameSync(snapshotPath);
+      }
+
       // Pass the snapshot path to home_widget so the native code knows where to find it
       await updateSimpleWidgetData('snapshot_db_path', snapshotPath);
       await updateSimpleWidgetData('snapshot_updated_at', DateTime.now().toIso8601String());
@@ -125,6 +134,12 @@ class WidgetServiceImpl implements WidgetService {
 
       return const Success(null);
     } catch (e) {
+      // Clean up temporary file on failure, preserving the existing snapshot intact
+      if (tempFile.existsSync()) {
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
+      }
       appLogger.e('Failed to generate widget snapshot', e);
       return Error(UnknownFailure('Failed to generate widget snapshot: $e'));
     }

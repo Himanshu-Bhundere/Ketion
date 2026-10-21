@@ -119,7 +119,7 @@ class ExportUseCase {
           // Skip empty list nodes so they do not produce stray bullet points
           final hasContent = listBlock.spans.isNotEmpty &&
               listBlock.spans.any((s) => s.text.trim().isNotEmpty);
-          if (!hasContent && listBlock.listType != 'toggle') {
+          if (!hasContent) {
             return;
           }
 

@@ -64,8 +64,8 @@ class PdfExporter implements ExportRepository {
               },
               list: (l) {
                 final text = _extractPlainText(l.spans);
-                // Skip empty list nodes so they do not produce stray bullet points
-                if (text.trim().isEmpty && l.listType != 'toggle') {
+                // Skip empty list nodes so they do not produce stray bullet points or markers
+                if (text.trim().isEmpty) {
                   return;
                 }
 
@@ -98,13 +98,19 @@ class PdfExporter implements ExportRepository {
                   );
                 } else if (l.listType == 'toggle') {
                   bullet = pw.Container(
-                    margin: const pw.EdgeInsets.only(right: 6, top: 2),
-                    child: pw.Text(
-                      '>',
-                      style: pw.TextStyle(
-                        fontSize: 11,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+                    width: 8,
+                    height: 8,
+                    margin: const pw.EdgeInsets.only(right: 6, top: 3),
+                    child: pw.CustomPaint(
+                      size: const PdfPoint(8, 8),
+                      painter: (PdfGraphics canvas, PdfPoint size) {
+                        canvas.setColor(PdfColors.grey800);
+                        canvas.moveTo(1, 1);
+                        canvas.lineTo(7, 4);
+                        canvas.lineTo(1, 7);
+                        canvas.closePath();
+                        canvas.fillPath();
+                      },
                     ),
                   );
                 } else if (l.listType == 'numbered') {

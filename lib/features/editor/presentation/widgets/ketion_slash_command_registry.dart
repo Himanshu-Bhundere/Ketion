@@ -10,7 +10,6 @@ import '../table/ketion_table_node.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../domain/commands/insert_reminder_request.dart';
-import 'ketion_edit_requests.dart';
 
 class KetionSlashCommand extends SuperEditorSlashCommandOption {
   final List<EditRequest> Function(String nodeId, Document document)?
@@ -169,43 +168,12 @@ class KetionSlashCommandRegistry {
       aliases: const ['toggle', 'expand'],
       isSupported: true,
       getRequestsWithDoc: (nodeId, doc) {
-        final node = doc.getNodeById(nodeId);
-        final toggleDepth = node?.metadata['depth'] as int? ??
-            (node is ListItemNode
-                ? node.indent
-                : (node is TaskNode ? node.indent : 0));
-        final parentBlockId = node?.metadata['blockId'] as String? ?? nodeId;
-        final newChildId = Editor.createNodeId();
-        return [
-          ..._getParagraphMetadataRequests(nodeId, doc, {
-            'blockType': const NamedAttribution('toggle'),
-            'listType': 'toggle',
-            'isExpanded': true,
-          }),
-          InsertNodeAfterNodeRequest(
-            existingNodeId: nodeId,
-            newNode: ParagraphNode(
-              id: newChildId,
-              text: AttributedText(),
-              metadata: {
-                'parentBlockId': parentBlockId,
-                'depth': toggleDepth + 1,
-              },
-            ),
-          ),
-          ExecuteCommandRequest(
-            ChangeSelectionCommand(
-              DocumentSelection.collapsed(
-                position: DocumentPosition(
-                  nodeId: newChildId,
-                  nodePosition: const TextNodePosition(offset: 0),
-                ),
-              ),
-              SelectionChangeType.placeCaret,
-              SelectionReason.userInteraction,
-            ),
-          ),
-        ];
+        return _getParagraphMetadataRequests(nodeId, doc, {
+          'blockType': const NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'type': 'toggle',
+          'isExpanded': true,
+        });
       },
     ),
     KetionSlashCommand(

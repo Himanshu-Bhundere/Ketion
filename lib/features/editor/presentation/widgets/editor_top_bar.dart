@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ketion/core/router/routes.dart';
 import 'package:uuid/uuid.dart';
 
 import '../providers/editor_state_provider.dart';
@@ -31,7 +32,13 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         tooltip: 'Back',
-        onPressed: () => Navigator.maybePop(context),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go(Routes.home);
+          }
+        },
       ),
       actions: [
         Consumer(

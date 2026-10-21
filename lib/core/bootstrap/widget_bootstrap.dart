@@ -13,16 +13,27 @@ class WidgetBootstrap {
 
   static void listenToDeepLinks({
     Future<String?> Function()? onCreatePage,
+    Future<bool> Function(String pageId)? onValidatePage,
     void Function(String error)? onError,
   }) {
     HomeWidget.widgetClicked.listen(
-      (uri) => _launchedFromWidget(uri, onCreatePage, onError),
+      (uri) => _launchedFromWidget(
+        uri,
+        onCreatePage: onCreatePage,
+        onValidatePage: onValidatePage,
+        onError: onError,
+      ),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(
         HomeWidget.initiallyLaunchedFromHomeWidget().then((uri) {
           if (uri != null) {
-            _launchedFromWidget(uri, onCreatePage, onError);
+            _launchedFromWidget(
+              uri,
+              onCreatePage: onCreatePage,
+              onValidatePage: onValidatePage,
+              onError: onError,
+            );
           }
         }),
       );
@@ -34,36 +45,76 @@ class WidgetBootstrap {
     Uri? uri, [
     Future<String?> Function()? onCreatePage,
     void Function(String error)? onError,
+    Future<bool> Function(String pageId)? onValidatePage,
   ]) =>
-      _launchedFromWidget(uri, onCreatePage, onError);
+      _launchedFromWidget(
+        uri,
+        onCreatePage: onCreatePage,
+        onValidatePage: onValidatePage,
+        onError: onError,
+      );
 
   @visibleForTesting
   static Future<void> handleWarmStart(
     Uri? uri, [
     Future<String?> Function()? onCreatePage,
     void Function(String error)? onError,
+    Future<bool> Function(String pageId)? onValidatePage,
   ]) =>
-      _launchedFromWidget(uri, onCreatePage, onError);
+      _launchedFromWidget(
+        uri,
+        onCreatePage: onCreatePage,
+        onValidatePage: onValidatePage,
+        onError: onError,
+      );
 
   @visibleForTesting
   static Future<void> handleColdStart([
     Future<String?> Function()? onCreatePage,
     Future<Uri?> Function()? initialUriProvider,
     void Function(String error)? onError,
+    Future<bool> Function(String pageId)? onValidatePage,
   ]) async {
     final uri = initialUriProvider != null
         ? await initialUriProvider()
         : await HomeWidget.initiallyLaunchedFromHomeWidget();
     if (uri != null) {
-      await _launchedFromWidget(uri, onCreatePage, onError);
+      await _launchedFromWidget(
+        uri,
+        onCreatePage: onCreatePage,
+        onValidatePage: onValidatePage,
+        onError: onError,
+      );
     }
   }
 
+  static Future<void> _navigateToEditor({
+    required String pageId,
+    bool focusTitle = false,
+  }) async {
+    // Ensure the home shell route is established first so Back always has a destination.
+    final currentPath = appRouter.routeInformationProvider.value.uri.path;
+    if (currentPath != Routes.home && !currentPath.startsWith(Routes.home)) {
+      appRouter.go(Routes.home);
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    // Push the editor on top of the established home shell
+    unawaited(
+      appRouter.pushNamed(
+        Routes.editorName,
+        pathParameters: {'pageId': pageId},
+        extra: focusTitle ? const {'focusTitle': true} : null,
+      ),
+    );
+  }
+
   static Future<void> _launchedFromWidget(
-    Uri? uri, [
+    Uri? uri, {
     Future<String?> Function()? onCreatePage,
+    Future<bool> Function(String pageId)? onValidatePage,
     void Function(String error)? onError,
-  ]) async {
+  }) async {
     if (uri != null && uri.scheme == 'ketion') {
       if (uri.host == 'new-note' ||
           uri.host == 'quick_note' ||
@@ -84,14 +135,9 @@ class WidgetBootstrap {
           }
 
           if (pageId != null && pageId.isNotEmpty) {
-            // A launcher deep link is a destination, not another editor on
-            // top of whichever page happened to be in the task. `goNamed`
-            // also updates the route state before the root Navigator is
-            // attached on a cold start, unlike an unobserved push future.
-            appRouter.goNamed(
-              Routes.editorName,
-              pathParameters: {'pageId': pageId},
-              extra: const {'focusTitle': true},
+            await _navigateToEditor(
+              pageId: pageId,
+              focusTitle: true,
             );
           } else {
             // Failed creation: show an error rather than opening a fabricated page ID!
@@ -120,9 +166,31 @@ class WidgetBootstrap {
         if (pageId.isEmpty || pageId == 'null' || pageId == 'undefined') {
           return;
         }
-        appRouter.goNamed(
-          Routes.editorName,
-          pathParameters: {'pageId': pageId},
+
+        if (onValidatePage != null) {
+          final isValid = await onValidatePage(pageId);
+          if (!isValid) {
+            const errorMsg = 'Note not found or deleted.';
+            if (onError != null) {
+              onError(errorMsg);
+            } else {
+              final context = rootNavigatorKey.currentContext;
+              if (context != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(errorMsg),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+            return;
+          }
+        }
+
+        await _navigateToEditor(
+          pageId: pageId,
+          focusTitle: false,
         );
       } else if (uri.host == 'settings') {
         if (uri.pathSegments.contains('sync') || uri.path == '/sync') {

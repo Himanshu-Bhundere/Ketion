@@ -45,6 +45,13 @@ class _KetionAppState extends ConsumerState<KetionApp> {
           (error) => null,
         );
       },
+      onValidatePage: (pageId) async {
+        final result = await ref.read(getPageUseCaseProvider)(pageId);
+        return result.fold(
+          (page) => !page.deleted,
+          (error) => false,
+        );
+      },
     );
 
     // Eagerly connect notification action dispatcher to Riverpod

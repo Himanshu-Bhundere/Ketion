@@ -1,3 +1,4 @@
+import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/result.dart';
 import 'package:ketion/features/widgets/domain/usecases/update_widgets_usecase.dart';
 import '../entities/page.dart';
@@ -15,7 +16,16 @@ class UpdatePageUseCase {
     // versioning policy in the presentation/application layers.
     final result = await _repository.updatePage(page);
     if (result is Success) {
-      await _updateWidgetsUseCase();
+      try {
+        final widgetResult = await _updateWidgetsUseCase();
+        if (widgetResult is Error) {
+          appLogger.w(
+            'Widget refresh failed after updatePage: ${widgetResult.failure}',
+          );
+        }
+      } catch (e) {
+        appLogger.w('Widget refresh failed after updatePage: $e');
+      }
     }
     return result;
   }

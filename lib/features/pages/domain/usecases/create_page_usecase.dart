@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
+import '../../../../core/utils/logger.dart';
 import 'package:ketion/features/widgets/domain/usecases/update_widgets_usecase.dart';
 import '../entities/page.dart';
 import '../repositories/page_repository.dart';
@@ -39,9 +39,14 @@ class CreatePageUseCase {
         await _repository.createPage(page, initialBlockType: initialBlockType);
     if (result is Success) {
       try {
-        await _updateWidgetsUseCase();
+        final widgetResult = await _updateWidgetsUseCase();
+        if (widgetResult is Error) {
+          appLogger.w(
+            'Widget refresh failed after createPage: ${widgetResult.failure}',
+          );
+        }
       } catch (e) {
-        debugPrint('Widget refresh failed: $e');
+        appLogger.w('Widget refresh failed after createPage: $e');
       }
     }
     return result.fold(

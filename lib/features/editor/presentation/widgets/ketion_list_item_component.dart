@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
+import 'depth_wrapping_component_builder.dart';
+
 /// A component builder for [ListItemNode]s that uses a fixed prefix width (24.0)
 /// for bullets and numbers, delegating all per-level indentation to
 /// [DepthWrappingComponentBuilder] to maintain a single unified indentation model.
@@ -13,15 +15,12 @@ import 'package:super_editor/super_editor.dart';
 /// terminates the sequence.
 int computeKetionListItemOrdinalValue(ListItemNode node, Document document) {
   int count = 1;
-  final nodeDepth = node.metadata['depth'] as int? ?? node.indent;
+  final nodeDepth = getNodeDepth(node);
   final nodeParentId = node.metadata['parentBlockId'] as String?;
 
   DocumentNode? prev = document.getNodeBeforeById(node.id);
   while (prev != null) {
-    final prevDepth = prev.metadata['depth'] as int? ??
-        (prev is ListItemNode
-            ? prev.indent
-            : (prev is TaskNode ? prev.indent : 0));
+    final prevDepth = getNodeDepth(prev);
     final prevParentId = prev.metadata['parentBlockId'] as String?;
 
     if (prevDepth < nodeDepth) {

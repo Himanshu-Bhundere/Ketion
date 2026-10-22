@@ -23,7 +23,8 @@ class KetionTaskComponentBuilder implements ComponentBuilder {
       nodeId: node.id,
       createdAt: node.metadata['createdAt'] as DateTime?,
       padding: EdgeInsets.zero,
-      indent: node.indent,
+      // Delegate all indentation to DepthWrappingComponentBuilder to prevent double indentation
+      indent: 0,
       isComplete: node.isComplete,
       setComplete: (bool isComplete) {
         _editor.execute([

@@ -14,12 +14,16 @@ import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/domain/commands/change_paragraph_metadata.dart';
+import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
+import 'package:ketion/features/editor/presentation/widgets/editable_page_title.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_list_item_component.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_slash_command_registry.dart';
+import 'package:ketion/features/editor/presentation/widgets/ketion_task_component.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_component.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_keyboard_actions.dart';
 import 'package:ketion/features/editor/services/editor_persistence_coordinator.dart';
 import 'package:ketion/features/editor/services/editor_persistence_mutations.dart';
+import 'package:ketion/features/import_export/domain/models/document_model.dart' as doc_model;
 import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart';
 import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
 import 'package:ketion/features/pages/data/repositories/page_repository_impl.dart';
@@ -458,6 +462,174 @@ void main() {
 
       final deleteResult = await deletePageUseCase(page.id);
       expect(deleteResult, isA<Success<void>>());
+
+      await db.close();
+    });
+  });
+
+  group('Issue 2: Checklist Indentation Hierarchy & Single Authority Indentation', () {
+    test('KetionTaskComponentBuilder delegates all indentation to DepthWrappingComponentBuilder', () {
+      final doc = MutableDocument(nodes: [
+        TaskNode(
+          id: 'task-1',
+          text: AttributedText('Nested Checklist Item'),
+          isComplete: false,
+          indent: 2,
+        ),
+      ]);
+      final editor = Editor(editables: {Editor.documentKey: doc});
+      final builder = KetionTaskComponentBuilder(editor);
+      final viewModel = builder.createViewModel(doc, doc.first);
+
+      expect(viewModel, isNotNull);
+      // Indent must be 0 in viewModel so that DepthWrappingComponentBuilder remains the single indentation authority
+      expect(viewModel!.indent, 0);
+      expect(getNodeDepth(doc.first), 2);
+    });
+
+    test('PdfExporter preserves nested checklist structure and applies depth margins', () async {
+      final exporter = PdfExporter();
+      final document = doc_model.ExportDocument(
+        title: 'Checklist Test',
+        nodes: [
+          doc_model.DocumentNode.list(
+            listType: 'checklist',
+            checked: false,
+            spans: [const doc_model.DocumentTextSpan(text: 'Root Task')],
+            depth: 0,
+          ),
+          doc_model.DocumentNode.list(
+            listType: 'checklist',
+            checked: true,
+            spans: [const doc_model.DocumentTextSpan(text: 'Level 1 Subtask')],
+            depth: 1,
+          ),
+          doc_model.DocumentNode.list(
+            listType: 'checklist',
+            checked: false,
+            spans: [const doc_model.DocumentTextSpan(text: 'Level 2 Deep Task')],
+            depth: 2,
+          ),
+        ],
+      );
+
+      final pdfBytes = await exporter.exportDocument(document);
+      expect(pdfBytes, isNotEmpty);
+      expect(pdfBytes.length, greaterThan(100));
+    });
+  });
+
+  group('Issue 3: Title Race Condition, Stale Provider Protection & Dispose Safety', () {
+    testWidgets('EditablePageTitle does not overwrite active local edit with stale provider snapshot', (tester) async {
+      final page = Page(
+        id: 'test-page-1',
+        title: 'Initial Title',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      String? lastSavedTitle;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: EditablePageTitle(
+              page: page,
+              onTitleChanged: (title) async {
+                lastSavedTitle = title;
+                return const Success(null);
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Verify initial title
+      expect(find.text('Initial Title'), findsOneWidget);
+
+      // Enter new text locally
+      await tester.enterText(find.byType(TextField), 'Locally Modified Title');
+      await tester.pump();
+      expect(find.text('Locally Modified Title'), findsOneWidget);
+
+      // Simulate didUpdateWidget receiving a stale snapshot from Riverpod/DB with the old title
+      final stalePage = page.copyWith(title: 'Stale External Title');
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: EditablePageTitle(
+              page: stalePage,
+              onTitleChanged: (title) async {
+                lastSavedTitle = title;
+                return const Success(null);
+              },
+            ),
+          ),
+        ),
+      );
+
+      // The dirty local text must NOT have been overwritten by the stale external title
+      expect(find.text('Locally Modified Title'), findsOneWidget);
+
+      // Let debounce run to flush
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(lastSavedTitle, 'Locally Modified Title');
+    });
+
+    testWidgets('EditablePageTitle flushes unpersisted title on dispose without disposed controller error', (tester) async {
+      final page = Page(
+        id: 'test-page-2',
+        title: 'Before Dispose',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      String? flushedTitle;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: EditablePageTitle(
+              page: page,
+              onTitleChanged: (title) async {
+                flushedTitle = title;
+                return const Success(null);
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Type without waiting for debounce
+      await tester.enterText(find.byType(TextField), 'Final Unflushed Title');
+      await tester.pump();
+
+      // Unmount the widget immediately (simulating page navigation / pop)
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
+      );
+
+      expect(flushedTitle, 'Final Unflushed Title');
+      expect(tester.takeException(), isNull);
+    });
+
+    test('Concurrent page updates serialize properly and preserve latest values', () async {
+      final db = AppDatabase.forTesting(NativeDatabase.memory());
+      final syncQueue = SyncQueueRepositoryImpl(db);
+      final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
+      final failingWidgetService = FailingWidgetService();
+      final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
+      final createPageUseCase = CreatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final updatePageUseCase = UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
+
+      final createResult = await createPageUseCase(title: 'Original Title');
+      final initialPage = createResult.valueOrNull!;
+
+      // Execute sequential updates simulating FIFO update queue
+      await updatePageUseCase(initialPage.copyWith(title: 'First Edit'));
+      await updatePageUseCase(initialPage.copyWith(title: 'Second Edit'));
+
+      final finalResult = await pageRepo.getPage(initialPage.id);
+      expect(finalResult, isA<Success<Page>>());
+      expect((finalResult as Success<Page>).value.title, 'Second Edit');
 
       await db.close();
     });

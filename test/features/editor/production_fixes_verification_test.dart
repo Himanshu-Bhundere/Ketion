@@ -469,14 +469,16 @@ void main() {
 
   group('Issue 2: Checklist Indentation Hierarchy & Single Authority Indentation', () {
     test('KetionTaskComponentBuilder delegates all indentation to DepthWrappingComponentBuilder', () {
-      final doc = MutableDocument(nodes: [
-        TaskNode(
-          id: 'task-1',
-          text: AttributedText('Nested Checklist Item'),
-          isComplete: false,
-          indent: 2,
-        ),
-      ]);
+      final doc = MutableDocument(
+        nodes: [
+          TaskNode(
+            id: 'task-1',
+            text: AttributedText('Nested Checklist Item'),
+            isComplete: false,
+            indent: 2,
+          ),
+        ],
+      );
       final editor = Editor(editables: {Editor.documentKey: doc});
       final builder = KetionTaskComponentBuilder(editor);
       final viewModel = builder.createViewModel(doc, doc.first);
@@ -489,25 +491,25 @@ void main() {
 
     test('PdfExporter preserves nested checklist structure and applies depth margins', () async {
       final exporter = PdfExporter();
-      final document = doc_model.ExportDocument(
+      const document = doc_model.ExportDocument(
         title: 'Checklist Test',
         nodes: [
           doc_model.DocumentNode.list(
             listType: 'checklist',
             checked: false,
-            spans: [const doc_model.DocumentTextSpan(text: 'Root Task')],
+            spans: [doc_model.DocumentTextSpan(text: 'Root Task')],
             depth: 0,
           ),
           doc_model.DocumentNode.list(
             listType: 'checklist',
             checked: true,
-            spans: [const doc_model.DocumentTextSpan(text: 'Level 1 Subtask')],
+            spans: [doc_model.DocumentTextSpan(text: 'Level 1 Subtask')],
             depth: 1,
           ),
           doc_model.DocumentNode.list(
             listType: 'checklist',
             checked: false,
-            spans: [const doc_model.DocumentTextSpan(text: 'Level 2 Deep Task')],
+            spans: [doc_model.DocumentTextSpan(text: 'Level 2 Deep Task')],
             depth: 2,
           ),
         ],

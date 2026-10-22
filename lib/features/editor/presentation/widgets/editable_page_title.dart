@@ -44,22 +44,42 @@ class _EditablePageTitleState extends State<EditablePageTitle> {
   void didUpdateWidget(EditablePageTitle oldWidget) {
     super.didUpdateWidget(oldWidget);
     final pageChanged = widget.page.id != oldWidget.page.id;
-    final receivedExternalTitle = widget.page.title != oldWidget.page.title;
-    final hasLocalEdit = _controller.text != _lastPersistedTitle || _isSaving;
-    if (pageChanged ||
-        (receivedExternalTitle && !_focusNode.hasFocus && !hasLocalEdit)) {
+    if (pageChanged) {
+      _debounce?.cancel();
+      final oldTitleToPersist = _controller.text;
+      if (oldTitleToPersist != _lastPersistedTitle) {
+        unawaited(oldWidget.onTitleChanged(oldTitleToPersist));
+      }
       _lastPersistedTitle = widget.page.title;
       _controller.value = TextEditingValue(
         text: _lastPersistedTitle,
         selection: TextSelection.collapsed(offset: _lastPersistedTitle.length),
       );
+      return;
+    }
+
+    // Same page: do not clobber user's active typing or in-flight save with a stale snapshot
+    final hasLocalEdit = _controller.text != _lastPersistedTitle || _isSaving;
+    if (!hasLocalEdit && !_focusNode.hasFocus) {
+      final receivedExternalTitle = widget.page.title != _lastPersistedTitle &&
+          widget.page.title != oldWidget.page.title;
+      if (receivedExternalTitle) {
+        _lastPersistedTitle = widget.page.title;
+        _controller.value = TextEditingValue(
+          text: _lastPersistedTitle,
+          selection: TextSelection.collapsed(offset: _lastPersistedTitle.length),
+        );
+      }
     }
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    unawaited(_flushTitle());
+    final finalTitle = _controller.text;
+    if (finalTitle != _lastPersistedTitle) {
+      unawaited(widget.onTitleChanged(finalTitle));
+    }
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();

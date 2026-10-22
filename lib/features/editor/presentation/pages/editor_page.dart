@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/utils/result.dart';
+import '../../../pages/domain/entities/page.dart' as entity;
 import '../../../pages/presentation/providers/page_providers.dart';
 import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
@@ -21,25 +21,40 @@ class EditorPage extends ConsumerWidget {
     this.openTarget,
   });
 
+  static final Map<String, Future<Result<void>>> _pageUpdateChains = {};
+
   Future<Result<void>> _updatePage(
     WidgetRef ref, {
     String? title,
     String? icon,
-  }) async {
-    final page = ref.read(pageProvider(pageId)).valueOrNull;
-    if (page == null) {
-      return const Error(StorageFailure('Page is unavailable'));
-    }
+  }) {
+    final previousChain =
+        _pageUpdateChains[pageId] ?? Future.value(const Success<void>(null));
+    final currentUpdate = previousChain.then((_) async {
+      final pageRepo = ref.read(pageRepositoryProvider);
+      final pageResult = await pageRepo.getPage(pageId);
+      if (pageResult is Error) {
+        return pageResult as Result<void>;
+      }
 
-    final updatedPage =
-        page.copyWith(title: title ?? page.title, icon: icon ?? page.icon);
-    final result = await ref.read(updatePageUseCaseProvider)(updatedPage);
-    if (result is Success<void>) {
-      ref.invalidate(pageProvider(pageId));
-      ref.invalidate(recentPagesProvider);
-      ref.invalidate(favoritePagesProvider);
-    }
-    return result;
+      final page = (pageResult as Success<entity.Page>).value;
+      final updatedPage = page.copyWith(
+        title: title ?? page.title,
+        icon: icon ?? page.icon,
+      );
+
+      final updateResult =
+          await ref.read(updatePageUseCaseProvider)(updatedPage);
+      if (updateResult is Success<void>) {
+        ref.invalidate(pageProvider(pageId));
+        ref.invalidate(recentPagesProvider);
+        ref.invalidate(favoritePagesProvider);
+      }
+      return updateResult;
+    });
+
+    _pageUpdateChains[pageId] = currentUpdate;
+    return currentUpdate;
   }
 
   @override

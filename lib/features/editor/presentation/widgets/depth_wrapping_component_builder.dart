@@ -15,12 +15,25 @@ int getNodeDepth(DocumentNode? node) {
   return 0;
 }
 
+/// Resolves a [DocumentNode] by either its in-memory [node.id] or its persistent
+/// [node.metadata['blockId']].
+DocumentNode? findDocumentNode(Document document, String id) {
+  final byId = document.getNodeById(id);
+  if (byId != null) return byId;
+  for (final node in document) {
+    if (node.metadata['blockId'] == id) {
+      return node;
+    }
+  }
+  return null;
+}
+
 /// Checks whether [node] is nested inside a toggle block.
 bool isNodeInsideToggle(DocumentNode node, Document document) {
   // 1. Direct or indirect parent check via parentBlockId
   final parentBlockId = node.metadata['parentBlockId'] as String?;
   if (parentBlockId != null) {
-    DocumentNode? curr = document.getNodeById(parentBlockId);
+    DocumentNode? curr = findDocumentNode(document, parentBlockId);
     final visited = <String>{};
     while (curr != null && !visited.contains(curr.id)) {
       visited.add(curr.id);
@@ -29,7 +42,7 @@ bool isNodeInsideToggle(DocumentNode node, Document document) {
       }
       final nextParentId = curr.metadata['parentBlockId'] as String?;
       if (nextParentId == null || nextParentId == curr.id) break;
-      curr = document.getNodeById(nextParentId);
+      curr = findDocumentNode(document, nextParentId);
     }
   }
 
@@ -62,7 +75,7 @@ bool isNodeInsideToggle(DocumentNode node, Document document) {
 DocumentNode? findParentToggleNode(DocumentNode node, Document document) {
   final parentBlockId = node.metadata['parentBlockId'] as String?;
   if (parentBlockId != null) {
-    DocumentNode? curr = document.getNodeById(parentBlockId);
+    DocumentNode? curr = findDocumentNode(document, parentBlockId);
     final visited = <String>{};
     while (curr != null && !visited.contains(curr.id)) {
       visited.add(curr.id);
@@ -71,7 +84,7 @@ DocumentNode? findParentToggleNode(DocumentNode node, Document document) {
       }
       final nextParentId = curr.metadata['parentBlockId'] as String?;
       if (nextParentId == null || nextParentId == curr.id) break;
-      curr = document.getNodeById(nextParentId);
+      curr = findDocumentNode(document, nextParentId);
     }
   }
 

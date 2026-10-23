@@ -422,9 +422,9 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
           try {
             ref.read(updateWidgetsUseCaseProvider)();
           } catch (_) {}
+          _coordinator.close();
         }),
       );
-      _coordinator.close();
       try {
         ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
       } catch (_) {}
@@ -468,9 +468,11 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
         final navigator = Navigator.of(context);
         setState(() => _isHandlingPop = true);
-        await _adapter.flushPendingChanges();
-        await _coordinator.flush();
-        unawaited(ref.read(updateWidgetsUseCaseProvider)());
+        try {
+          await _adapter.flushPendingChanges();
+          await _coordinator.flush();
+          await ref.read(updateWidgetsUseCaseProvider)();
+        } catch (_) {}
         navigator.pop(result);
       },
       child: Column(

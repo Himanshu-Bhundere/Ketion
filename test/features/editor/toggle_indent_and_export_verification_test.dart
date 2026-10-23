@@ -603,5 +603,67 @@ void main() {
       expect(header.startsWith('%PDF'), isTrue,
           reason: 'Export must produce a valid PDF document',);
     });
+
+    test('findDocumentNode and isNodeInsideToggle resolve parent via metadata blockId when node.id differs', () {
+      final parentToggle = ParagraphNode(
+        id: 'in-memory-node-1',
+        text: AttributedText('Parent Toggle'),
+        metadata: const {
+          'blockId': 'sqlite-block-uuid-1',
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'depth': 0,
+        },
+      );
+      final childNode = ParagraphNode(
+        id: 'in-memory-node-2',
+        text: AttributedText('Child Node'),
+        metadata: const {
+          'blockId': 'sqlite-block-uuid-2',
+          'parentBlockId': 'sqlite-block-uuid-1',
+          'depth': 1,
+        },
+      );
+      final doc = MutableDocument(nodes: [parentToggle, childNode]);
+
+      expect(findDocumentNode(doc, 'sqlite-block-uuid-1'), equals(parentToggle));
+      expect(isNodeInsideToggle(childNode, doc), isTrue);
+      expect(findParentToggleNode(childNode, doc), equals(parentToggle));
+    });
+
+    test('Empty toggle header is preserved during ExportUseCase and PdfExporter export', () async {
+      final now = DateTime.now();
+      final page = Page(
+        id: 'page-empty-toggle',
+        title: 'Empty Toggle Test',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final blocks = [
+        Block(
+          id: 'b-empty-toggle',
+          pageId: 'page-empty-toggle',
+          parentBlockId: null,
+          position: 10.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'spans': <Map<String, dynamic>>[],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ];
+
+      final exporter = PdfExporter();
+      final useCase = ExportUseCase([exporter]);
+
+      final pdfBytes = await useCase.exportToBytes(page, blocks, 'pdf');
+      expect(pdfBytes, isNotEmpty);
+      final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
+      expect(header.startsWith('%PDF'), isTrue);
+    });
   });
 }

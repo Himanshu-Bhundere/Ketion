@@ -116,10 +116,12 @@ class ExportUseCase {
           }
         },
         list: (ListBlockData listBlock) async {
-          // Skip empty list nodes so they do not produce stray bullet points
+          // Skip empty list nodes so they do not produce stray bullet points,
+          // but preserve toggle headers even if empty so toggle hierarchy is maintained.
+          final isToggle = listBlock.listType.toLowerCase() == 'toggle';
           final hasContent = listBlock.spans.isNotEmpty &&
               listBlock.spans.any((s) => s.text.trim().isNotEmpty);
-          if (!hasContent) {
+          if (!hasContent && !isToggle) {
             return;
           }
 

@@ -64,8 +64,9 @@ class PdfExporter implements ExportRepository {
               },
               list: (l) {
                 final text = _extractPlainText(l.spans);
-                // Skip empty list nodes so they do not produce stray bullet points or markers
-                if (text.trim().isEmpty) {
+                // Skip empty list nodes so they do not produce stray bullet points or markers,
+                // but preserve toggle items so their structure remains intact.
+                if (text.trim().isEmpty && l.listType != 'toggle') {
                   return;
                 }
 
@@ -143,7 +144,7 @@ class PdfExporter implements ExportRepository {
                         bullet,
                         pw.Expanded(
                           child: pw.Text(
-                            text,
+                            text.isEmpty ? ' ' : text,
                             style: const pw.TextStyle(fontSize: 11),
                           ),
                         ),

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
-import '../../../widgets/presentation/providers/widget_providers.dart';
 
 import '../../../../core/utils/result.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
@@ -61,10 +60,10 @@ class SuperEditorHost extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SuperEditorHost> createState() => _SuperEditorHostState();
+  ConsumerState<SuperEditorHost> createState() => SuperEditorHostState();
 }
 
-class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
+class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   late final MutableDocument _document;
   late final MutableDocumentComposer _composer;
   late final Editor _editor;
@@ -75,7 +74,16 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   late final EditorHistoryController _historyController;
   late final EditorPersistenceCoordinator _coordinator;
   bool _isInitialized = false;
-  bool _isHandlingPop = false;
+
+  Future<void> flush() async {
+    if (!_isInitialized) return;
+    try {
+      await _adapter.flushPendingChanges();
+      await _coordinator.flush();
+    } catch (e) {
+      debugPrint('Error flushing SuperEditorHost: $e');
+    }
+  }
 
   @visibleForTesting
   MutableDocument get document => _document;
@@ -110,11 +118,8 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
   Future<void> _initEditor() async {
     try {
-      debugPrint('Ketion _initEditor: invalidating state');
       ref.invalidate(editorStateProvider(widget.pageId));
-      debugPrint('Ketion _initEditor: awaiting blocks...');
       final blocks = await ref.read(editorStateProvider(widget.pageId).future);
-      debugPrint('Ketion _initEditor: got blocks: ${blocks.length}');
 
       if (!mounted) return;
 
@@ -417,14 +422,7 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _slashController.dispose();
       _historyController.dispose();
       _adapter.dispose();
-      unawaited(
-        _coordinator.flush().then((_) {
-          try {
-            ref.read(updateWidgetsUseCaseProvider)();
-          } catch (_) {}
-          _coordinator.close();
-        }),
-      );
+      _coordinator.close();
       try {
         ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
       } catch (_) {}
@@ -461,22 +459,8 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final page = pageAsync.valueOrNull;
     if (page == null) return const SizedBox.shrink();
 
-    return PopScope(
-      canPop: _isHandlingPop,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop || _isHandlingPop) return;
-
-        final navigator = Navigator.of(context);
-        setState(() => _isHandlingPop = true);
-        try {
-          await _adapter.flushPendingChanges();
-          await _coordinator.flush();
-          await ref.read(updateWidgetsUseCaseProvider)();
-        } catch (_) {}
-        navigator.pop(result);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding:
@@ -689,8 +673,6 @@ class _SuperEditorHostState extends ConsumerState<SuperEditorHost> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
-
 }

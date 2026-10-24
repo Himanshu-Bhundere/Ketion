@@ -4,7 +4,7 @@ import '../../domain/models/editor_open_target.dart';
 import 'block_editor_widget.dart';
 import 'super_editor_host.dart';
 
-class KetionEditorHost extends StatelessWidget {
+class KetionEditorHost extends StatefulWidget {
   final String pageId;
   final bool focusTitle;
   final Future<Result<void>> Function(String) onTitleChanged;
@@ -24,21 +24,33 @@ class KetionEditorHost extends StatelessWidget {
   static const bool useSuperEditor = true;
 
   @override
+  State<KetionEditorHost> createState() => KetionEditorHostState();
+}
+
+class KetionEditorHostState extends State<KetionEditorHost> {
+  final GlobalKey<SuperEditorHostState> _superEditorKey = GlobalKey();
+
+  Future<void> flush() async {
+    await _superEditorKey.currentState?.flush();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (useSuperEditor) {
+    if (KetionEditorHost.useSuperEditor) {
       return SuperEditorHost(
-        pageId: pageId,
-        focusTitle: focusTitle,
-        onTitleChanged: onTitleChanged,
-        onIconChanged: onIconChanged,
-        openTarget: openTarget,
+        key: _superEditorKey,
+        pageId: widget.pageId,
+        focusTitle: widget.focusTitle,
+        onTitleChanged: widget.onTitleChanged,
+        onIconChanged: widget.onIconChanged,
+        openTarget: widget.openTarget,
       );
     } else {
       return BlockEditorWidget(
-        pageId: pageId,
-        focusTitle: focusTitle,
-        onTitleChanged: onTitleChanged,
-        onIconChanged: onIconChanged,
+        pageId: widget.pageId,
+        focusTitle: widget.focusTitle,
+        onTitleChanged: widget.onTitleChanged,
+        onIconChanged: widget.onIconChanged,
       );
     }
   }

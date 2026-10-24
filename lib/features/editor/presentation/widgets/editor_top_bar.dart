@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ketion/core/router/routes.dart';
 import 'package:uuid/uuid.dart';
 
 import '../providers/editor_state_provider.dart';
@@ -15,8 +14,13 @@ import 'package:ketion/features/import_export/presentation/providers/import_expo
 
 class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
   final String pageId;
+  final VoidCallback? onBackPressed;
 
-  const EditorTopBar({super.key, required this.pageId});
+  const EditorTopBar({
+    super.key,
+    required this.pageId,
+    this.onBackPressed,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -32,13 +36,10 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         tooltip: 'Back',
-        onPressed: () {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go(Routes.home);
-          }
-        },
+        onPressed: onBackPressed ??
+            () {
+              Navigator.of(context).maybePop();
+            },
       ),
       actions: [
         Consumer(

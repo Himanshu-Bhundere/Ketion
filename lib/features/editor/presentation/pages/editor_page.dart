@@ -5,11 +5,12 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/utils/result.dart';
 import '../../../pages/domain/entities/page.dart' as entity;
 import '../../../pages/presentation/providers/page_providers.dart';
+import '../../../widgets/presentation/providers/widget_providers.dart';
 import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
 import '../../domain/models/editor_open_target.dart';
 
-class EditorPage extends ConsumerWidget {
+class EditorPage extends ConsumerStatefulWidget {
   final String pageId;
   final bool focusTitle;
   final EditorOpenTarget? openTarget;
@@ -21,18 +22,24 @@ class EditorPage extends ConsumerWidget {
     this.openTarget,
   });
 
-  static final Map<String, Future<Result<void>>> _pageUpdateChains = {};
+  @override
+  ConsumerState<EditorPage> createState() => _EditorPageState();
+}
 
-  Future<Result<void>> _updatePage(
-    WidgetRef ref, {
+class _EditorPageState extends ConsumerState<EditorPage> {
+  final GlobalKey<KetionEditorHostState> _editorHostKey = GlobalKey();
+  static final Map<String, Future<Result<void>>> _pageUpdateChains = {};
+  bool _isExiting = false;
+
+  Future<Result<void>> _updatePage({
     String? title,
     String? icon,
   }) {
     final previousChain =
-        _pageUpdateChains[pageId] ?? Future.value(const Success<void>(null));
+        _pageUpdateChains[widget.pageId] ?? Future.value(const Success<void>(null));
     final currentUpdate = previousChain.then((_) async {
       final pageRepo = ref.read(pageRepositoryProvider);
-      final pageResult = await pageRepo.getPage(pageId);
+      final pageResult = await pageRepo.getPage(widget.pageId);
       if (pageResult is Error) {
         return pageResult as Result<void>;
       }
@@ -46,34 +53,61 @@ class EditorPage extends ConsumerWidget {
       final updateResult =
           await ref.read(updatePageUseCaseProvider)(updatedPage);
       if (updateResult is Success<void>) {
-        ref.invalidate(pageProvider(pageId));
+        ref.invalidate(pageProvider(widget.pageId));
         ref.invalidate(recentPagesProvider);
         ref.invalidate(favoritePagesProvider);
       }
       return updateResult;
     });
 
-    _pageUpdateChains[pageId] = currentUpdate;
+    _pageUpdateChains[widget.pageId] = currentUpdate;
     return currentUpdate;
   }
 
+  Future<void> _handleBack(BuildContext context) async {
+    if (_isExiting) return;
+    _isExiting = true;
+
+    try {
+      final inFlightTitleUpdate = _pageUpdateChains[widget.pageId];
+      if (inFlightTitleUpdate != null) {
+        await inFlightTitleUpdate;
+      }
+      await _editorHostKey.currentState?.flush();
+      await ref.read(updateWidgetsUseCaseProvider)();
+    } catch (e) {
+      debugPrint('Error during editor exit flush: $e');
+    }
+
+    if (!context.mounted) return;
+
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(Routes.home);
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return PopScope(
-      canPop: context.canPop(),
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          context.go(Routes.home);
-        }
+        if (didPop) return;
+        _handleBack(context);
       },
       child: Scaffold(
-        appBar: EditorTopBar(pageId: pageId),
+        appBar: EditorTopBar(
+          pageId: widget.pageId,
+          onBackPressed: () => _handleBack(context),
+        ),
         body: KetionEditorHost(
-          pageId: pageId,
-          focusTitle: focusTitle,
-          openTarget: openTarget,
-          onTitleChanged: (title) => _updatePage(ref, title: title),
-          onIconChanged: (icon) => _updatePage(ref, icon: icon),
+          key: _editorHostKey,
+          pageId: widget.pageId,
+          focusTitle: widget.focusTitle,
+          openTarget: widget.openTarget,
+          onTitleChanged: (title) => _updatePage(title: title),
+          onIconChanged: (icon) => _updatePage(icon: icon),
         ),
       ),
     );

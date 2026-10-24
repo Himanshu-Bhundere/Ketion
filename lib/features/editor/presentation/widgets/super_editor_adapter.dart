@@ -162,7 +162,15 @@ class KetionSuperEditorAdapter {
   }
 
   void hideSubtree(String toggleBlockId) {
-    final toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
+    String? toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
+    if (toggleNodeId == null) {
+      for (final n in document) {
+        if (n.metadata['blockId'] == toggleBlockId || n.id == toggleBlockId) {
+          toggleNodeId = n.id;
+          break;
+        }
+      }
+    }
     if (toggleNodeId == null) return;
 
     final toggleIndex = document.getNodeIndexById(toggleNodeId);
@@ -198,7 +206,15 @@ class KetionSuperEditorAdapter {
   }
 
   void restoreSubtree(String toggleBlockId) {
-    final toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
+    String? toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
+    if (toggleNodeId == null) {
+      for (final n in document) {
+        if (n.metadata['blockId'] == toggleBlockId || n.id == toggleBlockId) {
+          toggleNodeId = n.id;
+          break;
+        }
+      }
+    }
     if (toggleNodeId == null) return;
 
     int toggleIndex = document.getNodeIndexById(toggleNodeId);

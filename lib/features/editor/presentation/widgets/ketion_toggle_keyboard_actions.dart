@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../domain/services/block_tree_service.dart';
 import 'depth_wrapping_component_builder.dart';
@@ -57,11 +56,7 @@ ExecutionInstruction splitToggleWhenEnterPressed({
       ]);
     }
 
-    var parentBlockId = node.metadata['blockId'] as String?;
-    if (parentBlockId == null || parentBlockId.isEmpty) {
-      parentBlockId = const Uuid().v7();
-      node.metadata['blockId'] = parentBlockId;
-    }
+    final parentBlockId = node.metadata['blockId'] as String? ?? node.id;
     final newNodeId = Editor.createNodeId();
     final childDepth = depth + 1;
 

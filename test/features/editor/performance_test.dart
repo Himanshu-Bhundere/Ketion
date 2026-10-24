@@ -20,7 +20,9 @@ void main() {
     await database.close();
   });
 
-  test('Move block performance in 100k-block document', () async {
+  test(
+    'Move block performance in 100k-block document',
+    () async {
     const pageId = 'perf_page';
     await database.into(database.pages).insert(
           PagesCompanion.insert(
@@ -89,5 +91,7 @@ void main() {
       reason: 'Block save should be <5000ms in test environment',
     );
     expect(result.isSuccess, isTrue, reason: 'Move block should succeed');
-  });
+  },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
 }

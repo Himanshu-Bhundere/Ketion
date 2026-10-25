@@ -664,7 +664,12 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                   unindentParagraphWhenShiftTabPressed,
                   unindentParagraphWhenBackspacePressed,
                   unindentParagraphWhenEnterPressedOnEmpty,
-                  splitToggleWhenEnterPressed,
+                  ({required editContext, required keyEvent}) =>
+                      splitToggleWhenEnterPressed(
+                    editContext: editContext,
+                    keyEvent: keyEvent,
+                    registry: _adapter.registry,
+                  ),
                   splitCalloutWhenEnterPressed,
                   convertCalloutToParagraphWhenBackspacePressed,
                   ...defaultKeyboardActions,

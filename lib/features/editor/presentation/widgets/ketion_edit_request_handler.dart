@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 import 'ketion_callout_node.dart';
 
 import '../../domain/services/block_data_serializer.dart';
-import '../../domain/services/block_tree_service.dart';
 
 import '../../services/editor_persistence_coordinator.dart';
 import '../../services/editor_persistence_mutations.dart'
@@ -20,6 +19,7 @@ import '../../domain/models/media_nodes.dart';
 import '../../domain/commands/insert_reminder_request.dart';
 import 'ketion_edit_requests.dart';
 import 'ketion_toggle_component.dart';
+import 'ketion_toggle_keyboard_actions.dart';
 import 'depth_wrapping_component_builder.dart';
 import '../table/ketion_table_node.dart';
 
@@ -90,9 +90,8 @@ EditRequestHandler createKetionRequestHandler({
 
 /// Handles the IME newline path for a toggle header.
 ///
-/// The inserted child deliberately carries the persisted *block* ID (not the
-/// SuperEditor node ID) as its parent. The adapter observes the insertion and
-/// persists it through the normal structural-insert flow.
+/// Both hardware Enter and IME Enter share the unified toggle helpers in
+/// `ketion_toggle_keyboard_actions.dart`.
 EditCommand? _buildToggleChildInsertionCommand(
   Editor editor,
   EditRequest request,
@@ -108,96 +107,83 @@ EditCommand? _buildToggleChildInsertionCommand(
 
   final node = editor.document.getNodeById(selection.extent.nodeId);
   if (node is! TextNode ||
-      !KetionToggleComponentBuilder.isToggleNode(node) ||
-      position.offset != node.text.length) {
+      !KetionToggleComponentBuilder.isToggleNode(node)) {
     return null;
   }
 
-  var toggleBlockId = node.metadata['blockId'] as String? ??
-      registry.blockIdForNode(node.id);
-  if (toggleBlockId == null || toggleBlockId.isEmpty) {
-    toggleBlockId = const Uuid().v7();
-    registry.registerPendingMapping(nodeId: node.id, blockId: toggleBlockId);
-    node.metadata['blockId'] = toggleBlockId;
+  if (position.offset == node.text.length) {
+    return _InsertToggleChildCommand(
+      editor: editor,
+      toggleNode: node,
+      registry: registry,
+      newNodeId: request.newNodeId,
+    );
+  } else {
+    return _SplitToggleMiddleOfHeaderCommand(
+      editor: editor,
+      toggleNode: node,
+      splitOffset: position.offset,
+      registry: registry,
+      newNodeId: request.newNodeId,
+    );
   }
-
-  final depth = node.metadata['depth'] as int? ?? 0;
-
-  // Ensure toggle is expanded when adding a child
-  final isExpanded = node.metadata['isExpanded'] == true;
-  if (!isExpanded) {
-    editor.execute([
-      ToggleExpandedRequest(nodeId: node.id, isExpanded: true),
-    ]);
-  }
-
-  return _InsertToggleChildCommand(
-    toggleNodeId: node.id,
-    childNode: ParagraphNode(
-      id: request.newNodeId,
-      text: AttributedText(),
-      metadata: {
-        'depth': depth + 1,
-        'parentBlockId': toggleBlockId,
-      },
-    ),
-  );
 }
 
 class _InsertToggleChildCommand extends EditCommand {
   _InsertToggleChildCommand({
-    required this.toggleNodeId,
-    required this.childNode,
+    required this.editor,
+    required this.toggleNode,
+    required this.registry,
+    required this.newNodeId,
   });
 
-  final String toggleNodeId;
-  final ParagraphNode childNode;
+  final Editor editor;
+  final TextNode toggleNode;
+  final EditorIdentityRegistry registry;
+  final String newNodeId;
 
   @override
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final toggleNode = context.document.getNodeById(toggleNodeId);
-    if (toggleNode == null) return;
-
-    if (toggleNode.metadata['isExpanded'] == false) {
-      executor.executeCommand(
-        ChangeParagraphMetadataCommand(
-          ChangeParagraphMetadataRequest(
-            nodeId: toggleNodeId,
-            metadata: {
-              ...toggleNode.metadata,
-              'isExpanded': true,
-            },
-          ),
-        ),
-      );
-    }
-
-    final lastDescendant = BlockTreeService.findLastDescendant(
-      context.document,
-      toggleNode,
-      getNodeDepth,
+    insertToggleChild(
+      editor: editor,
+      document: context.document,
+      toggleNode: toggleNode,
+      registry: registry,
+      newNodeId: newNodeId,
     );
+  }
+}
 
-    executor.executeCommand(
-      InsertNodeAfterNodeCommand(
-        existingNodeId: lastDescendant.id,
-        newNode: childNode,
-      ),
-    );
-    executor.executeCommand(
-      ChangeSelectionCommand(
-        DocumentSelection.collapsed(
-          position: DocumentPosition(
-            nodeId: childNode.id,
-            nodePosition: const TextNodePosition(offset: 0),
-          ),
-        ),
-        SelectionChangeType.placeCaret,
-        SelectionReason.userInteraction,
-      ),
+class _SplitToggleMiddleOfHeaderCommand extends EditCommand {
+  _SplitToggleMiddleOfHeaderCommand({
+    required this.editor,
+    required this.toggleNode,
+    required this.splitOffset,
+    required this.registry,
+    required this.newNodeId,
+  });
+
+  final Editor editor;
+  final TextNode toggleNode;
+  final int splitOffset;
+  final EditorIdentityRegistry registry;
+  final String newNodeId;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    splitToggleMiddleOfHeader(
+      editor: editor,
+      document: context.document,
+      toggleNode: toggleNode,
+      splitOffset: splitOffset,
+      registry: registry,
+      newNodeId: newNodeId,
     );
   }
 }

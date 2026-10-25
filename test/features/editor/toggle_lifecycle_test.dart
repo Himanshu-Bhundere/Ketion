@@ -826,5 +826,204 @@ void main() {
 
       expect(BlockTreeService.lastDescendantOf('b-root', blocks)?.id, 'b-child-2');
     });
+
+    test('Exact ID, text, parent ID, sibling order, and serialization preservation across collapse and expand with differing node/block IDs and nested toggles', () async {
+      final now = DateTime.now();
+      final coordinator = MockPersistenceCoordinator();
+      final snapshot = EditorPersistenceSnapshot('page-exact', {});
+      final adapter = KetionSuperEditorAdapter(
+        pageId: 'page-exact',
+        coordinator: coordinator,
+        snapshot: snapshot,
+      );
+
+      final outerToggleBlock = Block(
+        id: 'block-toggle-outer',
+        pageId: 'page-exact',
+        parentBlockId: null,
+        position: 1000.0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [{'text': 'Outer Toggle Header'}],
+          'listType': 'toggle',
+          'isExpanded': true,
+        }),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final child1Block = Block(
+        id: 'block-child-1',
+        pageId: 'page-exact',
+        parentBlockId: 'block-toggle-outer',
+        position: 1000.0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [{'text': 'Direct Child 1'}],
+        }),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final innerToggleBlock = Block(
+        id: 'block-toggle-inner',
+        pageId: 'page-exact',
+        parentBlockId: 'block-toggle-outer',
+        position: 2000.0,
+        type: 'list',
+        data: jsonEncode({
+          'spans': [{'text': 'Inner Nested Toggle'}],
+          'listType': 'toggle',
+          'isExpanded': true,
+        }),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final innerChildBlock = Block(
+        id: 'block-inner-child',
+        pageId: 'page-exact',
+        parentBlockId: 'block-toggle-inner',
+        position: 1000.0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [{'text': 'Nested Grandchild'}],
+        }),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final trailingSiblingBlock = Block(
+        id: 'block-trailing-sibling',
+        pageId: 'page-exact',
+        parentBlockId: null,
+        position: 2000.0,
+        type: 'text',
+        data: jsonEncode({
+          'spans': [{'text': 'Unrelated Trailing Sibling'}],
+        }),
+        createdAt: now,
+        updatedAt: now,
+        version: 1,
+        deleted: false,
+      );
+
+      final allBlocks = [
+        outerToggleBlock,
+        child1Block,
+        innerToggleBlock,
+        innerChildBlock,
+        trailingSiblingBlock,
+      ];
+
+      final document = adapter.createDocument(allBlocks);
+      expect(document.nodeCount, 5);
+
+      final outerNode = document.getNodeAt(0) as ParagraphNode;
+      final child1Node = document.getNodeAt(1) as ParagraphNode;
+      final innerNode = document.getNodeAt(2) as ParagraphNode;
+      final innerChildNode = document.getNodeAt(3) as ParagraphNode;
+      final trailingNode = document.getNodeAt(4) as ParagraphNode;
+
+      final outerNodeId = outerNode.id;
+      final child1NodeId = child1Node.id;
+      final innerNodeId = innerNode.id;
+      final innerChildNodeId = innerChildNode.id;
+      final trailingNodeId = trailingNode.id;
+
+      expect(adapter.registry.blockIdForNode(outerNodeId), 'block-toggle-outer');
+      expect(adapter.registry.blockIdForNode(child1NodeId), 'block-child-1');
+      expect(adapter.registry.blockIdForNode(innerNodeId), 'block-toggle-inner');
+      expect(adapter.registry.blockIdForNode(innerChildNodeId), 'block-inner-child');
+      expect(adapter.registry.blockIdForNode(trailingNodeId), 'block-trailing-sibling');
+
+      expect(outerNodeId, isNot('block-toggle-outer'));
+      expect(child1NodeId, isNot('block-child-1'));
+
+      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
+        'Outer Toggle Header',
+        'Direct Child 1',
+        'Inner Nested Toggle',
+        'Nested Grandchild',
+        'Unrelated Trailing Sibling',
+      ]);
+
+      final editor = Editor(
+        editables: {Editor.documentKey: document},
+        requestHandlers: [
+          createKetionRequestHandler(
+            registry: adapter.registry,
+            pageId: 'page-exact',
+            document: document,
+            composer: MutableDocumentComposer(),
+            coordinator: coordinator,
+            snapshot: snapshot,
+            adapter: adapter,
+          ),
+          changeParagraphMetadataRequestHandler,
+        ],
+      );
+      adapter.bind(document, editor);
+
+      editor.execute([
+        ToggleExpandedRequest(
+          nodeId: outerNodeId,
+          isExpanded: false,
+        ),
+      ]);
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(document.nodeCount, 2);
+      expect(document.getNodeAt(0)!.id, outerNodeId);
+      expect(document.getNodeAt(1)!.id, trailingNodeId);
+      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
+        'Outer Toggle Header',
+        'Unrelated Trailing Sibling',
+      ]);
+
+      final deleteMutations = coordinator.mutations.whereType<DeleteBlockMutation>();
+      expect(deleteMutations, isEmpty, reason: 'Subtree collapse must not delete blocks from database');
+
+      editor.execute([
+        ToggleExpandedRequest(
+          nodeId: outerNodeId,
+          isExpanded: true,
+        ),
+      ]);
+      await adapter.flushPendingChanges();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(document.nodeCount, 5);
+      expect(document.getNodeAt(0)!.id, outerNodeId);
+      expect(document.getNodeAt(1)!.id, child1NodeId);
+      expect(document.getNodeAt(2)!.id, innerNodeId);
+      expect(document.getNodeAt(3)!.id, innerChildNodeId);
+      expect(document.getNodeAt(4)!.id, trailingNodeId);
+
+      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
+        'Outer Toggle Header',
+        'Direct Child 1',
+        'Inner Nested Toggle',
+        'Nested Grandchild',
+        'Unrelated Trailing Sibling',
+      ]);
+
+      expect(document.getNodeAt(1)!.metadata['parentBlockId'], 'block-toggle-outer');
+      expect(document.getNodeAt(2)!.metadata['parentBlockId'], 'block-toggle-outer');
+      expect(document.getNodeAt(3)!.metadata['parentBlockId'], 'block-toggle-inner');
+      expect(document.getNodeAt(4)!.metadata['parentBlockId'], isNull);
+
+      expect(adapter.registry.blockIdForNode(child1NodeId), 'block-child-1');
+      expect(adapter.registry.blockIdForNode(innerChildNodeId), 'block-inner-child');
+    });
   });
 }

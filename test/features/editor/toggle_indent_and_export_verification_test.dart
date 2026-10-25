@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart' hide Page;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_editor/super_editor.dart';
@@ -662,6 +663,286 @@ void main() {
 
       final pdfBytes = await useCase.exportToBytes(page, blocks, 'pdf');
       expect(pdfBytes, isNotEmpty);
+      final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
+      expect(header.startsWith('%PDF'), isTrue);
+    });
+
+    testWidgets('KetionToggleComponent renders disclosure icon and responds to tap', (tester) async {
+      bool toggledValue = false;
+      bool wasToggled = false;
+
+      final toggleNode = ParagraphNode(
+        id: 'toggle-component-test',
+        text: AttributedText('Interactive Toggle Header'),
+        metadata: const {
+          'blockId': 'toggle-block-interactive',
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'type': 'toggle',
+          'isExpanded': false,
+        },
+      );
+
+      final document = MutableDocument(nodes: [toggleNode]);
+      final composer = MutableDocumentComposer();
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+      );
+
+      final builder = KetionToggleComponentBuilder(editor);
+      final viewModel = builder.createViewModel(document, toggleNode)
+          as KetionToggleComponentViewModel;
+
+      expect(viewModel, isNotNull);
+      expect(viewModel.isExpanded, isFalse);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: KetionToggleComponent(
+              viewModel: viewModel,
+              isExpanded: viewModel.isExpanded,
+              onToggle: (newExpanded) {
+                wasToggled = true;
+                toggledValue = newExpanded;
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Verify collapsed arrow icon (arrow_right) is present and visible
+      final arrowRightFinder = find.byIcon(Icons.arrow_right);
+      expect(arrowRightFinder, findsOneWidget);
+
+      // Tap on the disclosure icon
+      await tester.tap(arrowRightFinder);
+      await tester.pumpAndSettle();
+
+      // Verify onToggle callback responded to user interaction
+      expect(wasToggled, isTrue);
+      expect(toggledValue, isTrue);
+
+      // Now pump with expanded state
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: KetionToggleComponent(
+              viewModel: viewModel,
+              isExpanded: true,
+              onToggle: (newExpanded) {
+                toggledValue = newExpanded;
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Verify expanded arrow icon (arrow_drop_down) is present and visible
+      final arrowDropDownFinder = find.byIcon(Icons.arrow_drop_down);
+      expect(arrowDropDownFinder, findsOneWidget);
+
+      // Tap on the expanded disclosure icon to collapse
+      await tester.tap(arrowDropDownFinder);
+      await tester.pumpAndSettle();
+
+      expect(toggledValue, isFalse);
+    });
+
+    test('ExportUseCase and PdfExporter produce correct hierarchy for empty toggle, toggle with children, nested toggles, collapsed toggle, and unrelated sibling', () async {
+      final now = DateTime.now();
+      final page = Page(
+        id: 'page-hierarchy-export',
+        title: 'Hierarchy Export Test',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final blocks = [
+        // 1. Empty toggle
+        Block(
+          id: 'b-empty-toggle',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: null,
+          position: 100.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'spans': [{'text': 'Empty Toggle'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        // 2. Toggle with two children
+        Block(
+          id: 'b-toggle-with-children',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: null,
+          position: 200.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'spans': [{'text': 'Toggle With Children'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Block(
+          id: 'b-child-1',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: 'b-toggle-with-children',
+          position: 100.0,
+          type: 'text',
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [{'text': 'First Child'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Block(
+          id: 'b-child-2',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: 'b-toggle-with-children',
+          position: 200.0,
+          type: 'text',
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [{'text': 'Second Child'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        // 3. Nested toggles
+        Block(
+          id: 'b-nested-toggle-outer',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: null,
+          position: 300.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'spans': [{'text': 'Nested Toggle Outer'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Block(
+          id: 'b-nested-toggle-inner',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: 'b-nested-toggle-outer',
+          position: 100.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'spans': [{'text': 'Nested Toggle Inner'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Block(
+          id: 'b-deep-grandchild',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: 'b-nested-toggle-inner',
+          position: 100.0,
+          type: 'text',
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [{'text': 'Deep Grandchild'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        // 4. Collapsed toggle with child
+        Block(
+          id: 'b-collapsed-toggle',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: null,
+          position: 400.0,
+          type: 'list',
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'toggle',
+            'isExpanded': false,
+            'spans': [{'text': 'Collapsed Toggle'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        Block(
+          id: 'b-collapsed-child',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: 'b-collapsed-toggle',
+          position: 100.0,
+          type: 'text',
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [{'text': 'Hidden Child'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+        // 5. Unrelated sibling following toggle subtree
+        Block(
+          id: 'b-unrelated-trailing-sibling',
+          pageId: 'page-hierarchy-export',
+          parentBlockId: null,
+          position: 500.0,
+          type: 'text',
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [{'text': 'Unrelated Trailing Sibling'}],
+          }),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ];
+
+      // 1. Verify hierarchical structure in visible tree
+      final visibleTree = BlockTreeService.buildVisibleTree(blocks);
+      expect(visibleTree.map((vb) => vb.block.id).toList(), [
+        'b-empty-toggle',
+        'b-toggle-with-children',
+        'b-child-1',
+        'b-child-2',
+        'b-nested-toggle-outer',
+        'b-nested-toggle-inner',
+        'b-deep-grandchild',
+        'b-collapsed-toggle',
+        'b-collapsed-child',
+        'b-unrelated-trailing-sibling',
+      ]);
+
+      expect(visibleTree[0].depth, 0); // b-empty-toggle
+      expect(visibleTree[1].depth, 0); // b-toggle-with-children
+      expect(visibleTree[2].depth, 1); // b-child-1
+      expect(visibleTree[3].depth, 1); // b-child-2
+      expect(visibleTree[4].depth, 0); // b-nested-toggle-outer
+      expect(visibleTree[5].depth, 1); // b-nested-toggle-inner
+      expect(visibleTree[6].depth, 2); // b-deep-grandchild
+      expect(visibleTree[7].depth, 0); // b-collapsed-toggle
+      expect(visibleTree[8].depth, 1); // b-collapsed-child
+      expect(visibleTree[9].depth, 0); // b-unrelated-trailing-sibling
+
+      // 2. Export to PDF and verify valid document generation
+      final exporter = PdfExporter();
+      final useCase = ExportUseCase([exporter]);
+
+      final pdfBytes = await useCase.exportToBytes(page, blocks, 'pdf');
+      expect(pdfBytes, isNotEmpty);
+      expect(pdfBytes.length, greaterThan(200));
+
       final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
       expect(header.startsWith('%PDF'), isTrue);
     });

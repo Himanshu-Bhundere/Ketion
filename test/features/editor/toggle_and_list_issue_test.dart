@@ -5,6 +5,7 @@ import 'package:super_editor/super_editor.dart';
 import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_list_item_component.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_component.dart';
+import 'package:ketion/features/editor/presentation/widgets/editor_identity_registry.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_keyboard_actions.dart';
 import 'package:ketion/features/editor/services/editor_persistence_coordinator.dart';
 import 'package:ketion/features/editor/services/editor_persistence_mutations.dart';
@@ -104,6 +105,7 @@ void main() {
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
         metadata: const {
+          'blockId': 'toggle-1',
           'blockType': NamedAttribution('toggle'),
           'isExpanded': true,
           'depth': 0,
@@ -155,11 +157,221 @@ void main() {
       expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
     });
 
+    test('Hardware Enter when node ID differs from persistent block ID resolves block ID and does not use node ID fallback', () {
+      final toggleNode = ParagraphNode(
+        id: 'editor-node-123',
+        text: AttributedText('Toggle header'),
+        metadata: const {
+          'blockId': 'persistent-block-456',
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'isExpanded': true,
+          'depth': 0,
+        },
+      );
+
+      final document = MutableDocument(nodes: [toggleNode]);
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'editor-node-123',
+            nodePosition: TextNodePosition(offset: 13),
+          ),
+        ),
+      );
+
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = splitToggleWhenEnterPressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: LogicalKeyboardKey.enter,
+          timeStamp: Duration.zero,
+        ),
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(document.nodeCount, 2);
+
+      final childNode = document.getNodeAt(1)!;
+      expect(childNode.metadata['parentBlockId'], 'persistent-block-456');
+      expect(childNode.metadata['parentBlockId'], isNot('editor-node-123'));
+    });
+
+    test('Hardware Enter when persistent block ID is initially absent allocates UUID v7 and registers pending mapping', () {
+      final toggleNode = ParagraphNode(
+        id: 'editor-node-no-id',
+        text: AttributedText('Toggle header'),
+        metadata: const {
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'isExpanded': true,
+          'depth': 0,
+        },
+      );
+
+      final document = MutableDocument(nodes: [toggleNode]);
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'editor-node-no-id',
+            nodePosition: TextNodePosition(offset: 13),
+          ),
+        ),
+      );
+
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+
+      final registry = EditorIdentityRegistry();
+
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = splitToggleWhenEnterPressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: LogicalKeyboardKey.enter,
+          timeStamp: Duration.zero,
+        ),
+        registry: registry,
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(document.nodeCount, 2);
+
+      final childNode = document.getNodeAt(1)!;
+      final toggleInDoc = document.getNodeById('editor-node-no-id')!;
+      final allocatedBlockId = toggleInDoc.metadata['blockId'] as String?;
+      expect(allocatedBlockId, isNotNull);
+      expect(allocatedBlockId, isNotEmpty);
+      expect(allocatedBlockId, isNot('editor-node-no-id'));
+      expect(childNode.metadata['parentBlockId'], allocatedBlockId);
+      expect(childNode.metadata['parentBlockId'], isNot('editor-node-no-id'));
+      expect(registry.blockIdForNode('editor-node-no-id'), allocatedBlockId);
+    });
+
+    test('Enter in middle of toggle header splits text and creates regular sibling outside toggle subtree', () {
+      final toggleNode = ParagraphNode(
+        id: 'toggle-header-node',
+        text: AttributedText('Alpha Beta'),
+        metadata: const {
+          'blockId': 'toggle-header-block',
+          'blockType': NamedAttribution('toggle'),
+          'listType': 'toggle',
+          'isExpanded': true,
+          'depth': 0,
+        },
+      );
+
+      final childNode1 = ParagraphNode(
+        id: 'toggle-child-node',
+        text: AttributedText('Child content'),
+        metadata: const {
+          'blockId': 'child-block-1',
+          'parentBlockId': 'toggle-header-block',
+          'depth': 1,
+        },
+      );
+
+      final document = MutableDocument(nodes: [toggleNode, childNode1]);
+      // Place caret between 'Alpha ' and 'Beta' (offset 6)
+      final composer = MutableDocumentComposer(
+        initialSelection: const DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'toggle-header-node',
+            nodePosition: TextNodePosition(offset: 6),
+          ),
+        ),
+      );
+
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = splitToggleWhenEnterPressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: LogicalKeyboardKey.enter,
+          timeStamp: Duration.zero,
+        ),
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(document.nodeCount, 3);
+
+      // 1. Original node remains the toggle, retaining toggle metadata and startText
+      final originalNode = document.getNodeById('toggle-header-node') as ParagraphNode;
+      expect(originalNode.text.toPlainText(), 'Alpha ');
+      expect(originalNode.metadata['blockType'], const NamedAttribution('toggle'));
+      expect(originalNode.metadata['listType'], 'toggle');
+      expect(originalNode.metadata['isExpanded'], true);
+      expect(originalNode.metadata['blockId'], 'toggle-header-block');
+
+      // 2. Child remains in toggle subtree at index 1
+      expect(document.getNodeAt(1)!.id, 'toggle-child-node');
+
+      // 3. New node is inserted after last descendant of toggle (outside toggle subtree)
+      final newNode = document.getNodeAt(2) as ParagraphNode;
+      expect(newNode.text.toPlainText(), 'Beta');
+      // Must NOT be a toggle
+      expect(newNode.metadata['blockType'], isNot(const NamedAttribution('toggle')));
+      expect(newNode.metadata['listType'], isNot('toggle'));
+      expect(newNode.metadata['isExpanded'], isNull);
+      // Same depth and parentBlockId as toggle (top-level sibling)
+      expect(newNode.metadata['depth'], 0);
+      expect(newNode.metadata['parentBlockId'], isNull);
+
+      // Caret placed at offset 0 of new node
+      expect(composer.selection?.extent.nodeId, newNode.id);
+      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+    });
+
     test('Enter at the end of a toggle heading creates child node under toggle', () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
         metadata: const {
+          'blockId': 'toggle-1',
           'blockType': NamedAttribution('toggle'),
           'isExpanded': true,
           'depth': 0,

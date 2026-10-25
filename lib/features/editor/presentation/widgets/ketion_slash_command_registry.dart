@@ -168,6 +168,9 @@ class KetionSlashCommandRegistry {
       aliases: const ['toggle', 'expand'],
       isSupported: true,
       getRequestsWithDoc: (nodeId, doc) {
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] Slash command /toggle chosen on nodeId: $nodeId, existing metadata=${doc.getNodeById(nodeId)?.metadata}',
+        );
         return _getParagraphMetadataRequests(nodeId, doc, {
           'blockType': const NamedAttribution('toggle'),
           'listType': 'toggle',

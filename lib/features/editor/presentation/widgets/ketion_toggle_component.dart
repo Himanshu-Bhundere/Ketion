@@ -19,6 +19,32 @@ class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
 
   final bool isExpanded;
   final ValueChanged<bool> setExpanded;
+
+  @override
+  KetionToggleComponentViewModel copy() {
+    return KetionToggleComponentViewModel(
+      nodeId: nodeId,
+      maxWidth: maxWidth,
+      padding: padding,
+      text: text.copyText(0),
+      textDirection: textDirection,
+      textAlignment: textAlignment,
+      selectionColor: selectionColor,
+      textStyleBuilder: textStyleBuilder,
+      isExpanded: isExpanded,
+      setExpanded: setExpanded,
+    )..internalCopy(this);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is KetionToggleComponentViewModel &&
+          isExpanded == other.isExpanded;
+
+  @override
+  int get hashCode => super.hashCode ^ isExpanded.hashCode;
 }
 
 class KetionToggleComponentBuilder implements ComponentBuilder {
@@ -49,6 +75,9 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
 
     final textDirection = getParagraphDirection(node.text.toPlainText());
     final isExpanded = node.metadata['isExpanded'] as bool? ?? false;
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] KetionToggleComponentBuilder.createViewModel: nodeId=${node.id}, isExpanded=$isExpanded, metadata=${node.metadata}',
+    );
 
     return KetionToggleComponentViewModel(
       nodeId: node.id,
@@ -62,6 +91,9 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
       selectionColor: const Color(0x00000000),
       isExpanded: isExpanded,
       setExpanded: (bool expanded) {
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] Toggle arrow clicked for nodeId=${node.id}, new isExpanded=$expanded',
+        );
         editor.execute(
           [
             ToggleExpandedRequest(
@@ -82,6 +114,10 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
     if (componentViewModel is! KetionToggleComponentViewModel) {
       return null;
     }
+
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] KetionToggleComponentBuilder.createComponent: nodeId=${componentViewModel.nodeId}, isExpanded=${componentViewModel.isExpanded}',
+    );
 
     return KetionToggleComponent(
       key: componentContext.componentKey,
@@ -150,6 +186,9 @@ class _KetionToggleComponentState extends State<KetionToggleComponent>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] KetionToggleComponent.build: nodeId=${widget.viewModel.nodeId}, isExpanded=${widget.isExpanded}',
+    );
     return Directionality(
       textDirection: widget.viewModel.textDirection,
       child: Container(

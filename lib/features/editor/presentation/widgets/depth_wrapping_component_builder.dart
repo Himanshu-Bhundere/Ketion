@@ -208,6 +208,10 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
     final node = document.getNodeById(componentViewModel.nodeId);
     final depth = getNodeDepth(node);
 
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] Component selected: nodeId=${node?.id}, type=${node?.runtimeType}, innerBuilder=${innerBuilder.runtimeType}, widget=${widget.runtimeType}, depth=$depth, metadata=${node?.metadata}',
+    );
+
     Widget content = widget;
     if (depth > 0) {
       content = Padding(

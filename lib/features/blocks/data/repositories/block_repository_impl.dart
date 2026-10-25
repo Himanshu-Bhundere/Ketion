@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import '../../../../core/utils/logger.dart';
 import 'package:uuid/uuid.dart';
@@ -35,6 +36,9 @@ class BlockRepositoryImpl implements BlockRepository {
   @override
   Future<Result<void>> createBlock(domain.Block block) async {
     try {
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] SQLite createBlock: id=${block.id}, type=${block.type}, parentBlockId=${block.parentBlockId}, position=${block.position}',
+      );
       await _db.transaction(() async {
         await _db.into(_db.blocks).insert(block.toCompanion());
 
@@ -87,6 +91,9 @@ class BlockRepositoryImpl implements BlockRepository {
     required int expectedVersion,
   }) async {
     try {
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] SQLite updateBlock: id=${block.id}, type=${block.type}, parentBlockId=${block.parentBlockId}, version=${block.version}',
+      );
       await _db.transaction(() async {
         final newVersion = expectedVersion + 1;
         final newBlock = block.copyWith(

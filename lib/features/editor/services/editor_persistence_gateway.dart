@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../blocks/domain/entities/block.dart';
 import '../../blocks/domain/repositories/block_repository.dart';
 import 'editor_persistence_coordinator.dart';
@@ -54,6 +55,9 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
         data: mutation.data,
         createdAt: mutation.createdAt,
         updatedAt: mutation.createdAt,
+      );
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] Gateway executeMutation INSERT: blockId=${block.id}, type=${block.type}, parentBlockId=${block.parentBlockId}, position=${block.position}',
       );
       final result = await repository.createBlock(block);
       if (result.isError) {

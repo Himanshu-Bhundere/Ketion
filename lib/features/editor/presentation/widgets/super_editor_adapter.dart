@@ -271,6 +271,9 @@ class KetionSuperEditorAdapter {
         metadata['listType'] = 'toggle';
         metadata['type'] = 'toggle';
         metadata['isExpanded'] = data['isExpanded'] as bool? ?? false;
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] SQLite reload -> Toggle node reconstructed: blockId=${block.id}, nodeId=$nodeId, parentBlockId=${block.parentBlockId}, depth=$depth, isExpanded=${metadata['isExpanded']}',
+        );
         return ParagraphNode(
           id: nodeId,
           text: attributedText,
@@ -643,6 +646,9 @@ class KetionSuperEditorAdapter {
       );
 
       if (insertMutation != null) {
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] Adapter built insertMutation: nodeId=$nodeId, blockId=$newBlockId, type=$type, parentBlockId=${insertMutation.parentBlockId}, position=${insertMutation.position}',
+        );
         insertMutationsToEnqueue.add(insertMutation);
         snapshot.applyMutation(insertMutation);
         // Remove from pending updates if it was inadvertently added (e.g. text changed immediately)

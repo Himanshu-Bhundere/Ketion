@@ -106,25 +106,67 @@ EditCommand? _buildToggleChildInsertionCommand(
   if (position is! TextNodePosition) return null;
 
   final node = editor.document.getNodeById(selection.extent.nodeId);
-  if (node is! TextNode ||
-      !KetionToggleComponentBuilder.isToggleNode(node)) {
-    return null;
+  if (node is! TextNode) return null;
+
+  if (KetionToggleComponentBuilder.isToggleNode(node)) {
+    if (position.offset == node.text.length) {
+      return _InsertToggleChildCommand(
+        editor: editor,
+        toggleNode: node,
+        registry: registry,
+        newNodeId: request.newNodeId,
+      );
+    } else {
+      return _SplitToggleMiddleOfHeaderCommand(
+        editor: editor,
+        toggleNode: node,
+        splitOffset: position.offset,
+        registry: registry,
+        newNodeId: request.newNodeId,
+      );
+    }
   }
 
-  if (position.offset == node.text.length) {
-    return _InsertToggleChildCommand(
+  if (isInsideToggleBody(node, editor.document, registry)) {
+    return _ToggleBodyEnterCommand(
       editor: editor,
-      toggleNode: node,
+      node: node,
+      caretOffset: position.offset,
       registry: registry,
       newNodeId: request.newNodeId,
     );
-  } else {
-    return _SplitToggleMiddleOfHeaderCommand(
+  }
+
+  return null;
+}
+
+class _ToggleBodyEnterCommand extends EditCommand {
+  _ToggleBodyEnterCommand({
+    required this.editor,
+    required this.node,
+    required this.caretOffset,
+    required this.registry,
+    required this.newNodeId,
+  });
+
+  final Editor editor;
+  final TextNode node;
+  final int caretOffset;
+  final EditorIdentityRegistry registry;
+  final String newNodeId;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    executeToggleBodyEnter(
       editor: editor,
-      toggleNode: node,
-      splitOffset: position.offset,
+      document: context.document,
+      node: node,
+      caretOffset: caretOffset,
       registry: registry,
-      newNodeId: request.newNodeId,
+      newNodeId: newNodeId,
     );
   }
 }

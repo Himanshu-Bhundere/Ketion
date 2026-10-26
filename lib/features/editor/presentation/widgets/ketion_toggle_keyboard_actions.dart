@@ -179,6 +179,282 @@ ParagraphNode splitToggleMiddleOfHeader({
   return newNode;
 }
 
+/// Resolves a [DocumentNode] by looking up [blockId] in [registry],
+/// falling back to scanning [document] for matching `node.metadata['blockId']` or `node.id`.
+DocumentNode? resolveNodeByBlockId({
+  required String blockId,
+  required Document document,
+  EditorIdentityRegistry? registry,
+}) {
+  final nodeId = registry?.nodeIdForBlock(blockId);
+  if (nodeId != null) {
+    final node = document.getNodeById(nodeId);
+    if (node != null) return node;
+  }
+  return findDocumentNode(document, blockId);
+}
+
+/// Finds the nearest enclosing toggle ancestor for [node] by walking
+/// the persistent `parentBlockId` chain.
+///
+/// Returns null if [node] is not inside any toggle.
+TextNode? findNearestToggleAncestor({
+  required DocumentNode node,
+  required Document document,
+  EditorIdentityRegistry? registry,
+}) {
+  String? currentParentId = node.metadata['parentBlockId'] as String?;
+  final visited = <String>{};
+
+  while (currentParentId != null &&
+      currentParentId.isNotEmpty &&
+      !visited.contains(currentParentId)) {
+    visited.add(currentParentId);
+    final parentNode = resolveNodeByBlockId(
+      blockId: currentParentId,
+      document: document,
+      registry: registry,
+    );
+    if (parentNode == null) break;
+
+    if (parentNode is TextNode &&
+        KetionToggleComponentBuilder.isToggleNode(parentNode)) {
+      return parentNode;
+    }
+
+    currentParentId = parentNode.metadata['parentBlockId'] as String?;
+  }
+  return null;
+}
+
+/// Checks whether [node] is inside the body of a toggle by walking its persistent parent chain.
+bool isInsideToggleBody(
+  DocumentNode node,
+  Document document, [
+  EditorIdentityRegistry? registry,
+]) {
+  return findNearestToggleAncestor(
+    node: node,
+    document: document,
+    registry: registry,
+  ) != null;
+}
+
+/// Implements list-like exit behavior when Enter is pressed on an empty toggle body paragraph.
+///
+/// Moves the paragraph outside the innermost toggle subtree, updating its persistent
+/// parentBlockId, depth, and sibling position.
+ParagraphNode? exitToggleBodyOnEmpty({
+  required Editor editor,
+  required Document document,
+  required TextNode node,
+  EditorIdentityRegistry? registry,
+}) {
+  final innermostToggle = findNearestToggleAncestor(
+    node: node,
+    document: document,
+    registry: registry,
+  );
+  if (innermostToggle == null) return null;
+
+  final toggleDepth = innermostToggle.metadata['depth'] as int? ?? 0;
+  final toggleParentBlockId = innermostToggle.metadata['parentBlockId'] as String?;
+
+  final lastDescendant = BlockTreeService.findLastDescendant(
+    document,
+    innermostToggle,
+    getNodeDepth,
+  );
+
+  final updatedMetadata = Map<String, dynamic>.from(node.metadata);
+  updatedMetadata['depth'] = toggleDepth;
+  if (toggleParentBlockId != null && toggleParentBlockId.isNotEmpty) {
+    updatedMetadata['parentBlockId'] = toggleParentBlockId;
+  } else {
+    updatedMetadata.remove('parentBlockId');
+  }
+
+  final updatedNode = (node is ParagraphNode)
+      ? node.copyAndReplaceMetadata(updatedMetadata)
+      : ParagraphNode(
+          id: node.id,
+          text: node.text,
+          metadata: updatedMetadata,
+        );
+
+  if (document is MutableDocument) {
+    if (node.id == lastDescendant.id) {
+      document.replaceNodeById(node.id, updatedNode);
+    } else {
+      document.deleteNode(node.id);
+      final lastDescendantIndex = document.getNodeIndexById(lastDescendant.id);
+      final insertIndex = (lastDescendantIndex + 1).clamp(0, document.nodeCount);
+      document.insertNodeAt(insertIndex, updatedNode);
+    }
+  }
+
+  editor.execute([
+    ChangeSelectionRequest(
+      DocumentSelection.collapsed(
+        position: DocumentPosition(
+          nodeId: updatedNode.id,
+          nodePosition: const TextNodePosition(offset: 0),
+        ),
+      ),
+      SelectionChangeType.placeCaret,
+      SelectionReason.userInteraction,
+    ),
+  ]);
+
+  return updatedNode;
+}
+
+/// Handles pressing Enter inside a toggle body block.
+///
+/// Shared between hardware Enter and Android IME newline request.
+ParagraphNode? executeToggleBodyEnter({
+  required Editor editor,
+  required Document document,
+  required TextNode node,
+  required int caretOffset,
+  EditorIdentityRegistry? registry,
+  String? newNodeId,
+}) {
+  // Empty paragraph: exit the innermost toggle
+  if (node.text.isEmpty) {
+    return exitToggleBodyOnEmpty(
+      editor: editor,
+      document: document,
+      node: node,
+      registry: registry,
+    );
+  }
+
+  final parentBlockId = node.metadata['parentBlockId'] as String?;
+  final depth = node.metadata['depth'] as int? ?? 1;
+
+  // Caret at the end of paragraph: insert empty sibling inside the same parent
+  if (caretOffset == node.text.length) {
+    final lastDescendant = BlockTreeService.findLastDescendant(
+      document,
+      node,
+      getNodeDepth,
+    );
+
+    final childId = newNodeId ?? Editor.createNodeId();
+    if (registry != null && registry.blockIdForNode(childId) == null) {
+      registry.registerPendingMapping(
+        nodeId: childId,
+        blockId: const Uuid().v7(),
+      );
+    }
+
+    final newSibling = ParagraphNode(
+      id: childId,
+      text: AttributedText(),
+      metadata: {
+        'depth': depth,
+        if (parentBlockId != null && parentBlockId.isNotEmpty)
+          'parentBlockId': parentBlockId,
+      },
+    );
+
+    editor.execute([
+      InsertNodeAfterNodeRequest(
+        existingNodeId: lastDescendant.id,
+        newNode: newSibling,
+      ),
+      ChangeSelectionRequest(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: childId,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        ),
+        SelectionChangeType.placeCaret,
+        SelectionReason.userInteraction,
+      ),
+    ]);
+
+    return newSibling;
+  }
+
+  // Caret in the middle of paragraph: split text at caret inside the same parent
+  final text = node.text;
+  final startText = text.copyText(0, caretOffset);
+  final endText = text.copyText(caretOffset);
+
+  if (document is MutableDocument && node is ParagraphNode) {
+    document.replaceNodeById(
+      node.id,
+      node.copyParagraphWith(text: startText),
+    );
+  }
+
+  final newSiblingId = newNodeId ?? Editor.createNodeId();
+  if (registry != null && registry.blockIdForNode(newSiblingId) == null) {
+    registry.registerPendingMapping(
+      nodeId: newSiblingId,
+      blockId: const Uuid().v7(),
+    );
+  }
+
+  final newSibling = ParagraphNode(
+    id: newSiblingId,
+    text: endText,
+    metadata: {
+      'depth': depth,
+      if (parentBlockId != null && parentBlockId.isNotEmpty)
+        'parentBlockId': parentBlockId,
+    },
+  );
+
+  editor.execute([
+    InsertNodeAfterNodeRequest(
+      existingNodeId: node.id,
+      newNode: newSibling,
+    ),
+    ChangeSelectionRequest(
+      DocumentSelection.collapsed(
+        position: DocumentPosition(
+          nodeId: newSiblingId,
+          nodePosition: const TextNodePosition(offset: 0),
+        ),
+      ),
+      SelectionChangeType.placeCaret,
+      SelectionReason.userInteraction,
+    ),
+  ]);
+
+  return newSibling;
+}
+
+ExecutionInstruction handleToggleBodyEnter({
+  required SuperEditorContext editContext,
+  required TextNode node,
+  EditorIdentityRegistry? registry,
+}) {
+  final selection = editContext.composer.selection;
+  if (selection == null || !selection.isCollapsed) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final position = selection.extent.nodePosition;
+  if (position is! TextNodePosition) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  executeToggleBodyEnter(
+    editor: editContext.editor,
+    document: editContext.document,
+    node: node,
+    caretOffset: position.offset,
+    registry: registry,
+  );
+
+  return ExecutionInstruction.haltExecution;
+}
+
 ExecutionInstruction splitToggleWhenEnterPressed({
   required SuperEditorContext editContext,
   required KeyEvent keyEvent,
@@ -211,31 +487,39 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  if (!KetionToggleComponentBuilder.isToggleNode(node)) {
-    return ExecutionInstruction.continueExecution;
-  }
+  if (KetionToggleComponentBuilder.isToggleNode(node)) {
+    final text = node.text;
+    final position = selection.extent.nodePosition as TextNodePosition;
 
-  final text = node.text;
-  final position = selection.extent.nodePosition as TextNodePosition;
+    if (position.offset == text.length) {
+      insertToggleChild(
+        editor: editContext.editor,
+        document: editContext.document,
+        toggleNode: node,
+        registry: registry,
+      );
+      return ExecutionInstruction.haltExecution;
+    }
 
-  if (position.offset == text.length) {
-    insertToggleChild(
+    splitToggleMiddleOfHeader(
       editor: editContext.editor,
       document: editContext.document,
       toggleNode: node,
+      splitOffset: position.offset,
       registry: registry,
     );
     return ExecutionInstruction.haltExecution;
   }
 
-  splitToggleMiddleOfHeader(
-    editor: editContext.editor,
-    document: editContext.document,
-    toggleNode: node,
-    splitOffset: position.offset,
-    registry: registry,
-  );
-  return ExecutionInstruction.haltExecution;
+  if (isInsideToggleBody(node, editContext.document, registry)) {
+    return handleToggleBodyEnter(
+      editContext: editContext,
+      node: node,
+      registry: registry,
+    );
+  }
+
+  return ExecutionInstruction.continueExecution;
 }
 
 ExecutionInstruction indentParagraphWhenTabPressed({
@@ -438,6 +722,10 @@ ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
   }
 
   if (KetionToggleComponentBuilder.isToggleNode(node)) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  if (isInsideToggleBody(node, editContext.document)) {
     return ExecutionInstruction.continueExecution;
   }
 

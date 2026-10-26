@@ -160,6 +160,13 @@ class KetionSuperEditorAdapter {
     document.removeListener(_onDocumentChange);
     _mutationSuccessSubscription?.cancel();
   }
+  MutableDocumentComposer? get _safeComposer {
+    try {
+      return editor.context.find<MutableDocumentComposer>(Editor.composerKey);
+    } catch (_) {
+      return null;
+    }
+  }
 
   void hideSubtree(String toggleBlockId) {
     String? toggleNodeId = _registry.nodeIdForBlock(toggleBlockId);
@@ -173,7 +180,7 @@ class KetionSuperEditorAdapter {
     }
     if (toggleNodeId == null) return;
 
-    final toggleIndex = document.getNodeIndexById(toggleNodeId);
+    int toggleIndex = document.getNodeIndexById(toggleNodeId);
     if (toggleIndex == -1) return;
 
     final toggleNode = document.getNodeAt(toggleIndex);
@@ -195,14 +202,61 @@ class KetionSuperEditorAdapter {
 
     if (descendants.isEmpty) return;
 
+    final descendantIds = descendants.map((n) => n.id).toSet();
+    final composer = _safeComposer;
+    final selectionBefore = composer?.selection;
+
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] hideSubtree: toggleBlockId=$toggleBlockId, toggleNodeId=$toggleNodeId, '
+      'descendantsBeforeCollapse=$descendantIds, selectionBeforeCollapse=$selectionBefore',
+    );
+
+    // Clear or relocate selection before deleting descendants if selection is on a hidden node
+    if (selectionBefore != null) {
+      final baseInDescendants = descendantIds.contains(selectionBefore.base.nodeId);
+      final extentInDescendants = descendantIds.contains(selectionBefore.extent.nodeId);
+      final selectionRemainsOnHidden = baseInDescendants || extentInDescendants;
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] hideSubtree: whetherSelectionRemainsOnHiddenNode=$selectionRemainsOnHidden',
+      );
+      if (selectionRemainsOnHidden) {
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] Relocating selection to toggle header before hiding descendants',
+        );
+        final newSel = DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: toggleNodeId,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        );
+        try {
+          editor.execute([
+            ChangeSelectionRequest(
+              newSel,
+              SelectionChangeType.placeCaret,
+              SelectionReason.userInteraction,
+            ),
+          ]);
+        } catch (_) {
+          composer?.setSelectionWithReason(
+            newSel,
+            SelectionReason.userInteraction,
+          );
+        }
+      }
+    }
+
     _hiddenNodeCache[toggleBlockId] = List.from(descendants);
 
-    final descendantIds = descendants.map((n) => n.id).toSet();
     beginSemanticMutation(descendantIds);
     for (final node in descendants.reversed) {
       document.deleteNode(node.id);
     }
     endSemanticMutation(descendantIds);
+
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] hideSubtree complete: toggleBlockId=$toggleBlockId, selectionAfterCollapse=${_safeComposer?.selection}',
+    );
   }
 
   void restoreSubtree(String toggleBlockId) {
@@ -221,18 +275,72 @@ class KetionSuperEditorAdapter {
     if (toggleIndex == -1) return;
 
     final cachedNodes = _hiddenNodeCache.remove(toggleBlockId);
+    final composer = _safeComposer;
+    final selectionBefore = composer?.selection;
+
+    debugPrint(
+      '[KETION_TOGGLE_DIAG] restoreSubtree START: toggleBlockId=$toggleBlockId, toggleNodeId=$toggleNodeId, '
+      'cachedNodesCount=${cachedNodes?.length}, selectionBeforeExpansion=$selectionBefore',
+    );
 
     if (cachedNodes != null && cachedNodes.isNotEmpty) {
+      final existingNodeIds = document.map((n) => n.id).toSet();
+      final duplicatedNodeIds = cachedNodes
+          .map((n) => n.id)
+          .where(existingNodeIds.contains)
+          .toList();
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] restoreSubtree: whetherRestoredNodesAreDuplicated=${duplicatedNodeIds.isNotEmpty} '
+        '(duplicates: $duplicatedNodeIds)',
+      );
+
       final nodeIds = cachedNodes.map((n) => n.id).toSet();
       beginSemanticMutation(nodeIds);
 
       int insertIndex = toggleIndex + 1;
+      final restoredNodeIds = <String>[];
       for (final node in cachedNodes) {
-        document.insertNodeAt(insertIndex, node);
-        insertIndex++;
+        if (!existingNodeIds.contains(node.id)) {
+          document.insertNodeAt(insertIndex, node);
+          restoredNodeIds.add(node.id);
+          insertIndex++;
+        }
       }
 
       endSemanticMutation(nodeIds);
+
+      final selectionAfter = _safeComposer?.selection;
+      debugPrint(
+        '[KETION_TOGGLE_DIAG] restoreSubtree complete: toggleBlockId=$toggleBlockId, '
+        'descendantIdsAfterRestoration=$restoredNodeIds, selectionAfterExpansion=$selectionAfter',
+      );
+
+      // If selection refers to an invalid node, restore a valid selection
+      if (selectionAfter != null && document.getNodeById(selectionAfter.extent.nodeId) == null) {
+        debugPrint(
+          '[KETION_TOGGLE_DIAG] Stale selection detected after expansion. Restoring valid selection to toggle header.',
+        );
+        final newSel = DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: toggleNodeId,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        );
+        try {
+          editor.execute([
+            ChangeSelectionRequest(
+              newSel,
+              SelectionChangeType.placeCaret,
+              SelectionReason.userInteraction,
+            ),
+          ]);
+        } catch (_) {
+          _safeComposer?.setSelectionWithReason(
+            newSel,
+            SelectionReason.userInteraction,
+          );
+        }
+      }
     }
   }
 
@@ -688,8 +796,10 @@ class KetionSuperEditorAdapter {
               pageId: pageId,
               blockId: blockId,
               data: newData,
-              parentBlockId: currentMetadata['parentBlockId'] as String? ??
-                  snapshot.getBlock(blockId)?.parentBlockId,
+              parentBlockId: (currentMetadata['depth'] == 0)
+                  ? null
+                  : (currentMetadata['parentBlockId'] as String? ??
+                      snapshot.getBlock(blockId)?.parentBlockId),
               position: (currentMetadata['position'] as num?)?.toDouble() ??
                   snapshot.getBlock(blockId)?.position ??
                   0.0,

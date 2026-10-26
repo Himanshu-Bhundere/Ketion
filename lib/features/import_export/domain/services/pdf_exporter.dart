@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:ketion/features/import_export/domain/models/document_model.dart';
 import 'package:ketion/features/import_export/domain/services/export_repository.dart';
+import 'package:ketion/features/editor/domain/services/list_numbering_service.dart';
 
 class PdfExporter implements ExportRepository {
   @override
@@ -33,6 +34,50 @@ class PdfExporter implements ExportRepository {
             ),
           );
           widgets.add(pw.SizedBox(height: 16));
+
+          // Derive parent key for each flattened node using the most recent node at the preceding depth
+          final numberingEntries = <ListNumberingEntry>[];
+          for (int i = 0; i < document.nodes.length; i++) {
+            final node = document.nodes[i];
+            final nodeDepth = node.depth;
+            String? parentKey;
+            if (nodeDepth > 0) {
+              for (int j = i - 1; j >= 0; j--) {
+                final prevDepth = document.nodes[j].depth;
+                if (prevDepth == nodeDepth - 1) {
+                  parentKey = 'export-node-$j';
+                  break;
+                } else if (prevDepth < nodeDepth - 1) {
+                  break;
+                }
+              }
+            }
+
+            String? listType;
+            node.map(
+              paragraph: (_) {},
+              heading: (_) {},
+              list: (l) => listType = l.listType,
+              image: (_) {},
+              file: (_) {},
+              callout: (_) {},
+              table: (_) {},
+              code: (_) {},
+              divider: (_) {},
+            );
+
+            numberingEntries.add(
+              ListNumberingEntry(
+                key: 'export-node-$i',
+                listType: listType,
+                depth: nodeDepth,
+                parentKey: parentKey,
+              ),
+            );
+          }
+
+          final computedOrdinals =
+              ListNumberingService.computeOrdinals(numberingEntries);
 
           for (int i = 0; i < document.nodes.length; i++) {
             final node = document.nodes[i];
@@ -115,7 +160,7 @@ class PdfExporter implements ExportRepository {
                     ),
                   );
                 } else if (l.listType == 'numbered') {
-                  final num = _computeNumberedListOrdinal(i, document.nodes);
+                  final num = computedOrdinals['export-node-$i'] ?? 1;
                   bullet = pw.Container(
                     margin: const pw.EdgeInsets.only(right: 6, top: 1),
                     child: pw.Text(
@@ -305,16 +350,15 @@ class PdfExporter implements ExportRepository {
             );
 
             if (renderedWidget != null) {
-              if (nodeDepth > 0) {
-                widgets.add(
-                  pw.Padding(
-                    padding: pw.EdgeInsets.only(left: nodeDepth * 16.0),
-                    child: renderedWidget!,
+              widgets.add(
+                pw.Padding(
+                  padding: pw.EdgeInsets.only(
+                    left: nodeDepth.clamp(0, 20) * 16.0,
+                    bottom: 6,
                   ),
-                );
-              } else {
-                widgets.add(renderedWidget!);
-              }
+                  child: renderedWidget!,
+                ),
+              );
             }
           }
 
@@ -434,34 +478,5 @@ class PdfExporter implements ExportRepository {
 
   String _extractPlainText(List<DocumentTextSpan> spans) {
     return spans.map((e) => e.text).join('');
-  }
-
-  int _computeNumberedListOrdinal(int index, List<DocumentNode> nodes) {
-    final currentNode = nodes[index];
-    final nodeDepth = currentNode.depth;
-    int count = 1;
-
-    for (int j = index - 1; j >= 0; j--) {
-      final prev = nodes[j];
-      final prevDepth = prev.depth;
-
-      if (prevDepth < nodeDepth) {
-        // Reached an ancestor level or parent
-        break;
-      }
-
-      if (prevDepth == nodeDepth) {
-        if (prev is DocList && prev.listType == 'numbered') {
-          count++;
-        } else {
-          // A non-numbered sibling at the same level resets list sequence
-          break;
-        }
-      }
-      // If prevDepth > nodeDepth, it's a descendant of a previous sibling at this depth.
-      // Descendants are skipped so they do not break the sibling sequence.
-    }
-
-    return count;
   }
 }

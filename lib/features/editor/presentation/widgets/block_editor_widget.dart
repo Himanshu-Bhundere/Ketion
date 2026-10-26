@@ -23,6 +23,7 @@ import 'floating_toolbar.dart';
 import '../../../media/presentation/providers/media_picker_provider.dart';
 import '../../domain/models/block_data_models.dart';
 import '../../domain/models/visible_block.dart';
+import '../../domain/services/list_numbering_service.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../../../core/theme/editor_layout_config.dart';
@@ -143,39 +144,23 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
           if (data['listType'] == 'numbered') {
             final visibleBlocks =
                 ref.read(visibleBlocksProvider(widget.pageId));
-            int count = 1;
-            final nodeDepth = visibleBlock.depth;
-            final nodeParentId = block.parentBlockId;
-            for (int j = index - 1; j >= 0 && j < visibleBlocks.length; j--) {
-              final prevVisible = visibleBlocks[j];
-              final prev = prevVisible.block;
-              final prevDepth = prevVisible.depth;
-              final prevParentId = prev.parentBlockId;
-
-              if (prevDepth < nodeDepth) {
-                // Reached an ancestor level or parent
-                break;
+            final entries = visibleBlocks.map((vb) {
+              String? type;
+              if (vb.block.type == 'list') {
+                try {
+                  final d = jsonDecode(vb.block.data) as Map<String, dynamic>;
+                  type = d['listType'] as String?;
+                } catch (_) {}
               }
-
-              if (prevDepth == nodeDepth && prevParentId == nodeParentId) {
-                if (prev.type == 'list') {
-                  try {
-                    final prevData =
-                        jsonDecode(prev.data) as Map<String, dynamic>;
-                    if (prevData['listType'] == 'numbered') {
-                      count++;
-                    } else {
-                      break;
-                    }
-                  } catch (_) {
-                    break;
-                  }
-                } else {
-                  break;
-                }
-              }
-            }
-            listIndex = count;
+              return ListNumberingEntry(
+                key: vb.block.id,
+                listType: type,
+                depth: vb.depth,
+                parentKey: vb.block.parentBlockId,
+              );
+            }).toList();
+            listIndex =
+                ListNumberingService.computeOrdinals(entries)[block.id];
           }
         } catch (_) {}
 

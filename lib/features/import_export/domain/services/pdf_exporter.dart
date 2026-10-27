@@ -190,7 +190,14 @@ class PdfExporter implements ExportRepository {
                         pw.Expanded(
                           child: pw.Text(
                             text.isEmpty ? ' ' : text,
-                            style: const pw.TextStyle(fontSize: 11),
+                            style: pw.TextStyle(
+                              fontSize: 11,
+                              decoration: l.listType == 'checklist' && l.checked
+                                  ? pw.TextDecoration.lineThrough
+                                  : pw.TextDecoration.none,
+                              decorationColor: PdfColors.grey700,
+                              decorationThickness: 0.8,
+                            ),
                           ),
                         ),
                       ],
@@ -353,7 +360,7 @@ class PdfExporter implements ExportRepository {
               widgets.add(
                 pw.Padding(
                   padding: pw.EdgeInsets.only(
-                    left: nodeDepth.clamp(0, 20) * 16.0,
+                    left: nodeDepth.clamp(0, 20) * 24.0,
                     bottom: 6,
                   ),
                   child: renderedWidget!,

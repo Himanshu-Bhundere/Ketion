@@ -29,17 +29,16 @@ int computeKetionListItemOrdinalValue(ListItemNode node, Document document) {
     }
 
     if (prevDepth == nodeDepth) {
-      // If both explicitly declare parents and they differ, they aren't siblings
-      if (nodeParentId != null &&
-          prevParentId != null &&
-          nodeParentId != prevParentId) {
+      // Null is a real root-parent value. If either parent differs,
+      // these nodes are not siblings and numbering must not leak
+      // across branches.
+      if (prevParentId != nodeParentId) {
         break;
       }
 
       if (prev is ListItemNode && prev.type == ListItemType.ordered) {
         count++;
       } else {
-        // A non-ordered sibling at the same level resets list sequence
         break;
       }
     }

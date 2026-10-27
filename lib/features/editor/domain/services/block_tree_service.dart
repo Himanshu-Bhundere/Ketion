@@ -14,36 +14,70 @@ class BlockTreeService {
     List<Block> blocks, {
     int maxDepth = 20,
   }) {
-    final Map<String?, List<Block>> childrenMap = {};
-    for (final block in blocks) {
-      if (!block.deleted) {
-        childrenMap.putIfAbsent(block.parentBlockId, () => []).add(block);
+    final activeBlocks = blocks.where((block) => !block.deleted).toList();
+    final activeIds = activeBlocks.map((b) => b.id).toSet();
+
+    int sortBlocks(Block a, Block b) {
+      final byPosition = a.position.compareTo(b.position);
+      return byPosition != 0 ? byPosition : a.id.compareTo(b.id);
+    }
+
+    final Map<String, List<Block>> childrenMap = {};
+    for (final block in activeBlocks) {
+      if (block.parentBlockId != null && activeIds.contains(block.parentBlockId)) {
+        childrenMap.putIfAbsent(block.parentBlockId!, () => []).add(block);
       }
     }
 
-    for (final parentId in childrenMap.keys) {
-      childrenMap[parentId]!.sort((a, b) => a.position.compareTo(b.position));
+    for (final children in childrenMap.values) {
+      children.sort(sortBlocks);
     }
+
+    final roots = activeBlocks
+        .where(
+          (block) =>
+              block.parentBlockId == null ||
+              !activeIds.contains(block.parentBlockId),
+        )
+        .toList()
+      ..sort(sortBlocks);
 
     final List<VisibleBlock> visibleBlocks = [];
+    final Set<String> visited = {};
 
-    void traverse(String? parentId, int depth) {
-      final children = childrenMap[parentId] ?? [];
+    void traverse(Block current, int depth) {
+      if (visited.contains(current.id)) return;
+      visited.add(current.id);
+
+      final actualDepth = depth > maxDepth ? maxDepth : depth;
+      final children = childrenMap[current.id] ?? [];
+
+      visibleBlocks.add(
+        VisibleBlock(
+          block: current,
+          depth: actualDepth,
+          hasChildren: children.isNotEmpty,
+        ),
+      );
+
       for (final child in children) {
-        final actualDepth = depth;
-        visibleBlocks.add(
-          VisibleBlock(
-            block: child,
-            depth: actualDepth > maxDepth ? maxDepth : actualDepth,
-            hasChildren: childrenMap.containsKey(child.id) &&
-                childrenMap[child.id]!.isNotEmpty,
-          ),
-        );
-        traverse(child.id, actualDepth + 1);
+        traverse(child, depth + 1);
       }
     }
 
-    traverse(null, 0);
+    for (final root in roots) {
+      traverse(root, 0);
+    }
+
+    final remaining =
+        activeBlocks.where((b) => !visited.contains(b.id)).toList()
+          ..sort(sortBlocks);
+    for (final block in remaining) {
+      if (!visited.contains(block.id)) {
+        traverse(block, 0);
+      }
+    }
+
     return visibleBlocks;
   }
 
@@ -51,51 +85,84 @@ class BlockTreeService {
     List<Block> blocks, {
     int maxDepth = 20,
   }) {
-    final Map<String?, List<Block>> childrenMap = {};
-    for (final block in blocks) {
-      if (!block.deleted) {
-        childrenMap.putIfAbsent(block.parentBlockId, () => []).add(block);
+    final activeBlocks = blocks.where((block) => !block.deleted).toList();
+    final activeIds = activeBlocks.map((b) => b.id).toSet();
+
+    int sortBlocks(Block a, Block b) {
+      final byPosition = a.position.compareTo(b.position);
+      return byPosition != 0 ? byPosition : a.id.compareTo(b.id);
+    }
+
+    final Map<String, List<Block>> childrenMap = {};
+    for (final block in activeBlocks) {
+      if (block.parentBlockId != null && activeIds.contains(block.parentBlockId)) {
+        childrenMap.putIfAbsent(block.parentBlockId!, () => []).add(block);
       }
     }
 
-    for (final parentId in childrenMap.keys) {
-      childrenMap[parentId]!.sort((a, b) => a.position.compareTo(b.position));
+    for (final children in childrenMap.values) {
+      children.sort(sortBlocks);
     }
+
+    final roots = activeBlocks
+        .where(
+          (block) =>
+              block.parentBlockId == null ||
+              !activeIds.contains(block.parentBlockId),
+        )
+        .toList()
+      ..sort(sortBlocks);
 
     final List<ProjectedBlock> projectedBlocks = [];
+    final Set<String> visited = {};
 
-    void traverse(String? parentId, int depth, String? hiddenByAncestorId) {
-      final children = childrenMap[parentId] ?? [];
+    void traverse(Block current, int depth, String? hiddenByAncestorId) {
+      if (visited.contains(current.id)) return;
+      visited.add(current.id);
+
+      final actualDepth = depth > maxDepth ? maxDepth : depth;
+      final children = childrenMap[current.id] ?? [];
+
+      projectedBlocks.add(
+        ProjectedBlock(
+          block: current,
+          depth: actualDepth,
+          hasChildren: children.isNotEmpty,
+          hiddenByAncestorId: hiddenByAncestorId,
+        ),
+      );
+
+      bool isExpanded = true;
+      try {
+        final data = jsonDecode(current.data) as Map<String, dynamic>;
+        final isToggle = current.type == 'toggle' ||
+            data['listType'] == 'toggle' ||
+            data['blockType'] == 'toggle' ||
+            data['type'] == 'toggle';
+        if (isToggle) {
+          isExpanded = data['isExpanded'] as bool? ?? false;
+        }
+      } catch (_) {}
+
+      final nextHiddenBy = !isExpanded ? current.id : hiddenByAncestorId;
       for (final child in children) {
-        final actualDepth = depth;
-        projectedBlocks.add(
-          ProjectedBlock(
-            block: child,
-            depth: actualDepth > maxDepth ? maxDepth : actualDepth,
-            hasChildren: childrenMap.containsKey(child.id) &&
-                childrenMap[child.id]!.isNotEmpty,
-            hiddenByAncestorId: hiddenByAncestorId,
-          ),
-        );
-
-        bool isExpanded = true;
-        try {
-          final data = jsonDecode(child.data) as Map<String, dynamic>;
-          final isToggle = child.type == 'toggle' ||
-              data['listType'] == 'toggle' ||
-              data['blockType'] == 'toggle' ||
-              data['type'] == 'toggle';
-          if (isToggle) {
-            isExpanded = data['isExpanded'] as bool? ?? false;
-          }
-        } catch (_) {}
-
-        final nextHiddenBy = !isExpanded ? child.id : hiddenByAncestorId;
-        traverse(child.id, actualDepth + 1, nextHiddenBy);
+        traverse(child, depth + 1, nextHiddenBy);
       }
     }
 
-    traverse(null, 0, null);
+    for (final root in roots) {
+      traverse(root, 0, null);
+    }
+
+    final remaining =
+        activeBlocks.where((b) => !visited.contains(b.id)).toList()
+          ..sort(sortBlocks);
+    for (final block in remaining) {
+      if (!visited.contains(block.id)) {
+        traverse(block, 0, null);
+      }
+    }
+
     return projectedBlocks;
   }
 

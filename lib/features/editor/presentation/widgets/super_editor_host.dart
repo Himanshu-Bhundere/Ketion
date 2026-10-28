@@ -258,16 +258,33 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     }
   }
 
-  void _replaceSlashWithNode(SlashCommandTarget target, DocumentNode newNode) {
-    final emptyParagraph =
-        ParagraphNode(id: Editor.createNodeId(), text: AttributedText());
+  void _replaceSlashWithNode(
+    SlashCommandTarget target,
+    DocumentNode newNode,
+  ) {
+    // Preserve the current block's tree placement when replacing it with
+    // a media, bookmark, or link node.
+    final placementMetadata =
+        KetionSlashCommandRegistry.inheritedPlacementMetadata(
+      target.nodeId,
+      _document,
+    );
+
+    final placedNode = newNode.copyWithAddedMetadata(placementMetadata);
+
+    final emptyParagraph = ParagraphNode(
+      id: Editor.createNodeId(),
+      text: AttributedText(),
+      metadata: placementMetadata,
+    );
+
     _editor.execute([
       InsertNodeAfterNodeRequest(
         existingNodeId: target.nodeId,
-        newNode: newNode,
+        newNode: placedNode,
       ),
       InsertNodeAfterNodeRequest(
-        existingNodeId: newNode.id,
+        existingNodeId: placedNode.id,
         newNode: emptyParagraph,
       ),
       DeleteNodeRequest(nodeId: target.nodeId),

@@ -36,13 +36,27 @@ class KetionSlashCommand extends SuperEditorSlashCommandOption {
 }
 
 class KetionSlashCommandRegistry {
-  static Map<String, dynamic> _getInheritedMetadata(
-      String nodeId, Document doc,) {
+  /// Placement metadata required to keep a slash-created block in the same
+  /// persisted tree branch as the paragraph it replaces or follows.
+  static Map<String, dynamic> inheritedPlacementMetadata(
+    String nodeId,
+    Document doc,
+  ) {
     final node = doc.getNodeById(nodeId);
-    if (node != null && node.metadata.containsKey('parentBlockId')) {
-      return {'parentBlockId': node.metadata['parentBlockId']};
+    if (node == null) return const {};
+
+    final metadata = <String, dynamic>{};
+    final parentBlockId = node.metadata['parentBlockId'];
+    final depth = node.metadata['depth'];
+
+    if (parentBlockId is String && parentBlockId.isNotEmpty) {
+      metadata['parentBlockId'] = parentBlockId;
     }
-    return {};
+    if (depth is int) {
+      metadata['depth'] = depth;
+    }
+
+    return metadata;
   }
 
   static final List<KetionSlashCommand> _commands = [
@@ -97,8 +111,8 @@ class KetionSlashCommandRegistry {
         InsertNodeBeforeNodeRequest(
           existingNodeId: nodeId,
           newNode: HorizontalRuleNode(
-              id: Editor
-                  .createNodeId(),), // SuperEditor's HorizontalRuleNode doesn't explicitly expose metadata in its basic constructor sometimes, but wait...
+            id: Editor.createNodeId(),
+          ).copyWithAddedMetadata(inheritedPlacementMetadata(nodeId, doc)),
         ),
       ],
     ),
@@ -193,7 +207,7 @@ class KetionSlashCommandRegistry {
           newNode: ImageNode(
             id: Editor.createNodeId(),
             imageUrl: '',
-            metadata: _getInheritedMetadata(nodeId, doc),
+            metadata: inheritedPlacementMetadata(nodeId, doc),
           ),
         ),
       ],
@@ -212,7 +226,7 @@ class KetionSlashCommandRegistry {
           newNode: KetionVideoNode(
             id: Editor.createNodeId(),
             attachmentId: '',
-            metadata: _getInheritedMetadata(nodeId, doc),
+            metadata: inheritedPlacementMetadata(nodeId, doc),
           ),
         ),
       ],
@@ -231,7 +245,7 @@ class KetionSlashCommandRegistry {
           newNode: KetionAudioNode(
             id: Editor.createNodeId(),
             attachmentId: '',
-            metadata: _getInheritedMetadata(nodeId, doc),
+            metadata: inheritedPlacementMetadata(nodeId, doc),
           ),
         ),
       ],
@@ -250,7 +264,7 @@ class KetionSlashCommandRegistry {
           newNode: KetionPdfNode(
             id: Editor.createNodeId(),
             attachmentId: '',
-            metadata: _getInheritedMetadata(nodeId, doc),
+            metadata: inheritedPlacementMetadata(nodeId, doc),
           ),
         ),
       ],
@@ -269,7 +283,7 @@ class KetionSlashCommandRegistry {
           newNode: KetionFileNode(
             id: Editor.createNodeId(),
             attachmentId: '',
-            metadata: _getInheritedMetadata(nodeId, doc),
+            metadata: inheritedPlacementMetadata(nodeId, doc),
           ),
         ),
       ],
@@ -299,7 +313,7 @@ class KetionSlashCommandRegistry {
             newNode: KetionTableNode(
               id: Editor.createNodeId(),
               metadata: {
-                ..._getInheritedMetadata(nodeId, doc),
+                ...inheritedPlacementMetadata(nodeId, doc),
                 'columnCount': 3,
                 'rows': [
                   {

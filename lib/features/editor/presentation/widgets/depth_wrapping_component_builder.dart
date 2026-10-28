@@ -8,10 +8,20 @@ import 'ketion_toggle_component.dart';
 /// Gets the effective depth of a node from its canonical indent property or metadata.
 int getNodeDepth(DocumentNode? node) {
   if (node == null) return 0;
-  if (node is ListItemNode) return node.indent;
-  if (node is TaskNode) return node.indent;
-  final depth = node.metadata['depth'];
-  if (depth is int) return depth;
+
+  final metadataDepth = node.metadata['depth'];
+  if (metadataDepth is int) {
+    return metadataDepth.clamp(0, 99);
+  }
+
+  if (node is ListItemNode) {
+    return node.indent.clamp(0, 99);
+  }
+
+  if (node is TaskNode) {
+    return node.indent.clamp(0, 99);
+  }
+
   return 0;
 }
 
@@ -186,7 +196,7 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
   final Editor? editor;
   final DocumentComposer? composer;
 
-  static const double kIndentPerLevel = 16.0;
+  static const double kIndentPerLevel = 24.0;
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(

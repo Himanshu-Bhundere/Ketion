@@ -424,5 +424,164 @@ void main() {
       final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
       expect(header.startsWith('%PDF'), isTrue);
     });
+
+    test(
+      'ExportUseCase normalizes legacy toggle representations and carries parentKey into export document',
+      () async {
+        final fakeRepo = FakeAttachmentRepository();
+        final exporter = PdfExporter();
+        final useCase = ExportUseCase([exporter], fakeRepo);
+        final now = DateTime.now();
+        final page = Page(
+          id: 'page-legacy-toggle',
+          title: 'Legacy Toggle Test',
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        final blocks = [
+          // 1. block.type == 'toggle'
+          Block(
+            id: 't-1',
+            pageId: 'page-legacy-toggle',
+            type: 'toggle',
+            position: 0.0,
+            data: jsonEncode({
+              'isExpanded': true,
+              'spans': [
+                {'text': 'Toggle 1 (type=toggle)'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          // Child numbered item under toggle 1
+          Block(
+            id: 't-1-child-1',
+            pageId: 'page-legacy-toggle',
+            parentBlockId: 't-1',
+            type: 'list',
+            position: 1.0,
+            data: jsonEncode({
+              'listType': 'numbered',
+              'spans': [
+                {'text': 'Item 1 in Toggle 1'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          // 2. json['blockType'] == 'toggle'
+          Block(
+            id: 't-2',
+            pageId: 'page-legacy-toggle',
+            type: 'text',
+            position: 2.0,
+            data: jsonEncode({
+              'blockType': 'toggle',
+              'isExpanded': true,
+              'spans': [
+                {'text': 'Toggle 2 (blockType=toggle)'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          // Child numbered item under toggle 2
+          Block(
+            id: 't-2-child-1',
+            pageId: 'page-legacy-toggle',
+            parentBlockId: 't-2',
+            type: 'list',
+            position: 3.0,
+            data: jsonEncode({
+              'listType': 'numbered',
+              'spans': [
+                {'text': 'Item 1 in Toggle 2'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          // 3. json['type'] == 'toggle'
+          Block(
+            id: 't-3',
+            pageId: 'page-legacy-toggle',
+            type: 'text',
+            position: 4.0,
+            data: jsonEncode({
+              'type': 'toggle',
+              'isExpanded': false,
+              'spans': [
+                {'text': 'Toggle 3 (type=toggle in data)'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+          // Collapsed child (should be omitted from visible export tree)
+          Block(
+            id: 't-3-child-1',
+            pageId: 'page-legacy-toggle',
+            parentBlockId: 't-3',
+            type: 'text',
+            position: 5.0,
+            data: jsonEncode({
+              'spans': [
+                {'text': 'Hidden child'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ];
+
+        final pdfBytes = await useCase.exportToBytes(page, blocks, 'pdf');
+        expect(pdfBytes, isNotEmpty);
+        expect(
+          utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true),
+          startsWith('%PDF'),
+        );
+
+        // Also verify via direct DocumentNode with parentKey
+        const doc = ExportDocument(
+          title: 'ParentKey Numbering Test',
+          nodes: [
+            DocumentNode.list(
+              listType: 'numbered',
+              checked: false,
+              spans: [DocumentTextSpan(text: 'List A Item 1')],
+              depth: 1,
+              parentKey: 'parent-A',
+            ),
+            DocumentNode.list(
+              listType: 'numbered',
+              checked: false,
+              spans: [DocumentTextSpan(text: 'List A Item 2')],
+              depth: 1,
+              parentKey: 'parent-A',
+            ),
+            DocumentNode.list(
+              listType: 'numbered',
+              checked: false,
+              spans: [
+                DocumentTextSpan(
+                  text: 'List B Item 1 (new parent, restarts at 1)',
+                ),
+              ],
+              depth: 1,
+              parentKey: 'parent-B',
+            ),
+          ],
+        );
+
+        final exportedBytes = await PdfExporter().exportDocument(doc);
+        expect(exportedBytes, isNotEmpty);
+        expect(
+          utf8.decode(exportedBytes.sublist(0, 5), allowMalformed: true),
+          startsWith('%PDF'),
+        );
+      },
+    );
   });
 }

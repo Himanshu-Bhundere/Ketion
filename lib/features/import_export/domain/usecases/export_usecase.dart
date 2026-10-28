@@ -83,7 +83,13 @@ class ExportUseCase {
       final json = Map<String, dynamic>.from(
         jsonDecode(block.data) as Map<String, dynamic>,
       );
-      if (block.type == 'toggle' || json['listType'] == 'toggle') {
+      final isToggle = block.type == 'toggle' ||
+          json['listType'] == 'toggle' ||
+          json['blockType'] == 'toggle' ||
+          json['type'] == 'toggle';
+
+      if (isToggle) {
+        // Force legacy toggle records through the canonical list/toggle model.
         json['runtimeType'] = 'list';
         json['listType'] = 'toggle';
       } else if (!json.containsKey('runtimeType')) {
@@ -128,6 +134,7 @@ class ExportUseCase {
               checked: listBlock.checked,
               spans: _mapSpans(listBlock.spans),
               depth: depth,
+              parentKey: block.parentBlockId,
             ),
           );
         },
@@ -143,7 +150,9 @@ class ExportUseCase {
         },
         table: (TableBlockData tableBlock) async {
           final rows = tableBlock.rows.map((r) {
-            return r.cells.map((c) => c.spans.map((s) => s.text).join('')).toList();
+            return r.cells
+                .map((c) => c.spans.map((s) => s.text).join(''))
+                .toList();
           }).toList();
 
           nodes.add(

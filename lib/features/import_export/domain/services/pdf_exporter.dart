@@ -41,7 +41,25 @@ class PdfExporter implements ExportRepository {
             final node = document.nodes[i];
             final nodeDepth = node.depth;
             String? parentKey;
-            if (nodeDepth > 0) {
+            String? listType;
+
+            node.map(
+              paragraph: (_) {},
+              heading: (_) {},
+              list: (l) {
+                listType = l.listType;
+                parentKey = l.parentKey;
+              },
+              image: (_) {},
+              file: (_) {},
+              callout: (_) {},
+              table: (_) {},
+              code: (_) {},
+              divider: (_) {},
+            );
+
+            // Backward-compatible fallback: infer parent if parentKey was not explicitly provided
+            if (parentKey == null && nodeDepth > 0) {
               for (int j = i - 1; j >= 0; j--) {
                 final prevDepth = document.nodes[j].depth;
                 if (prevDepth == nodeDepth - 1) {
@@ -52,19 +70,6 @@ class PdfExporter implements ExportRepository {
                 }
               }
             }
-
-            String? listType;
-            node.map(
-              paragraph: (_) {},
-              heading: (_) {},
-              list: (l) => listType = l.listType,
-              image: (_) {},
-              file: (_) {},
-              callout: (_) {},
-              table: (_) {},
-              code: (_) {},
-              divider: (_) {},
-            );
 
             numberingEntries.add(
               ListNumberingEntry(
@@ -99,8 +104,8 @@ class PdfExporter implements ExportRepository {
               paragraph: (_) {},
               heading: (_) {},
               list: (l) {
-                isToggleHeader = l.listType == 'toggle' ||
-                    l.listType == 'toggle_expanded';
+                isToggleHeader =
+                    l.listType == 'toggle' || l.listType == 'toggle_expanded';
               },
               image: (_) {},
               file: (_) {},
@@ -153,7 +158,8 @@ class PdfExporter implements ExportRepository {
                     margin: const pw.EdgeInsets.only(right: 6, top: 2),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey800, width: 1),
-                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                      borderRadius:
+                          const pw.BorderRadius.all(pw.Radius.circular(2)),
                       color: l.checked ? PdfColors.grey900 : PdfColors.white,
                     ),
                     child: l.checked
@@ -248,7 +254,9 @@ class PdfExporter implements ExportRepository {
                 );
               },
               image: (img) {
-                if (img.isAvailable && img.imageBytes != null && img.imageBytes!.isNotEmpty) {
+                if (img.isAvailable &&
+                    img.imageBytes != null &&
+                    img.imageBytes!.isNotEmpty) {
                   try {
                     final provider = pw.MemoryImage(img.imageBytes!);
                     renderedWidget = pw.Column(
@@ -270,17 +278,26 @@ class PdfExporter implements ExportRepository {
                       ],
                     );
                   } catch (e) {
-                    renderedWidget = _buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName);
+                    renderedWidget = _buildUnavailableAttachmentCard(
+                      'Image',
+                      img.caption ?? img.fileName,
+                    );
                   }
                 } else {
-                  renderedWidget = _buildUnavailableAttachmentCard('Image', img.caption ?? img.fileName);
+                  renderedWidget = _buildUnavailableAttachmentCard(
+                    'Image',
+                    img.caption ?? img.fileName,
+                  );
                 }
               },
               file: (f) {
                 renderedWidget = pw.Column(
                   children: [
                     if (!f.isAvailable)
-                      _buildUnavailableAttachmentCard(f.fileTypeLabel, f.caption ?? f.fileName)
+                      _buildUnavailableAttachmentCard(
+                        f.fileTypeLabel,
+                        f.caption ?? f.fileName,
+                      )
                     else
                       _buildAttachmentCard(f),
                     pw.SizedBox(height: 6),
@@ -293,13 +310,15 @@ class PdfExporter implements ExportRepository {
                   padding: const pw.EdgeInsets.all(10),
                   decoration: pw.BoxDecoration(
                     color: PdfColors.grey100,
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                    borderRadius:
+                        const pw.BorderRadius.all(pw.Radius.circular(6)),
                     border: pw.Border.all(color: PdfColors.grey300),
                   ),
                   child: pw.Row(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      if (c.icon.isNotEmpty && c.icon.runes.every((r) => r <= 255))
+                      if (c.icon.isNotEmpty &&
+                          c.icon.runes.every((r) => r <= 255))
                         pw.Text(c.icon, style: const pw.TextStyle(fontSize: 14))
                       else
                         pw.Container(
@@ -337,7 +356,10 @@ class PdfExporter implements ExportRepository {
                 renderedWidget = pw.Container(
                   margin: const pw.EdgeInsets.symmetric(vertical: 8),
                   child: pw.Table(
-                    border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+                    border: pw.TableBorder.all(
+                      color: PdfColors.grey400,
+                      width: 0.5,
+                    ),
                     children: t.rows.asMap().entries.map((entry) {
                       final rowIndex = entry.key;
                       final row = entry.value;
@@ -373,7 +395,8 @@ class PdfExporter implements ExportRepository {
                       margin: const pw.EdgeInsets.symmetric(vertical: 4),
                       decoration: const pw.BoxDecoration(
                         color: PdfColors.grey200,
-                        borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                        borderRadius:
+                            pw.BorderRadius.all(pw.Radius.circular(4)),
                       ),
                       padding: const pw.EdgeInsets.all(8),
                       child: pw.Text(
@@ -505,7 +528,10 @@ class PdfExporter implements ExportRepository {
       decoration: pw.BoxDecoration(
         color: PdfColors.grey100,
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
-        border: pw.Border.all(color: PdfColors.grey400, style: pw.BorderStyle.dashed),
+        border: pw.Border.all(
+          color: PdfColors.grey400,
+          style: pw.BorderStyle.dashed,
+        ),
       ),
       child: pw.Row(
         children: [

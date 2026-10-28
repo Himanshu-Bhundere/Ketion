@@ -31,6 +31,7 @@ sealed class DocumentNode with _$DocumentNode {
     required bool checked,
     required List<DocumentTextSpan> spans,
     @Default(0) int depth,
+    String? parentKey,
   }) = DocList;
 
   const factory DocumentNode.image({

@@ -217,7 +217,7 @@ mixin _$DocumentNode {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -253,7 +253,7 @@ mixin _$DocumentNode {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -283,7 +283,7 @@ mixin _$DocumentNode {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -477,7 +477,7 @@ class _$DocParagraphImpl implements DocParagraph {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -516,7 +516,7 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -549,7 +549,7 @@ class _$DocParagraphImpl implements DocParagraph {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -746,7 +746,7 @@ class _$DocHeadingImpl implements DocHeading {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -785,7 +785,7 @@ class _$DocHeadingImpl implements DocHeading {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -818,7 +818,7 @@ class _$DocHeadingImpl implements DocHeading {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -926,7 +926,11 @@ abstract class _$$DocListImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String listType, bool checked, List<DocumentTextSpan> spans, int depth});
+      {String listType,
+      bool checked,
+      List<DocumentTextSpan> spans,
+      int depth,
+      String? parentKey});
 }
 
 /// @nodoc
@@ -944,6 +948,7 @@ class __$$DocListImplCopyWithImpl<$Res>
     Object? checked = null,
     Object? spans = null,
     Object? depth = null,
+    Object? parentKey = freezed,
   }) {
     return _then(_$DocListImpl(
       listType: null == listType
@@ -962,6 +967,10 @@ class __$$DocListImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -973,7 +982,8 @@ class _$DocListImpl implements DocList {
       {required this.listType,
       required this.checked,
       required final List<DocumentTextSpan> spans,
-      this.depth = 0})
+      this.depth = 0,
+      this.parentKey})
       : _spans = spans;
 
   @override
@@ -992,10 +1002,12 @@ class _$DocListImpl implements DocList {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
 
   @override
   String toString() {
-    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans, depth: $depth)';
+    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans, depth: $depth, parentKey: $parentKey)';
   }
 
   @override
@@ -1007,12 +1019,14 @@ class _$DocListImpl implements DocList {
                 other.listType == listType) &&
             (identical(other.checked, checked) || other.checked == checked) &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey));
   }
 
   @override
   int get hashCode => Object.hash(runtimeType, listType, checked,
-      const DeepCollectionEquality().hash(_spans), depth);
+      const DeepCollectionEquality().hash(_spans), depth, parentKey);
 
   @JsonKey(ignore: true)
   @override
@@ -1029,7 +1043,7 @@ class _$DocListImpl implements DocList {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -1058,7 +1072,7 @@ class _$DocListImpl implements DocList {
     required TResult Function(int depth) divider,
     required TResult Function(String code, String language, int depth) code,
   }) {
-    return list(listType, checked, spans, depth);
+    return list(listType, checked, spans, depth, parentKey);
   }
 
   @override
@@ -1068,7 +1082,7 @@ class _$DocListImpl implements DocList {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1091,7 +1105,7 @@ class _$DocListImpl implements DocList {
     TResult? Function(int depth)? divider,
     TResult? Function(String code, String language, int depth)? code,
   }) {
-    return list?.call(listType, checked, spans, depth);
+    return list?.call(listType, checked, spans, depth, parentKey);
   }
 
   @override
@@ -1101,7 +1115,7 @@ class _$DocListImpl implements DocList {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1126,7 +1140,7 @@ class _$DocListImpl implements DocList {
     required TResult orElse(),
   }) {
     if (list != null) {
-      return list(listType, checked, spans, depth);
+      return list(listType, checked, spans, depth, parentKey);
     }
     return orElse();
   }
@@ -1189,13 +1203,15 @@ abstract class DocList implements DocumentNode {
       {required final String listType,
       required final bool checked,
       required final List<DocumentTextSpan> spans,
-      final int depth}) = _$DocListImpl;
+      final int depth,
+      final String? parentKey}) = _$DocListImpl;
 
   String get listType; // 'bullet', 'numbered', 'checklist', 'toggle'
   bool get checked;
   List<DocumentTextSpan> get spans;
   @override
   int get depth;
+  String? get parentKey;
   @override
   @JsonKey(ignore: true)
   _$$DocListImplCopyWith<_$DocListImpl> get copyWith =>
@@ -1333,7 +1349,7 @@ class _$DocImageImpl implements DocImage {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -1373,7 +1389,7 @@ class _$DocImageImpl implements DocImage {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1407,7 +1423,7 @@ class _$DocImageImpl implements DocImage {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1667,7 +1683,7 @@ class _$DocFileImpl implements DocFile {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -1707,7 +1723,7 @@ class _$DocFileImpl implements DocFile {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1741,7 +1757,7 @@ class _$DocFileImpl implements DocFile {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -1961,7 +1977,7 @@ class _$DocCalloutImpl implements DocCallout {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -2000,7 +2016,7 @@ class _$DocCalloutImpl implements DocCallout {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2033,7 +2049,7 @@ class _$DocCalloutImpl implements DocCallout {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2235,7 +2251,7 @@ class _$DocTableImpl implements DocTable {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -2274,7 +2290,7 @@ class _$DocTableImpl implements DocTable {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2307,7 +2323,7 @@ class _$DocTableImpl implements DocTable {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2479,7 +2495,7 @@ class _$DocDividerImpl implements DocDivider {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -2518,7 +2534,7 @@ class _$DocDividerImpl implements DocDivider {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2551,7 +2567,7 @@ class _$DocDividerImpl implements DocDivider {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2736,7 +2752,7 @@ class _$DocCodeImpl implements DocCode {
             int level, List<DocumentTextSpan> spans, int depth)
         heading,
     required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)
+            List<DocumentTextSpan> spans, int depth, String? parentKey)
         list,
     required TResult Function(
             String attachmentId,
@@ -2775,7 +2791,7 @@ class _$DocCodeImpl implements DocCode {
     TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult? Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?
@@ -2808,7 +2824,7 @@ class _$DocCodeImpl implements DocCode {
     TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
         heading,
     TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth)?
+            List<DocumentTextSpan> spans, int depth, String? parentKey)?
         list,
     TResult Function(String attachmentId, String? caption, String? fileName,
             Uint8List? imageBytes, bool isAvailable, int depth)?

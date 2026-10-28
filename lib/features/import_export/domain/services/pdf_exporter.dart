@@ -79,9 +79,37 @@ class PdfExporter implements ExportRepository {
           final computedOrdinals =
               ListNumberingService.computeOrdinals(numberingEntries);
 
+          final activeToggleDepths = <int>[];
+
           for (int i = 0; i < document.nodes.length; i++) {
             final node = document.nodes[i];
             final nodeDepth = node.depth;
+
+            // Leave any toggle whose subtree has ended.
+            while (activeToggleDepths.isNotEmpty &&
+                activeToggleDepths.last >= nodeDepth) {
+              activeToggleDepths.removeLast();
+            }
+
+            final isNestedUnderToggle = activeToggleDepths.isNotEmpty &&
+                nodeDepth > activeToggleDepths.last;
+
+            var isToggleHeader = false;
+            node.map(
+              paragraph: (_) {},
+              heading: (_) {},
+              list: (l) {
+                isToggleHeader = l.listType == 'toggle' ||
+                    l.listType == 'toggle_expanded';
+              },
+              image: (_) {},
+              file: (_) {},
+              callout: (_) {},
+              table: (_) {},
+              code: (_) {},
+              divider: (_) {},
+            );
+
             pw.Widget? renderedWidget;
 
             node.map(
@@ -370,15 +398,34 @@ class PdfExporter implements ExportRepository {
             );
 
             if (renderedWidget != null) {
+              final groupedWidget = isNestedUnderToggle
+                  ? pw.Container(
+                      padding: const pw.EdgeInsets.only(left: 6),
+                      decoration: const pw.BoxDecoration(
+                        border: pw.Border(
+                          left: pw.BorderSide(
+                            color: PdfColors.grey300,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: renderedWidget!,
+                    )
+                  : renderedWidget!;
+
               widgets.add(
                 pw.Padding(
                   padding: pw.EdgeInsets.only(
                     left: nodeDepth.clamp(0, 20) * 24.0,
                     bottom: 6,
                   ),
-                  child: renderedWidget!,
+                  child: groupedWidget,
                 ),
               );
+            }
+
+            if (isToggleHeader) {
+              activeToggleDepths.add(nodeDepth);
             }
           }
 

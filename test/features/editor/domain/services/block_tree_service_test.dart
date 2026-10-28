@@ -246,6 +246,86 @@ void main() {
       expect(tree[4].hasChildren, isFalse);
     });
 
+    test('buildVisibleTree handles mixed-content toggle ancestry including media, table, bookmark, file, and nested toggles', () {
+      final blocks = [
+        createBlock(
+          id: 'outer_toggle',
+          position: 0,
+          type: 'toggle',
+          data: '{"isExpanded":true}',
+        ),
+        createBlock(id: 'p1', parentId: 'outer_toggle', position: 0, type: 'text'),
+        createBlock(id: 'tbl1', parentId: 'outer_toggle', position: 1, type: 'table'),
+        createBlock(id: 'bm1', parentId: 'outer_toggle', position: 2, type: 'bookmark'),
+        createBlock(id: 'f1', parentId: 'outer_toggle', position: 3, type: 'file'),
+        createBlock(id: 'img1', parentId: 'outer_toggle', position: 4, type: 'image'),
+        createBlock(
+          id: 'inner_toggle',
+          parentId: 'outer_toggle',
+          position: 5,
+          type: 'toggle',
+          data: '{"isExpanded":true}',
+        ),
+        createBlock(id: 'inner_vid', parentId: 'inner_toggle', position: 0, type: 'video'),
+        createBlock(
+          id: 'deep_toggle',
+          parentId: 'inner_toggle',
+          position: 1,
+          type: 'toggle',
+          data: '{"isExpanded":false}',
+        ),
+        createBlock(id: 'hidden_audio', parentId: 'deep_toggle', position: 0, type: 'audio'),
+        createBlock(id: 'p2', parentId: 'outer_toggle', position: 6, type: 'text'),
+        createBlock(id: 'root_after', position: 10, type: 'text'),
+      ];
+
+      final visibleTree = BlockTreeService.buildVisibleTree(blocks);
+
+      expect(visibleTree.map((v) => v.block.id).toList(), [
+        'outer_toggle',
+        'p1',
+        'tbl1',
+        'bm1',
+        'f1',
+        'img1',
+        'inner_toggle',
+        'inner_vid',
+        'deep_toggle',
+        'p2',
+        'root_after',
+      ]);
+
+      expect(visibleTree[0].depth, 0);
+      expect(visibleTree[1].depth, 1);
+      expect(visibleTree[2].depth, 1);
+      expect(visibleTree[3].depth, 1);
+      expect(visibleTree[4].depth, 1);
+      expect(visibleTree[5].depth, 1);
+      expect(visibleTree[6].depth, 1);
+      expect(visibleTree[7].depth, 2);
+      expect(visibleTree[8].depth, 2);
+      expect(visibleTree[8].isExpanded, isFalse);
+      expect(visibleTree[8].hasChildren, isTrue);
+      expect(visibleTree[9].depth, 1);
+      expect(visibleTree[10].depth, 0);
+
+      // Now collapse outer_toggle and verify all mixed-content descendants are hidden
+      final collapsedBlocks = blocks.map((b) {
+        if (b.id == 'outer_toggle') {
+          return b.copyWith(data: '{"isExpanded":false}');
+        }
+        return b;
+      }).toList();
+
+      final collapsedTree = BlockTreeService.buildVisibleTree(collapsedBlocks);
+      expect(collapsedTree.map((v) => v.block.id).toList(), [
+        'outer_toggle',
+        'root_after',
+      ]);
+      expect(collapsedTree[0].hasChildren, isTrue);
+      expect(collapsedTree[0].isExpanded, isFalse);
+    });
+
     test('moveBlock handles DropIntent.after correctly', () {
       final blocks = [
         createBlock(id: 'a', position: 0),

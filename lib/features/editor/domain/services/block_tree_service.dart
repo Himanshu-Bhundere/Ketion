@@ -8,6 +8,30 @@ import 'package:super_editor/super_editor.dart';
 import 'sibling_position_manager.dart';
 
 class BlockTreeService {
+  static bool isToggle(Block block) {
+    if (block.type == 'toggle') return true;
+
+    try {
+      final data = jsonDecode(block.data) as Map<String, dynamic>;
+      return data['listType'] == 'toggle' ||
+          data['blockType'] == 'toggle' ||
+          data['type'] == 'toggle';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static bool isExpanded(Block block) {
+    if (!isToggle(block)) return true;
+
+    try {
+      final data = jsonDecode(block.data) as Map<String, dynamic>;
+      return data['isExpanded'] as bool? ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Builds a flattened visible tree representing the hierarchical block structure.
   /// Enforces a safe visual [maxDepth].
   static List<VisibleBlock> buildVisibleTree(
@@ -45,20 +69,35 @@ class BlockTreeService {
     final List<VisibleBlock> visibleBlocks = [];
     final Set<String> visited = {};
 
-    void traverse(Block current, int depth) {
-      if (visited.contains(current.id)) return;
-      visited.add(current.id);
+    void markSubtreeHidden(Block current) {
+      if (!visited.add(current.id)) return;
 
-      final actualDepth = depth > maxDepth ? maxDepth : depth;
+      for (final child in childrenMap[current.id] ?? const <Block>[]) {
+        markSubtreeHidden(child);
+      }
+    }
+
+    void traverse(Block current, int depth) {
+      if (!visited.add(current.id)) return;
+
       final children = childrenMap[current.id] ?? [];
+      final expanded = isExpanded(current);
 
       visibleBlocks.add(
         VisibleBlock(
           block: current,
-          depth: actualDepth,
+          depth: depth.clamp(0, maxDepth),
           hasChildren: children.isNotEmpty,
+          isExpanded: expanded,
         ),
       );
+
+      if (isToggle(current) && !expanded) {
+        for (final child in children) {
+          markSubtreeHidden(child);
+        }
+        return;
+      }
 
       for (final child in children) {
         traverse(child, depth + 1);

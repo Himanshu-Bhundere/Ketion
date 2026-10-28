@@ -70,19 +70,14 @@ class ExportUseCase {
   Future<ExportDocument> _mapToDocument(Page page, List<Block> blocks) async {
     final nodes = <DocumentNode>[];
 
-    // Pre-order tree traversal to ensure ExportDocument has the exact hierarchical visual order
+    // The visible tree marks descendants of collapsed toggles as intentionally
+    // hidden. Do not append unvisited blocks afterward, because that would leak
+    // collapsed children into the PDF.
     final visibleTree = BlockTreeService.buildVisibleTree(blocks);
-    final visitedIds = visibleTree.map((vb) => vb.block.id).toSet();
-    final unvisited = blocks
-        .where((b) => !b.deleted && !visitedIds.contains(b.id))
-        .toList()
-      ..sort((a, b) => a.position.compareTo(b.position));
-    final itemsToProcess = [
-      ...visibleTree.map((vb) => (block: vb.block, depth: vb.depth)),
-      ...unvisited.map((b) => (block: b, depth: 0)),
-    ];
 
-    for (final item in itemsToProcess) {
+    for (final item in visibleTree.map(
+      (visible) => (block: visible.block, depth: visible.depth),
+    )) {
       final block = item.block;
       final depth = item.depth;
       final json = Map<String, dynamic>.from(
@@ -127,7 +122,9 @@ class ExportUseCase {
 
           nodes.add(
             DocumentNode.list(
-              listType: listBlock.listType,
+              listType: isToggle
+                  ? (listBlock.isExpanded ? 'toggle_expanded' : 'toggle')
+                  : listBlock.listType,
               checked: listBlock.checked,
               spans: _mapSpans(listBlock.spans),
               depth: depth,

@@ -111,7 +111,9 @@ class PdfExporter implements ExportRepository {
                 final text = _extractPlainText(l.spans);
                 // Skip empty list nodes so they do not produce stray bullet points or markers,
                 // but preserve toggle items so their structure remains intact.
-                if (text.trim().isEmpty && l.listType != 'toggle') {
+                if (text.trim().isEmpty &&
+                    l.listType != 'toggle' &&
+                    l.listType != 'toggle_expanded') {
                   return;
                 }
 
@@ -142,7 +144,10 @@ class PdfExporter implements ExportRepository {
                           )
                         : null,
                   );
-                } else if (l.listType == 'toggle') {
+                } else if (l.listType == 'toggle' ||
+                    l.listType == 'toggle_expanded') {
+                  final isExpanded = l.listType == 'toggle_expanded';
+
                   bullet = pw.Container(
                     width: 8,
                     height: 8,
@@ -151,9 +156,17 @@ class PdfExporter implements ExportRepository {
                       size: const PdfPoint(8, 8),
                       painter: (PdfGraphics canvas, PdfPoint size) {
                         canvas.setColor(PdfColors.grey800);
-                        canvas.moveTo(1, 1);
-                        canvas.lineTo(7, 4);
-                        canvas.lineTo(1, 7);
+
+                        if (isExpanded) {
+                          canvas.moveTo(1, 2);
+                          canvas.lineTo(4, 7);
+                          canvas.lineTo(7, 2);
+                        } else {
+                          canvas.moveTo(2, 1);
+                          canvas.lineTo(7, 4);
+                          canvas.lineTo(2, 7);
+                        }
+
                         canvas.closePath();
                         canvas.fillPath();
                       },

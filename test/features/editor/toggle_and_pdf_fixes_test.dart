@@ -657,6 +657,135 @@ void main() {
       expect(doc.getNodeAt(2)!.metadata['parentBlockId'], 'toggle-b2');
     });
 
+    test(
+      '7b. hideSubtree: collapses mixed-content descendants (text, task, image without depth, nested toggle) via parent hierarchy and restores them',
+      () async {
+        final coordinator = TestPersistenceCoordinator();
+        final snapshot = EditorPersistenceSnapshot('test-page-mixed', const {});
+        final adapter = KetionSuperEditorAdapter(
+          pageId: 'test-page-mixed',
+          coordinator: coordinator,
+          snapshot: snapshot,
+        );
+        final registry = adapter.registry;
+
+        final toggleNode = ParagraphNode(
+          id: 'toggle-mixed-node',
+          text: AttributedText('Toggle Header'),
+          metadata: const {
+            'blockId': 'toggle-b-mixed',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'depth': 0,
+          },
+        );
+        final paragraphChild = ParagraphNode(
+          id: 'p-child-node',
+          text: AttributedText('Paragraph child'),
+          metadata: const {
+            'blockId': 'b-p-child',
+            'parentBlockId': 'toggle-b-mixed',
+            'depth': 1,
+          },
+        );
+        final taskChild = TaskNode(
+          id: 'task-child-node',
+          text: AttributedText('Task child'),
+          isComplete: false,
+          metadata: const {
+            'blockId': 'b-task-child',
+            'parentBlockId': 'toggle-b-mixed',
+            'depth': 1,
+          },
+        );
+        // Media node intentionally missing depth metadata, but having parentBlockId
+        final imageChild = ImageNode(
+          id: 'img-child-node',
+          imageUrl: 'https://example.com/test.png',
+          metadata: const {
+            'blockId': 'b-img-child',
+            'parentBlockId': 'toggle-b-mixed',
+          },
+        );
+        final innerToggle = ParagraphNode(
+          id: 'inner-toggle-node',
+          text: AttributedText('Inner Toggle Header'),
+          metadata: const {
+            'blockId': 'b-inner-toggle',
+            'listType': 'toggle',
+            'parentBlockId': 'toggle-b-mixed',
+            'isExpanded': true,
+            'depth': 1,
+          },
+        );
+        final innerDescendant = ParagraphNode(
+          id: 'inner-descendant-node',
+          text: AttributedText('Inner descendant'),
+          metadata: const {
+            'blockId': 'b-inner-desc',
+            'parentBlockId': 'b-inner-toggle',
+            'depth': 2,
+          },
+        );
+        final rootSibling = ParagraphNode(
+          id: 'root-sibling-node',
+          text: AttributedText('Root Sibling'),
+          metadata: const {
+            'blockId': 'b-root-sibling',
+            'depth': 0,
+          },
+        );
+
+        registry.registerMapping(nodeId: toggleNode.id, blockId: 'toggle-b-mixed');
+        registry.registerMapping(nodeId: paragraphChild.id, blockId: 'b-p-child');
+        registry.registerMapping(nodeId: taskChild.id, blockId: 'b-task-child');
+        registry.registerMapping(nodeId: imageChild.id, blockId: 'b-img-child');
+        registry.registerMapping(nodeId: innerToggle.id, blockId: 'b-inner-toggle');
+        registry.registerMapping(nodeId: innerDescendant.id, blockId: 'b-inner-desc');
+        registry.registerMapping(nodeId: rootSibling.id, blockId: 'b-root-sibling');
+
+        final doc = MutableDocument(
+          nodes: [
+            toggleNode,
+            paragraphChild,
+            taskChild,
+            imageChild,
+            innerToggle,
+            innerDescendant,
+            rootSibling,
+          ],
+        );
+
+        final composer = MutableDocumentComposer();
+        final editor = Editor(
+          editables: {
+            Editor.documentKey: doc,
+            Editor.composerKey: composer,
+          },
+        );
+        adapter.bind(doc, editor);
+
+        expect(doc.nodeCount, 7);
+
+        // Collapse outer toggle: all 5 descendants should be hidden, root sibling remains visible
+        adapter.hideSubtree('toggle-b-mixed');
+        expect(doc.nodeCount, 2);
+        expect(doc.getNodeAt(0)!.id, toggleNode.id);
+        expect(doc.getNodeAt(1)!.id, rootSibling.id);
+
+        // Re-expand outer toggle: all 5 descendants should be restored in exact order
+        adapter.restoreSubtree('toggle-b-mixed');
+        expect(doc.nodeCount, 7);
+        expect(doc.getNodeAt(0)!.id, toggleNode.id);
+        expect(doc.getNodeAt(1)!.id, paragraphChild.id);
+        expect(doc.getNodeAt(2)!.id, taskChild.id);
+        expect(doc.getNodeAt(3)!.id, imageChild.id);
+        expect(doc.getNodeAt(4)!.id, innerToggle.id);
+        expect(doc.getNodeAt(5)!.id, innerDescendant.id);
+        expect(doc.getNodeAt(6)!.id, rootSibling.id);
+      },
+    );
+
     test('8. PDF blocks: Every block is separated vertically and exports valid PDF', () async {
       final page = Page(
         id: 'pdf-page-1',

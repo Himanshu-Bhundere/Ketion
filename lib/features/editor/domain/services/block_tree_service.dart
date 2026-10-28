@@ -48,7 +48,8 @@ class BlockTreeService {
 
     final Map<String, List<Block>> childrenMap = {};
     for (final block in activeBlocks) {
-      if (block.parentBlockId != null && activeIds.contains(block.parentBlockId)) {
+      if (block.parentBlockId != null &&
+          activeIds.contains(block.parentBlockId)) {
         childrenMap.putIfAbsent(block.parentBlockId!, () => []).add(block);
       }
     }
@@ -108,9 +109,10 @@ class BlockTreeService {
       traverse(root, 0);
     }
 
-    final remaining =
-        activeBlocks.where((b) => !visited.contains(b.id)).toList()
-          ..sort(sortBlocks);
+    final remaining = activeBlocks
+        .where((b) => !visited.contains(b.id))
+        .toList()
+      ..sort(sortBlocks);
     for (final block in remaining) {
       if (!visited.contains(block.id)) {
         traverse(block, 0);
@@ -134,7 +136,8 @@ class BlockTreeService {
 
     final Map<String, List<Block>> childrenMap = {};
     for (final block in activeBlocks) {
-      if (block.parentBlockId != null && activeIds.contains(block.parentBlockId)) {
+      if (block.parentBlockId != null &&
+          activeIds.contains(block.parentBlockId)) {
         childrenMap.putIfAbsent(block.parentBlockId!, () => []).add(block);
       }
     }
@@ -193,9 +196,10 @@ class BlockTreeService {
       traverse(root, 0, null);
     }
 
-    final remaining =
-        activeBlocks.where((b) => !visited.contains(b.id)).toList()
-          ..sort(sortBlocks);
+    final remaining = activeBlocks
+        .where((b) => !visited.contains(b.id))
+        .toList()
+      ..sort(sortBlocks);
     for (final block in remaining) {
       if (!visited.contains(block.id)) {
         traverse(block, 0, null);
@@ -400,7 +404,9 @@ class BlockTreeService {
     final Map<String, Block> blockMap = {for (var b in allBlocks) b.id: b};
 
     String? currentId = possibleDescendantId;
-    while (currentId != null) {
+    final visited = <String>{};
+
+    while (currentId != null && visited.add(currentId)) {
       if (currentId == ancestorId) return true;
       currentId = blockMap[currentId]?.parentBlockId;
     }
@@ -415,18 +421,27 @@ class BlockTreeService {
   }) {
     final Map<String, Block> blockMap = {for (var b in allBlocks) b.id: b};
 
-    // Calculate new parent depth
+    // Calculate new parent depth with cycle protection
     int parentDepth = 0;
     String? currentId = newParentId;
-    while (currentId != null) {
+    final visitedParents = <String>{};
+
+    while (currentId != null && visitedParents.add(currentId)) {
       parentDepth++;
       currentId = blockMap[currentId]?.parentBlockId;
     }
 
-    // Calculate source subtree depth
+    // Calculate source subtree depth with visited set protection
     int maxSubtreeDepth = 0;
+    final visitedSubtree = <String>{};
+
     void traverse(String blockId, int currentDepth) {
-      if (currentDepth > maxSubtreeDepth) maxSubtreeDepth = currentDepth;
+      if (!visitedSubtree.add(blockId)) return;
+
+      if (currentDepth > maxSubtreeDepth) {
+        maxSubtreeDepth = currentDepth;
+      }
+
       final children =
           allBlocks.where((b) => b.parentBlockId == blockId && !b.deleted);
       for (final child in children) {

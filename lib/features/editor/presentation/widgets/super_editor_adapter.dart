@@ -160,6 +160,7 @@ class KetionSuperEditorAdapter {
     document.removeListener(_onDocumentChange);
     _mutationSuccessSubscription?.cancel();
   }
+
   MutableDocumentComposer? get _safeComposer {
     try {
       return editor.context.find<MutableDocumentComposer>(Editor.composerKey);
@@ -185,18 +186,72 @@ class KetionSuperEditorAdapter {
 
     final toggleNode = document.getNodeAt(toggleIndex);
     final toggleDepth = toggleNode?.metadata['depth'] as int? ??
-        (toggleNode is ListItemNode ? toggleNode.indent : (toggleNode is TaskNode ? toggleNode.indent : 0));
+        (toggleNode is ListItemNode
+            ? toggleNode.indent
+            : (toggleNode is TaskNode ? toggleNode.indent : 0));
+
+    bool isDescendantOfToggle(DocumentNode node) {
+      final visitedParentIds = <String>{};
+      String? parentId = node.metadata['parentBlockId'] as String?;
+
+      while (parentId != null && parentId.isNotEmpty) {
+        if (parentId == toggleBlockId || parentId == toggleNodeId) return true;
+        if (!visitedParentIds.add(parentId)) return false;
+
+        final parentNodeId = _registry.nodeIdForBlock(parentId);
+        DocumentNode? parentNode =
+            parentNodeId != null ? document.getNodeById(parentNodeId) : null;
+        if (parentNode == null) {
+          for (final n in document) {
+            if (n.metadata['blockId'] == parentId || n.id == parentId) {
+              parentNode = n;
+              break;
+            }
+          }
+        }
+
+        parentId = parentNode?.metadata['parentBlockId'] as String?;
+      }
+
+      return false;
+    }
 
     final descendants = <DocumentNode>[];
 
     for (int i = toggleIndex + 1; i < document.nodeCount; i++) {
       final node = document.getNodeAt(i);
       if (node == null) continue;
-      final depth = node.metadata['depth'] as int? ??
-          (node is ListItemNode ? node.indent : (node is TaskNode ? node.indent : 0));
-      if (depth <= toggleDepth) {
-        break; // Reached next sibling or higher ancestor
+
+      // Prefer persisted hierarchy whenever available.
+      final hasParentMetadata = node.metadata['parentBlockId'] is String &&
+          (node.metadata['parentBlockId'] as String).isNotEmpty;
+
+      if (hasParentMetadata) {
+        if (isDescendantOfToggle(node)) {
+          descendants.add(node);
+          continue;
+        }
+
+        // We reached a node outside this toggle subtree.
+        final depth = node.metadata['depth'] as int? ??
+            (node is ListItemNode
+                ? node.indent
+                : (node is TaskNode ? node.indent : 0));
+
+        if (depth <= toggleDepth) break;
+
+        // A node with parent metadata that is not in this subtree must not
+        // be hidden just because its depth is larger.
+        continue;
       }
+
+      // Legacy fallback: only use depth when no parent metadata exists.
+      final depth = node.metadata['depth'] as int? ??
+          (node is ListItemNode
+              ? node.indent
+              : (node is TaskNode ? node.indent : 0));
+
+      if (depth <= toggleDepth) break;
       descendants.add(node);
     }
 
@@ -213,8 +268,10 @@ class KetionSuperEditorAdapter {
 
     // Clear or relocate selection before deleting descendants if selection is on a hidden node
     if (selectionBefore != null) {
-      final baseInDescendants = descendantIds.contains(selectionBefore.base.nodeId);
-      final extentInDescendants = descendantIds.contains(selectionBefore.extent.nodeId);
+      final baseInDescendants =
+          descendantIds.contains(selectionBefore.base.nodeId);
+      final extentInDescendants =
+          descendantIds.contains(selectionBefore.extent.nodeId);
       final selectionRemainsOnHidden = baseInDescendants || extentInDescendants;
       debugPrint(
         '[KETION_TOGGLE_DIAG] hideSubtree: whetherSelectionRemainsOnHiddenNode=$selectionRemainsOnHidden',
@@ -285,10 +342,8 @@ class KetionSuperEditorAdapter {
 
     if (cachedNodes != null && cachedNodes.isNotEmpty) {
       final existingNodeIds = document.map((n) => n.id).toSet();
-      final duplicatedNodeIds = cachedNodes
-          .map((n) => n.id)
-          .where(existingNodeIds.contains)
-          .toList();
+      final duplicatedNodeIds =
+          cachedNodes.map((n) => n.id).where(existingNodeIds.contains).toList();
       debugPrint(
         '[KETION_TOGGLE_DIAG] restoreSubtree: whetherRestoredNodesAreDuplicated=${duplicatedNodeIds.isNotEmpty} '
         '(duplicates: $duplicatedNodeIds)',
@@ -316,7 +371,8 @@ class KetionSuperEditorAdapter {
       );
 
       // If selection refers to an invalid node, restore a valid selection
-      if (selectionAfter != null && document.getNodeById(selectionAfter.extent.nodeId) == null) {
+      if (selectionAfter != null &&
+          document.getNodeById(selectionAfter.extent.nodeId) == null) {
         debugPrint(
           '[KETION_TOGGLE_DIAG] Stale selection detected after expansion. Restoring valid selection to toggle header.',
         );

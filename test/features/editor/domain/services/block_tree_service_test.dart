@@ -404,5 +404,54 @@ void main() {
       );
       expect(updated, isEmpty);
     });
+
+    test(
+      'moveBlock terminates safely without hanging on cyclic parent references',
+      () {
+        final cyclicBlocks = [
+          createBlock(
+            id: 'block_a',
+            parentId: 'block_b',
+            position: 0,
+          ),
+          createBlock(
+            id: 'block_b',
+            parentId: 'block_a',
+            position: 10,
+          ),
+          createBlock(
+            id: 'target',
+            position: 20,
+          ),
+        ];
+
+        // Moving target as child of block_a should not hang on cycle
+        final updated = BlockTreeService.moveBlock(
+          'target',
+          const DropIntent.child('block_a'),
+          cyclicBlocks,
+        );
+        expect(updated, isA<List<Block>>());
+
+        final selfParentingBlocks = [
+          createBlock(
+            id: 'self_parent',
+            parentId: 'self_parent',
+            position: 0,
+          ),
+          createBlock(
+            id: 'other',
+            position: 10,
+          ),
+        ];
+
+        final selfUpdated = BlockTreeService.moveBlock(
+          'other',
+          const DropIntent.child('self_parent'),
+          selfParentingBlocks,
+        );
+        expect(selfUpdated, isA<List<Block>>());
+      },
+    );
   });
 }

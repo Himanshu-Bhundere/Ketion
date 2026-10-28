@@ -230,9 +230,13 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
       );
     }
 
-    final isIndentable = node is ParagraphNode || node is ListItemNode || node is TaskNode;
+    final isIndentable =
+        node is ParagraphNode || node is ListItemNode || node is TaskNode;
 
-    if (editor != null && node != null && isIndentable && node is! KetionTableNode) {
+    if (editor != null &&
+        node != null &&
+        isIndentable &&
+        node is! KetionTableNode) {
       content = SwipeIndentationWrapper(
         nodeId: node.id,
         editor: editor!,
@@ -286,16 +290,25 @@ class _SwipeIndentationWrapperState extends State<SwipeIndentationWrapper> {
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     if (!_isDragging) return;
-    _dragDistanceX += details.primaryDelta ?? details.delta.dx;
-    _dragDistanceY += details.delta.dy;
+    setState(() {
+      _dragDistanceX += details.primaryDelta ?? details.delta.dx;
+      _dragDistanceY += details.delta.dy;
+    });
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
     if (!_isDragging) return;
-    _isDragging = false;
+    final dragX = _dragDistanceX;
+    final dragY = _dragDistanceY;
+
+    setState(() {
+      _isDragging = false;
+      _dragDistanceX = 0.0;
+      _dragDistanceY = 0.0;
+    });
 
     // Do not interfere with diagonal or vertical scrolling
-    if (_dragDistanceY.abs() > _dragDistanceX.abs() * 0.8) {
+    if (dragY.abs() > dragX.abs() * 0.8) {
       return;
     }
 
@@ -316,17 +329,27 @@ class _SwipeIndentationWrapperState extends State<SwipeIndentationWrapper> {
       unindentRequest = UnIndentParagraphRequest(widget.nodeId);
     }
 
-    if (_dragDistanceX > swipeThreshold || velocity > 200) {
+    if (dragX > swipeThreshold || velocity > 200) {
       // Swipe right -> Indent
       widget.editor.execute([indentRequest]);
-    } else if (_dragDistanceX < -swipeThreshold || velocity < -200) {
+    } else if (dragX < -swipeThreshold || velocity < -200) {
       // Swipe left -> Unindent
       widget.editor.execute([unindentRequest]);
     }
   }
 
   void _onHorizontalDragCancel() {
-    _isDragging = false;
+    if (mounted) {
+      setState(() {
+        _isDragging = false;
+        _dragDistanceX = 0.0;
+        _dragDistanceY = 0.0;
+      });
+    } else {
+      _isDragging = false;
+      _dragDistanceX = 0.0;
+      _dragDistanceY = 0.0;
+    }
   }
 
   void _onDoubleTap() {
@@ -342,6 +365,9 @@ class _SwipeIndentationWrapperState extends State<SwipeIndentationWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final visualOffset =
+        _isDragging ? _dragDistanceX.clamp(-48.0, 48.0).toDouble() : 0.0;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onHorizontalDragStart: _onHorizontalDragStart,
@@ -349,7 +375,10 @@ class _SwipeIndentationWrapperState extends State<SwipeIndentationWrapper> {
       onHorizontalDragEnd: _onHorizontalDragEnd,
       onHorizontalDragCancel: _onHorizontalDragCancel,
       onDoubleTap: _onDoubleTap,
-      child: widget.child,
+      child: Transform.translate(
+        offset: Offset(visualOffset, 0),
+        child: widget.child,
+      ),
     );
   }
 }

@@ -920,7 +920,6 @@ void main() {
         'b-nested-toggle-inner',
         'b-deep-grandchild',
         'b-collapsed-toggle',
-        'b-collapsed-child',
         'b-unrelated-trailing-sibling',
       ]);
 
@@ -932,8 +931,7 @@ void main() {
       expect(visibleTree[5].depth, 1); // b-nested-toggle-inner
       expect(visibleTree[6].depth, 2); // b-deep-grandchild
       expect(visibleTree[7].depth, 0); // b-collapsed-toggle
-      expect(visibleTree[8].depth, 1); // b-collapsed-child
-      expect(visibleTree[9].depth, 0); // b-unrelated-trailing-sibling
+      expect(visibleTree[8].depth, 0); // b-unrelated-trailing-sibling
 
       // 2. Export to PDF and verify valid document generation
       final exporter = PdfExporter();

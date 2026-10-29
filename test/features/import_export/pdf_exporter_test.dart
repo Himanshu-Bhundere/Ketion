@@ -583,5 +583,54 @@ void main() {
         );
       },
     );
+
+    test(
+      'renders rich text formatting spans and handles unicode emojis without crashing',
+      () async {
+        const doc = ExportDocument(
+          title: '⏰ Weekly Planning & "Sprint" Review',
+          nodes: [
+            DocumentNode.heading(
+              level: 1,
+              spans: [
+                DocumentTextSpan(text: 'Heading with '),
+                DocumentTextSpan(text: 'bold style', bold: true),
+              ],
+            ),
+            DocumentNode.paragraph(
+              spans: [
+                DocumentTextSpan(text: 'Mixed paragraph with '),
+                DocumentTextSpan(text: 'italic text', italic: true),
+                DocumentTextSpan(text: ', '),
+                DocumentTextSpan(text: 'inline code', code: true),
+                DocumentTextSpan(text: ', '),
+                DocumentTextSpan(text: 'strike text', strikethrough: true),
+                DocumentTextSpan(text: ', and a '),
+                DocumentTextSpan(
+                  text: 'web link',
+                  link: 'https://example.com',
+                ),
+                DocumentTextSpan(text: '. • Bullet with emoji 💡'),
+              ],
+            ),
+            DocumentNode.list(
+              listType: 'checklist',
+              checked: true,
+              spans: [
+                DocumentTextSpan(text: 'Task done with '),
+                DocumentTextSpan(text: 'bold note', bold: true),
+              ],
+            ),
+          ],
+        );
+
+        final pdfBytes = await PdfExporter().exportDocument(doc);
+        expect(pdfBytes, isNotEmpty);
+        expect(
+          utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true),
+          startsWith('%PDF'),
+        );
+      },
+    );
   });
 }

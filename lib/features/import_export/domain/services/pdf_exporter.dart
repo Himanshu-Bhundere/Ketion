@@ -25,7 +25,7 @@ class PdfExporter implements ExportRepository {
             pw.Header(
               level: 0,
               child: pw.Text(
-                document.title,
+                _sanitizeTextForPdf(document.title),
                 style: pw.TextStyle(
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
@@ -119,24 +119,22 @@ class PdfExporter implements ExportRepository {
 
             node.map(
               paragraph: (p) {
-                final text = _extractPlainText(p.spans);
-                if (text.isNotEmpty) {
-                  renderedWidget = pw.Paragraph(
-                    text: text,
-                    style: const pw.TextStyle(fontSize: 11),
+                final hasContent = p.spans.any((s) => s.text.isNotEmpty);
+                if (hasContent) {
+                  renderedWidget = pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 4),
+                    child: _spansToPdfWidget(p.spans, fontSize: 11),
                   );
                 }
               },
               heading: (h) {
-                final fontSize = 24.0 - (h.level * 2);
+                final fontSize = (24.0 - (h.level * 2)).clamp(10.0, 24.0);
                 renderedWidget = pw.Header(
                   level: h.level,
-                  child: pw.Text(
-                    _extractPlainText(h.spans),
-                    style: pw.TextStyle(
-                      fontSize: fontSize > 10 ? fontSize : 10,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
+                  child: _spansToPdfWidget(
+                    h.spans,
+                    fontSize: fontSize,
+                    fontWeight: pw.FontWeight.bold,
                   ),
                 );
               },
@@ -235,16 +233,15 @@ class PdfExporter implements ExportRepository {
                       children: [
                         bullet,
                         pw.Expanded(
-                          child: pw.Text(
-                            text.isEmpty ? ' ' : text,
-                            style: pw.TextStyle(
-                              fontSize: 11,
-                              decoration: l.listType == 'checklist' && l.checked
-                                  ? pw.TextDecoration.lineThrough
-                                  : pw.TextDecoration.none,
-                              decorationColor: PdfColors.grey700,
-                              decorationThickness: 0.8,
-                            ),
+                          child: _spansToPdfWidget(
+                            l.spans,
+                            fontSize: 11,
+                            baseDecoration: l.listType == 'checklist' && l.checked
+                                ? pw.TextDecoration.lineThrough
+                                : pw.TextDecoration.none,
+                            defaultColor: l.listType == 'checklist' && l.checked
+                                ? PdfColors.grey700
+                                : null,
                           ),
                         ),
                       ],
@@ -571,5 +568,99 @@ class PdfExporter implements ExportRepository {
 
   String _extractPlainText(List<DocumentTextSpan> spans) {
     return spans.map((e) => e.text).join('');
+  }
+
+  pw.Widget _spansToPdfWidget(
+    List<DocumentTextSpan> spans, {
+    double fontSize = 11,
+    pw.FontWeight fontWeight = pw.FontWeight.normal,
+    pw.TextDecoration? baseDecoration,
+    PdfColor? defaultColor,
+  }) {
+    if (spans.isEmpty) {
+      return pw.Text(' ', style: pw.TextStyle(fontSize: fontSize));
+    }
+
+    final children = <pw.InlineSpan>[];
+    for (final span in spans) {
+      final safeText = _sanitizeTextForPdf(span.text);
+      if (safeText.isEmpty) continue;
+
+      pw.TextDecoration decoration = baseDecoration ?? pw.TextDecoration.none;
+      if (span.strikethrough) {
+        decoration = pw.TextDecoration.lineThrough;
+      } else if (span.underline) {
+        decoration = pw.TextDecoration.underline;
+      }
+
+      final spanWeight = span.bold ? pw.FontWeight.bold : fontWeight;
+
+      children.add(
+        pw.TextSpan(
+          text: safeText,
+          style: pw.TextStyle(
+            fontSize: fontSize,
+            fontWeight: spanWeight,
+            fontStyle: span.italic ? pw.FontStyle.italic : pw.FontStyle.normal,
+            decoration: decoration,
+            color: span.link != null
+                ? PdfColors.blue700
+                : (span.code ? PdfColors.grey900 : defaultColor),
+            background: span.code
+                ? const pw.BoxDecoration(
+                    color: PdfColors.grey200,
+                    borderRadius: pw.BorderRadius.all(pw.Radius.circular(2)),
+                  )
+                : null,
+          ),
+        ),
+      );
+    }
+
+    if (children.isEmpty) {
+      return pw.Text(' ', style: pw.TextStyle(fontSize: fontSize));
+    }
+
+    return pw.RichText(
+      text: pw.TextSpan(children: children),
+    );
+  }
+
+  String _sanitizeTextForPdf(String text) {
+    if (text.isEmpty) return text;
+    if (text.runes.every((r) => r <= 255)) {
+      return text;
+    }
+
+    final buffer = StringBuffer();
+    for (final rune in text.runes) {
+      if (rune <= 255) {
+        buffer.writeCharCode(rune);
+      } else {
+        switch (rune) {
+          case 0x23F0: // ⏰
+            buffer.write('[Due] ');
+          case 0x1F4A1: // 💡
+            buffer.write('[Tip] ');
+          case 0x1F4CC: // 📌
+            buffer.write('[Note] ');
+          case 0x26A0: // ⚠️
+            buffer.write('[!] ');
+          case 0x2705: // ✅
+            buffer.write('[x] ');
+          case 0x2022: // •
+            buffer.write('* ');
+          case 0x2013 || 0x2014: // – or —
+            buffer.write('-');
+          case 0x201C || 0x201D: // “ or ”
+            buffer.write('"');
+          case 0x2018 || 0x2019: // ‘ or ’
+            buffer.write("'");
+          default:
+            continue;
+        }
+      }
+    }
+    return buffer.toString();
   }
 }

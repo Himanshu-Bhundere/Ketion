@@ -16,7 +16,8 @@ class MarkdownExporter implements ExportRepository {
     for (final node in document.nodes) {
       node.map(
         paragraph: (p) {
-          buffer.writeln(_spansToMarkdown(p.spans));
+          final indent = '  ' * p.depth;
+          buffer.writeln('$indent${_spansToMarkdown(p.spans)}');
           buffer.writeln();
         },
         heading: (h) {
@@ -25,23 +26,36 @@ class MarkdownExporter implements ExportRepository {
           buffer.writeln();
         },
         list: (l) {
-          final prefix = l.listType == 'checklist'
-              ? '- [${l.checked ? 'x' : ' '}]'
-              : '-'; // For now, treat all as bullets, except checklist
-          buffer.writeln('$prefix ${_spansToMarkdown(l.spans)}');
+          final indent = '  ' * l.depth;
+          final String prefix;
+          if (l.listType == 'checklist') {
+            prefix = '- [${l.checked ? 'x' : ' '}]';
+          } else if (l.listType == 'numbered') {
+            prefix = '1.';
+          } else if (l.listType == 'toggle' || l.listType == 'toggle_expanded') {
+            prefix = l.listType == 'toggle_expanded' ? '- ▾' : '- ▸';
+          } else {
+            prefix = '-';
+          }
+          buffer.writeln('$indent$prefix ${_spansToMarkdown(l.spans)}');
         },
         image: (img) {
-          buffer.writeln('![${img.caption ?? ''}](${img.attachmentId})');
+          final indent = '  ' * img.depth;
+          buffer.writeln('$indent![${img.caption ?? ''}](${img.attachmentId})');
           buffer.writeln();
         },
         file: (f) {
-          buffer.writeln('[${f.caption ?? 'File'}](${f.attachmentId})');
+          final indent = '  ' * f.depth;
+          buffer.writeln('$indent[${f.caption ?? 'File'}](${f.attachmentId})');
           buffer.writeln();
         },
         code: (c) {
-          buffer.writeln('```${c.language}');
-          buffer.writeln(c.code);
-          buffer.writeln('```');
+          final indent = '  ' * c.depth;
+          buffer.writeln('$indent```${c.language}');
+          for (final line in c.code.split('\n')) {
+            buffer.writeln('$indent$line');
+          }
+          buffer.writeln('$indent```');
           buffer.writeln();
         },
         divider: (d) {
@@ -49,7 +63,8 @@ class MarkdownExporter implements ExportRepository {
           buffer.writeln();
         },
         callout: (c) {
-          buffer.writeln('> ${c.icon} ${_spansToMarkdown(c.spans)}');
+          final indent = '  ' * c.depth;
+          buffer.writeln('$indent> ${c.icon} ${_spansToMarkdown(c.spans)}');
           buffer.writeln();
         },
         table: (t) {

@@ -9,6 +9,7 @@ Ketion is a fast, offline-first, cross-platform note-taking application built wi
   - **Quick Note**: Instantly launch into a new note from your home screen.
   - **Recent Notes**: View and access your most recently edited notes directly.
   - **Sync Status**: Monitor your current synchronization status at a glance.
+- **Multi-Format Export**: Full structural fidelity export to PDF, HTML, and Markdown with collapsible toggles and rich typography.
 - **Cross-Platform**: Designed to work gracefully on mobile platforms.
 
 ## Architecture

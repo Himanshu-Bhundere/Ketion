@@ -20,6 +20,11 @@ final editorCoordinatorProvider =
   (ref, pageId) => null,
 );
 
+final editorFlushCallbackProvider =
+    StateProvider.family<Future<void> Function()?, String>(
+  (ref, pageId) => null,
+);
+
 class BlockFocusIntent {
   final String id;
   final String action;

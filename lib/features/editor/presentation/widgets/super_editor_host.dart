@@ -130,6 +130,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       );
       ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
           _coordinator;
+      ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state =
+          flush;
 
       final initialSnapshotMap = <String, BlockSnapshot>{};
       for (final block in blocks) {
@@ -305,17 +307,22 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final url = await UrlInputDialog.show(context, title: 'Add Bookmark');
     if (url != null && mounted) {
       _replaceSlashWithNode(
-          target, KetionBookmarkNode(id: Editor.createNodeId(), url: url),);
+        target,
+        KetionBookmarkNode(id: Editor.createNodeId(), url: url),
+      );
       _focusNode.requestFocus();
     }
   }
 
   Future<void> _handleWebBookmarkSlashSelected(
-      SlashCommandTarget target,) async {
+    SlashCommandTarget target,
+  ) async {
     final url = await UrlInputDialog.show(context, title: 'Add Web Bookmark');
     if (url != null && mounted) {
       _replaceSlashWithNode(
-          target, KetionWebLinkNode(id: Editor.createNodeId(), url: url),);
+        target,
+        KetionWebLinkNode(id: Editor.createNodeId(), url: url),
+      );
       _focusNode.requestFocus();
     }
   }
@@ -326,18 +333,21 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       builder: (context) => const PagePickerSheet(),
     );
     if (page != null && mounted) {
-      _replaceSlashWithNode(target,
-          KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id),);
+      _replaceSlashWithNode(
+        target,
+        KetionPageLinkNode(id: Editor.createNodeId(), pageId: page.id),
+      );
       _focusNode.requestFocus();
     }
   }
 
   Future<void> _handleMediaSlashSelected(
-      SlashCommandTarget target,
-      FileType fileType,
-      String mimePrefix,
-      BlockNode Function(String, String) nodeBuilder,
-      {List<String>? allowedExtensions,}) async {
+    SlashCommandTarget target,
+    FileType fileType,
+    String mimePrefix,
+    BlockNode Function(String, String) nodeBuilder, {
+    List<String>? allowedExtensions,
+  }) async {
     final result = await FilePicker.platform
         .pickFiles(type: fileType, allowedExtensions: allowedExtensions);
     if (result != null && result.files.isNotEmpty && mounted) {
@@ -369,26 +379,30 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   }
 
   Future<void> _handleImageSlashSelected(SlashCommandTarget target) async {
-    return _handleMediaSlashSelected(target, FileType.image, 'image',
-        (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId),);
+    return _handleMediaSlashSelected(
+      target,
+      FileType.image,
+      'image',
+      (id, attachmentId) => ImageNode(id: id, imageUrl: attachmentId),
+    );
   }
 
   Future<void> _handleVideoSlashSelected(SlashCommandTarget target) async {
     return _handleMediaSlashSelected(
-        target,
-        FileType.video,
-        'video',
-        (id, attachmentId) =>
-            KetionVideoNode(id: id, attachmentId: attachmentId),);
+      target,
+      FileType.video,
+      'video',
+      (id, attachmentId) => KetionVideoNode(id: id, attachmentId: attachmentId),
+    );
   }
 
   Future<void> _handleAudioSlashSelected(SlashCommandTarget target) async {
     return _handleMediaSlashSelected(
-        target,
-        FileType.audio,
-        'audio',
-        (id, attachmentId) =>
-            KetionAudioNode(id: id, attachmentId: attachmentId),);
+      target,
+      FileType.audio,
+      'audio',
+      (id, attachmentId) => KetionAudioNode(id: id, attachmentId: attachmentId),
+    );
   }
 
   Future<void> _handleFileSlashSelected(SlashCommandTarget target) async {
@@ -441,7 +455,10 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _adapter.dispose();
       _coordinator.close();
       try {
-        ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
+        ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
+            null;
+        ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state =
+            null;
       } catch (_) {}
     }
     _focusNode.dispose();
@@ -478,223 +495,222 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: PageHeader(
-              page: page,
-              focusTitle: widget.focusTitle,
-              onTitleChanged: widget.onTitleChanged,
-              onIconChanged: widget.onIconChanged,
-            ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: PageHeader(
+            page: page,
+            focusTitle: widget.focusTitle,
+            onTitleChanged: widget.onTitleChanged,
+            onIconChanged: widget.onIconChanged,
           ),
-          Expanded(
-            child: Focus(
-              onFocusChange: (hasFocus) {
-                if (!hasFocus) {
-                  _adapter.flushPendingChanges();
-                }
-              },
-              onKeyEvent: (node, event) {
-                if (event is KeyDownEvent) {
-                  final hardwareKeyboard = HardwareKeyboard.instance;
-                  final isMetaPressed = hardwareKeyboard.isMetaPressed ||
-                      hardwareKeyboard.isControlPressed;
+        ),
+        Expanded(
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) {
+                _adapter.flushPendingChanges();
+              }
+            },
+            onKeyEvent: (node, event) {
+              if (event is KeyDownEvent) {
+                final hardwareKeyboard = HardwareKeyboard.instance;
+                final isMetaPressed = hardwareKeyboard.isMetaPressed ||
+                    hardwareKeyboard.isControlPressed;
 
-                  if (event.logicalKey == LogicalKeyboardKey.keyZ &&
-                      isMetaPressed) {
-                    final historyController = ref
-                        .read(editorHistoryControllerProvider(widget.pageId));
-                    if (hardwareKeyboard.isShiftPressed) {
-                      historyController?.redo();
-                    } else {
-                      historyController?.undo();
-                    }
-                    return KeyEventResult.handled;
+                if (event.logicalKey == LogicalKeyboardKey.keyZ &&
+                    isMetaPressed) {
+                  final historyController =
+                      ref.read(editorHistoryControllerProvider(widget.pageId));
+                  if (hardwareKeyboard.isShiftPressed) {
+                    historyController?.redo();
+                  } else {
+                    historyController?.undo();
                   }
-
-                  if (_slashController.handleKeyEvent(event)) {
-                    return KeyEventResult.handled;
-                  }
+                  return KeyEventResult.handled;
                 }
-                return KeyEventResult.ignored;
-              },
-              child: SuperEditor(
-                editor: _editor,
-                focusNode: _focusNode,
-                stylesheet: (Theme.of(context).brightness == Brightness.dark
-                        ? defaultStylesheet.copyWith(
-                            addRulesAfter: [
-                              StyleRule(
-                                BlockSelector.all,
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      color: Color(0xFFCCCCCC),
-                                      height: 1.4,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('paragraph'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('header1'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('header2'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('header3'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('listItem'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  };
-                                },
-                              ),
-                              StyleRule(
-                                const BlockSelector('task'),
-                                (doc, docNode) {
-                                  return {
-                                    'textStyle': const TextStyle(
-                                      fontSize: 18,
-                                    ),
-                                  };
-                                },
-                              ),
-                            ],
-                          )
-                        : defaultStylesheet)
-                    .copyWith(
-                  addRulesAfter: [
-                    StyleRule(
-                      const BlockSelector('task'),
-                      (doc, docNode) {
-                        return {
-                          'padding':
-                              const CascadingPadding.only(top: 0, bottom: 0),
-                        };
-                      },
-                    ),
-                    StyleRule(
-                      const BlockSelector('blockquote'),
-                      (doc, docNode) {
-                        return {
-                          'padding': const CascadingPadding.only(
-                            top: 8,
-                            bottom: 8,
-                            left: 16,
-                          ),
-                          'textStyle': const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w400,
-                            fontStyle: FontStyle.italic,
-                            height: 1.5,
-                          ),
-                        };
-                      },
-                    ),
-                    StyleRule(
-                      const BlockSelector('code'),
-                      (doc, docNode) {
-                        return {
-                          'padding': const CascadingPadding.all(16),
-                          'textStyle': const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 16,
-                          ),
-                        };
-                      },
-                    ),
-                  ],
-                  documentPadding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
+
+                if (_slashController.handleKeyEvent(event)) {
+                  return KeyEventResult.handled;
+                }
+              }
+              return KeyEventResult.ignored;
+            },
+            child: SuperEditor(
+              editor: _editor,
+              focusNode: _focusNode,
+              stylesheet: (Theme.of(context).brightness == Brightness.dark
+                      ? defaultStylesheet.copyWith(
+                          addRulesAfter: [
+                            StyleRule(
+                              BlockSelector.all,
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    color: Color(0xFFCCCCCC),
+                                    height: 1.4,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('paragraph'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('header1'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('header2'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('header3'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('listItem'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                };
+                              },
+                            ),
+                            StyleRule(
+                              const BlockSelector('task'),
+                              (doc, docNode) {
+                                return {
+                                  'textStyle': const TextStyle(
+                                    fontSize: 18,
+                                  ),
+                                };
+                              },
+                            ),
+                          ],
+                        )
+                      : defaultStylesheet)
+                  .copyWith(
+                addRulesAfter: [
+                  StyleRule(
+                    const BlockSelector('task'),
+                    (doc, docNode) {
+                      return {
+                        'padding':
+                            const CascadingPadding.only(top: 0, bottom: 0),
+                      };
+                    },
                   ),
-                ),
-                componentBuilders: [
-                  KetionToggleComponentBuilder(_editor),
-                  const KetionCalloutComponentBuilder(),
-                  KetionTaskComponentBuilder(_editor),
-                  const KetionImageComponentBuilder(),
-                  const KetionVideoComponentBuilder(),
-                  const KetionAudioComponentBuilder(),
-                  const KetionPdfComponentBuilder(),
-                  const KetionFileComponentBuilder(),
-                  const KetionBookmarkComponentBuilder(),
-                  KetionTableComponentBuilder(_editor),
-                  const KetionPageLinkComponentBuilder(),
-                  const KetionWebLinkComponentBuilder(),
-                  KetionReminderComponentBuilder(_editor),
-                  const KetionListItemComponentBuilder(),
-                  ...defaultComponentBuilders,
-                ]
-                    .map(
-                      (b) => DepthWrappingComponentBuilder(
-                        b,
-                        _editor.document,
-                        editor: _editor,
-                        composer: _composer,
-                      ),
-                    )
-                    .toList(),
-                keyboardActions: [
-                  indentParagraphWhenTabPressed,
-                  unindentParagraphWhenShiftTabPressed,
-                  unindentParagraphWhenBackspacePressed,
-                  unindentParagraphWhenEnterPressedOnEmpty,
-                  ({required editContext, required keyEvent}) =>
-                      splitToggleWhenEnterPressed(
-                    editContext: editContext,
-                    keyEvent: keyEvent,
-                    registry: _adapter.registry,
+                  StyleRule(
+                    const BlockSelector('blockquote'),
+                    (doc, docNode) {
+                      return {
+                        'padding': const CascadingPadding.only(
+                          top: 8,
+                          bottom: 8,
+                          left: 16,
+                        ),
+                        'textStyle': const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.italic,
+                          height: 1.5,
+                        ),
+                      };
+                    },
                   ),
-                  splitCalloutWhenEnterPressed,
-                  convertCalloutToParagraphWhenBackspacePressed,
-                  ...defaultKeyboardActions,
+                  StyleRule(
+                    const BlockSelector('code'),
+                    (doc, docNode) {
+                      return {
+                        'padding': const CascadingPadding.all(16),
+                        'textStyle': const TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 16,
+                        ),
+                      };
+                    },
+                  ),
                 ],
+                documentPadding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
               ),
+              componentBuilders: [
+                KetionToggleComponentBuilder(_editor),
+                const KetionCalloutComponentBuilder(),
+                KetionTaskComponentBuilder(_editor),
+                const KetionImageComponentBuilder(),
+                const KetionVideoComponentBuilder(),
+                const KetionAudioComponentBuilder(),
+                const KetionPdfComponentBuilder(),
+                const KetionFileComponentBuilder(),
+                const KetionBookmarkComponentBuilder(),
+                KetionTableComponentBuilder(_editor),
+                const KetionPageLinkComponentBuilder(),
+                const KetionWebLinkComponentBuilder(),
+                KetionReminderComponentBuilder(_editor),
+                const KetionListItemComponentBuilder(),
+                ...defaultComponentBuilders,
+              ]
+                  .map(
+                    (b) => DepthWrappingComponentBuilder(
+                      b,
+                      _editor.document,
+                      editor: _editor,
+                      composer: _composer,
+                    ),
+                  )
+                  .toList(),
+              keyboardActions: [
+                indentParagraphWhenTabPressed,
+                unindentParagraphWhenShiftTabPressed,
+                unindentParagraphWhenBackspacePressed,
+                unindentParagraphWhenEnterPressedOnEmpty,
+                ({required editContext, required keyEvent}) =>
+                    splitToggleWhenEnterPressed(
+                      editContext: editContext,
+                      keyEvent: keyEvent,
+                      registry: _adapter.registry,
+                    ),
+                splitCalloutWhenEnterPressed,
+                convertCalloutToParagraphWhenBackspacePressed,
+                ...defaultKeyboardActions,
+              ],
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 }

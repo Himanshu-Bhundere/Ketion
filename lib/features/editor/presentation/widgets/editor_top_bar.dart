@@ -169,11 +169,17 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                       // 1. Unfocus any active editor widget/input to trigger pending updates
                       FocusManager.instance.primaryFocus?.unfocus();
 
-                      // 2. Flush the persistence coordinator if available
-                      final coordinator =
-                          ref.read(editorCoordinatorProvider(pageId));
-                      if (coordinator != null) {
-                        await coordinator.flush();
+                      // 2. Flush pending editor host changes (adapter + coordinator) if available
+                      final flushCallback =
+                          ref.read(editorFlushCallbackProvider(pageId));
+                      if (flushCallback != null) {
+                        await flushCallback();
+                      } else {
+                        final coordinator =
+                            ref.read(editorCoordinatorProvider(pageId));
+                        if (coordinator != null) {
+                          await coordinator.flush();
+                        }
                       }
 
                       // 3. Fetch latest persisted blocks directly to avoid reading stale state

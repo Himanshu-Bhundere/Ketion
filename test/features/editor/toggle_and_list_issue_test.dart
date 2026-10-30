@@ -67,7 +67,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Toggle Behavior & Interactions', () {
-    test('KetionToggleComponentBuilder recognizes toggle nodes in expanded & collapsed states', () {
+    test(
+        'KetionToggleComponentBuilder recognizes toggle nodes in expanded & collapsed states',
+        () {
       final document = MutableDocument();
       final editor = Editor(editables: {Editor.documentKey: document});
       final builder = KetionToggleComponentBuilder(editor);
@@ -90,8 +92,10 @@ void main() {
         },
       );
 
-      final collapsedVm = builder.createViewModel(document, collapsedNode) as KetionToggleComponentViewModel?;
-      final expandedVm = builder.createViewModel(document, expandedNode) as KetionToggleComponentViewModel?;
+      final collapsedVm = builder.createViewModel(document, collapsedNode)
+          as KetionToggleComponentViewModel?;
+      final expandedVm = builder.createViewModel(document, expandedNode)
+          as KetionToggleComponentViewModel?;
 
       expect(collapsedVm, isNotNull);
       expect(collapsedVm!.isExpanded, isFalse);
@@ -100,7 +104,8 @@ void main() {
       expect(expandedVm!.isExpanded, isTrue);
     });
 
-    test('Enter at the end of a toggle heading creates child when none exists', () {
+    test('Enter at the end of a toggle heading creates child when none exists',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
@@ -117,7 +122,8 @@ void main() {
         initialSelection: const DocumentSelection.collapsed(
           position: DocumentPosition(
             nodeId: 'toggle-1',
-            nodePosition: TextNodePosition(offset: 13), // end of "Toggle Header"
+            nodePosition:
+                TextNodePosition(offset: 13), // end of "Toggle Header"
           ),
         ),
       );
@@ -154,10 +160,14 @@ void main() {
       expect(childNode.metadata['parentBlockId'], 'toggle-1');
       expect(childNode.metadata['depth'], 1);
       expect(composer.selection?.extent.nodeId, childNode.id);
-      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+      expect(
+          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+          0,);
     });
 
-    test('Hardware Enter when node ID differs from persistent block ID resolves block ID and does not use node ID fallback', () {
+    test(
+        'Hardware Enter when node ID differs from persistent block ID resolves block ID and does not use node ID fallback',
+        () {
       final toggleNode = ParagraphNode(
         id: 'editor-node-123',
         text: AttributedText('Toggle header'),
@@ -213,7 +223,9 @@ void main() {
       expect(childNode.metadata['parentBlockId'], isNot('editor-node-123'));
     });
 
-    test('Hardware Enter when persistent block ID is initially absent allocates UUID v7 and registers pending mapping', () {
+    test(
+        'Hardware Enter when persistent block ID is initially absent allocates UUID v7 and registers pending mapping',
+        () {
       final toggleNode = ParagraphNode(
         id: 'editor-node-no-id',
         text: AttributedText('Toggle header'),
@@ -277,7 +289,9 @@ void main() {
       expect(registry.blockIdForNode('editor-node-no-id'), allocatedBlockId);
     });
 
-    test('Enter in middle of toggle header splits text and creates regular sibling outside toggle subtree', () {
+    test(
+        'Enter in middle of toggle header splits text and creates regular sibling outside toggle subtree',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-header-node',
         text: AttributedText('Alpha Beta'),
@@ -340,9 +354,11 @@ void main() {
       expect(document.nodeCount, 3);
 
       // 1. Original node remains the toggle, retaining toggle metadata and startText
-      final originalNode = document.getNodeById('toggle-header-node') as ParagraphNode;
+      final originalNode =
+          document.getNodeById('toggle-header-node') as ParagraphNode;
       expect(originalNode.text.toPlainText(), 'Alpha ');
-      expect(originalNode.metadata['blockType'], const NamedAttribution('toggle'));
+      expect(
+          originalNode.metadata['blockType'], const NamedAttribution('toggle'),);
       expect(originalNode.metadata['listType'], 'toggle');
       expect(originalNode.metadata['isExpanded'], true);
       expect(originalNode.metadata['blockId'], 'toggle-header-block');
@@ -354,7 +370,8 @@ void main() {
       final newNode = document.getNodeAt(2) as ParagraphNode;
       expect(newNode.text.toPlainText(), 'Beta');
       // Must NOT be a toggle
-      expect(newNode.metadata['blockType'], isNot(const NamedAttribution('toggle')));
+      expect(newNode.metadata['blockType'],
+          isNot(const NamedAttribution('toggle')),);
       expect(newNode.metadata['listType'], isNot('toggle'));
       expect(newNode.metadata['isExpanded'], isNull);
       // Same depth and parentBlockId as toggle (top-level sibling)
@@ -363,10 +380,13 @@ void main() {
 
       // Caret placed at offset 0 of new node
       expect(composer.selection?.extent.nodeId, newNode.id);
-      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+      expect(
+          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+          0,);
     });
 
-    test('Enter at the end of a toggle heading creates child node under toggle', () {
+    test('Enter at the end of a toggle heading creates child node under toggle',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
@@ -427,10 +447,14 @@ void main() {
       expect(newChild.metadata['depth'], 1);
       expect(newChild.metadata['parentBlockId'], 'toggle-1');
       expect(composer.selection?.extent.nodeId, newChild.id);
-      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+      expect(
+          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+          0,);
     });
 
-    test('Double-click / exitToggle inside nested item moves caret outside the toggle', () {
+    test(
+        'Double-click / exitToggle inside nested item moves caret outside the toggle',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
@@ -456,7 +480,8 @@ void main() {
         metadata: const {'depth': 0},
       );
 
-      final document = MutableDocument(nodes: [toggleNode, child1, child2, outsideNode]);
+      final document =
+          MutableDocument(nodes: [toggleNode, child1, child2, outsideNode]);
       final composer = MutableDocumentComposer(
         initialSelection: const DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -487,10 +512,14 @@ void main() {
       );
 
       expect(composer.selection?.extent.nodeId, 'outside-1');
-      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, 0);
+      expect(
+          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+          0,);
     });
 
-    test('exitToggle at end of document inserts new paragraph outside toggle and places caret', () {
+    test(
+        'exitToggle at end of document inserts new paragraph outside toggle and places caret',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-end',
         text: AttributedText('Toggle Header'),
@@ -541,7 +570,9 @@ void main() {
   });
 
   group('Numbered Lists Hierarchy & Ordinal Calculation', () {
-    test('computeKetionListItemOrdinalValue maintains numbering across nested child blocks', () {
+    test(
+        'computeKetionListItemOrdinalValue maintains numbering across nested child blocks',
+        () {
       // 1. Item 1
       //    1. Child 1
       //    2. Child 2
@@ -579,7 +610,9 @@ void main() {
       expect(computeKetionListItemOrdinalValue(item2, document), 2);
     });
 
-    test('computeKetionListItemOrdinalValue resets when separated by non-ordered sibling', () {
+    test(
+        'computeKetionListItemOrdinalValue resets when separated by non-ordered sibling',
+        () {
       final item1 = ListItemNode.ordered(
         id: 'item-1',
         text: AttributedText('Item 1'),
@@ -604,7 +637,9 @@ void main() {
       expect(computeKetionListItemOrdinalValue(item2, document), 1);
     });
 
-    test('StructuralMutationBuilder buildIndentMutation and buildUnindentMutation update parent-child relationships', () {
+    test(
+        'StructuralMutationBuilder buildIndentMutation and buildUnindentMutation update parent-child relationships',
+        () {
       final snapshot = EditorPersistenceSnapshot('page-1', {
         'item-1': BlockSnapshot(
           blockId: 'item-1',
@@ -651,6 +686,81 @@ void main() {
       expect(unindentMutation, isNotNull);
       expect(unindentMutation!.parentBlockId, isNull);
       expect(unindentMutation.position > 10.0, isTrue);
+    });
+
+    test(
+        'StructuralMutationBuilder buildInsertMutation correctly assigns toggle as parent',
+        () {
+      final snapshot = EditorPersistenceSnapshot('page-1', {
+        'toggle-1': BlockSnapshot(
+          blockId: 'toggle-1',
+          pageId: 'page-1',
+          type: 'list',
+          parentBlockId: null,
+          position: 10.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+      });
+
+      final insertInsideToggle = StructuralMutationBuilder.buildInsertMutation(
+        pageId: 'page-1',
+        blockId: 'child-1',
+        data: 'item',
+        type: 'list',
+        previousBlockId: 'toggle-1',
+        nextBlockId: null,
+        snapshot: snapshot,
+        previousBlockIsToggle: true,
+      );
+
+      expect(insertInsideToggle, isNotNull);
+      expect(insertInsideToggle!.parentBlockId, 'toggle-1');
+
+      snapshot.applyMutation(insertInsideToggle);
+
+      final insertSiblingInsideToggle =
+          StructuralMutationBuilder.buildInsertMutation(
+        pageId: 'page-1',
+        blockId: 'child-2',
+        data: 'second',
+        type: 'text',
+        previousBlockId: 'child-1',
+        nextBlockId: null,
+        snapshot: snapshot,
+        previousBlockIsToggle: false,
+      );
+
+      expect(insertSiblingInsideToggle, isNotNull);
+      expect(insertSiblingInsideToggle!.parentBlockId, 'toggle-1');
+
+      final normalSnapshot = EditorPersistenceSnapshot('page-1', {
+        'root-1': BlockSnapshot(
+          blockId: 'root-1',
+          pageId: 'page-1',
+          type: 'paragraph',
+          parentBlockId: null,
+          position: 10.0,
+          version: 1,
+          createdAt: DateTime.now(),
+          deleted: false,
+        ),
+      });
+
+      final insertAfterRoot = StructuralMutationBuilder.buildInsertMutation(
+        pageId: 'page-1',
+        blockId: 'root-2',
+        data: 'root2',
+        type: 'paragraph',
+        previousBlockId: 'root-1',
+        nextBlockId: null,
+        snapshot: normalSnapshot,
+        previousBlockIsToggle: false,
+      );
+
+      expect(insertAfterRoot, isNotNull);
+      expect(insertAfterRoot!.parentBlockId, isNull);
     });
 
     test('Nested list ordinals restart within each parent group', () {
@@ -707,7 +817,8 @@ void main() {
       expect(computeKetionListItemOrdinalValue(c22, document), 2);
     });
 
-    test('Unindenting multiple consecutive children preserves sibling order', () {
+    test('Unindenting multiple consecutive children preserves sibling order',
+        () {
       // Parent at 10.0, Child 1 under Parent, Child 2 under Parent, OtherBlock at 40.0
       final snapshot = EditorPersistenceSnapshot('page-1', {
         'parent': BlockSnapshot(
@@ -777,12 +888,17 @@ void main() {
 
       // Sibling ordering must be preserved: parent < c1 < c2 < other
       expect(unindentC1.position > 10.0, isTrue);
-      expect(unindentC2.position > unindentC1.position, isTrue,
-          reason: 'c2 must be placed after c1 in document order',);
+      expect(
+        unindentC2.position > unindentC1.position,
+        isTrue,
+        reason: 'c2 must be placed after c1 in document order',
+      );
       expect(unindentC2.position < 40.0, isTrue);
     });
 
-    test('getNodeDepth correctly reads indent from TaskNode, ListItemNode, and metadata', () {
+    test(
+        'getNodeDepth correctly reads indent from TaskNode, ListItemNode, and metadata',
+        () {
       final taskNode = TaskNode(
         id: 't1',
         text: AttributedText('Task item'),
@@ -853,7 +969,9 @@ void main() {
       expect(executedRequests.any((r) => r is UnIndentListItemRequest), isTrue);
     });
 
-    test('Backspace on first-level empty bullet at offset 0 converts to paragraph', () {
+    test(
+        'Backspace on first-level empty bullet at offset 0 converts to paragraph',
+        () {
       final emptyBullet = ListItemNode.unordered(
         id: 'b-empty',
         text: AttributedText(),
@@ -898,10 +1016,15 @@ void main() {
       );
 
       expect(result, ExecutionInstruction.haltExecution);
-      expect(executedRequests.any((r) => r is ConvertListItemToParagraphRequest), isTrue);
+      expect(
+        executedRequests.any((r) => r is ConvertListItemToParagraphRequest),
+        isTrue,
+      );
     });
 
-    test('Backspace on non-empty bullet at offset > 0 continues execution for normal deletion', () {
+    test(
+        'Backspace on non-empty bullet at offset > 0 continues execution for normal deletion',
+        () {
       final bullet = ListItemNode.unordered(
         id: 'b-text',
         text: AttributedText('Hello'),

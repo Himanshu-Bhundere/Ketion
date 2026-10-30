@@ -787,8 +787,17 @@ class KetionSuperEditorAdapter {
       final previousBlockId = previousNode != null
           ? _registry.blockIdForNode(previousNode.id)
           : null;
+
       final nextBlockId =
           nextNode != null ? _registry.blockIdForNode(nextNode.id) : null;
+
+      final previousMetadata =
+          previousNode?.metadata ?? const <String, dynamic>{};
+      final previousBlockIsToggle = previousMetadata['listType'] == 'toggle' ||
+          previousMetadata['type'] == 'toggle' ||
+          (previousMetadata['blockType'] is NamedAttribution &&
+              (previousMetadata['blockType'] as NamedAttribution).name ==
+                  'toggle');
 
       String? providedParent = node.metadata['parentBlockId'] as String?;
       if (providedParent != null) {
@@ -807,6 +816,7 @@ class KetionSuperEditorAdapter {
         nextBlockId: nextBlockId,
         snapshot: snapshot,
         providedParentBlockId: providedParent,
+        previousBlockIsToggle: previousBlockIsToggle,
       );
 
       if (insertMutation != null) {

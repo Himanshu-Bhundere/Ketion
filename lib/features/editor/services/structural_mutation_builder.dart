@@ -118,16 +118,28 @@ class StructuralMutationBuilder {
     required String? nextBlockId,
     required EditorPersistenceSnapshot snapshot,
     String? providedParentBlockId,
+    bool previousBlockIsToggle = false,
   }) {
     BlockSnapshot? previousBlock;
     BlockSnapshot? nextBlock;
+
+    // An explicitly provided parent takes precedence. Otherwise, infer
+    // the new block's parent from its previous sibling.
     String? parentBlockId = providedParentBlockId;
 
     if (previousBlockId != null) {
       final prev = snapshot.getBlock(previousBlockId);
+
       if (prev != null && !prev.deleted) {
-        parentBlockId ??= prev.parentBlockId;
-        if (prev.blockId != parentBlockId && prev.parentBlockId == parentBlockId) {
+        // A block inserted directly after a toggle belongs inside it.
+        // For all other blocks, inherit the previous block's parent.
+        parentBlockId ??=
+            previousBlockIsToggle ? prev.blockId : prev.parentBlockId;
+
+        // Only use the previous block as a positional sibling when it
+        // belongs to the same parent as the new block.
+        if (prev.blockId != parentBlockId &&
+            prev.parentBlockId == parentBlockId) {
           previousBlock = prev;
         }
       }
@@ -135,6 +147,7 @@ class StructuralMutationBuilder {
 
     if (nextBlockId != null) {
       final next = snapshot.getBlock(nextBlockId);
+
       if (next != null && !next.deleted) {
         if (parentBlockId == null) {
           parentBlockId = next.parentBlockId;

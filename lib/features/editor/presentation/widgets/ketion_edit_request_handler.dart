@@ -1039,7 +1039,10 @@ class _KetionDelegatingCommand extends EditCommand {
       case MoveBlockMutation():
         if (reqToCreate is MoveNodeRequest) {
           final req = reqToCreate;
-          return _MoveSubtreeCommand(nodeId: req.nodeId, newIndex: req.newIndex);
+          return _MoveSubtreeCommand(
+            nodeId: req.nodeId,
+            newIndex: req.newIndex,
+          );
         }
         return null;
 
@@ -1509,6 +1512,18 @@ class _KetionDelegatingCommand extends EditCommand {
         ? (registry.blockIdForNode(rawParent) ?? rawParent)
         : null;
 
+    final previousNode =
+        previousNodeId != null ? document.getNodeById(previousNodeId) : null;
+
+    final previousMetadata =
+        previousNode?.metadata ?? const <String, dynamic>{};
+
+    final previousBlockIsToggle = previousMetadata['listType'] == 'toggle' ||
+        previousMetadata['type'] == 'toggle' ||
+        (previousMetadata['blockType'] is NamedAttribution &&
+            (previousMetadata['blockType'] as NamedAttribution).name ==
+                'toggle');
+
     return StructuralMutationBuilder.buildInsertMutation(
       pageId: pageId,
       blockId: newBlockId,
@@ -1518,6 +1533,7 @@ class _KetionDelegatingCommand extends EditCommand {
       nextBlockId: nextBlockId,
       providedParentBlockId: providedParentBlockId,
       snapshot: snapshot,
+      previousBlockIsToggle: previousBlockIsToggle,
     );
   }
 

@@ -98,7 +98,9 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
         _isInitialized = true;
         _isPlaying = controller.value.isPlaying;
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Video initialization failed on ${defaultTargetPlatform.name}: $e');
+      debugPrintStack(stackTrace: stackTrace);
       if (mounted && token == _initToken) {
         setState(() {
           _errorMessage = 'Failed to load video: $e';

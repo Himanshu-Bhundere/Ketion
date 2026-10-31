@@ -63,6 +63,8 @@ dependencies:
   flutter_timezone: ^5.1.0
   platform: ^3.1.6
   pdfx: ^2.11.0
+  video_player_win: ^3.3.1
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:

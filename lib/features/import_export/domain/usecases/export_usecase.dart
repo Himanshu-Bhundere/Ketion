@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io' as io;
-import 'dart:typed_data';
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/domain/models/block_data_models.dart';
@@ -29,9 +30,31 @@ class ExportUseCase {
     final document = await _mapToDocument(page, blocks);
     final bytes = await exporter.exportDocument(document);
 
+    final sanitizedTitle = page.title.trim().isEmpty
+        ? 'Untitled'
+        : page.title.trim().replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').replaceAll(' ', '_');
+    final fileName = '$sanitizedTitle.$extension';
+
+    if (!kIsWeb && io.Platform.isWindows) {
+      final typeGroup = XTypeGroup(
+        label: extension.toUpperCase(),
+        extensions: [extension],
+      );
+      final fileSaveLocation = await getSaveLocation(
+        suggestedName: fileName,
+        acceptedTypeGroups: [typeGroup],
+      );
+      if (fileSaveLocation == null) {
+        return;
+      }
+      final file = io.File(fileSaveLocation.path);
+      await file.writeAsBytes(bytes);
+      return;
+    }
+
     final xFile = XFile.fromData(
       bytes,
-      name: '${page.title.replaceAll(' ', '_')}.$extension',
+      name: fileName,
       mimeType: _getMimeType(extension),
     );
 

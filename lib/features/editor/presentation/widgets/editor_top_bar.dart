@@ -191,8 +191,29 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                           : blocksAsync.valueOrNull;
 
                       if (blocks != null) {
-                        final useCase = ref.read(exportUseCaseProvider);
-                        await useCase.exportAndShare(page, blocks, ext);
+                        try {
+                          final useCase = ref.read(exportUseCaseProvider);
+                          await useCase.exportAndShare(page, blocks, ext);
+                          if (context.mounted) {
+                            final noteTitle =
+                                page.title.isEmpty ? 'note' : page.title;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Exported $noteTitle to ${ext.toUpperCase()}',
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Export failed: $e'),
+                              ),
+                            );
+                          }
+                        }
                       }
                       break;
                     case 'move_to_trash':

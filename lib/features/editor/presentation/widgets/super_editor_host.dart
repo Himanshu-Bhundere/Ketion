@@ -692,6 +692,20 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                     ),
                   )
                   .toList(),
+              documentOverlayBuilders: [
+                const SuperEditorIosToolbarFocalPointDocumentLayerBuilder(),
+                const SuperEditorIosHandlesDocumentLayerBuilder(),
+                const SuperEditorAndroidToolbarFocalPointDocumentLayerBuilder(),
+                const SuperEditorAndroidHandlesDocumentLayerBuilder(),
+                DefaultCaretOverlayBuilder(
+                  caretStyle: CaretStyle(
+                    width: 2,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ],
               keyboardActions: [
                 indentParagraphWhenTabPressed,
                 unindentParagraphWhenShiftTabPressed,

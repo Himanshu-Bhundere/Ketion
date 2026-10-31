@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:ketion/core/router/app_router.dart';
@@ -8,6 +9,12 @@ class WidgetBootstrap {
   static bool _isCreatingPage = false;
 
   static Future<void> initialize() async {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return;
+    }
+
     await HomeWidget.setAppGroupId('group.com.example.ketion');
   }
 
@@ -16,6 +23,12 @@ class WidgetBootstrap {
     Future<bool> Function(String pageId)? onValidatePage,
     void Function(String error)? onError,
   }) {
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.android &&
+            defaultTargetPlatform != TargetPlatform.iOS)) {
+      return;
+    }
+
     HomeWidget.widgetClicked.listen(
       (uri) => _launchedFromWidget(
         uri,

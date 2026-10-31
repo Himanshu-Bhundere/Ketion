@@ -20,8 +20,7 @@ class AppShell extends StatelessWidget {
 
     Widget shell;
     if (width >= AppBreakpoints.expanded) {
-      // Three pane layout, independent of mobile branches
-      shell = const DesktopWorkspace();
+      shell = DesktopWorkspace(navigationShell: navigationShell);
     } else if (width >= AppBreakpoints.medium) {
       // Two pane layout
       shell = TabletWorkspace(navigationShell: navigationShell);

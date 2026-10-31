@@ -11,8 +11,15 @@ import 'package:ketion/features/reminders/presentation/providers/reminder_provid
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 
-void main() async {
-  await AppBootstrap.initialize();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await AppBootstrap.initialize();
+  } catch (error, stackTrace) {
+    debugPrint('Ketion startup failed: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   runApp(
     const ProviderScope(

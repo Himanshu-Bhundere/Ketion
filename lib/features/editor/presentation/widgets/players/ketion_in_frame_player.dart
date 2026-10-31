@@ -99,7 +99,9 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
         _isPlaying = controller.value.isPlaying;
       });
     } catch (e, stackTrace) {
-      debugPrint('Video initialization failed on ${defaultTargetPlatform.name}: $e');
+      debugPrint(
+        'Video initialization failed on ${defaultTargetPlatform.name}: $e',
+      );
       debugPrintStack(stackTrace: stackTrace);
       if (mounted && token == _initToken) {
         setState(() {
@@ -279,8 +281,11 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline,
-                  color: Colors.redAccent, size: 36,),
+              const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 36,
+              ),
               const SizedBox(height: 8),
               Text(
                 _errorMessage!,
@@ -473,8 +478,9 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
       );
     }
 
+    Widget content = playerWidget;
     if (widget.caption != null && widget.caption!.isNotEmpty) {
-      return Column(
+      content = Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -493,6 +499,15 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
       );
     }
 
-    return playerWidget;
+    if (!widget.isFullscreen) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: content,
+        ),
+      );
+    }
+
+    return content;
   }
 }

@@ -77,6 +77,6 @@ final deletedPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
   final result = await repository.getDeletedPages();
   return result.fold(
     (pages) => pages,
-    (error) => [],
+    (error) => throw error,
   );
 });

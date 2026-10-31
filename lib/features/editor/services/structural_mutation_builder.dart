@@ -133,8 +133,11 @@ class StructuralMutationBuilder {
       if (prev != null && !prev.deleted) {
         // A block inserted directly after a toggle belongs inside it.
         // For all other blocks, inherit the previous block's parent.
-        parentBlockId ??=
-            previousBlockIsToggle ? prev.blockId : prev.parentBlockId;
+        if (previousBlockIsToggle) {
+          parentBlockId = prev.blockId;
+        } else {
+          parentBlockId ??= prev.parentBlockId;
+        }
 
         // Only use the previous block as a positional sibling when it
         // belongs to the same parent as the new block.

@@ -221,6 +221,7 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                       await deleteUseCase(pageId);
                       ref.invalidate(recentPagesProvider);
                       ref.invalidate(favoritePagesProvider);
+                      ref.invalidate(deletedPagesProvider);
                       if (context.mounted) {
                         context.pop();
                       }

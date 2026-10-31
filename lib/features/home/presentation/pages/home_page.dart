@@ -6,7 +6,6 @@ import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
 import 'package:ketion/core/theme/breakpoints.dart';
-import 'package:ketion/features/home/presentation/providers/home_providers.dart';
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
@@ -95,11 +94,14 @@ class HomePage extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 8.0),
                   child: ListTile(
                     leading: Icon(
-                        isAlarm ? Icons.alarm : Icons.notifications_active,),
+                      isAlarm ? Icons.alarm : Icons.notifications_active,
+                    ),
                     title: Text(reminder.title),
                     subtitle: Text(
                       ReminderDisplayFormatter.formatDueLabel(
-                          context, reminder.reminderTime,),
+                        context,
+                        reminder.reminderTime,
+                      ),
                     ),
                     trailing: isAlarm
                         ? IconButton(
@@ -111,7 +113,8 @@ class HomePage extends ConsumerWidget {
                                 builder: (context) => AlertDialog(
                                   title: const Text('Delete Alarm'),
                                   content: const Text(
-                                      'Are you sure you want to delete this alarm?',),
+                                    'Are you sure you want to delete this alarm?',
+                                  ),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
@@ -251,18 +254,10 @@ class HomePage extends ConsumerWidget {
         ),
         child: InkWell(
           onTap: () {
-            // Navigation handled by the AppShell/Router logic.
-            // On mobile -> push editor route
-            // On desktop/tablet -> update active page provider
-            final width = MediaQuery.of(context).size.width;
-            if (width >= AppBreakpoints.medium) {
-              ref.read(activePageIdProvider.notifier).state = page.id;
-            } else {
-              context.pushNamed(
-                Routes.editorName,
-                pathParameters: {'pageId': page.id},
-              );
-            }
+            context.pushNamed(
+              Routes.editorName,
+              pathParameters: {'pageId': page.id},
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),

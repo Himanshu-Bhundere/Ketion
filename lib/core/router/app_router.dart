@@ -9,6 +9,7 @@ import 'package:ketion/features/settings/presentation/pages/settings_page.dart';
 import 'package:ketion/features/pages/presentation/pages/notes_page.dart';
 import 'package:ketion/features/reminders/presentation/pages/reminders_page.dart';
 import 'package:ketion/features/reminders/presentation/pages/alarm_ringing_page.dart';
+import 'package:ketion/features/pages/presentation/pages/trash_page.dart';
 import 'package:ketion/features/editor/domain/models/editor_open_target.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -107,6 +108,12 @@ final appRouter = GoRouter(
           occurrenceTime: occurrenceTime,
         );
       },
+    ),
+    GoRoute(
+      name: Routes.trashName,
+      parentNavigatorKey: _rootNavigatorKey,
+      path: Routes.trash,
+      builder: (context, state) => const TrashPage(),
     ),
   ],
 );

@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration {
@@ -582,6 +582,14 @@ class AppDatabase extends _$AppDatabase {
           ''');
 
           await rebuildSearchIndex();
+        }
+        if (from < 21) {
+          await m.addColumn(pages, pages.deletedAt);
+          await customStatement('''
+            UPDATE pages
+            SET deleted_at = updated_at
+            WHERE deleted = 1 AND deleted_at IS NULL
+          ''');
         }
       },
       beforeOpen: (details) async {

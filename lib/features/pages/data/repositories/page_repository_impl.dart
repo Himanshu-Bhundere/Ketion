@@ -190,11 +190,13 @@ class PageRepositoryImpl implements PageRepository {
           return;
         }
 
+        final now = DateTime.now().toUtc();
         final newVersion = existingRecord.version + 1;
         final newPage = page.copyWith(
           deleted: true,
+          deletedAt: now,
           version: newVersion,
-          updatedAt: DateTime.now().toUtc(),
+          updatedAt: now,
         );
 
         final updatedRows = await (_db.update(_db.pages)
@@ -303,6 +305,101 @@ class PageRepositoryImpl implements PageRepository {
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
       _logger.e('Failed to get template pages', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+
+  @override
+  Future<Result<void>> restorePage(String id) async {
+    try {
+      await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.pages)
+              ..where((t) => t.id.equals(id) & t.deleted.equals(true)))
+            .getSingleOrNull();
+
+        if (existingRecord == null) {
+          throw StateError('Deleted note not found');
+        }
+
+        final now = DateTime.now().toUtc();
+        final restored = existingRecord.toDomain().copyWith(
+          deleted: false,
+          deletedAt: null,
+          version: existingRecord.version + 1,
+          updatedAt: now,
+        );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(id)))
+            .write(restored.toCompanion());
+
+        await _enqueueOrThrow(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'pages',
+            entityId: id,
+            operation: 'update',
+            payload: jsonEncode(restored.toJson()),
+            batchId: null,
+            version: restored.version,
+            updatedAt: restored.updatedAt,
+            createdAt: now,
+          ),
+        );
+      });
+
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to restore page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> permanentlyDeletePage(String id) async {
+    try {
+      await _db.transaction(() async {
+        await (_db.delete(_db.pages)..where((t) => t.id.equals(id))).go();
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to permanently delete page', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> emptyTrash() async {
+    try {
+      await _db.transaction(() async {
+        await (_db.delete(_db.pages)..where((t) => t.deleted.equals(true))).go();
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to empty trash', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<List<domain.Page>>> getDeletedPages() async {
+    try {
+      final records = await (_db.select(_db.pages)
+            ..where((t) => t.deleted.equals(true))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.deletedAt,
+                    mode: OrderingMode.desc,
+                  ),
+              (t) => OrderingTerm(
+                    expression: t.updatedAt,
+                    mode: OrderingMode.desc,
+                  ),
+            ]))
+          .get();
+      return Success(records.map((r) => r.toDomain()).toList());
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get deleted pages', e, stackTrace);
       return Error(StorageFailure(e.toString()));
     }
   }

@@ -15,6 +15,9 @@ _$PageImpl _$$PageImplFromJson(Map<String, dynamic> json) => _$PageImpl(
       isFavorite: json['isFavorite'] as bool? ?? false,
       isArchived: json['isArchived'] as bool? ?? false,
       deleted: json['deleted'] as bool? ?? false,
+      deletedAt: json['deletedAt'] == null
+          ? null
+          : DateTime.parse(json['deletedAt'] as String),
       isTemplate: json['isTemplate'] as bool? ?? false,
       version: (json['version'] as num?)?.toInt() ?? 1,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -31,6 +34,7 @@ Map<String, dynamic> _$$PageImplToJson(_$PageImpl instance) =>
       'isFavorite': instance.isFavorite,
       'isArchived': instance.isArchived,
       'deleted': instance.deleted,
+      'deletedAt': instance.deletedAt?.toIso8601String(),
       'isTemplate': instance.isTemplate,
       'version': instance.version,
       'createdAt': instance.createdAt.toIso8601String(),

@@ -67,6 +67,11 @@ class _NotesPageState extends ConsumerState<NotesPage> {
               ),
             ],
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Trash',
+            onPressed: () => context.push(Routes.trash),
+          ),
         ],
       ),
       body: recentPagesAsync.when(

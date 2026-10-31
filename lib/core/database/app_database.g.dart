@@ -70,6 +70,12 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _isTemplateMeta =
       const VerificationMeta('isTemplate');
   @override
@@ -110,6 +116,7 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
         isFavorite,
         isArchived,
         deleted,
+        deletedAt,
         isTemplate,
         version,
         createdAt,
@@ -166,6 +173,10 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
       context.handle(_deletedMeta,
           deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
     if (data.containsKey('is_template')) {
       context.handle(
           _isTemplateMeta,
@@ -213,6 +224,8 @@ class $PagesTable extends Pages with TableInfo<$PagesTable, Page> {
           .read(DriftSqlType.bool, data['${effectivePrefix}is_archived'])!,
       deleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       isTemplate: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_template'])!,
       version: attachedDatabase.typeMapping
@@ -239,6 +252,7 @@ class Page extends DataClass implements Insertable<Page> {
   final bool isFavorite;
   final bool isArchived;
   final bool deleted;
+  final DateTime? deletedAt;
   final bool isTemplate;
   final int version;
   final DateTime createdAt;
@@ -252,6 +266,7 @@ class Page extends DataClass implements Insertable<Page> {
       required this.isFavorite,
       required this.isArchived,
       required this.deleted,
+      this.deletedAt,
       required this.isTemplate,
       required this.version,
       required this.createdAt,
@@ -273,6 +288,9 @@ class Page extends DataClass implements Insertable<Page> {
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['is_archived'] = Variable<bool>(isArchived);
     map['deleted'] = Variable<bool>(deleted);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     map['is_template'] = Variable<bool>(isTemplate);
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -294,6 +312,9 @@ class Page extends DataClass implements Insertable<Page> {
       isFavorite: Value(isFavorite),
       isArchived: Value(isArchived),
       deleted: Value(deleted),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       isTemplate: Value(isTemplate),
       version: Value(version),
       createdAt: Value(createdAt),
@@ -313,6 +334,7 @@ class Page extends DataClass implements Insertable<Page> {
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       deleted: serializer.fromJson<bool>(json['deleted']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       isTemplate: serializer.fromJson<bool>(json['isTemplate']),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -331,6 +353,7 @@ class Page extends DataClass implements Insertable<Page> {
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isArchived': serializer.toJson<bool>(isArchived),
       'deleted': serializer.toJson<bool>(deleted),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'isTemplate': serializer.toJson<bool>(isTemplate),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -347,6 +370,7 @@ class Page extends DataClass implements Insertable<Page> {
           bool? isFavorite,
           bool? isArchived,
           bool? deleted,
+          Value<DateTime?> deletedAt = const Value.absent(),
           bool? isTemplate,
           int? version,
           DateTime? createdAt,
@@ -361,6 +385,7 @@ class Page extends DataClass implements Insertable<Page> {
         isFavorite: isFavorite ?? this.isFavorite,
         isArchived: isArchived ?? this.isArchived,
         deleted: deleted ?? this.deleted,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
         isTemplate: isTemplate ?? this.isTemplate,
         version: version ?? this.version,
         createdAt: createdAt ?? this.createdAt,
@@ -381,6 +406,7 @@ class Page extends DataClass implements Insertable<Page> {
       isArchived:
           data.isArchived.present ? data.isArchived.value : this.isArchived,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       isTemplate:
           data.isTemplate.present ? data.isTemplate.value : this.isTemplate,
       version: data.version.present ? data.version.value : this.version,
@@ -400,6 +426,7 @@ class Page extends DataClass implements Insertable<Page> {
           ..write('isFavorite: $isFavorite, ')
           ..write('isArchived: $isArchived, ')
           ..write('deleted: $deleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('isTemplate: $isTemplate, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -418,6 +445,7 @@ class Page extends DataClass implements Insertable<Page> {
       isFavorite,
       isArchived,
       deleted,
+      deletedAt,
       isTemplate,
       version,
       createdAt,
@@ -434,6 +462,7 @@ class Page extends DataClass implements Insertable<Page> {
           other.isFavorite == this.isFavorite &&
           other.isArchived == this.isArchived &&
           other.deleted == this.deleted &&
+          other.deletedAt == this.deletedAt &&
           other.isTemplate == this.isTemplate &&
           other.version == this.version &&
           other.createdAt == this.createdAt &&
@@ -449,6 +478,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
   final Value<bool> isFavorite;
   final Value<bool> isArchived;
   final Value<bool> deleted;
+  final Value<DateTime?> deletedAt;
   final Value<bool> isTemplate;
   final Value<int> version;
   final Value<DateTime> createdAt;
@@ -463,6 +493,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     this.isFavorite = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.isTemplate = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -478,6 +509,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     this.isFavorite = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.deleted = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.isTemplate = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
@@ -495,6 +527,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
     Expression<bool>? isFavorite,
     Expression<bool>? isArchived,
     Expression<bool>? deleted,
+    Expression<DateTime>? deletedAt,
     Expression<bool>? isTemplate,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
@@ -510,6 +543,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isArchived != null) 'is_archived': isArchived,
       if (deleted != null) 'deleted': deleted,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (isTemplate != null) 'is_template': isTemplate,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
@@ -527,6 +561,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       Value<bool>? isFavorite,
       Value<bool>? isArchived,
       Value<bool>? deleted,
+      Value<DateTime?>? deletedAt,
       Value<bool>? isTemplate,
       Value<int>? version,
       Value<DateTime>? createdAt,
@@ -541,6 +576,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       deleted: deleted ?? this.deleted,
+      deletedAt: deletedAt ?? this.deletedAt,
       isTemplate: isTemplate ?? this.isTemplate,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
@@ -576,6 +612,9 @@ class PagesCompanion extends UpdateCompanion<Page> {
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (isTemplate.present) {
       map['is_template'] = Variable<bool>(isTemplate.value);
     }
@@ -605,6 +644,7 @@ class PagesCompanion extends UpdateCompanion<Page> {
           ..write('isFavorite: $isFavorite, ')
           ..write('isArchived: $isArchived, ')
           ..write('deleted: $deleted, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('isTemplate: $isTemplate, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -6269,6 +6309,7 @@ typedef $$PagesTableCreateCompanionBuilder = PagesCompanion Function({
   Value<bool> isFavorite,
   Value<bool> isArchived,
   Value<bool> deleted,
+  Value<DateTime?> deletedAt,
   Value<bool> isTemplate,
   Value<int> version,
   required DateTime createdAt,
@@ -6284,6 +6325,7 @@ typedef $$PagesTableUpdateCompanionBuilder = PagesCompanion Function({
   Value<bool> isFavorite,
   Value<bool> isArchived,
   Value<bool> deleted,
+  Value<DateTime?> deletedAt,
   Value<bool> isTemplate,
   Value<int> version,
   Value<DateTime> createdAt,
@@ -6410,6 +6452,9 @@ class $$PagesTableFilterComposer extends Composer<_$AppDatabase, $PagesTable> {
 
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isTemplate => $composableBuilder(
       column: $table.isTemplate, builder: (column) => ColumnFilters(column));
@@ -6579,6 +6624,9 @@ class $$PagesTableOrderingComposer
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isTemplate => $composableBuilder(
       column: $table.isTemplate, builder: (column) => ColumnOrderings(column));
 
@@ -6641,6 +6689,9 @@ class $$PagesTableAnnotationComposer
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   GeneratedColumn<bool> get isTemplate => $composableBuilder(
       column: $table.isTemplate, builder: (column) => column);
@@ -6817,6 +6868,7 @@ class $$PagesTableTableManager extends RootTableManager<
             Value<bool> isFavorite = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<bool> isTemplate = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -6832,6 +6884,7 @@ class $$PagesTableTableManager extends RootTableManager<
             isFavorite: isFavorite,
             isArchived: isArchived,
             deleted: deleted,
+            deletedAt: deletedAt,
             isTemplate: isTemplate,
             version: version,
             createdAt: createdAt,
@@ -6847,6 +6900,7 @@ class $$PagesTableTableManager extends RootTableManager<
             Value<bool> isFavorite = const Value.absent(),
             Value<bool> isArchived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
+            Value<DateTime?> deletedAt = const Value.absent(),
             Value<bool> isTemplate = const Value.absent(),
             Value<int> version = const Value.absent(),
             required DateTime createdAt,
@@ -6862,6 +6916,7 @@ class $$PagesTableTableManager extends RootTableManager<
             isFavorite: isFavorite,
             isArchived: isArchived,
             deleted: deleted,
+            deletedAt: deletedAt,
             isTemplate: isTemplate,
             version: version,
             createdAt: createdAt,

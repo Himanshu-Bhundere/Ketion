@@ -71,3 +71,12 @@ final templatePagesProvider = FutureProvider<List<entity.Page>>((ref) async {
     (error) => [],
   );
 });
+
+final deletedPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
+  final repository = ref.watch(pageRepositoryProvider);
+  final result = await repository.getDeletedPages();
+  return result.fold(
+    (pages) => pages,
+    (error) => [],
+  );
+});

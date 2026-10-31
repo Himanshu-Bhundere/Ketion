@@ -11,6 +11,9 @@ class Routes {
   static const String editorName = 'editor';
   static const String editor = '/editor/:pageId';
 
+  static const String trashName = 'trash';
+  static const String trash = '/trash';
+
   static const String alarmRingingName = 'alarm_ringing';
   static const String alarmRinging = '/alarm-ringing/:reminderId';
 }

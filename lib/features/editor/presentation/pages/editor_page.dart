@@ -35,8 +35,8 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     String? title,
     String? icon,
   }) {
-    final previousChain =
-        _pageUpdateChains[widget.pageId] ?? Future.value(const Success<void>(null));
+    final previousChain = _pageUpdateChains[widget.pageId] ??
+        Future.value(const Success<void>(null));
     final currentUpdate = previousChain.then((_) async {
       final pageRepo = ref.read(pageRepositoryProvider);
       final pageResult = await pageRepo.getPage(widget.pageId);
@@ -70,21 +70,50 @@ class _EditorPageState extends ConsumerState<EditorPage> {
 
     try {
       final inFlightTitleUpdate = _pageUpdateChains[widget.pageId];
+
       if (inFlightTitleUpdate != null) {
-        await inFlightTitleUpdate;
+        final titleResult = await inFlightTitleUpdate;
+
+        if (titleResult is Error) {
+          throw StateError('Could not save the note title.');
+        }
       }
+
       await _editorHostKey.currentState?.flush();
+
       await ref.read(updateWidgetsUseCaseProvider)();
-    } catch (e) {
-      debugPrint('Error during editor exit flush: $e');
-    }
 
-    if (!context.mounted) return;
+      if (!context.mounted) return;
 
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go(Routes.home);
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(Routes.home);
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Editor exit failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Your changes could not be saved. '
+            'The editor will remain open.',
+          ),
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () {
+              _isExiting = false;
+              _handleBack(context);
+            },
+          ),
+          duration: const Duration(seconds: 6),
+        ),
+      );
+
+      _isExiting = false;
     }
   }
 

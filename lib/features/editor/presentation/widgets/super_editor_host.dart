@@ -77,11 +77,16 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
   Future<void> flush() async {
     if (!_isInitialized) return;
-    try {
-      await _adapter.flushPendingChanges();
-      await _coordinator.flush();
-    } catch (e) {
-      debugPrint('Error flushing SuperEditorHost: $e');
+
+    await _adapter.flushPendingChanges();
+
+    final persisted = await _coordinator.flush();
+
+    if (!persisted || _coordinator.hasPendingMutations) {
+      throw StateError(
+        'Failed to persist ${_coordinator.failedMutations.length} '
+        'editor mutation(s).',
+      );
     }
   }
 
@@ -449,11 +454,20 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   @override
   void dispose() {
     if (_isInitialized) {
+      if (_coordinator.hasPendingMutations) {
+        debugPrint(
+          'WARNING: Disposing editor with unsaved mutations: '
+          '${_coordinator.failedMutations.length} failed, '
+          'pending=${_coordinator.hasPendingMutations}',
+        );
+      }
+
       _editor.removeListener(_editListener);
       _slashController.dispose();
       _historyController.dispose();
       _adapter.dispose();
       _coordinator.close();
+
       try {
         ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
             null;
@@ -461,8 +475,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
             null;
       } catch (_) {}
     }
-    _focusNode.dispose();
 
+    _focusNode.dispose();
     _composer.dispose();
 
     super.dispose();

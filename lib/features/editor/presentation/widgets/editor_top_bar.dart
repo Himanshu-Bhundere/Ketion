@@ -156,11 +156,18 @@ class EditorTopBar extends ConsumerWidget implements PreferredSizeWidget {
                       );
                       break;
                     case 'alarm':
-                      await showModalBottomSheet<void>(
+                      final saved = await showModalBottomSheet<bool>(
                         context: context,
                         isScrollControlled: true,
                         builder: (context) => AlarmPickerSheet(pageId: pageId),
                       );
+                      if (saved == true && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Alarm set successfully'),
+                          ),
+                        );
+                      }
                       break;
                     case 'export_md':
                     case 'export_html':

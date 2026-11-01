@@ -223,11 +223,18 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         context: () => context,
         optionsBuilder: _slashOptionsFor,
         onDismiss: () => _focusNode.requestFocus(),
-        onReminderSlashSelected: () {
-          showModalBottomSheet<void>(
+        onReminderSlashSelected: () async {
+          final saved = await showModalBottomSheet<bool>(
             context: context,
             builder: (context) => ReminderPickerSheet(pageId: widget.pageId),
           );
+          if (saved == true && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Reminder set successfully'),
+              ),
+            );
+          }
         },
         onBookmarkSlashSelected: _handleBookmarkSlashSelected,
         onWebBookmarkSlashSelected: _handleWebBookmarkSlashSelected,

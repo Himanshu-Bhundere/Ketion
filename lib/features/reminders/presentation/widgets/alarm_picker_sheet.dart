@@ -179,7 +179,15 @@ class _AlarmPickerSheetState extends ConsumerState<AlarmPickerSheet> {
                         );
 
                         if (context.mounted) {
-                          Navigator.pop(context);
+                          Navigator.pop(context, true);
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to save alarm: $e'),
+                            ),
+                          );
                         }
                       } finally {
                         if (mounted) {

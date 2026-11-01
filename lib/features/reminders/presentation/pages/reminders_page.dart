@@ -93,39 +93,11 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                       title: Text(reminder.title),
                       subtitle: Text(ReminderDisplayFormatter.formatDueLabel(
                           context, reminder.reminderTime,),),
-                      trailing: isAlarm
-                          ? IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              tooltip: 'Delete alarm',
-                              onPressed: () async {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Delete Alarm'),
-                                    content: const Text(
-                                        'Are you sure you want to delete this alarm?',),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (confirmed == true) {
-                                  final deleteUseCase =
-                                      ref.read(deleteReminderUseCaseProvider);
-                                  await deleteUseCase.execute(reminder.id);
-                                }
-                              },
-                            )
-                          : IconButton(
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isAlarm)
+                            IconButton(
                               icon: const Icon(Icons.check_circle_outline),
                               tooltip: 'Complete',
                               onPressed: () async {
@@ -138,6 +110,47 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                                 );
                               },
                             ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip:
+                                isAlarm ? 'Delete alarm' : 'Delete reminder',
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(
+                                    isAlarm
+                                        ? 'Delete Alarm'
+                                        : 'Delete Reminder',
+                                  ),
+                                  content: Text(
+                                    isAlarm
+                                        ? 'Are you sure you want to delete this alarm?'
+                                        : 'Are you sure you want to delete this reminder?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                final deleteUseCase =
+                                    ref.read(deleteReminderUseCaseProvider);
+                                await deleteUseCase.execute(reminder.id);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );

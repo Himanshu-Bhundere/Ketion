@@ -119,7 +119,15 @@ class _ReminderPickerSheetState extends ConsumerState<ReminderPickerSheet> {
                           );
 
                           if (context.mounted) {
-                            Navigator.pop(context);
+                            Navigator.pop(context, true);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to save reminder: $e'),
+                              ),
+                            );
                           }
                         } finally {
                           if (mounted) {

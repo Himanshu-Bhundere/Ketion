@@ -33,6 +33,8 @@ class EditorPersistenceCoordinator {
       _failed.isNotEmpty ||
       _blocked.isNotEmpty;
   bool get hasFailedMutations => _failed.isNotEmpty;
+  List<EditorPersistenceMutation> get failedMutations =>
+      List.unmodifiable([..._failed, ..._blocked]);
 
   /// Synchronously accepts ownership of the mutation.
   /// Returns false if the coordinator is closed and rejected the mutation.

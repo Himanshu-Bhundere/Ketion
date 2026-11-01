@@ -43,6 +43,9 @@ class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 
@@ -212,7 +215,8 @@ void main() {
       expect(childBlockId, 'child-1');
     });
 
-    test('nested toggles: expanding outer toggle preserves inner toggle collapsed state',
+    test(
+        'nested toggles: expanding outer toggle preserves inner toggle collapsed state',
         () async {
       final snapshot = EditorPersistenceSnapshot('page-1', {});
       final coordinator = MockPersistenceCoordinator();
@@ -229,7 +233,9 @@ void main() {
         position: 0,
         type: 'list',
         data: jsonEncode({
-          'spans': [{'text': 'Outer Toggle'}],
+          'spans': [
+            {'text': 'Outer Toggle'},
+          ],
           'listType': 'toggle',
           'isExpanded': false,
         }),
@@ -246,7 +252,9 @@ void main() {
         position: 0,
         type: 'list',
         data: jsonEncode({
-          'spans': [{'text': 'Inner Toggle'}],
+          'spans': [
+            {'text': 'Inner Toggle'},
+          ],
           'listType': 'toggle',
           'isExpanded': false,
         }),
@@ -263,7 +271,9 @@ void main() {
         position: 0,
         type: 'text',
         data: jsonEncode({
-          'spans': [{'text': 'Deep nested content'}],
+          'spans': [
+            {'text': 'Deep nested content'},
+          ],
         }),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -332,7 +342,8 @@ void main() {
       );
     });
 
-    test('Insert child via InsertNodeAfterNodeRequest sets parentBlockId in persistence',
+    test(
+        'Insert child via InsertNodeAfterNodeRequest sets parentBlockId in persistence',
         () async {
       final snapshot = EditorPersistenceSnapshot('page-1', {});
       final coordinator = MockPersistenceCoordinator();
@@ -349,7 +360,9 @@ void main() {
         position: 0,
         type: 'list',
         data: jsonEncode({
-          'spans': [{'text': 'Parent Toggle'}],
+          'spans': [
+            {'text': 'Parent Toggle'},
+          ],
           'listType': 'toggle',
           'isExpanded': true,
         }),
@@ -406,7 +419,8 @@ void main() {
       );
     });
 
-    test('InsertNewlineAtCaretRequest at end of collapsed toggle expands it and inserts child',
+    test(
+        'InsertNewlineAtCaretRequest at end of collapsed toggle expands it and inserts child',
         () async {
       final snapshot = EditorPersistenceSnapshot('page-1', {});
       final coordinator = MockPersistenceCoordinator();
@@ -478,7 +492,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       // Should expand toggle and insert new child block
-      expect(document.getNodeById(toggleNode.id)!.metadata['isExpanded'], isTrue);
+      expect(
+          document.getNodeById(toggleNode.id)!.metadata['isExpanded'], isTrue,);
       expect(document.nodeCount, 2);
 
       final childNode = document.getNodeAt(1)! as ParagraphNode;
@@ -489,7 +504,8 @@ void main() {
       expect(composer.selection?.extent.nodeId, childNode.id);
     });
 
-    test('exitToggle exits descendant to outside sibling or creates new outside paragraph',
+    test(
+        'exitToggle exits descendant to outside sibling or creates new outside paragraph',
         () async {
       final snapshot = EditorPersistenceSnapshot('page-1', {});
       final coordinator = MockPersistenceCoordinator();
@@ -698,7 +714,9 @@ void main() {
       expect(composer.selection?.extent.nodeId, newChild.id);
     });
 
-    test('BlockTreeService.findLastDescendant finds the final node in a multi-level subtree', () {
+    test(
+        'BlockTreeService.findLastDescendant finds the final node in a multi-level subtree',
+        () {
       final rootToggle = ParagraphNode(
         id: 'root-toggle',
         text: AttributedText('Root'),
@@ -745,7 +763,8 @@ void main() {
         },
       );
 
-      final doc = MutableDocument(nodes: [rootToggle, c1, c1Nested, c2, sibling]);
+      final doc =
+          MutableDocument(nodes: [rootToggle, c1, c1Nested, c2, sibling]);
 
       final last = BlockTreeService.findLastDescendant(
         doc,
@@ -757,7 +776,9 @@ void main() {
       expect(last.id, 'c2');
     });
 
-    test('BlockTreeService hierarchy queries accurately report depth, parent, children, siblings', () {
+    test(
+        'BlockTreeService hierarchy queries accurately report depth, parent, children, siblings',
+        () {
       final now = DateTime.now();
       final bRoot = Block(
         id: 'b-root',
@@ -816,18 +837,24 @@ void main() {
 
       expect(BlockTreeService.parentOf('b-root', blocks), isNull);
       expect(BlockTreeService.parentOf('b-child-1', blocks)?.id, 'b-root');
-      expect(BlockTreeService.parentOf('b-grandchild', blocks)?.id, 'b-child-1');
+      expect(
+          BlockTreeService.parentOf('b-grandchild', blocks)?.id, 'b-child-1',);
 
       final rootChildren = BlockTreeService.childrenOf('b-root', blocks);
-      expect(rootChildren.map((b) => b.id).toList(), ['b-child-1', 'b-child-2']);
+      expect(
+          rootChildren.map((b) => b.id).toList(), ['b-child-1', 'b-child-2'],);
 
       final childSiblings = BlockTreeService.siblingsOf('b-child-1', blocks);
-      expect(childSiblings.map((b) => b.id).toList(), ['b-child-1', 'b-child-2']);
+      expect(
+          childSiblings.map((b) => b.id).toList(), ['b-child-1', 'b-child-2'],);
 
-      expect(BlockTreeService.lastDescendantOf('b-root', blocks)?.id, 'b-child-2');
+      expect(
+          BlockTreeService.lastDescendantOf('b-root', blocks)?.id, 'b-child-2',);
     });
 
-    test('Exact ID, text, parent ID, sibling order, and serialization preservation across collapse and expand with differing node/block IDs and nested toggles', () async {
+    test(
+        'Exact ID, text, parent ID, sibling order, and serialization preservation across collapse and expand with differing node/block IDs and nested toggles',
+        () async {
       final now = DateTime.now();
       final coordinator = MockPersistenceCoordinator();
       final snapshot = EditorPersistenceSnapshot('page-exact', {});
@@ -844,7 +871,9 @@ void main() {
         position: 1000.0,
         type: 'list',
         data: jsonEncode({
-          'spans': [{'text': 'Outer Toggle Header'}],
+          'spans': [
+            {'text': 'Outer Toggle Header'},
+          ],
           'listType': 'toggle',
           'isExpanded': true,
         }),
@@ -861,7 +890,9 @@ void main() {
         position: 1000.0,
         type: 'text',
         data: jsonEncode({
-          'spans': [{'text': 'Direct Child 1'}],
+          'spans': [
+            {'text': 'Direct Child 1'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -876,7 +907,9 @@ void main() {
         position: 2000.0,
         type: 'list',
         data: jsonEncode({
-          'spans': [{'text': 'Inner Nested Toggle'}],
+          'spans': [
+            {'text': 'Inner Nested Toggle'},
+          ],
           'listType': 'toggle',
           'isExpanded': true,
         }),
@@ -893,7 +926,9 @@ void main() {
         position: 1000.0,
         type: 'text',
         data: jsonEncode({
-          'spans': [{'text': 'Nested Grandchild'}],
+          'spans': [
+            {'text': 'Nested Grandchild'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -908,7 +943,9 @@ void main() {
         position: 2000.0,
         type: 'text',
         data: jsonEncode({
-          'spans': [{'text': 'Unrelated Trailing Sibling'}],
+          'spans': [
+            {'text': 'Unrelated Trailing Sibling'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -939,22 +976,28 @@ void main() {
       final innerChildNodeId = innerChildNode.id;
       final trailingNodeId = trailingNode.id;
 
-      expect(adapter.registry.blockIdForNode(outerNodeId), 'block-toggle-outer');
+      expect(
+          adapter.registry.blockIdForNode(outerNodeId), 'block-toggle-outer',);
       expect(adapter.registry.blockIdForNode(child1NodeId), 'block-child-1');
-      expect(adapter.registry.blockIdForNode(innerNodeId), 'block-toggle-inner');
-      expect(adapter.registry.blockIdForNode(innerChildNodeId), 'block-inner-child');
-      expect(adapter.registry.blockIdForNode(trailingNodeId), 'block-trailing-sibling');
+      expect(
+          adapter.registry.blockIdForNode(innerNodeId), 'block-toggle-inner',);
+      expect(adapter.registry.blockIdForNode(innerChildNodeId),
+          'block-inner-child',);
+      expect(adapter.registry.blockIdForNode(trailingNodeId),
+          'block-trailing-sibling',);
 
       expect(outerNodeId, isNot('block-toggle-outer'));
       expect(child1NodeId, isNot('block-child-1'));
 
-      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
-        'Outer Toggle Header',
-        'Direct Child 1',
-        'Inner Nested Toggle',
-        'Nested Grandchild',
-        'Unrelated Trailing Sibling',
-      ]);
+      expect(
+          document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(),
+          [
+            'Outer Toggle Header',
+            'Direct Child 1',
+            'Inner Nested Toggle',
+            'Nested Grandchild',
+            'Unrelated Trailing Sibling',
+          ]);
 
       final editor = Editor(
         editables: {Editor.documentKey: document},
@@ -985,13 +1028,17 @@ void main() {
       expect(document.nodeCount, 2);
       expect(document.getNodeAt(0)!.id, outerNodeId);
       expect(document.getNodeAt(1)!.id, trailingNodeId);
-      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
-        'Outer Toggle Header',
-        'Unrelated Trailing Sibling',
-      ]);
+      expect(
+          document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(),
+          [
+            'Outer Toggle Header',
+            'Unrelated Trailing Sibling',
+          ]);
 
-      final deleteMutations = coordinator.mutations.whereType<DeleteBlockMutation>();
-      expect(deleteMutations, isEmpty, reason: 'Subtree collapse must not delete blocks from database');
+      final deleteMutations =
+          coordinator.mutations.whereType<DeleteBlockMutation>();
+      expect(deleteMutations, isEmpty,
+          reason: 'Subtree collapse must not delete blocks from database',);
 
       editor.execute([
         ToggleExpandedRequest(
@@ -1009,21 +1056,27 @@ void main() {
       expect(document.getNodeAt(3)!.id, innerChildNodeId);
       expect(document.getNodeAt(4)!.id, trailingNodeId);
 
-      expect(document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(), [
-        'Outer Toggle Header',
-        'Direct Child 1',
-        'Inner Nested Toggle',
-        'Nested Grandchild',
-        'Unrelated Trailing Sibling',
-      ]);
+      expect(
+          document.map((n) => (n as ParagraphNode).text.toPlainText()).toList(),
+          [
+            'Outer Toggle Header',
+            'Direct Child 1',
+            'Inner Nested Toggle',
+            'Nested Grandchild',
+            'Unrelated Trailing Sibling',
+          ]);
 
-      expect(document.getNodeAt(1)!.metadata['parentBlockId'], 'block-toggle-outer');
-      expect(document.getNodeAt(2)!.metadata['parentBlockId'], 'block-toggle-outer');
-      expect(document.getNodeAt(3)!.metadata['parentBlockId'], 'block-toggle-inner');
+      expect(document.getNodeAt(1)!.metadata['parentBlockId'],
+          'block-toggle-outer',);
+      expect(document.getNodeAt(2)!.metadata['parentBlockId'],
+          'block-toggle-outer',);
+      expect(document.getNodeAt(3)!.metadata['parentBlockId'],
+          'block-toggle-inner',);
       expect(document.getNodeAt(4)!.metadata['parentBlockId'], isNull);
 
       expect(adapter.registry.blockIdForNode(child1NodeId), 'block-child-1');
-      expect(adapter.registry.blockIdForNode(innerChildNodeId), 'block-inner-child');
+      expect(adapter.registry.blockIdForNode(innerChildNodeId),
+          'block-inner-child',);
     });
   });
 }

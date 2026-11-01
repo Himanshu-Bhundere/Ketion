@@ -69,6 +69,9 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 
@@ -154,7 +157,8 @@ void main() {
       // The adapter observes the document insertion and persists the actual
       // block relationship, rather than leaving this as editor-only state.
       await adapter.flushPendingChanges();
-      final inserted = coordinator.mutations.whereType<InsertBlockMutation>().single;
+      final inserted =
+          coordinator.mutations.whereType<InsertBlockMutation>().single;
       expect(inserted.parentBlockId, 'toggle-ime-block');
     });
 
@@ -252,10 +256,16 @@ void main() {
       final builder = KetionToggleComponentBuilder(editor);
       final viewModel = builder.createViewModel(reloadedDoc, reloadedNode)
           as KetionToggleComponentViewModel?;
-      expect(viewModel, isNotNull,
-          reason: 'ViewModel must be created for toggle',);
-      expect(viewModel!.isExpanded, isTrue,
-          reason: 'Toggle was saved as expanded',);
+      expect(
+        viewModel,
+        isNotNull,
+        reason: 'ViewModel must be created for toggle',
+      );
+      expect(
+        viewModel!.isExpanded,
+        isTrue,
+        reason: 'Toggle was saved as expanded',
+      );
 
       final editContext = TestSuperEditorContext(
         editor: editor,
@@ -273,16 +283,20 @@ void main() {
       );
 
       expect(keyResult, ExecutionInstruction.haltExecution);
-      expect(reloadedDoc.nodeCount, 2,
-          reason: 'Enter must insert a child node under toggle',);
+      expect(
+        reloadedDoc.nodeCount,
+        2,
+        reason: 'Enter must insert a child node under toggle',
+      );
 
       final childNode = reloadedDoc.getNodeAt(1)!;
       expect(childNode.metadata['parentBlockId'], 'block-toggle-1');
       expect(childNode.metadata['depth'], 1);
       expect(composer.selection?.extent.nodeId, childNode.id);
       expect(
-          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0,);
+        (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+        0,
+      );
     });
   });
 
@@ -601,11 +615,16 @@ void main() {
       expect(pdfBytes.length, greaterThan(100));
 
       final header = utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true);
-      expect(header.startsWith('%PDF'), isTrue,
-          reason: 'Export must produce a valid PDF document',);
+      expect(
+        header.startsWith('%PDF'),
+        isTrue,
+        reason: 'Export must produce a valid PDF document',
+      );
     });
 
-    test('findDocumentNode and isNodeInsideToggle resolve parent via metadata blockId when node.id differs', () {
+    test(
+        'findDocumentNode and isNodeInsideToggle resolve parent via metadata blockId when node.id differs',
+        () {
       final parentToggle = ParagraphNode(
         id: 'in-memory-node-1',
         text: AttributedText('Parent Toggle'),
@@ -627,12 +646,15 @@ void main() {
       );
       final doc = MutableDocument(nodes: [parentToggle, childNode]);
 
-      expect(findDocumentNode(doc, 'sqlite-block-uuid-1'), equals(parentToggle));
+      expect(
+          findDocumentNode(doc, 'sqlite-block-uuid-1'), equals(parentToggle),);
       expect(isNodeInsideToggle(childNode, doc), isTrue);
       expect(findParentToggleNode(childNode, doc), equals(parentToggle));
     });
 
-    test('Empty toggle header is preserved during ExportUseCase and PdfExporter export', () async {
+    test(
+        'Empty toggle header is preserved during ExportUseCase and PdfExporter export',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-empty-toggle',
@@ -667,7 +689,9 @@ void main() {
       expect(header.startsWith('%PDF'), isTrue);
     });
 
-    testWidgets('KetionToggleComponent renders disclosure icon and responds to tap', (tester) async {
+    testWidgets(
+        'KetionToggleComponent renders disclosure icon and responds to tap',
+        (tester) async {
       bool toggledValue = false;
       bool wasToggled = false;
 
@@ -752,7 +776,9 @@ void main() {
       expect(toggledValue, isFalse);
     });
 
-    test('ExportUseCase and PdfExporter produce correct hierarchy for empty toggle, toggle with children, nested toggles, collapsed toggle, and unrelated sibling', () async {
+    test(
+        'ExportUseCase and PdfExporter produce correct hierarchy for empty toggle, toggle with children, nested toggles, collapsed toggle, and unrelated sibling',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-hierarchy-export',
@@ -773,7 +799,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Empty Toggle'}],
+            'spans': [
+              {'text': 'Empty Toggle'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -789,7 +817,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Toggle With Children'}],
+            'spans': [
+              {'text': 'Toggle With Children'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -802,7 +832,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'First Child'}],
+            'spans': [
+              {'text': 'First Child'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -815,7 +847,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'Second Child'}],
+            'spans': [
+              {'text': 'Second Child'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -831,7 +865,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Nested Toggle Outer'}],
+            'spans': [
+              {'text': 'Nested Toggle Outer'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -846,7 +882,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Nested Toggle Inner'}],
+            'spans': [
+              {'text': 'Nested Toggle Inner'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -859,7 +897,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'Deep Grandchild'}],
+            'spans': [
+              {'text': 'Deep Grandchild'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -875,7 +915,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': false,
-            'spans': [{'text': 'Collapsed Toggle'}],
+            'spans': [
+              {'text': 'Collapsed Toggle'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -888,7 +930,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'Hidden Child'}],
+            'spans': [
+              {'text': 'Hidden Child'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -902,7 +946,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'Unrelated Trailing Sibling'}],
+            'spans': [
+              {'text': 'Unrelated Trailing Sibling'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,

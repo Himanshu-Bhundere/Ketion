@@ -256,4 +256,43 @@ void main() {
       3,
     ); // Victim version was expected to be 2, then updated to 3 because of the pending update!
   });
+
+  test(
+      'failedMutations provides diagnostic inspection for failed and blocked mutations',
+      () async {
+    final gateway = _Gateway()..fail = true;
+    final coordinator = EditorPersistenceCoordinator(gateway: gateway);
+
+    coordinator.enqueue(_update('First'));
+    await coordinator.flush();
+
+    // Enqueue dependent mutation
+    coordinator.enqueue(_update('Second'));
+    await coordinator.flush();
+
+    expect(coordinator.hasFailedMutations, isTrue);
+    expect(coordinator.failedMutations, hasLength(2));
+    expect(coordinator.failedMutations.first, isA<UpdateBlockMutation>());
+
+    // Attempting to modify the unmodifiable list should throw UnsupportedError
+    expect(() => coordinator.failedMutations.clear(), throwsUnsupportedError);
+
+    // Successful retry clears failedMutations
+    gateway.fail = false;
+    final retrySuccess = await coordinator.retryFailed();
+    expect(retrySuccess, isTrue);
+    expect(coordinator.failedMutations, isEmpty);
+  });
+
+  test(
+      'closing coordinator rejects enqueue and hasPendingMutations reflects state',
+      () async {
+    final gateway = _Gateway();
+    final coordinator = EditorPersistenceCoordinator(gateway: gateway);
+
+    coordinator.close();
+
+    final accepted = coordinator.enqueue(_update('After close'));
+    expect(accepted, isFalse);
+  });
 }

@@ -831,11 +831,11 @@ class KetionSuperEditorAdapter {
     }
 
     for (final mutation in insertMutationsToEnqueue) {
-      try {
-        coordinator.enqueue(mutation);
-      } catch (e) {
-        debugPrint(
-          'KETION: Flush enqueue failed for insert block ${mutation.blockId}: $e',
+      final accepted = coordinator.enqueue(mutation);
+      if (!accepted) {
+        throw StateError(
+          'Persistence coordinator rejected mutation '
+          'for block ${mutation.blockId}.',
         );
       }
     }
@@ -882,11 +882,11 @@ class KetionSuperEditorAdapter {
     }
 
     for (final mutation in mutationsToEnqueue) {
-      try {
-        coordinator.enqueue(mutation);
-      } catch (e) {
-        debugPrint(
-          'KETION: Flush enqueue failed for block ${mutation.blockId}: $e',
+      final accepted = coordinator.enqueue(mutation);
+      if (!accepted) {
+        throw StateError(
+          'Persistence coordinator rejected mutation '
+          'for block ${mutation.blockId}.',
         );
       }
     }

@@ -14,7 +14,8 @@ import 'package:ketion/features/editor/presentation/widgets/super_editor_adapter
 import 'package:ketion/features/editor/services/editor_persistence_coordinator.dart';
 import 'package:ketion/features/editor/services/editor_persistence_mutations.dart';
 import 'package:ketion/features/editor/services/editor_persistence_snapshot.dart';
-import 'package:ketion/features/import_export/domain/models/document_model.dart' as exp;
+import 'package:ketion/features/import_export/domain/models/document_model.dart'
+    as exp;
 import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart';
 import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart';
@@ -67,6 +68,9 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 
@@ -74,7 +78,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Ketion Toggle and PDF Fixes — Regression Verification', () {
-    test('1. Enter at toggle heading: Caret moves to a new paragraph inside the toggle; arrow remains functional', () async {
+    test(
+        '1. Enter at toggle heading: Caret moves to a new paragraph inside the toggle; arrow remains functional',
+        () async {
       final toggleNode = ParagraphNode(
         id: 'toggle-h1',
         text: AttributedText('Toggle Heading'),
@@ -134,12 +140,15 @@ void main() {
 
       // Verify toggle arrow remains functional
       final builder = KetionToggleComponentBuilder(editor);
-      final vm = builder.createViewModel(document, toggleNode) as KetionToggleComponentViewModel?;
+      final vm = builder.createViewModel(document, toggleNode)
+          as KetionToggleComponentViewModel?;
       expect(vm, isNotNull);
       expect(vm!.isExpanded, isTrue);
     });
 
-    test('2. Enter inside toggle body: New paragraph retains the same parentBlockId and depth; text split preserved', () {
+    test(
+        '2. Enter inside toggle body: New paragraph retains the same parentBlockId and depth; text split preserved',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-header',
         text: AttributedText('Toggle Header'),
@@ -164,7 +173,8 @@ void main() {
         initialSelection: DocumentSelection.collapsed(
           position: DocumentPosition(
             nodeId: bodyNode.id,
-            nodePosition: const TextNodePosition(offset: 5), // between Hello and World
+            nodePosition:
+                const TextNodePosition(offset: 5), // between Hello and World
           ),
         ),
       );
@@ -214,7 +224,9 @@ void main() {
       expect(composer.selection?.extent.nodeId, secondPart.id);
     });
 
-    test('3. Android IME Enter: Soft-keyboard Enter produces the same structural result as hardware Enter', () async {
+    test(
+        '3. Android IME Enter: Soft-keyboard Enter produces the same structural result as hardware Enter',
+        () async {
       final toggleNode = ParagraphNode(
         id: 'toggle-h2',
         text: AttributedText('Toggle Header'),
@@ -239,7 +251,8 @@ void main() {
         initialSelection: DocumentSelection.collapsed(
           position: DocumentPosition(
             nodeId: childNode.id,
-            nodePosition: const TextNodePosition(offset: 14), // at end of Existing Child
+            nodePosition:
+                const TextNodePosition(offset: 14), // at end of Existing Child
           ),
         ),
       );
@@ -273,8 +286,10 @@ void main() {
         coordinator: coordinator,
         snapshot: snapshot,
       );
-      adapter.registry.registerMapping(nodeId: toggleNode.id, blockId: 'b-toggle-ime');
-      adapter.registry.registerMapping(nodeId: childNode.id, blockId: 'b-child-ime-1');
+      adapter.registry
+          .registerMapping(nodeId: toggleNode.id, blockId: 'b-toggle-ime');
+      adapter.registry
+          .registerMapping(nodeId: childNode.id, blockId: 'b-child-ime-1');
 
       final editor = Editor(
         editables: {
@@ -299,14 +314,17 @@ void main() {
       editor.execute([InsertNewlineAtCaretRequest('new-ime-sibling')]);
 
       expect(document.nodeCount, 3);
-      final newSibling = document.getNodeById('new-ime-sibling') as ParagraphNode?;
+      final newSibling =
+          document.getNodeById('new-ime-sibling') as ParagraphNode?;
       expect(newSibling, isNotNull);
       expect(newSibling!.metadata['parentBlockId'], 'b-toggle-ime');
       expect(newSibling.metadata['depth'], 1);
       expect(composer.selection?.extent.nodeId, 'new-ime-sibling');
     });
 
-    test('4. Empty child exits toggle: Empty paragraph moves outside the toggle subtree with valid parent and sibling position', () {
+    test(
+        '4. Empty child exits toggle: Empty paragraph moves outside the toggle subtree with valid parent and sibling position',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-header-4',
         text: AttributedText('Toggle Header 4'),
@@ -387,7 +405,9 @@ void main() {
       expect(composer.selection?.extent.nodeId, exitedNode.id);
     });
 
-    test('5. Nested toggle exit: Exiting a nested toggle exits only the innermost toggle', () {
+    test(
+        '5. Nested toggle exit: Exiting a nested toggle exits only the innermost toggle',
+        () {
       final outerToggle = ParagraphNode(
         id: 'outer-toggle',
         text: AttributedText('Outer Toggle'),
@@ -418,7 +438,8 @@ void main() {
           'depth': 2,
         },
       );
-      final document = MutableDocument(nodes: [outerToggle, innerToggle, emptyChild]);
+      final document =
+          MutableDocument(nodes: [outerToggle, innerToggle, emptyChild]);
       final composer = MutableDocumentComposer(
         initialSelection: DocumentSelection.collapsed(
           position: DocumentPosition(
@@ -430,7 +451,8 @@ void main() {
       final registry = EditorIdentityRegistry();
       registry.registerMapping(nodeId: outerToggle.id, blockId: 'b-outer');
       registry.registerMapping(nodeId: innerToggle.id, blockId: 'b-inner');
-      registry.registerMapping(nodeId: emptyChild.id, blockId: 'b-nested-empty');
+      registry.registerMapping(
+          nodeId: emptyChild.id, blockId: 'b-nested-empty',);
 
       final editor = Editor(
         editables: {
@@ -470,7 +492,9 @@ void main() {
       expect(composer.selection?.extent.nodeId, exitedNode.id);
     });
 
-    test('6. First expand: Multiple children appear without duplicated nodes or stale selection', () {
+    test(
+        '6. First expand: Multiple children appear without duplicated nodes or stale selection',
+        () {
       final coordinator = TestPersistenceCoordinator();
       final snapshot = EditorPersistenceSnapshot('p2', {});
       final adapter = KetionSuperEditorAdapter(
@@ -490,7 +514,9 @@ void main() {
           'runtimeType': 'list',
           'listType': 'toggle',
           'isExpanded': false, // initially collapsed!
-          'spans': [{'text': 'Collapsed Toggle'}],
+          'spans': [
+            {'text': 'Collapsed Toggle'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -506,7 +532,9 @@ void main() {
         type: 'text',
         data: jsonEncode({
           'runtimeType': 'text',
-          'spans': [{'text': 'Child 1'}],
+          'spans': [
+            {'text': 'Child 1'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -522,7 +550,9 @@ void main() {
         type: 'text',
         data: jsonEncode({
           'runtimeType': 'text',
-          'spans': [{'text': 'Child 2'}],
+          'spans': [
+            {'text': 'Child 2'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -557,7 +587,9 @@ void main() {
       expect(text2, 'Child 2');
     });
 
-    test('7. Collapse and re-expand: All child IDs, text, order, and parent relationships remain unchanged', () {
+    test(
+        '7. Collapse and re-expand: All child IDs, text, order, and parent relationships remain unchanged',
+        () {
       final coordinator = TestPersistenceCoordinator();
       final snapshot = EditorPersistenceSnapshot('p3', {});
       final adapter = KetionSuperEditorAdapter(
@@ -577,7 +609,9 @@ void main() {
           'runtimeType': 'list',
           'listType': 'toggle',
           'isExpanded': true,
-          'spans': [{'text': 'Expandable Toggle'}],
+          'spans': [
+            {'text': 'Expandable Toggle'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -593,7 +627,9 @@ void main() {
         type: 'text',
         data: jsonEncode({
           'runtimeType': 'text',
-          'spans': [{'text': 'Child A'}],
+          'spans': [
+            {'text': 'Child A'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -609,7 +645,9 @@ void main() {
         type: 'text',
         data: jsonEncode({
           'runtimeType': 'text',
-          'spans': [{'text': 'Child B'}],
+          'spans': [
+            {'text': 'Child B'},
+          ],
         }),
         createdAt: now,
         updatedAt: now,
@@ -736,13 +774,18 @@ void main() {
           },
         );
 
-        registry.registerMapping(nodeId: toggleNode.id, blockId: 'toggle-b-mixed');
-        registry.registerMapping(nodeId: paragraphChild.id, blockId: 'b-p-child');
+        registry.registerMapping(
+            nodeId: toggleNode.id, blockId: 'toggle-b-mixed',);
+        registry.registerMapping(
+            nodeId: paragraphChild.id, blockId: 'b-p-child',);
         registry.registerMapping(nodeId: taskChild.id, blockId: 'b-task-child');
         registry.registerMapping(nodeId: imageChild.id, blockId: 'b-img-child');
-        registry.registerMapping(nodeId: innerToggle.id, blockId: 'b-inner-toggle');
-        registry.registerMapping(nodeId: innerDescendant.id, blockId: 'b-inner-desc');
-        registry.registerMapping(nodeId: rootSibling.id, blockId: 'b-root-sibling');
+        registry.registerMapping(
+            nodeId: innerToggle.id, blockId: 'b-inner-toggle',);
+        registry.registerMapping(
+            nodeId: innerDescendant.id, blockId: 'b-inner-desc',);
+        registry.registerMapping(
+            nodeId: rootSibling.id, blockId: 'b-root-sibling',);
 
         final doc = MutableDocument(
           nodes: [
@@ -786,7 +829,9 @@ void main() {
       },
     );
 
-    test('8. PDF blocks: Every block is separated vertically and exports valid PDF', () async {
+    test(
+        '8. PDF blocks: Every block is separated vertically and exports valid PDF',
+        () async {
       final page = Page(
         id: 'pdf-page-1',
         title: 'PDF Separation Test',
@@ -797,10 +842,16 @@ void main() {
       final doc = exp.ExportDocument(
         title: page.title,
         nodes: [
-          const exp.DocumentNode.heading(level: 1, spans: [exp.DocumentTextSpan(text: 'Heading 1')]),
-          const exp.DocumentNode.paragraph(spans: [exp.DocumentTextSpan(text: 'Paragraph body block 1')]),
-          const exp.DocumentNode.callout(icon: '💡', color: 'blue', spans: [exp.DocumentTextSpan(text: 'Callout note')]),
-          const exp.DocumentNode.code(language: 'dart', code: 'void main() => print("test");'),
+          const exp.DocumentNode.heading(
+              level: 1, spans: [exp.DocumentTextSpan(text: 'Heading 1')],),
+          const exp.DocumentNode.paragraph(
+              spans: [exp.DocumentTextSpan(text: 'Paragraph body block 1')],),
+          const exp.DocumentNode.callout(
+              icon: '💡',
+              color: 'blue',
+              spans: [exp.DocumentTextSpan(text: 'Callout note')],),
+          const exp.DocumentNode.code(
+              language: 'dart', code: 'void main() => print("test");',),
           const exp.DocumentNode.divider(),
         ],
       );
@@ -813,7 +864,9 @@ void main() {
       expect(header.startsWith('%PDF'), isTrue);
     });
 
-    test('9. Nested PDF indentation: Each additional hierarchy level increases left indentation', () async {
+    test(
+        '9. Nested PDF indentation: Each additional hierarchy level increases left indentation',
+        () async {
       final page = Page(
         id: 'pdf-page-2',
         title: 'PDF Indentation Test',
@@ -824,10 +877,22 @@ void main() {
       final doc = exp.ExportDocument(
         title: page.title,
         nodes: [
-          const exp.DocumentNode.list(listType: 'toggle', checked: false, spans: [exp.DocumentTextSpan(text: 'Toggle Root')], depth: 0),
-          const exp.DocumentNode.paragraph(spans: [exp.DocumentTextSpan(text: 'Depth 1 paragraph')], depth: 1),
-          const exp.DocumentNode.list(listType: 'toggle', checked: false, spans: [exp.DocumentTextSpan(text: 'Nested Toggle')], depth: 1),
-          const exp.DocumentNode.paragraph(spans: [exp.DocumentTextSpan(text: 'Depth 2 paragraph')], depth: 2),
+          const exp.DocumentNode.list(
+              listType: 'toggle',
+              checked: false,
+              spans: [exp.DocumentTextSpan(text: 'Toggle Root')],
+              depth: 0,),
+          const exp.DocumentNode.paragraph(
+              spans: [exp.DocumentTextSpan(text: 'Depth 1 paragraph')],
+              depth: 1,),
+          const exp.DocumentNode.list(
+              listType: 'toggle',
+              checked: false,
+              spans: [exp.DocumentTextSpan(text: 'Nested Toggle')],
+              depth: 1,),
+          const exp.DocumentNode.paragraph(
+              spans: [exp.DocumentTextSpan(text: 'Depth 2 paragraph')],
+              depth: 2,),
         ],
       );
 
@@ -839,7 +904,9 @@ void main() {
       expect(header.startsWith('%PDF'), isTrue);
     });
 
-    test('10. Save and reload: Editor and PDF represent the same persisted content and hierarchy', () async {
+    test(
+        '10. Save and reload: Editor and PDF represent the same persisted content and hierarchy',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-save-reload',
@@ -859,7 +926,9 @@ void main() {
             'runtimeType': 'list',
             'listType': 'toggle',
             'isExpanded': true,
-            'spans': [{'text': 'Top Toggle'}],
+            'spans': [
+              {'text': 'Top Toggle'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -875,7 +944,9 @@ void main() {
           data: jsonEncode({
             'runtimeType': 'text',
             'headingLevel': 0,
-            'spans': [{'text': 'Child under toggle'}],
+            'spans': [
+              {'text': 'Child under toggle'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -903,7 +974,8 @@ void main() {
       final reloadedDoc = adapter.createDocument(blocks);
       expect(reloadedDoc.nodeCount, 2);
       expect(reloadedDoc.getNodeAt(0)!.metadata['blockId'], 'b-top-toggle');
-      expect(reloadedDoc.getNodeAt(1)!.metadata['parentBlockId'], 'b-top-toggle');
+      expect(
+          reloadedDoc.getNodeAt(1)!.metadata['parentBlockId'], 'b-top-toggle',);
       expect(reloadedDoc.getNodeAt(1)!.metadata['depth'], 1);
 
       // Verify export to PDF
@@ -911,7 +983,11 @@ void main() {
       final useCase = ExportUseCase([exporter]);
       final pdfBytes = await useCase.exportToBytes(page, blocks, 'pdf');
       expect(pdfBytes, isNotEmpty);
-      expect(utf8.decode(pdfBytes.sublist(0, 5), allowMalformed: true).startsWith('%PDF'), isTrue);
+      expect(
+          utf8
+              .decode(pdfBytes.sublist(0, 5), allowMalformed: true)
+              .startsWith('%PDF'),
+          isTrue,);
     });
   });
 }

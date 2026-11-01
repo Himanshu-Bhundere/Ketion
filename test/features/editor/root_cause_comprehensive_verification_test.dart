@@ -48,6 +48,9 @@ class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 
@@ -73,41 +76,86 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Issue 1: List Hierarchy, Indentation, and Subtree Reordering', () {
-    test('Ordered List: indent middle item twice, unindent twice, preserving type and sibling order', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(
-          id: 'o1',
-          text: AttributedText('1. Parent 1'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-o1'},
-        ),
-        ListItemNode.ordered(
-          id: 'o1_sub',
-          text: AttributedText('1.1 Sub-item 1'),
-          indent: 1,
-          metadata: const {'depth': 1, 'blockId': 'b-o1_sub', 'parentBlockId': 'b-o1'},
-        ),
-        ListItemNode.ordered(
-          id: 'o2',
-          text: AttributedText('1.2 Middle item'),
-          indent: 1,
-          metadata: const {'depth': 1, 'blockId': 'b-o2', 'parentBlockId': 'b-o1'},
-        ),
-        ListItemNode.ordered(
-          id: 'o3',
-          text: AttributedText('2. Sibling 3'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-o3'},
-        ),
-      ],);
+    test(
+        'Ordered List: indent middle item twice, unindent twice, preserving type and sibling order',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+            id: 'o1',
+            text: AttributedText('1. Parent 1'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-o1'},
+          ),
+          ListItemNode.ordered(
+            id: 'o1_sub',
+            text: AttributedText('1.1 Sub-item 1'),
+            indent: 1,
+            metadata: const {
+              'depth': 1,
+              'blockId': 'b-o1_sub',
+              'parentBlockId': 'b-o1',
+            },
+          ),
+          ListItemNode.ordered(
+            id: 'o2',
+            text: AttributedText('1.2 Middle item'),
+            indent: 1,
+            metadata: const {
+              'depth': 1,
+              'blockId': 'b-o2',
+              'parentBlockId': 'b-o1',
+            },
+          ),
+          ListItemNode.ordered(
+            id: 'o3',
+            text: AttributedText('2. Sibling 3'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-o3'},
+          ),
+        ],
+      );
 
       final coordinator = MockPersistenceCoordinator();
-      final snapshot = EditorPersistenceSnapshot('page-ordered', {
-        'b-o1': BlockSnapshot(blockId: 'b-o1', pageId: 'page-ordered', type: 'list', position: 10, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-o1_sub': BlockSnapshot(blockId: 'b-o1_sub', pageId: 'page-ordered', type: 'list', parentBlockId: 'b-o1', position: 15, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-o2': BlockSnapshot(blockId: 'b-o2', pageId: 'page-ordered', type: 'list', parentBlockId: 'b-o1', position: 20, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-o3': BlockSnapshot(blockId: 'b-o3', pageId: 'page-ordered', type: 'list', position: 30, version: 1, createdAt: DateTime.now(), deleted: false),
-      },);
+      final snapshot = EditorPersistenceSnapshot(
+        'page-ordered',
+        {
+          'b-o1': BlockSnapshot(
+              blockId: 'b-o1',
+              pageId: 'page-ordered',
+              type: 'list',
+              position: 10,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-o1_sub': BlockSnapshot(
+              blockId: 'b-o1_sub',
+              pageId: 'page-ordered',
+              type: 'list',
+              parentBlockId: 'b-o1',
+              position: 15,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-o2': BlockSnapshot(
+              blockId: 'b-o2',
+              pageId: 'page-ordered',
+              type: 'list',
+              parentBlockId: 'b-o1',
+              position: 20,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-o3': BlockSnapshot(
+              blockId: 'b-o3',
+              pageId: 'page-ordered',
+              type: 'list',
+              position: 30,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+        },
+      );
       final adapter = KetionSuperEditorAdapter(
         pageId: 'page-ordered',
         coordinator: coordinator,
@@ -170,34 +218,62 @@ void main() {
       expect(reorderedIds, ['o1', 'o1_sub', 'o3', 'o2']);
     });
 
-    test('Unordered List: indent middle item, unindent, verify bullet marker preserved', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.unordered(
-          id: 'u1',
-          text: AttributedText('Bullet 1'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-u1'},
-        ),
-        ListItemNode.unordered(
-          id: 'u2',
-          text: AttributedText('Bullet 2'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-u2'},
-        ),
-        ListItemNode.unordered(
-          id: 'u3',
-          text: AttributedText('Bullet 3'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-u3'},
-        ),
-      ],);
+    test(
+        'Unordered List: indent middle item, unindent, verify bullet marker preserved',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.unordered(
+            id: 'u1',
+            text: AttributedText('Bullet 1'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-u1'},
+          ),
+          ListItemNode.unordered(
+            id: 'u2',
+            text: AttributedText('Bullet 2'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-u2'},
+          ),
+          ListItemNode.unordered(
+            id: 'u3',
+            text: AttributedText('Bullet 3'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-u3'},
+          ),
+        ],
+      );
 
       final coordinator = MockPersistenceCoordinator();
-      final snapshot = EditorPersistenceSnapshot('page-unordered', {
-        'b-u1': BlockSnapshot(blockId: 'b-u1', pageId: 'page-unordered', type: 'list', position: 10, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-u2': BlockSnapshot(blockId: 'b-u2', pageId: 'page-unordered', type: 'list', position: 20, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-u3': BlockSnapshot(blockId: 'b-u3', pageId: 'page-unordered', type: 'list', position: 30, version: 1, createdAt: DateTime.now(), deleted: false),
-      },);
+      final snapshot = EditorPersistenceSnapshot(
+        'page-unordered',
+        {
+          'b-u1': BlockSnapshot(
+              blockId: 'b-u1',
+              pageId: 'page-unordered',
+              type: 'list',
+              position: 10,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-u2': BlockSnapshot(
+              blockId: 'b-u2',
+              pageId: 'page-unordered',
+              type: 'list',
+              position: 20,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-u3': BlockSnapshot(
+              blockId: 'b-u3',
+              pageId: 'page-unordered',
+              type: 'list',
+              position: 30,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+        },
+      );
       final adapter = KetionSuperEditorAdapter(
         pageId: 'page-unordered',
         coordinator: coordinator,
@@ -241,34 +317,62 @@ void main() {
       expect(n2.type, ListItemType.unordered);
     });
 
-    test('Checklist: indent middle item, unindent, and preserve TaskNode type with checked state', () {
-      final doc = MutableDocument(nodes: [
-        TaskNode(
-          id: 't1',
-          isComplete: false,
-          text: AttributedText('Task 1'),
-          metadata: const {'depth': 0, 'blockId': 'b-t1'},
-        ),
-        TaskNode(
-          id: 't2',
-          isComplete: true,
-          text: AttributedText('Task 2 (completed)'),
-          metadata: const {'depth': 0, 'blockId': 'b-t2'},
-        ),
-        TaskNode(
-          id: 't3',
-          isComplete: false,
-          text: AttributedText('Task 3'),
-          metadata: const {'depth': 0, 'blockId': 'b-t3'},
-        ),
-      ],);
+    test(
+        'Checklist: indent middle item, unindent, and preserve TaskNode type with checked state',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          TaskNode(
+            id: 't1',
+            isComplete: false,
+            text: AttributedText('Task 1'),
+            metadata: const {'depth': 0, 'blockId': 'b-t1'},
+          ),
+          TaskNode(
+            id: 't2',
+            isComplete: true,
+            text: AttributedText('Task 2 (completed)'),
+            metadata: const {'depth': 0, 'blockId': 'b-t2'},
+          ),
+          TaskNode(
+            id: 't3',
+            isComplete: false,
+            text: AttributedText('Task 3'),
+            metadata: const {'depth': 0, 'blockId': 'b-t3'},
+          ),
+        ],
+      );
 
       final coordinator = MockPersistenceCoordinator();
-      final snapshot = EditorPersistenceSnapshot('page-tasks', {
-        'b-t1': BlockSnapshot(blockId: 'b-t1', pageId: 'page-tasks', type: 'list', position: 10, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-t2': BlockSnapshot(blockId: 'b-t2', pageId: 'page-tasks', type: 'list', position: 20, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-t3': BlockSnapshot(blockId: 'b-t3', pageId: 'page-tasks', type: 'list', position: 30, version: 1, createdAt: DateTime.now(), deleted: false),
-      },);
+      final snapshot = EditorPersistenceSnapshot(
+        'page-tasks',
+        {
+          'b-t1': BlockSnapshot(
+              blockId: 'b-t1',
+              pageId: 'page-tasks',
+              type: 'list',
+              position: 10,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-t2': BlockSnapshot(
+              blockId: 'b-t2',
+              pageId: 'page-tasks',
+              type: 'list',
+              position: 20,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-t3': BlockSnapshot(
+              blockId: 'b-t3',
+              pageId: 'page-tasks',
+              type: 'list',
+              position: 30,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+        },
+      );
       final adapter = KetionSuperEditorAdapter(
         pageId: 'page-tasks',
         coordinator: coordinator,
@@ -315,40 +419,83 @@ void main() {
     });
 
     test('Reordering parent moves all its contiguous descendants together', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(
-          id: 'p1',
-          text: AttributedText('Parent 1'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-p1'},
-        ),
-        ListItemNode.ordered(
-          id: 'c1_1',
-          text: AttributedText('Child 1.1'),
-          indent: 1,
-          metadata: const {'depth': 1, 'blockId': 'b-c1_1', 'parentBlockId': 'b-p1'},
-        ),
-        ListItemNode.ordered(
-          id: 'c1_2',
-          text: AttributedText('Child 1.2'),
-          indent: 1,
-          metadata: const {'depth': 1, 'blockId': 'b-c1_2', 'parentBlockId': 'b-p1'},
-        ),
-        ListItemNode.ordered(
-          id: 'p2',
-          text: AttributedText('Parent 2'),
-          indent: 0,
-          metadata: const {'depth': 0, 'blockId': 'b-p2'},
-        ),
-      ],);
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+            id: 'p1',
+            text: AttributedText('Parent 1'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-p1'},
+          ),
+          ListItemNode.ordered(
+            id: 'c1_1',
+            text: AttributedText('Child 1.1'),
+            indent: 1,
+            metadata: const {
+              'depth': 1,
+              'blockId': 'b-c1_1',
+              'parentBlockId': 'b-p1',
+            },
+          ),
+          ListItemNode.ordered(
+            id: 'c1_2',
+            text: AttributedText('Child 1.2'),
+            indent: 1,
+            metadata: const {
+              'depth': 1,
+              'blockId': 'b-c1_2',
+              'parentBlockId': 'b-p1',
+            },
+          ),
+          ListItemNode.ordered(
+            id: 'p2',
+            text: AttributedText('Parent 2'),
+            indent: 0,
+            metadata: const {'depth': 0, 'blockId': 'b-p2'},
+          ),
+        ],
+      );
 
       final coordinator = MockPersistenceCoordinator();
-      final snapshot = EditorPersistenceSnapshot('page-subtree', {
-        'b-p1': BlockSnapshot(blockId: 'b-p1', pageId: 'page-subtree', type: 'list', position: 10, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-c1_1': BlockSnapshot(blockId: 'b-c1_1', pageId: 'page-subtree', type: 'list', parentBlockId: 'b-p1', position: 11, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-c1_2': BlockSnapshot(blockId: 'b-c1_2', pageId: 'page-subtree', type: 'list', parentBlockId: 'b-p1', position: 12, version: 1, createdAt: DateTime.now(), deleted: false),
-        'b-p2': BlockSnapshot(blockId: 'b-p2', pageId: 'page-subtree', type: 'list', position: 20, version: 1, createdAt: DateTime.now(), deleted: false),
-      },);
+      final snapshot = EditorPersistenceSnapshot(
+        'page-subtree',
+        {
+          'b-p1': BlockSnapshot(
+              blockId: 'b-p1',
+              pageId: 'page-subtree',
+              type: 'list',
+              position: 10,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-c1_1': BlockSnapshot(
+              blockId: 'b-c1_1',
+              pageId: 'page-subtree',
+              type: 'list',
+              parentBlockId: 'b-p1',
+              position: 11,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-c1_2': BlockSnapshot(
+              blockId: 'b-c1_2',
+              pageId: 'page-subtree',
+              type: 'list',
+              parentBlockId: 'b-p1',
+              position: 12,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+          'b-p2': BlockSnapshot(
+              blockId: 'b-p2',
+              pageId: 'page-subtree',
+              type: 'list',
+              position: 20,
+              version: 1,
+              createdAt: DateTime.now(),
+              deleted: false,),
+        },
+      );
       final adapter = KetionSuperEditorAdapter(
         pageId: 'page-subtree',
         coordinator: coordinator,
@@ -393,7 +540,9 @@ void main() {
   });
 
   group('Issue 2: PDF Export Matching Editor Hierarchy & Ordinals', () {
-    test('Calculates ordered list numbers per sibling group and resets for separate lists', () async {
+    test(
+        'Calculates ordered list numbers per sibling group and resets for separate lists',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-export-test',
@@ -408,7 +557,13 @@ void main() {
           id: '1',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'Parent 1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'Parent 1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 10,
@@ -418,7 +573,13 @@ void main() {
           pageId: page.id,
           parentBlockId: '1',
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'Child 1.1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'Child 1.1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 11,
@@ -428,7 +589,13 @@ void main() {
           pageId: page.id,
           parentBlockId: '1',
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'Child 1.2'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'Child 1.2'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 12,
@@ -437,7 +604,13 @@ void main() {
           id: '4',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'Parent 2'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'Parent 2'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 20,
@@ -446,7 +619,13 @@ void main() {
           id: '5',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'Parent 3'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'Parent 3'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 30,
@@ -457,7 +636,12 @@ void main() {
           id: 'sep',
           pageId: page.id,
           type: 'text',
-          data: jsonEncode({'runtimeType': 'text', 'spans': [{'text': 'A paragraph separating lists'}]}),
+          data: jsonEncode({
+            'runtimeType': 'text',
+            'spans': [
+              {'text': 'A paragraph separating lists'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 40,
@@ -468,7 +652,13 @@ void main() {
           id: '6',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'New List 1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'New List 1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 50,
@@ -477,7 +667,13 @@ void main() {
           id: '7',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'ordered', 'spans': [{'text': 'New List 2'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'ordered',
+            'spans': [
+              {'text': 'New List 2'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 60,
@@ -488,7 +684,13 @@ void main() {
           id: 'b1',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'bullet', 'spans': [{'text': 'Bullet group 1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'bullet',
+            'spans': [
+              {'text': 'Bullet group 1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 70,
@@ -498,7 +700,13 @@ void main() {
           pageId: page.id,
           parentBlockId: 'b1',
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'bullet', 'spans': [{'text': 'Nested bullet 1.1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'bullet',
+            'spans': [
+              {'text': 'Nested bullet 1.1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 71,
@@ -507,7 +715,13 @@ void main() {
           id: 'b3',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'bullet', 'spans': [{'text': 'Bullet group 2'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'bullet',
+            'spans': [
+              {'text': 'Bullet group 2'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 80,
@@ -518,7 +732,14 @@ void main() {
           id: 'k1',
           pageId: page.id,
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'checklist', 'checked': true, 'spans': [{'text': 'Task 1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'checklist',
+            'checked': true,
+            'spans': [
+              {'text': 'Task 1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 90,
@@ -528,7 +749,14 @@ void main() {
           pageId: page.id,
           parentBlockId: 'k1',
           type: 'list',
-          data: jsonEncode({'runtimeType': 'list', 'listType': 'checklist', 'checked': false, 'spans': [{'text': 'Nested task 1.1'}]}),
+          data: jsonEncode({
+            'runtimeType': 'list',
+            'listType': 'checklist',
+            'checked': false,
+            'spans': [
+              {'text': 'Nested task 1.1'},
+            ],
+          }),
           createdAt: now,
           updatedAt: now,
           position: 91,
@@ -546,7 +774,8 @@ void main() {
       expect(header.startsWith('%PDF'), isTrue);
     });
 
-    test('ExportUseCase does not drop toggle blocks as UnknownBlockData', () async {
+    test('ExportUseCase does not drop toggle blocks as UnknownBlockData',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'page-toggle-export',
@@ -563,7 +792,9 @@ void main() {
           data: jsonEncode({
             'runtimeType': 'list',
             'listType': 'toggle',
-            'spans': [{'text': 'My Toggle Heading'}],
+            'spans': [
+              {'text': 'My Toggle Heading'},
+            ],
           }),
           createdAt: now,
           updatedAt: now,
@@ -576,7 +807,9 @@ void main() {
           type: 'text',
           data: jsonEncode({
             'runtimeType': 'text',
-            'spans': [{'text': 'Child paragraph inside toggle'}],
+            'spans': [
+              {'text': 'Child paragraph inside toggle'},
+            ],
           }),
           parentBlockId: 'toggle-blk-1',
           createdAt: now,
@@ -598,7 +831,9 @@ void main() {
   });
 
   group('Issue 3: Toggle Arrow Visibility & Enter Key Child Insertion', () {
-    test('KetionToggleComponentBuilder produces ViewModel with valid disclosure arrow properties', () {
+    test(
+        'KetionToggleComponentBuilder produces ViewModel with valid disclosure arrow properties',
+        () {
       final doc = MutableDocument();
       final editor = Editor(editables: {Editor.documentKey: doc});
       final builder = KetionToggleComponentBuilder(editor);
@@ -612,12 +847,15 @@ void main() {
         },
       );
 
-      final vm = builder.createViewModel(doc, toggleNode) as KetionToggleComponentViewModel?;
+      final vm = builder.createViewModel(doc, toggleNode)
+          as KetionToggleComponentViewModel?;
       expect(vm, isNotNull);
       expect(vm!.isExpanded, isTrue);
     });
 
-    test('splitToggleWhenEnterPressed at end of toggle creates child block inside toggle and moves caret', () {
+    test(
+        'splitToggleWhenEnterPressed at end of toggle creates child block inside toggle and moves caret',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
@@ -647,7 +885,8 @@ void main() {
         ],
       );
 
-      final context = MockSuperEditorContext(editor: editor, document: doc, composer: composer);
+      final context = MockSuperEditorContext(
+          editor: editor, document: doc, composer: composer,);
 
       // Press Enter at end of toggle header
       final handled = splitToggleWhenEnterPressed(
@@ -671,7 +910,9 @@ void main() {
       expect(composer.selection?.extent.nodeId, child.id);
     });
 
-    test('splitToggleWhenEnterPressed at end of toggle with existing children inserts another child', () {
+    test(
+        'splitToggleWhenEnterPressed at end of toggle with existing children inserts another child',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-2',
         text: AttributedText('Toggle With Existing Child'),
@@ -710,7 +951,8 @@ void main() {
         ],
       );
 
-      final context = MockSuperEditorContext(editor: editor, document: doc, composer: composer);
+      final context = MockSuperEditorContext(
+          editor: editor, document: doc, composer: composer,);
 
       final handled = splitToggleWhenEnterPressed(
         editContext: context,
@@ -731,22 +973,28 @@ void main() {
   });
 
   group('Issue 4: Android Widget Deep Linking and Snapshot Pipeline', () {
-    test('WidgetBootstrap routes ketion://note/{id} directly to specific editor note', () async {
+    test(
+        'WidgetBootstrap routes ketion://note/{id} directly to specific editor note',
+        () async {
       const pageId = 'note-widget-12345';
       await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/$pageId'));
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(appRouter.routeInformationProvider.value.uri.path, contains(pageId));
+      expect(
+          appRouter.routeInformationProvider.value.uri.path, contains(pageId),);
     });
 
-    test('WidgetBootstrap ignores malformed or null note IDs gracefully', () async {
+    test('WidgetBootstrap ignores malformed or null note IDs gracefully',
+        () async {
       final curPath = appRouter.routeInformationProvider.value.uri.path;
       await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/null'));
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(appRouter.routeInformationProvider.value.uri.path, curPath);
     });
 
-    test('WidgetBootstrap invokes onCreatePage on ketion://new-note and routes to created note', () async {
+    test(
+        'WidgetBootstrap invokes onCreatePage on ketion://new-note and routes to created note',
+        () async {
       bool called = false;
       const newPageId = 'new-note-from-widget-789';
 
@@ -760,7 +1008,8 @@ void main() {
 
       expect(called, isTrue);
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(appRouter.routeInformationProvider.value.uri.path, contains(newPageId));
+      expect(appRouter.routeInformationProvider.value.uri.path,
+          contains(newPageId),);
     });
   });
 }

@@ -30,6 +30,9 @@ class MockPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 

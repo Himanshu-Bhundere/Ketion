@@ -60,6 +60,9 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   Future<bool> retryFailed() async => true;
 }
 
@@ -161,8 +164,9 @@ void main() {
       expect(childNode.metadata['depth'], 1);
       expect(composer.selection?.extent.nodeId, childNode.id);
       expect(
-          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0,);
+        (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+        0,
+      );
     });
 
     test(
@@ -358,7 +362,9 @@ void main() {
           document.getNodeById('toggle-header-node') as ParagraphNode;
       expect(originalNode.text.toPlainText(), 'Alpha ');
       expect(
-          originalNode.metadata['blockType'], const NamedAttribution('toggle'),);
+        originalNode.metadata['blockType'],
+        const NamedAttribution('toggle'),
+      );
       expect(originalNode.metadata['listType'], 'toggle');
       expect(originalNode.metadata['isExpanded'], true);
       expect(originalNode.metadata['blockId'], 'toggle-header-block');
@@ -370,8 +376,10 @@ void main() {
       final newNode = document.getNodeAt(2) as ParagraphNode;
       expect(newNode.text.toPlainText(), 'Beta');
       // Must NOT be a toggle
-      expect(newNode.metadata['blockType'],
-          isNot(const NamedAttribution('toggle')),);
+      expect(
+        newNode.metadata['blockType'],
+        isNot(const NamedAttribution('toggle')),
+      );
       expect(newNode.metadata['listType'], isNot('toggle'));
       expect(newNode.metadata['isExpanded'], isNull);
       // Same depth and parentBlockId as toggle (top-level sibling)
@@ -381,8 +389,9 @@ void main() {
       // Caret placed at offset 0 of new node
       expect(composer.selection?.extent.nodeId, newNode.id);
       expect(
-          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0,);
+        (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+        0,
+      );
     });
 
     test('Enter at the end of a toggle heading creates child node under toggle',
@@ -448,8 +457,9 @@ void main() {
       expect(newChild.metadata['parentBlockId'], 'toggle-1');
       expect(composer.selection?.extent.nodeId, newChild.id);
       expect(
-          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0,);
+        (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+        0,
+      );
     });
 
     test(
@@ -513,8 +523,9 @@ void main() {
 
       expect(composer.selection?.extent.nodeId, 'outside-1');
       expect(
-          (composer.selection?.extent.nodePosition as TextNodePosition).offset,
-          0,);
+        (composer.selection?.extent.nodePosition as TextNodePosition).offset,
+        0,
+      );
     });
 
     test(

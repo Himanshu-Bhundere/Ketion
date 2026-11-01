@@ -23,7 +23,8 @@ import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_compon
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_keyboard_actions.dart';
 import 'package:ketion/features/editor/services/editor_persistence_coordinator.dart';
 import 'package:ketion/features/editor/services/editor_persistence_mutations.dart';
-import 'package:ketion/features/import_export/domain/models/document_model.dart' as doc_model;
+import 'package:ketion/features/import_export/domain/models/document_model.dart'
+    as doc_model;
 import 'package:ketion/features/import_export/domain/services/pdf_exporter.dart';
 import 'package:ketion/features/import_export/domain/usecases/export_usecase.dart';
 import 'package:ketion/features/pages/data/repositories/page_repository_impl.dart';
@@ -84,6 +85,9 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
   bool get hasPendingMutations => false;
 
   @override
+  List<EditorPersistenceMutation> get failedMutations => const [];
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -107,32 +111,42 @@ class FailingWidgetService implements WidgetService {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Issue 1: Toggle Slash Command, Enter Insertion & PDF Vector Triangle', () {
-    test('Slash command /toggle converts current node without premature child insertion', () {
-      final doc = MutableDocument(nodes: [
-        ParagraphNode(
-          id: 'p1',
-          text: AttributedText('My Toggle Topic'),
-          metadata: const {'depth': 0, 'blockId': 'block-p1'},
-        ),
-      ],);
+  group('Issue 1: Toggle Slash Command, Enter Insertion & PDF Vector Triangle',
+      () {
+    test(
+        'Slash command /toggle converts current node without premature child insertion',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          ParagraphNode(
+            id: 'p1',
+            text: AttributedText('My Toggle Topic'),
+            metadata: const {'depth': 0, 'blockId': 'block-p1'},
+          ),
+        ],
+      );
 
-      final toggleCommand = KetionSlashCommandRegistry.allCommands.firstWhere((c) => c.id == 'toggle');
+      final toggleCommand = KetionSlashCommandRegistry.allCommands
+          .firstWhere((c) => c.id == 'toggle');
       final requests = toggleCommand.getEditRequestsWithDoc('p1', doc);
 
       expect(requests.isNotEmpty, isTrue);
       // Verify no InsertNodeAfterNodeRequest is prematurely issued
       expect(requests.whereType<InsertNodeAfterNodeRequest>().isEmpty, isTrue);
 
-      final metadataReq = requests.whereType<ChangeParagraphMetadataRequest>().single;
+      final metadataReq =
+          requests.whereType<ChangeParagraphMetadataRequest>().single;
       expect(metadataReq.nodeId, 'p1');
       expect(metadataReq.metadata['listType'], 'toggle');
       expect(metadataReq.metadata['type'], 'toggle');
       expect(metadataReq.metadata['isExpanded'], isTrue);
-      expect(metadataReq.metadata['blockType'], const NamedAttribution('toggle'));
+      expect(
+          metadataReq.metadata['blockType'], const NamedAttribution('toggle'),);
     });
 
-    testWidgets('Toggle header recognized by builder and renders visible disclosure arrow', (tester) async {
+    testWidgets(
+        'Toggle header recognized by builder and renders visible disclosure arrow',
+        (tester) async {
       final node = ParagraphNode(
         id: 'toggle-header-node',
         text: AttributedText('Toggle Header'),
@@ -156,7 +170,8 @@ void main() {
       expect(KetionToggleComponentBuilder.isToggleNode(node), isTrue);
 
       final builder = KetionToggleComponentBuilder(editor);
-      final viewModel = builder.createViewModel(doc, node) as KetionToggleComponentViewModel?;
+      final viewModel =
+          builder.createViewModel(doc, node) as KetionToggleComponentViewModel?;
       expect(viewModel, isNotNull);
       expect(viewModel!.isExpanded, isTrue);
 
@@ -175,7 +190,9 @@ void main() {
       expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
     });
 
-    test('Enter at end of toggle header creates child with correct parent relationship and caret placement', () {
+    test(
+        'Enter at end of toggle header creates child with correct parent relationship and caret placement',
+        () {
       final toggleNode = ParagraphNode(
         id: 'toggle-header-node',
         text: AttributedText('Header'),
@@ -236,7 +253,9 @@ void main() {
       );
     });
 
-    test('PDF export does not print literal > characters and skips empty toggles', () async {
+    test(
+        'PDF export does not print literal > characters and skips empty toggles',
+        () async {
       final now = DateTime.now();
       final page = Page(
         id: 'p-pdf-test',
@@ -293,80 +312,173 @@ void main() {
 
   group('Issue 2: Numbered-List Ordinals & Indentation Hierarchy', () {
     test('Three ordered siblings have ordinals 1, 2, 3', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(id: 'o1', text: AttributedText('First'), indent: 0),
-        ListItemNode.ordered(id: 'o2', text: AttributedText('Second'), indent: 0),
-        ListItemNode.ordered(id: 'o3', text: AttributedText('Third'), indent: 0),
-      ],);
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+              id: 'o1', text: AttributedText('First'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'o2', text: AttributedText('Second'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'o3', text: AttributedText('Third'), indent: 0,),
+        ],
+      );
 
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('o1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('o2') as ListItemNode, doc), 2);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('o3') as ListItemNode, doc), 3);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('o1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('o2') as ListItemNode, doc,),
+          2,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('o3') as ListItemNode, doc,),
+          3,);
     });
 
-    test('Nested children under siblings do not increment parent ordinal sequence', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(id: 'p1', text: AttributedText('Item 1'), indent: 0),
-        ListItemNode.ordered(id: 'c1', text: AttributedText('Sub 1.1'), indent: 1),
-        ListItemNode.ordered(id: 'p2', text: AttributedText('Item 2'), indent: 0),
-        ListItemNode.ordered(id: 'c2_1', text: AttributedText('Sub 2.1'), indent: 1),
-        ListItemNode.ordered(id: 'c2_2', text: AttributedText('Sub 2.2'), indent: 1),
-      ],);
+    test(
+        'Nested children under siblings do not increment parent ordinal sequence',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+              id: 'p1', text: AttributedText('Item 1'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'c1', text: AttributedText('Sub 1.1'), indent: 1,),
+          ListItemNode.ordered(
+              id: 'p2', text: AttributedText('Item 2'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'c2_1', text: AttributedText('Sub 2.1'), indent: 1,),
+          ListItemNode.ordered(
+              id: 'c2_2', text: AttributedText('Sub 2.2'), indent: 1,),
+        ],
+      );
 
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('p1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('c1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('p2') as ListItemNode, doc), 2);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('c2_1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('c2_2') as ListItemNode, doc), 2);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('p1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('c1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('p2') as ListItemNode, doc,),
+          2,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('c2_1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('c2_2') as ListItemNode, doc,),
+          2,);
     });
 
-    test('Indenting and unindenting middle item recomputes ordinals correctly', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(id: 'i1', text: AttributedText('One'), indent: 0),
-        ListItemNode.ordered(id: 'i2', text: AttributedText('Two'), indent: 0),
-        ListItemNode.ordered(id: 'i3', text: AttributedText('Three'), indent: 0),
-      ],);
+    test('Indenting and unindenting middle item recomputes ordinals correctly',
+        () {
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+              id: 'i1', text: AttributedText('One'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'i2', text: AttributedText('Two'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'i3', text: AttributedText('Three'), indent: 0,),
+        ],
+      );
 
       // Before indent: 1, 2, 3
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i2') as ListItemNode, doc), 2);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i3') as ListItemNode, doc), 3);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i2') as ListItemNode, doc,),
+          2,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i3') as ListItemNode, doc,),
+          3,);
 
       // Indent middle item to depth 1
-      final indentedI2 = ListItemNode.ordered(id: 'i2', text: AttributedText('Two'), indent: 1);
+      final indentedI2 = ListItemNode.ordered(
+          id: 'i2', text: AttributedText('Two'), indent: 1,);
       doc.replaceNodeById('i2', indentedI2);
 
       // Ordinals now: i1 -> 1, i2 (depth 1) -> 1, i3 (depth 0) -> 2
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i2') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i3') as ListItemNode, doc), 2);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i2') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i3') as ListItemNode, doc,),
+          2,);
 
       // Unindent middle item back to depth 0
-      final unindentedI2 = ListItemNode.ordered(id: 'i2', text: AttributedText('Two'), indent: 0);
+      final unindentedI2 = ListItemNode.ordered(
+          id: 'i2', text: AttributedText('Two'), indent: 0,);
       doc.replaceNodeById('i2', unindentedI2);
 
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i2') as ListItemNode, doc), 2);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('i3') as ListItemNode, doc), 3);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i2') as ListItemNode, doc,),
+          2,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('i3') as ListItemNode, doc,),
+          3,);
     });
 
     test('Non-ordered sibling at same level resets list sequence', () {
-      final doc = MutableDocument(nodes: [
-        ListItemNode.ordered(id: 'a1', text: AttributedText('List A1'), indent: 0),
-        ListItemNode.ordered(id: 'a2', text: AttributedText('List A2'), indent: 0),
-        ParagraphNode(id: 'sep', text: AttributedText('Paragraph Break'), metadata: const {'depth': 0}),
-        ListItemNode.ordered(id: 'b1', text: AttributedText('List B1'), indent: 0),
-        ListItemNode.ordered(id: 'b2', text: AttributedText('List B2'), indent: 0),
-      ],);
+      final doc = MutableDocument(
+        nodes: [
+          ListItemNode.ordered(
+              id: 'a1', text: AttributedText('List A1'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'a2', text: AttributedText('List A2'), indent: 0,),
+          ParagraphNode(
+              id: 'sep',
+              text: AttributedText('Paragraph Break'),
+              metadata: const {'depth': 0},),
+          ListItemNode.ordered(
+              id: 'b1', text: AttributedText('List B1'), indent: 0,),
+          ListItemNode.ordered(
+              id: 'b2', text: AttributedText('List B2'), indent: 0,),
+        ],
+      );
 
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('a1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('a2') as ListItemNode, doc), 2);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('b1') as ListItemNode, doc), 1);
-      expect(computeKetionListItemOrdinalValue(doc.getNodeById('b2') as ListItemNode, doc), 2);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('a1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('a2') as ListItemNode, doc,),
+          2,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('b1') as ListItemNode, doc,),
+          1,);
+      expect(
+          computeKetionListItemOrdinalValue(
+              doc.getNodeById('b2') as ListItemNode, doc,),
+          2,);
     });
   });
 
   group('Issue 3: Widget Deep Links, Navigation Stack & Back Behavior', () {
-    test('ketion://new-note pushes editor above home and canPop or popping returns home', () async {
+    test(
+        'ketion://new-note pushes editor above home and canPop or popping returns home',
+        () async {
       const newPageId = 'created-widget-page';
       await WidgetBootstrap.handleDeepLink(
         Uri.parse('ketion://new-note'),
@@ -374,7 +486,8 @@ void main() {
       );
 
       await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(appRouter.routeInformationProvider.value.uri.path, contains(newPageId));
+      expect(appRouter.routeInformationProvider.value.uri.path,
+          contains(newPageId),);
 
       // Pop from editor
       if (appRouter.canPop()) {
@@ -384,7 +497,9 @@ void main() {
       }
     });
 
-    test('ketion://note/{id} validates note and rejects deleted or missing pages', () async {
+    test(
+        'ketion://note/{id} validates note and rejects deleted or missing pages',
+        () async {
       bool errorReported = false;
 
       await WidgetBootstrap.handleDeepLink(
@@ -399,11 +514,13 @@ void main() {
       expect(errorReported, isTrue);
     });
 
-    test('Malformed note IDs (null, empty, undefined) are ignored safely', () async {
+    test('Malformed note IDs (null, empty, undefined) are ignored safely',
+        () async {
       final initialPath = appRouter.routeInformationProvider.value.uri.path;
 
       await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/null'));
-      await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/undefined'));
+      await WidgetBootstrap.handleDeepLink(
+          Uri.parse('ketion://note/undefined'),);
       await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/ '));
 
       expect(appRouter.routeInformationProvider.value.uri.path, initialPath);
@@ -411,14 +528,16 @@ void main() {
   });
 
   group('Issue 4: Widget Update Error Inspection & Resilience', () {
-    test('CreatePageUseCase logs error when UpdateWidgetsUseCase returns Error', () async {
+    test('CreatePageUseCase logs error when UpdateWidgetsUseCase returns Error',
+        () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       final syncQueue = SyncQueueRepositoryImpl(db);
       final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
       final failingWidgetService = FailingWidgetService();
       final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
 
-      final createPageUseCase = CreatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final createPageUseCase =
+          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
 
       final result = await createPageUseCase(title: 'Resilient Page');
       expect(result, isA<Success<Page>>());
@@ -428,34 +547,41 @@ void main() {
       await db.close();
     });
 
-    test('UpdatePageUseCase logs error when UpdateWidgetsUseCase returns Error', () async {
+    test('UpdatePageUseCase logs error when UpdateWidgetsUseCase returns Error',
+        () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       final syncQueue = SyncQueueRepositoryImpl(db);
       final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
       final failingWidgetService = FailingWidgetService();
       final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
 
-      final createPageUseCase = CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final updatePageUseCase = UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final createPageUseCase =
+          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final updatePageUseCase =
+          UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
 
       final createResult = await createPageUseCase(title: 'Initial Title');
       final page = createResult.valueOrNull!;
 
-      final updateResult = await updatePageUseCase(page.copyWith(title: 'Updated Title'));
+      final updateResult =
+          await updatePageUseCase(page.copyWith(title: 'Updated Title'));
       expect(updateResult, isA<Success<void>>());
 
       await db.close();
     });
 
-    test('DeletePageUseCase logs error when UpdateWidgetsUseCase returns Error', () async {
+    test('DeletePageUseCase logs error when UpdateWidgetsUseCase returns Error',
+        () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       final syncQueue = SyncQueueRepositoryImpl(db);
       final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
       final failingWidgetService = FailingWidgetService();
       final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
 
-      final createPageUseCase = CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final deletePageUseCase = DeletePageUseCase(pageRepo, updateWidgetsUseCase);
+      final createPageUseCase =
+          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final deletePageUseCase =
+          DeletePageUseCase(pageRepo, updateWidgetsUseCase);
 
       final createResult = await createPageUseCase(title: 'To Be Deleted');
       final page = createResult.valueOrNull!;
@@ -467,8 +593,12 @@ void main() {
     });
   });
 
-  group('Issue 2: Checklist Indentation Hierarchy & Single Authority Indentation', () {
-    test('KetionTaskComponentBuilder delegates all indentation to DepthWrappingComponentBuilder', () {
+  group(
+      'Issue 2: Checklist Indentation Hierarchy & Single Authority Indentation',
+      () {
+    test(
+        'KetionTaskComponentBuilder delegates all indentation to DepthWrappingComponentBuilder',
+        () {
       final doc = MutableDocument(
         nodes: [
           TaskNode(
@@ -489,7 +619,9 @@ void main() {
       expect(getNodeDepth(doc.first), 2);
     });
 
-    test('PdfExporter preserves nested checklist structure and applies depth margins', () async {
+    test(
+        'PdfExporter preserves nested checklist structure and applies depth margins',
+        () async {
       final exporter = PdfExporter();
       const document = doc_model.ExportDocument(
         title: 'Checklist Test',
@@ -521,8 +653,12 @@ void main() {
     });
   });
 
-  group('Issue 3: Title Race Condition, Stale Provider Protection & Dispose Safety', () {
-    testWidgets('EditablePageTitle does not overwrite active local edit with stale provider snapshot', (tester) async {
+  group(
+      'Issue 3: Title Race Condition, Stale Provider Protection & Dispose Safety',
+      () {
+    testWidgets(
+        'EditablePageTitle does not overwrite active local edit with stale provider snapshot',
+        (tester) async {
       final page = Page(
         id: 'test-page-1',
         title: 'Initial Title',
@@ -577,7 +713,9 @@ void main() {
       expect(lastSavedTitle, 'Locally Modified Title');
     });
 
-    testWidgets('EditablePageTitle flushes unpersisted title on dispose without disposed controller error', (tester) async {
+    testWidgets(
+        'EditablePageTitle flushes unpersisted title on dispose without disposed controller error',
+        (tester) async {
       final page = Page(
         id: 'test-page-2',
         title: 'Before Dispose',
@@ -613,14 +751,18 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    test('Concurrent page updates serialize properly and preserve latest values', () async {
+    test(
+        'Concurrent page updates serialize properly and preserve latest values',
+        () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       final syncQueue = SyncQueueRepositoryImpl(db);
       final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
       final failingWidgetService = FailingWidgetService();
       final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
-      final createPageUseCase = CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final updatePageUseCase = UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final createPageUseCase =
+          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final updatePageUseCase =
+          UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
 
       final createResult = await createPageUseCase(title: 'Original Title');
       final initialPage = createResult.valueOrNull!;

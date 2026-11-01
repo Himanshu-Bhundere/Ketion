@@ -93,11 +93,29 @@ class LocalNotificationScheduler implements ReminderScheduler {
       categoryIdentifier: 'reminder_actions',
     );
 
+    final windowsDetails = WindowsNotificationDetails(
+      scenario: reminder.kind == ReminderKind.alarm
+          ? WindowsNotificationScenario.alarm
+          : WindowsNotificationScenario.reminder,
+      actions: <WindowsAction>[
+        if (reminder.kind != ReminderKind.alarm)
+          const WindowsAction(
+            content: 'Complete',
+            arguments: 'complete',
+          ),
+        const WindowsAction(
+          content: 'Snooze',
+          arguments: 'snooze',
+        ),
+      ],
+    );
+
     final notificationDetails = NotificationDetails(
       android: reminder.kind == ReminderKind.alarm
           ? alarmAndroidDetails
           : reminderAndroidDetails,
       iOS: iOSDetails,
+      windows: windowsDetails,
     );
 
     final payload = jsonEncode({

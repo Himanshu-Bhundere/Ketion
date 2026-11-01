@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -20,18 +21,27 @@ class AlarmRingingPage extends ConsumerStatefulWidget {
 }
 
 class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  AudioPlayer? _audioPlayer;
+
+  bool get _isAudioSupported =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
+
   @override
   void initState() {
     super.initState();
-    _startAlarm();
+    if (_isAudioSupported) {
+      _audioPlayer = AudioPlayer();
+      _startAlarm();
+    }
   }
 
   Future<void> _startAlarm() async {
+    final player = _audioPlayer;
+    if (player == null) return;
     try {
-      await _audioPlayer.setAsset('assets/audio/alarm.mp3');
-      await _audioPlayer.setLoopMode(LoopMode.one);
-      await _audioPlayer.play();
+      await player.setAsset('assets/audio/alarm.mp3');
+      await player.setLoopMode(LoopMode.one);
+      await player.play();
     } catch (e) {
       debugPrint('Error playing alarm audio: $e');
     }
@@ -39,8 +49,11 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
 
   @override
   void dispose() {
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
+    final player = _audioPlayer;
+    if (player != null) {
+      player.stop();
+      player.dispose();
+    }
     super.dispose();
   }
 
@@ -51,7 +64,10 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
           occurrenceTime: widget.occurrenceTime,
         );
 
-    await _audioPlayer.stop();
+    final player = _audioPlayer;
+    if (player != null) {
+      await player.stop();
+    }
     if (mounted) {
       if (context.canPop()) {
         context.pop();
@@ -125,7 +141,7 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
                               reminderId: widget.reminderId,
                               occurrenceTime: widget.occurrenceTime,
                             );
-                        await _audioPlayer.stop();
+                        await _audioPlayer?.stop();
                         if (mounted) {
                           if (context.canPop()) {
                             context.pop();

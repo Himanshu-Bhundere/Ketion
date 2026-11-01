@@ -36,7 +36,8 @@ class NotificationBootstrap {
 
       if (kIsWeb ||
           (defaultTargetPlatform != TargetPlatform.android &&
-              defaultTargetPlatform != TargetPlatform.iOS)) {
+              defaultTargetPlatform != TargetPlatform.iOS &&
+              defaultTargetPlatform != TargetPlatform.windows)) {
         return;
       }
 
@@ -56,9 +57,15 @@ class NotificationBootstrap {
           ),
         ],
       );
+      const initializationSettingsWindows = WindowsInitializationSettings(
+        appName: 'Ketion',
+        appUserModelId: 'com.ketion.app',
+        guid: '2663b06e-8217-48f1-8318-77f6b7c0d297',
+      );
       final initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid,
         iOS: initializationSettingsDarwin,
+        windows: initializationSettingsWindows,
       );
 
       await plugin.initialize(

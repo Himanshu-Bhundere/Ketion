@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:ketion/core/theme/media_dimensions.dart';
 import 'package:ketion/features/import_export/domain/models/document_model.dart';
 import 'package:ketion/features/import_export/domain/services/export_repository.dart';
 import 'package:ketion/features/editor/domain/services/list_numbering_service.dart';
@@ -236,9 +237,10 @@ class PdfExporter implements ExportRepository {
                           child: _spansToPdfWidget(
                             l.spans,
                             fontSize: 11,
-                            baseDecoration: l.listType == 'checklist' && l.checked
-                                ? pw.TextDecoration.lineThrough
-                                : pw.TextDecoration.none,
+                            baseDecoration:
+                                l.listType == 'checklist' && l.checked
+                                    ? pw.TextDecoration.lineThrough
+                                    : pw.TextDecoration.none,
                             defaultColor: l.listType == 'checklist' && l.checked
                                 ? PdfColors.grey700
                                 : null,
@@ -256,10 +258,18 @@ class PdfExporter implements ExportRepository {
                     img.imageBytes!.isNotEmpty) {
                   try {
                     final provider = pw.MemoryImage(img.imageBytes!);
+
                     renderedWidget = pw.Column(
                       children: [
                         pw.Center(
-                          child: pw.Image(provider),
+                          child: pw.SizedBox(
+                            width: MediaDimensions.width,
+                            height: MediaDimensions.height,
+                            child: pw.Image(
+                              provider,
+                              fit: pw.BoxFit.contain,
+                            ),
+                          ),
                         ),
                         if (img.caption != null && img.caption!.isNotEmpty)
                           pw.Center(

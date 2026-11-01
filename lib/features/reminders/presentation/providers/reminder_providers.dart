@@ -12,6 +12,7 @@ import 'package:ketion/features/reminders/domain/usecases/resolve_reminder_useca
 import 'package:ketion/features/reminders/domain/usecases/snooze_reminder_usecase.dart';
 import 'package:ketion/features/reminders/presentation/services/local_notification_scheduler.dart';
 import 'package:ketion/features/reminders/presentation/services/reminder_scheduler.dart';
+import 'package:ketion/features/reminders/domain/services/reminder_expiry_service.dart';
 import 'package:ketion/features/reminders/domain/services/reminder_snooze_reconciler.dart';
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
 import 'package:ketion/features/sync/presentation/providers/sync_providers.dart';
@@ -160,4 +161,11 @@ final notificationActionDispatcherProvider =
   );
   NotificationActionDispatcher.instance = dispatcher;
   return dispatcher;
+});
+
+// Provides the ReminderExpiryService
+final reminderExpiryServiceProvider = Provider<ReminderExpiryService>((ref) {
+  final repository = ref.read(reminderRepositoryProvider);
+  final scheduler = ref.read(reminderSchedulerProvider);
+  return ReminderExpiryService(repository, scheduler);
 });

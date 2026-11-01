@@ -35,10 +35,12 @@ class KetionApp extends ConsumerStatefulWidget {
   ConsumerState<KetionApp> createState() => _KetionAppState();
 }
 
-class _KetionAppState extends ConsumerState<KetionApp> {
+class _KetionAppState extends ConsumerState<KetionApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetBootstrap.listenToDeepLinks(
       onCreatePage: () async {
         final result = await ref.read(createPageUseCaseProvider)(title: '');
@@ -62,20 +64,47 @@ class _KetionAppState extends ConsumerState<KetionApp> {
     );
 
     // Eagerly connect notification action dispatcher to Riverpod
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(notificationActionDispatcherProvider);
+
+      try {
+        await ref.read(reminderExpiryServiceProvider).cleanupExpiredReminders();
+      } catch (e) {
+        debugPrint('Error cleaning up expired reminders on startup: $e');
+      }
 
       // Handle pending cold-start navigation
       final pending = NotificationBootstrap.pendingNavigation;
       if (pending != null && pending.type == 'alarm') {
         NotificationBootstrap.pendingNavigation = null;
-        appRouter.pushNamed(
+        await appRouter.pushNamed(
           Routes.alarmRingingName,
           pathParameters: {'reminderId': pending.reminderId},
           extra: {'occurrenceTime': pending.occurrenceTime},
         );
       }
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(reminderExpiryServiceProvider)
+          .cleanupExpiredReminders()
+          .catchError(
+        (Object e) {
+          debugPrint('Error cleaning up expired reminders on resume: $e');
+          return 0;
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override

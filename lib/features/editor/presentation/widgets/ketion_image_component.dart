@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_editor/super_editor.dart';
+import 'package:ketion/core/theme/media_dimensions.dart';
 import '../../../media/presentation/providers/attachment_provider.dart';
 
 /// Ketion's custom ImageComponentBuilder to handle image attachments.
@@ -122,15 +123,30 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 280),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: kIsWeb
-                        ? Image.network(localPath, fit: BoxFit.contain)
-                        : Image.file(io.File(localPath), fit: BoxFit.contain),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: MediaDimensions.width,
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: MediaDimensions.aspectRatio,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        MediaDimensions.borderRadius,
+                      ),
+                      child: ColoredBox(
+                        color: Colors.black12,
+                        child: kIsWeb
+                            ? Image.network(
+                                localPath,
+                                fit: BoxFit.contain,
+                              )
+                            : Image.file(
+                                io.File(localPath),
+                                fit: BoxFit.contain,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -178,13 +194,25 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
   Widget _buildNetworkImage(String url) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 280),
-        child: SizedBox(
-          width: double.infinity,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8.0),
-            child: Image.network(url, fit: BoxFit.contain),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: MediaDimensions.width,
+          ),
+          child: AspectRatio(
+            aspectRatio: MediaDimensions.aspectRatio,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                MediaDimensions.borderRadius,
+              ),
+              child: ColoredBox(
+                color: Colors.black12,
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
           ),
         ),
       ),

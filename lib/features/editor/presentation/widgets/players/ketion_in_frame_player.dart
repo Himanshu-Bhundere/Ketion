@@ -3,6 +3,7 @@ import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:ketion/core/theme/media_dimensions.dart';
 
 class KetionInFramePlayer extends StatefulWidget {
   final String filePath;
@@ -245,65 +246,110 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
   Widget build(BuildContext context) {
     Widget playerWidget;
     if (_isInFullScreen) {
-      playerWidget = Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.fullscreen,
-                color: Colors.white70,
-                size: 36,
+      playerWidget = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: MediaDimensions.width,
+          ),
+          child: AspectRatio(
+            aspectRatio: MediaDimensions.aspectRatio,
+            child: SizedBox(
+              width: MediaDimensions.width,
+              height: MediaDimensions.height,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius:
+                      BorderRadius.circular(MediaDimensions.borderRadius),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.fullscreen,
+                        color: Colors.white70,
+                        size: 36,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Playing in fullscreen',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              SizedBox(height: 8),
-              Text(
-                'Playing in fullscreen',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-            ],
+            ),
           ),
         ),
       );
     } else if (_errorMessage != null) {
-      playerWidget = Container(
-        height: 180,
-        decoration: BoxDecoration(
-          color: Colors.black87,
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.redAccent,
-                size: 36,
+      playerWidget = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: MediaDimensions.width,
+          ),
+          child: AspectRatio(
+            aspectRatio: MediaDimensions.aspectRatio,
+            child: SizedBox(
+              width: MediaDimensions.width,
+              height: MediaDimensions.height,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius:
+                      BorderRadius.circular(MediaDimensions.borderRadius),
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.redAccent,
+                        size: 36,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
         ),
       );
     } else if (_controller == null || !_isInitialized) {
-      playerWidget = Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Colors.black12,
-          borderRadius: BorderRadius.circular(8.0),
+      playerWidget = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: MediaDimensions.width,
+          ),
+          child: AspectRatio(
+            aspectRatio: MediaDimensions.aspectRatio,
+            child: SizedBox(
+              width: MediaDimensions.width,
+              height: MediaDimensions.height,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius:
+                      BorderRadius.circular(MediaDimensions.borderRadius),
+                ),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+          ),
         ),
-        child: const Center(child: CircularProgressIndicator()),
       );
     } else {
       final duration = _controller!.value.duration;
@@ -311,168 +357,190 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
       final timeDisplay =
           '${_formatDuration(position)} / ${_formatDuration(duration)}';
 
-      playerWidget = ClipRRect(
-        borderRadius: BorderRadius.circular(8.0),
-        child: AspectRatio(
-          aspectRatio: _controller!.value.aspectRatio > 0
-              ? _controller!.value.aspectRatio
-              : 16 / 9,
-          child: Stack(
-            fit: StackFit.expand,
-            alignment: Alignment.center,
-            children: [
-              // 1. Video surface
-              Positioned.fill(
-                child: VideoPlayer(_controller!),
+      playerWidget = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: MediaDimensions.width,
+          ),
+          child: AspectRatio(
+            aspectRatio: MediaDimensions.aspectRatio,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                MediaDimensions.borderRadius,
               ),
+              child: Stack(
+                fit: StackFit.expand,
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: _controller!.value.aspectRatio > 0
+                            ? MediaDimensions.height *
+                                _controller!.value.aspectRatio
+                            : MediaDimensions.width,
+                        height: MediaDimensions.height,
+                        child: VideoPlayer(_controller!),
+                      ),
+                    ),
+                  ),
 
-              // 2. Tap to toggle controls (behind interactive controls)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: _toggleControls,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
+                  // 2. Tap to toggle controls (behind interactive controls)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: _toggleControls,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(color: Colors.transparent),
+                    ),
+                  ),
 
-              // 3. Center play/pause overlay
-              if (!_isPlaying || _showControls)
-                Center(
-                  child: IgnorePointer(
-                    ignoring: !_showControls && _isPlaying,
-                    child: AnimatedOpacity(
-                      opacity: (_showControls || !_isPlaying) ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: GestureDetector(
-                        onTap: _togglePlayback,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(14.0),
-                          child: Icon(
-                            _isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 40,
+                  // 3. Center play/pause overlay
+                  if (!_isPlaying || _showControls)
+                    Center(
+                      child: IgnorePointer(
+                        ignoring: !_showControls && _isPlaying,
+                        child: AnimatedOpacity(
+                          opacity: (_showControls || !_isPlaying) ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: GestureDetector(
+                            onTap: _togglePlayback,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(14.0),
+                              child: Icon(
+                                _isPlaying ? Icons.pause : Icons.play_arrow,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-              // 4. In-frame controls overlay (bottom gradient bar)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: AnimatedOpacity(
-                  opacity: _showControls ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: IgnorePointer(
-                    ignoring: !_showControls,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black87,
-                            Colors.black45,
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 6.0,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          VideoProgressIndicator(
-                            _controller!,
-                            allowScrubbing: true,
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            colors: VideoProgressColors(
-                              playedColor: Theme.of(context).primaryColor,
-                              bufferedColor: Colors.white38,
-                              backgroundColor: Colors.white24,
+                  // 4. In-frame controls overlay (bottom gradient bar)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: AnimatedOpacity(
+                      opacity: _showControls ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: IgnorePointer(
+                        ignoring: !_showControls,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black87,
+                                Colors.black45,
+                                Colors.transparent,
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Row(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0,
+                            vertical: 6.0,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              GestureDetector(
-                                onTap: _togglePlayback,
-                                child: Icon(
-                                  _isPlaying ? Icons.pause : Icons.play_arrow,
-                                  color: Colors.white,
-                                  size: 20,
+                              VideoProgressIndicator(
+                                _controller!,
+                                allowScrubbing: true,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4.0),
+                                colors: VideoProgressColors(
+                                  playedColor: Theme.of(context).primaryColor,
+                                  bufferedColor: Colors.white38,
+                                  backgroundColor: Colors.white24,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                timeDisplay,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontFeatures: [FontFeature.tabularFigures()],
-                                ),
-                              ),
-                              const Spacer(),
-                              PopupMenuButton<double>(
-                                tooltip: 'Playback Speed',
-                                initialValue: _playbackSpeed,
-                                onSelected: _changeSpeed,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6.0,
-                                    vertical: 2.0,
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: _togglePlayback,
+                                    child: Icon(
+                                      _isPlaying
+                                          ? Icons.pause
+                                          : Icons.play_arrow,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white24,
-                                    borderRadius: BorderRadius.circular(4.0),
-                                  ),
-                                  child: Text(
-                                    '${_playbackSpeed == 1.0 ? '1' : _playbackSpeed}×',
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    timeDisplay,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                      fontFeatures: [
+                                        FontFeature.tabularFigures(),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                itemBuilder: (context) => _availableSpeeds
-                                    .map(
-                                      (speed) => PopupMenuItem<double>(
-                                        value: speed,
-                                        child: Text('$speed×'),
+                                  const Spacer(),
+                                  PopupMenuButton<double>(
+                                    tooltip: 'Playback Speed',
+                                    initialValue: _playbackSpeed,
+                                    onSelected: _changeSpeed,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6.0,
+                                        vertical: 2.0,
                                       ),
-                                    )
-                                    .toList(),
-                              ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: _toggleFullScreen,
-                                child: Icon(
-                                  widget.isFullscreen
-                                      ? Icons.fullscreen_exit
-                                      : Icons.fullscreen,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white24,
+                                        borderRadius:
+                                            BorderRadius.circular(4.0),
+                                      ),
+                                      child: Text(
+                                        '${_playbackSpeed == 1.0 ? '1' : _playbackSpeed}×',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    itemBuilder: (context) => _availableSpeeds
+                                        .map(
+                                          (speed) => PopupMenuItem<double>(
+                                            value: speed,
+                                            child: Text('$speed×'),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: _toggleFullScreen,
+                                    child: Icon(
+                                      widget.isFullscreen
+                                          ? Icons.fullscreen_exit
+                                          : Icons.fullscreen,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );

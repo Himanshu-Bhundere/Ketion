@@ -192,7 +192,10 @@ class KetionSuperEditorAdapter {
 
     bool isDescendantOfToggle(DocumentNode node) {
       final visitedParentIds = <String>{};
-      String? parentId = node.metadata['parentBlockId'] as String?;
+      final blockId = _registry.blockIdForNode(node.id) ??
+          (node.metadata['blockId'] as String?);
+      String? parentId = node.metadata['parentBlockId'] as String? ??
+          (blockId != null ? snapshot.getBlock(blockId)?.parentBlockId : null);
 
       while (parentId != null && parentId.isNotEmpty) {
         if (parentId == toggleBlockId || parentId == toggleNodeId) return true;
@@ -210,7 +213,8 @@ class KetionSuperEditorAdapter {
           }
         }
 
-        parentId = parentNode?.metadata['parentBlockId'] as String?;
+        parentId = parentNode?.metadata['parentBlockId'] as String? ??
+            snapshot.getBlock(parentId)?.parentBlockId;
       }
 
       return false;
@@ -222,37 +226,22 @@ class KetionSuperEditorAdapter {
       final node = document.getNodeAt(i);
       if (node == null) continue;
 
-      // Prefer persisted hierarchy whenever available.
-      final hasParentMetadata = node.metadata['parentBlockId'] is String &&
-          (node.metadata['parentBlockId'] as String).isNotEmpty;
-
-      if (hasParentMetadata) {
-        if (isDescendantOfToggle(node)) {
-          descendants.add(node);
-          continue;
-        }
-
-        // We reached a node outside this toggle subtree.
-        final depth = node.metadata['depth'] as int? ??
-            (node is ListItemNode
-                ? node.indent
-                : (node is TaskNode ? node.indent : 0));
-
-        if (depth <= toggleDepth) break;
-
-        // A node with parent metadata that is not in this subtree must not
-        // be hidden just because its depth is larger.
+      if (isDescendantOfToggle(node)) {
+        descendants.add(node);
         continue;
       }
 
-      // Legacy fallback: only use depth when no parent metadata exists.
+      // If we reached a node outside this toggle subtree whose depth is <= toggleDepth,
+      // the toggle subtree has ended.
       final depth = node.metadata['depth'] as int? ??
           (node is ListItemNode
               ? node.indent
               : (node is TaskNode ? node.indent : 0));
 
       if (depth <= toggleDepth) break;
-      descendants.add(node);
+
+      // A node with depth > toggleDepth that is NOT a descendant of this toggle
+      // must not be hidden.
     }
 
     if (descendants.isEmpty) return;

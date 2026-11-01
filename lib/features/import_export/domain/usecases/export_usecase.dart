@@ -93,6 +93,40 @@ class ExportUseCase {
   Future<ExportDocument> _mapToDocument(Page page, List<Block> blocks) async {
     final nodes = <DocumentNode>[];
 
+    final blocksById = {for (final b in blocks) b.id: b};
+
+    final toggleBlockIds = <String>{};
+    for (final b in blocks) {
+      try {
+        final map = jsonDecode(b.data);
+        if (map is Map<String, dynamic>) {
+          if (b.type == 'toggle' ||
+              map['listType'] == 'toggle' ||
+              map['blockType'] == 'toggle' ||
+              map['type'] == 'toggle') {
+            toggleBlockIds.add(b.id);
+          }
+        }
+      } catch (_) {
+        if (b.type == 'toggle') {
+          toggleBlockIds.add(b.id);
+        }
+      }
+    }
+
+    bool isDescendantOfToggle(Block block) {
+      final visited = <String>{};
+      String? currentParentId = block.parentBlockId;
+      while (currentParentId != null && currentParentId.isNotEmpty) {
+        if (toggleBlockIds.contains(currentParentId)) return true;
+        if (!visited.add(currentParentId)) break;
+        final parent = blocksById[currentParentId];
+        if (parent == null) break;
+        currentParentId = parent.parentBlockId;
+      }
+      return false;
+    }
+
     // The visible tree marks descendants of collapsed toggles as intentionally
     // hidden. Do not append unvisited blocks afterward, because that would leak
     // collapsed children into the PDF.
@@ -103,6 +137,8 @@ class ExportUseCase {
     )) {
       final block = item.block;
       final depth = item.depth;
+      final parentKey = block.parentBlockId;
+      final isNestedUnderToggle = isDescendantOfToggle(block);
       final json = Map<String, dynamic>.from(
         jsonDecode(block.data) as Map<String, dynamic>,
       );
@@ -128,6 +164,8 @@ class ExportUseCase {
                 level: textBlock.headingLevel,
                 spans: _mapSpans(textBlock.spans),
                 depth: depth,
+                parentKey: parentKey,
+                isNestedUnderToggle: isNestedUnderToggle,
               ),
             );
           } else {
@@ -135,6 +173,8 @@ class ExportUseCase {
               DocumentNode.paragraph(
                 spans: _mapSpans(textBlock.spans),
                 depth: depth,
+                parentKey: parentKey,
+                isNestedUnderToggle: isNestedUnderToggle,
               ),
             );
           }
@@ -157,7 +197,8 @@ class ExportUseCase {
               checked: listBlock.checked,
               spans: _mapSpans(listBlock.spans),
               depth: depth,
-              parentKey: block.parentBlockId,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -168,6 +209,8 @@ class ExportUseCase {
               color: calloutBlock.color,
               spans: _mapSpans(calloutBlock.spans),
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -183,11 +226,19 @@ class ExportUseCase {
               columnCount: tableBlock.columnCount,
               rows: rows,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
         divider: (DividerBlockData dividerBlock) async {
-          nodes.add(DocumentNode.divider(depth: depth));
+          nodes.add(
+            DocumentNode.divider(
+              depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
+            ),
+          );
         },
         code: (CodeBlockData codeBlock) async {
           nodes.add(
@@ -195,6 +246,8 @@ class ExportUseCase {
               language: codeBlock.language,
               code: codeBlock.code,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -223,6 +276,8 @@ class ExportUseCase {
               imageBytes: imageBytes,
               isAvailable: resolved.isAvailable && imageBytes != null,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -242,6 +297,8 @@ class ExportUseCase {
               fileTypeLabel: 'Video',
               isAvailable: resolved.isAvailable,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -261,6 +318,8 @@ class ExportUseCase {
               fileTypeLabel: 'Audio',
               isAvailable: resolved.isAvailable,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -280,6 +339,8 @@ class ExportUseCase {
               fileTypeLabel: 'PDF Document',
               isAvailable: resolved.isAvailable,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -299,6 +360,8 @@ class ExportUseCase {
               fileTypeLabel: 'File Attachment',
               isAvailable: resolved.isAvailable,
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -313,6 +376,8 @@ class ExportUseCase {
                 ),
               ],
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -326,6 +391,8 @@ class ExportUseCase {
                 ),
               ],
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },
@@ -338,6 +405,8 @@ class ExportUseCase {
                 ),
               ],
               depth: depth,
+              parentKey: parentKey,
+              isNestedUnderToggle: isNestedUnderToggle,
             ),
           );
         },

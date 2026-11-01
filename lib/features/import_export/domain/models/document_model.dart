@@ -18,12 +18,16 @@ sealed class DocumentNode with _$DocumentNode {
   const factory DocumentNode.paragraph({
     required List<DocumentTextSpan> spans,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocParagraph;
 
   const factory DocumentNode.heading({
     required int level,
     required List<DocumentTextSpan> spans,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocHeading;
 
   const factory DocumentNode.list({
@@ -32,6 +36,7 @@ sealed class DocumentNode with _$DocumentNode {
     required List<DocumentTextSpan> spans,
     @Default(0) int depth,
     String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocList;
 
   const factory DocumentNode.image({
@@ -41,6 +46,8 @@ sealed class DocumentNode with _$DocumentNode {
     Uint8List? imageBytes,
     @Default(true) bool isAvailable,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocImage;
 
   const factory DocumentNode.file({
@@ -52,6 +59,8 @@ sealed class DocumentNode with _$DocumentNode {
     @Default('File') String fileTypeLabel,
     @Default(true) bool isAvailable,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocFile;
 
   const factory DocumentNode.callout({
@@ -59,22 +68,30 @@ sealed class DocumentNode with _$DocumentNode {
     required String color,
     required List<DocumentTextSpan> spans,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocCallout;
 
   const factory DocumentNode.table({
     required int columnCount,
     required List<List<String>> rows,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocTable;
 
   const factory DocumentNode.divider({
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocDivider;
 
   const factory DocumentNode.code({
     required String code,
     required String language,
     @Default(0) int depth,
+    String? parentKey,
+    @Default(false) bool isNestedUnderToggle,
   }) = DocCode;
 }
 

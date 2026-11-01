@@ -209,15 +209,23 @@ abstract class _ExportDocument implements ExportDocument {
 /// @nodoc
 mixin _$DocumentNode {
   int get depth => throw _privateConstructorUsedError;
+  String? get parentKey => throw _privateConstructorUsedError;
+  bool get isNestedUnderToggle => throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -225,7 +233,9 @@ mixin _$DocumentNode {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -235,28 +245,54 @@ mixin _$DocumentNode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -266,27 +302,48 @@ mixin _$DocumentNode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -296,15 +353,21 @@ mixin _$DocumentNode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -360,7 +423,7 @@ abstract class $DocumentNodeCopyWith<$Res> {
           DocumentNode value, $Res Function(DocumentNode) then) =
       _$DocumentNodeCopyWithImpl<$Res, DocumentNode>;
   @useResult
-  $Res call({int depth});
+  $Res call({int depth, String? parentKey, bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -377,12 +440,22 @@ class _$DocumentNodeCopyWithImpl<$Res, $Val extends DocumentNode>
   @override
   $Res call({
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_value.copyWith(
       depth: null == depth
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -395,7 +468,11 @@ abstract class _$$DocParagraphImplCopyWith<$Res>
       __$$DocParagraphImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<DocumentTextSpan> spans, int depth});
+  $Res call(
+      {List<DocumentTextSpan> spans,
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -411,6 +488,8 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
   $Res call({
     Object? spans = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocParagraphImpl(
       spans: null == spans
@@ -421,6 +500,14 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -429,7 +516,10 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
 
 class _$DocParagraphImpl implements DocParagraph {
   const _$DocParagraphImpl(
-      {required final List<DocumentTextSpan> spans, this.depth = 0})
+      {required final List<DocumentTextSpan> spans,
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false})
       : _spans = spans;
 
   final List<DocumentTextSpan> _spans;
@@ -443,10 +533,15 @@ class _$DocParagraphImpl implements DocParagraph {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.paragraph(spans: $spans, depth: $depth)';
+    return 'DocumentNode.paragraph(spans: $spans, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -455,12 +550,20 @@ class _$DocParagraphImpl implements DocParagraph {
         (other.runtimeType == runtimeType &&
             other is _$DocParagraphImpl &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, const DeepCollectionEquality().hash(_spans), depth);
+      runtimeType,
+      const DeepCollectionEquality().hash(_spans),
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -471,13 +574,19 @@ class _$DocParagraphImpl implements DocParagraph {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -485,7 +594,9 @@ class _$DocParagraphImpl implements DocParagraph {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -495,31 +606,57 @@ class _$DocParagraphImpl implements DocParagraph {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return paragraph(spans, depth);
+    return paragraph(spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -529,30 +666,51 @@ class _$DocParagraphImpl implements DocParagraph {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return paragraph?.call(spans, depth);
+    return paragraph?.call(spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -562,19 +720,25 @@ class _$DocParagraphImpl implements DocParagraph {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (paragraph != null) {
-      return paragraph(spans, depth);
+      return paragraph(spans, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -635,11 +799,17 @@ class _$DocParagraphImpl implements DocParagraph {
 abstract class DocParagraph implements DocumentNode {
   const factory DocParagraph(
       {required final List<DocumentTextSpan> spans,
-      final int depth}) = _$DocParagraphImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocParagraphImpl;
 
   List<DocumentTextSpan> get spans;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocParagraphImplCopyWith<_$DocParagraphImpl> get copyWith =>
@@ -654,7 +824,12 @@ abstract class _$$DocHeadingImplCopyWith<$Res>
       __$$DocHeadingImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int level, List<DocumentTextSpan> spans, int depth});
+  $Res call(
+      {int level,
+      List<DocumentTextSpan> spans,
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -671,6 +846,8 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
     Object? level = null,
     Object? spans = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocHeadingImpl(
       level: null == level
@@ -685,6 +862,14 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -695,7 +880,9 @@ class _$DocHeadingImpl implements DocHeading {
   const _$DocHeadingImpl(
       {required this.level,
       required final List<DocumentTextSpan> spans,
-      this.depth = 0})
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false})
       : _spans = spans;
 
   @override
@@ -711,10 +898,15 @@ class _$DocHeadingImpl implements DocHeading {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.heading(level: $level, spans: $spans, depth: $depth)';
+    return 'DocumentNode.heading(level: $level, spans: $spans, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -724,12 +916,21 @@ class _$DocHeadingImpl implements DocHeading {
             other is _$DocHeadingImpl &&
             (identical(other.level, level) || other.level == level) &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
   int get hashCode => Object.hash(
-      runtimeType, level, const DeepCollectionEquality().hash(_spans), depth);
+      runtimeType,
+      level,
+      const DeepCollectionEquality().hash(_spans),
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -740,13 +941,19 @@ class _$DocHeadingImpl implements DocHeading {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -754,7 +961,9 @@ class _$DocHeadingImpl implements DocHeading {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -764,31 +973,57 @@ class _$DocHeadingImpl implements DocHeading {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return heading(level, spans, depth);
+    return heading(level, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -798,30 +1033,51 @@ class _$DocHeadingImpl implements DocHeading {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return heading?.call(level, spans, depth);
+    return heading?.call(level, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -831,19 +1087,25 @@ class _$DocHeadingImpl implements DocHeading {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (heading != null) {
-      return heading(level, spans, depth);
+      return heading(level, spans, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -905,12 +1167,18 @@ abstract class DocHeading implements DocumentNode {
   const factory DocHeading(
       {required final int level,
       required final List<DocumentTextSpan> spans,
-      final int depth}) = _$DocHeadingImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocHeadingImpl;
 
   int get level;
   List<DocumentTextSpan> get spans;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocHeadingImplCopyWith<_$DocHeadingImpl> get copyWith =>
@@ -930,7 +1198,8 @@ abstract class _$$DocListImplCopyWith<$Res>
       bool checked,
       List<DocumentTextSpan> spans,
       int depth,
-      String? parentKey});
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -949,6 +1218,7 @@ class __$$DocListImplCopyWithImpl<$Res>
     Object? spans = null,
     Object? depth = null,
     Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocListImpl(
       listType: null == listType
@@ -971,6 +1241,10 @@ class __$$DocListImplCopyWithImpl<$Res>
           ? _value.parentKey
           : parentKey // ignore: cast_nullable_to_non_nullable
               as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -983,7 +1257,8 @@ class _$DocListImpl implements DocList {
       required this.checked,
       required final List<DocumentTextSpan> spans,
       this.depth = 0,
-      this.parentKey})
+      this.parentKey,
+      this.isNestedUnderToggle = false})
       : _spans = spans;
 
   @override
@@ -1004,10 +1279,13 @@ class _$DocListImpl implements DocList {
   final int depth;
   @override
   final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans, depth: $depth, parentKey: $parentKey)';
+    return 'DocumentNode.list(listType: $listType, checked: $checked, spans: $spans, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -1021,12 +1299,20 @@ class _$DocListImpl implements DocList {
             const DeepCollectionEquality().equals(other._spans, _spans) &&
             (identical(other.depth, depth) || other.depth == depth) &&
             (identical(other.parentKey, parentKey) ||
-                other.parentKey == parentKey));
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, listType, checked,
-      const DeepCollectionEquality().hash(_spans), depth, parentKey);
+  int get hashCode => Object.hash(
+      runtimeType,
+      listType,
+      checked,
+      const DeepCollectionEquality().hash(_spans),
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -1037,13 +1323,19 @@ class _$DocListImpl implements DocList {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -1051,7 +1343,9 @@ class _$DocListImpl implements DocList {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -1061,31 +1355,58 @@ class _$DocListImpl implements DocList {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return list(listType, checked, spans, depth, parentKey);
+    return list(
+        listType, checked, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1095,30 +1416,52 @@ class _$DocListImpl implements DocList {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return list?.call(listType, checked, spans, depth, parentKey);
+    return list?.call(
+        listType, checked, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -1128,19 +1471,26 @@ class _$DocListImpl implements DocList {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (list != null) {
-      return list(listType, checked, spans, depth, parentKey);
+      return list(
+          listType, checked, spans, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -1204,14 +1554,18 @@ abstract class DocList implements DocumentNode {
       required final bool checked,
       required final List<DocumentTextSpan> spans,
       final int depth,
-      final String? parentKey}) = _$DocListImpl;
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocListImpl;
 
   String get listType; // 'bullet', 'numbered', 'checklist', 'toggle'
   bool get checked;
   List<DocumentTextSpan> get spans;
   @override
   int get depth;
+  @override
   String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocListImplCopyWith<_$DocListImpl> get copyWith =>
@@ -1232,7 +1586,9 @@ abstract class _$$DocImageImplCopyWith<$Res>
       String? fileName,
       Uint8List? imageBytes,
       bool isAvailable,
-      int depth});
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -1252,6 +1608,8 @@ class __$$DocImageImplCopyWithImpl<$Res>
     Object? imageBytes = freezed,
     Object? isAvailable = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocImageImpl(
       attachmentId: null == attachmentId
@@ -1278,6 +1636,14 @@ class __$$DocImageImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -1291,7 +1657,9 @@ class _$DocImageImpl implements DocImage {
       this.fileName,
       this.imageBytes,
       this.isAvailable = true,
-      this.depth = 0});
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false});
 
   @override
   final String attachmentId;
@@ -1307,10 +1675,15 @@ class _$DocImageImpl implements DocImage {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, imageBytes: $imageBytes, isAvailable: $isAvailable, depth: $depth)';
+    return 'DocumentNode.image(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, imageBytes: $imageBytes, isAvailable: $isAvailable, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -1327,12 +1700,24 @@ class _$DocImageImpl implements DocImage {
                 .equals(other.imageBytes, imageBytes) &&
             (identical(other.isAvailable, isAvailable) ||
                 other.isAvailable == isAvailable) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
-      const DeepCollectionEquality().hash(imageBytes), isAvailable, depth);
+  int get hashCode => Object.hash(
+      runtimeType,
+      attachmentId,
+      caption,
+      fileName,
+      const DeepCollectionEquality().hash(imageBytes),
+      isAvailable,
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -1343,13 +1728,19 @@ class _$DocImageImpl implements DocImage {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -1357,7 +1748,9 @@ class _$DocImageImpl implements DocImage {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -1367,32 +1760,58 @@ class _$DocImageImpl implements DocImage {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return image(
-        attachmentId, caption, fileName, imageBytes, isAvailable, depth);
+    return image(attachmentId, caption, fileName, imageBytes, isAvailable,
+        depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1402,31 +1821,52 @@ class _$DocImageImpl implements DocImage {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return image?.call(
-        attachmentId, caption, fileName, imageBytes, isAvailable, depth);
+    return image?.call(attachmentId, caption, fileName, imageBytes, isAvailable,
+        depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -1436,20 +1876,26 @@ class _$DocImageImpl implements DocImage {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (image != null) {
-      return image(
-          attachmentId, caption, fileName, imageBytes, isAvailable, depth);
+      return image(attachmentId, caption, fileName, imageBytes, isAvailable,
+          depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -1514,7 +1960,9 @@ abstract class DocImage implements DocumentNode {
       final String? fileName,
       final Uint8List? imageBytes,
       final bool isAvailable,
-      final int depth}) = _$DocImageImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocImageImpl;
 
   String get attachmentId;
   String? get caption;
@@ -1523,6 +1971,10 @@ abstract class DocImage implements DocumentNode {
   bool get isAvailable;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocImageImplCopyWith<_$DocImageImpl> get copyWith =>
@@ -1545,7 +1997,9 @@ abstract class _$$DocFileImplCopyWith<$Res>
       int? fileSize,
       String fileTypeLabel,
       bool isAvailable,
-      int depth});
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -1567,6 +2021,8 @@ class __$$DocFileImplCopyWithImpl<$Res>
     Object? fileTypeLabel = null,
     Object? isAvailable = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocFileImpl(
       attachmentId: null == attachmentId
@@ -1601,6 +2057,14 @@ class __$$DocFileImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -1616,7 +2080,9 @@ class _$DocFileImpl implements DocFile {
       this.fileSize,
       this.fileTypeLabel = 'File',
       this.isAvailable = true,
-      this.depth = 0});
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false});
 
   @override
   final String attachmentId;
@@ -1637,10 +2103,15 @@ class _$DocFileImpl implements DocFile {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, mimeType: $mimeType, fileSize: $fileSize, fileTypeLabel: $fileTypeLabel, isAvailable: $isAvailable, depth: $depth)';
+    return 'DocumentNode.file(attachmentId: $attachmentId, caption: $caption, fileName: $fileName, mimeType: $mimeType, fileSize: $fileSize, fileTypeLabel: $fileTypeLabel, isAvailable: $isAvailable, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -1661,12 +2132,26 @@ class _$DocFileImpl implements DocFile {
                 other.fileTypeLabel == fileTypeLabel) &&
             (identical(other.isAvailable, isAvailable) ||
                 other.isAvailable == isAvailable) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, attachmentId, caption, fileName,
-      mimeType, fileSize, fileTypeLabel, isAvailable, depth);
+  int get hashCode => Object.hash(
+      runtimeType,
+      attachmentId,
+      caption,
+      fileName,
+      mimeType,
+      fileSize,
+      fileTypeLabel,
+      isAvailable,
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -1677,13 +2162,19 @@ class _$DocFileImpl implements DocFile {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -1691,7 +2182,9 @@ class _$DocFileImpl implements DocFile {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -1701,32 +2194,58 @@ class _$DocFileImpl implements DocFile {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
     return file(attachmentId, caption, fileName, mimeType, fileSize,
-        fileTypeLabel, isAvailable, depth);
+        fileTypeLabel, isAvailable, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -1736,31 +2255,52 @@ class _$DocFileImpl implements DocFile {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
     return file?.call(attachmentId, caption, fileName, mimeType, fileSize,
-        fileTypeLabel, isAvailable, depth);
+        fileTypeLabel, isAvailable, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -1770,20 +2310,26 @@ class _$DocFileImpl implements DocFile {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (file != null) {
       return file(attachmentId, caption, fileName, mimeType, fileSize,
-          fileTypeLabel, isAvailable, depth);
+          fileTypeLabel, isAvailable, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -1850,7 +2396,9 @@ abstract class DocFile implements DocumentNode {
       final int? fileSize,
       final String fileTypeLabel,
       final bool isAvailable,
-      final int depth}) = _$DocFileImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocFileImpl;
 
   String get attachmentId;
   String? get caption;
@@ -1861,6 +2409,10 @@ abstract class DocFile implements DocumentNode {
   bool get isAvailable;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
@@ -1876,7 +2428,12 @@ abstract class _$$DocCalloutImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String icon, String color, List<DocumentTextSpan> spans, int depth});
+      {String icon,
+      String color,
+      List<DocumentTextSpan> spans,
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -1894,6 +2451,8 @@ class __$$DocCalloutImplCopyWithImpl<$Res>
     Object? color = null,
     Object? spans = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocCalloutImpl(
       icon: null == icon
@@ -1912,6 +2471,14 @@ class __$$DocCalloutImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -1923,7 +2490,9 @@ class _$DocCalloutImpl implements DocCallout {
       {required this.icon,
       required this.color,
       required final List<DocumentTextSpan> spans,
-      this.depth = 0})
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false})
       : _spans = spans;
 
   @override
@@ -1941,10 +2510,15 @@ class _$DocCalloutImpl implements DocCallout {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.callout(icon: $icon, color: $color, spans: $spans, depth: $depth)';
+    return 'DocumentNode.callout(icon: $icon, color: $color, spans: $spans, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -1955,12 +2529,22 @@ class _$DocCalloutImpl implements DocCallout {
             (identical(other.icon, icon) || other.icon == icon) &&
             (identical(other.color, color) || other.color == color) &&
             const DeepCollectionEquality().equals(other._spans, _spans) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, icon, color,
-      const DeepCollectionEquality().hash(_spans), depth);
+  int get hashCode => Object.hash(
+      runtimeType,
+      icon,
+      color,
+      const DeepCollectionEquality().hash(_spans),
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -1971,13 +2555,19 @@ class _$DocCalloutImpl implements DocCallout {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -1985,7 +2575,9 @@ class _$DocCalloutImpl implements DocCallout {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -1995,31 +2587,57 @@ class _$DocCalloutImpl implements DocCallout {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return callout(icon, color, spans, depth);
+    return callout(icon, color, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2029,30 +2647,52 @@ class _$DocCalloutImpl implements DocCallout {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return callout?.call(icon, color, spans, depth);
+    return callout?.call(
+        icon, color, spans, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -2062,19 +2702,25 @@ class _$DocCalloutImpl implements DocCallout {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (callout != null) {
-      return callout(icon, color, spans, depth);
+      return callout(icon, color, spans, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -2137,13 +2783,19 @@ abstract class DocCallout implements DocumentNode {
       {required final String icon,
       required final String color,
       required final List<DocumentTextSpan> spans,
-      final int depth}) = _$DocCalloutImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocCalloutImpl;
 
   String get icon;
   String get color;
   List<DocumentTextSpan> get spans;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
@@ -2158,7 +2810,12 @@ abstract class _$$DocTableImplCopyWith<$Res>
       __$$DocTableImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int columnCount, List<List<String>> rows, int depth});
+  $Res call(
+      {int columnCount,
+      List<List<String>> rows,
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -2175,6 +2832,8 @@ class __$$DocTableImplCopyWithImpl<$Res>
     Object? columnCount = null,
     Object? rows = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocTableImpl(
       columnCount: null == columnCount
@@ -2189,6 +2848,14 @@ class __$$DocTableImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -2199,7 +2866,9 @@ class _$DocTableImpl implements DocTable {
   const _$DocTableImpl(
       {required this.columnCount,
       required final List<List<String>> rows,
-      this.depth = 0})
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false})
       : _rows = rows;
 
   @override
@@ -2215,10 +2884,15 @@ class _$DocTableImpl implements DocTable {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.table(columnCount: $columnCount, rows: $rows, depth: $depth)';
+    return 'DocumentNode.table(columnCount: $columnCount, rows: $rows, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -2229,12 +2903,21 @@ class _$DocTableImpl implements DocTable {
             (identical(other.columnCount, columnCount) ||
                 other.columnCount == columnCount) &&
             const DeepCollectionEquality().equals(other._rows, _rows) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, columnCount,
-      const DeepCollectionEquality().hash(_rows), depth);
+  int get hashCode => Object.hash(
+      runtimeType,
+      columnCount,
+      const DeepCollectionEquality().hash(_rows),
+      depth,
+      parentKey,
+      isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -2245,13 +2928,19 @@ class _$DocTableImpl implements DocTable {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -2259,7 +2948,9 @@ class _$DocTableImpl implements DocTable {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -2269,31 +2960,57 @@ class _$DocTableImpl implements DocTable {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return table(columnCount, rows, depth);
+    return table(columnCount, rows, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2303,30 +3020,52 @@ class _$DocTableImpl implements DocTable {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return table?.call(columnCount, rows, depth);
+    return table?.call(
+        columnCount, rows, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -2336,19 +3075,25 @@ class _$DocTableImpl implements DocTable {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (table != null) {
-      return table(columnCount, rows, depth);
+      return table(columnCount, rows, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -2410,12 +3155,18 @@ abstract class DocTable implements DocumentNode {
   const factory DocTable(
       {required final int columnCount,
       required final List<List<String>> rows,
-      final int depth}) = _$DocTableImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocTableImpl;
 
   int get columnCount;
   List<List<String>> get rows;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
@@ -2430,7 +3181,7 @@ abstract class _$$DocDividerImplCopyWith<$Res>
       __$$DocDividerImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int depth});
+  $Res call({int depth, String? parentKey, bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -2445,12 +3196,22 @@ class __$$DocDividerImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocDividerImpl(
       depth: null == depth
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -2458,15 +3219,21 @@ class __$$DocDividerImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$DocDividerImpl implements DocDivider {
-  const _$DocDividerImpl({this.depth = 0});
+  const _$DocDividerImpl(
+      {this.depth = 0, this.parentKey, this.isNestedUnderToggle = false});
 
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.divider(depth: $depth)';
+    return 'DocumentNode.divider(depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -2474,11 +3241,16 @@ class _$DocDividerImpl implements DocDivider {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$DocDividerImpl &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, depth);
+  int get hashCode =>
+      Object.hash(runtimeType, depth, parentKey, isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -2489,13 +3261,19 @@ class _$DocDividerImpl implements DocDivider {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -2503,7 +3281,9 @@ class _$DocDividerImpl implements DocDivider {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -2513,31 +3293,57 @@ class _$DocDividerImpl implements DocDivider {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return divider(depth);
+    return divider(depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2547,30 +3353,51 @@ class _$DocDividerImpl implements DocDivider {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return divider?.call(depth);
+    return divider?.call(depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -2580,19 +3407,25 @@ class _$DocDividerImpl implements DocDivider {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (divider != null) {
-      return divider(depth);
+      return divider(depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -2651,10 +3484,17 @@ class _$DocDividerImpl implements DocDivider {
 }
 
 abstract class DocDivider implements DocumentNode {
-  const factory DocDivider({final int depth}) = _$DocDividerImpl;
+  const factory DocDivider(
+      {final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocDividerImpl;
 
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocDividerImplCopyWith<_$DocDividerImpl> get copyWith =>
@@ -2669,7 +3509,12 @@ abstract class _$$DocCodeImplCopyWith<$Res>
       __$$DocCodeImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String code, String language, int depth});
+  $Res call(
+      {String code,
+      String language,
+      int depth,
+      String? parentKey,
+      bool isNestedUnderToggle});
 }
 
 /// @nodoc
@@ -2686,6 +3531,8 @@ class __$$DocCodeImplCopyWithImpl<$Res>
     Object? code = null,
     Object? language = null,
     Object? depth = null,
+    Object? parentKey = freezed,
+    Object? isNestedUnderToggle = null,
   }) {
     return _then(_$DocCodeImpl(
       code: null == code
@@ -2700,6 +3547,14 @@ class __$$DocCodeImplCopyWithImpl<$Res>
           ? _value.depth
           : depth // ignore: cast_nullable_to_non_nullable
               as int,
+      parentKey: freezed == parentKey
+          ? _value.parentKey
+          : parentKey // ignore: cast_nullable_to_non_nullable
+              as String?,
+      isNestedUnderToggle: null == isNestedUnderToggle
+          ? _value.isNestedUnderToggle
+          : isNestedUnderToggle // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -2708,7 +3563,11 @@ class __$$DocCodeImplCopyWithImpl<$Res>
 
 class _$DocCodeImpl implements DocCode {
   const _$DocCodeImpl(
-      {required this.code, required this.language, this.depth = 0});
+      {required this.code,
+      required this.language,
+      this.depth = 0,
+      this.parentKey,
+      this.isNestedUnderToggle = false});
 
   @override
   final String code;
@@ -2717,10 +3576,15 @@ class _$DocCodeImpl implements DocCode {
   @override
   @JsonKey()
   final int depth;
+  @override
+  final String? parentKey;
+  @override
+  @JsonKey()
+  final bool isNestedUnderToggle;
 
   @override
   String toString() {
-    return 'DocumentNode.code(code: $code, language: $language, depth: $depth)';
+    return 'DocumentNode.code(code: $code, language: $language, depth: $depth, parentKey: $parentKey, isNestedUnderToggle: $isNestedUnderToggle)';
   }
 
   @override
@@ -2731,11 +3595,16 @@ class _$DocCodeImpl implements DocCode {
             (identical(other.code, code) || other.code == code) &&
             (identical(other.language, language) ||
                 other.language == language) &&
-            (identical(other.depth, depth) || other.depth == depth));
+            (identical(other.depth, depth) || other.depth == depth) &&
+            (identical(other.parentKey, parentKey) ||
+                other.parentKey == parentKey) &&
+            (identical(other.isNestedUnderToggle, isNestedUnderToggle) ||
+                other.isNestedUnderToggle == isNestedUnderToggle));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, code, language, depth);
+  int get hashCode => Object.hash(
+      runtimeType, code, language, depth, parentKey, isNestedUnderToggle);
 
   @JsonKey(ignore: true)
   @override
@@ -2746,13 +3615,19 @@ class _$DocCodeImpl implements DocCode {
   @override
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
-    required TResult Function(List<DocumentTextSpan> spans, int depth)
+    required TResult Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)
         paragraph,
-    required TResult Function(
-            int level, List<DocumentTextSpan> spans, int depth)
+    required TResult Function(int level, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         heading,
-    required TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)
+    required TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         list,
     required TResult Function(
             String attachmentId,
@@ -2760,7 +3635,9 @@ class _$DocCodeImpl implements DocCode {
             String? fileName,
             Uint8List? imageBytes,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         image,
     required TResult Function(
             String attachmentId,
@@ -2770,31 +3647,57 @@ class _$DocCodeImpl implements DocCode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         file,
     required TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)
+            String icon,
+            String color,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)
         callout,
-    required TResult Function(
-            int columnCount, List<List<String>> rows, int depth)
+    required TResult Function(int columnCount, List<List<String>> rows,
+            int depth, String? parentKey, bool isNestedUnderToggle)
         table,
-    required TResult Function(int depth) divider,
-    required TResult Function(String code, String language, int depth) code,
+    required TResult Function(
+            int depth, String? parentKey, bool isNestedUnderToggle)
+        divider,
+    required TResult Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)
+        code,
   }) {
-    return code(this.code, language, depth);
+    return code(this.code, language, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
-    TResult? Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult? Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        paragraph,
+    TResult? Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult? Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult? Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult? Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult? Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult? Function(
             String attachmentId,
@@ -2804,30 +3707,52 @@ class _$DocCodeImpl implements DocCode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult? Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult? Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult? Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult? Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult? Function(int depth)? divider,
-    TResult? Function(String code, String language, int depth)? code,
+    TResult? Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult? Function(String code, String language, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
+        code,
   }) {
-    return code?.call(this.code, language, depth);
+    return code?.call(
+        this.code, language, depth, parentKey, isNestedUnderToggle);
   }
 
   @override
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
-    TResult Function(List<DocumentTextSpan> spans, int depth)? paragraph,
-    TResult Function(int level, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(List<DocumentTextSpan> spans, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        paragraph,
+    TResult Function(int level, List<DocumentTextSpan> spans, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         heading,
-    TResult Function(String listType, bool checked,
-            List<DocumentTextSpan> spans, int depth, String? parentKey)?
+    TResult Function(
+            String listType,
+            bool checked,
+            List<DocumentTextSpan> spans,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         list,
-    TResult Function(String attachmentId, String? caption, String? fileName,
-            Uint8List? imageBytes, bool isAvailable, int depth)?
+    TResult Function(
+            String attachmentId,
+            String? caption,
+            String? fileName,
+            Uint8List? imageBytes,
+            bool isAvailable,
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         image,
     TResult Function(
             String attachmentId,
@@ -2837,19 +3762,25 @@ class _$DocCodeImpl implements DocCode {
             int? fileSize,
             String fileTypeLabel,
             bool isAvailable,
-            int depth)?
+            int depth,
+            String? parentKey,
+            bool isNestedUnderToggle)?
         file,
-    TResult Function(
-            String icon, String color, List<DocumentTextSpan> spans, int depth)?
+    TResult Function(String icon, String color, List<DocumentTextSpan> spans,
+            int depth, String? parentKey, bool isNestedUnderToggle)?
         callout,
-    TResult Function(int columnCount, List<List<String>> rows, int depth)?
+    TResult Function(int columnCount, List<List<String>> rows, int depth,
+            String? parentKey, bool isNestedUnderToggle)?
         table,
-    TResult Function(int depth)? divider,
-    TResult Function(String code, String language, int depth)? code,
+    TResult Function(int depth, String? parentKey, bool isNestedUnderToggle)?
+        divider,
+    TResult Function(String code, String language, int depth, String? parentKey,
+            bool isNestedUnderToggle)?
+        code,
     required TResult orElse(),
   }) {
     if (code != null) {
-      return code(this.code, language, depth);
+      return code(this.code, language, depth, parentKey, isNestedUnderToggle);
     }
     return orElse();
   }
@@ -2911,12 +3842,18 @@ abstract class DocCode implements DocumentNode {
   const factory DocCode(
       {required final String code,
       required final String language,
-      final int depth}) = _$DocCodeImpl;
+      final int depth,
+      final String? parentKey,
+      final bool isNestedUnderToggle}) = _$DocCodeImpl;
 
   String get code;
   String get language;
   @override
   int get depth;
+  @override
+  String? get parentKey;
+  @override
+  bool get isNestedUnderToggle;
   @override
   @JsonKey(ignore: true)
   _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>

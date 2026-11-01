@@ -41,7 +41,7 @@ class PdfExporter implements ExportRepository {
           for (int i = 0; i < document.nodes.length; i++) {
             final node = document.nodes[i];
             final nodeDepth = node.depth;
-            String? parentKey;
+            String? parentKey = node.parentKey;
             String? listType;
 
             node.map(
@@ -49,7 +49,7 @@ class PdfExporter implements ExportRepository {
               heading: (_) {},
               list: (l) {
                 listType = l.listType;
-                parentKey = l.parentKey;
+                parentKey ??= l.parentKey;
               },
               image: (_) {},
               file: (_) {},
@@ -85,27 +85,21 @@ class PdfExporter implements ExportRepository {
           final computedOrdinals =
               ListNumberingService.computeOrdinals(numberingEntries);
 
-          final activeToggleDepths = <int>[];
-
+          // Build set of toggle keys for persistent hierarchy resolution
+          final toggleKeys = <String>{};
+          final parentKeyByNodeKey = <String, String?>{};
           for (int i = 0; i < document.nodes.length; i++) {
             final node = document.nodes[i];
-            final nodeDepth = node.depth;
+            final nodeKey = 'export-node-$i';
+            final pKey = node.parentKey ?? numberingEntries[i].parentKey;
+            parentKeyByNodeKey[nodeKey] = pKey;
 
-            // Leave any toggle whose subtree has ended.
-            while (activeToggleDepths.isNotEmpty &&
-                activeToggleDepths.last >= nodeDepth) {
-              activeToggleDepths.removeLast();
-            }
-
-            final isNestedUnderToggle = activeToggleDepths.isNotEmpty &&
-                nodeDepth > activeToggleDepths.last;
-
-            var isToggleHeader = false;
+            var isToggle = false;
             node.map(
               paragraph: (_) {},
               heading: (_) {},
               list: (l) {
-                isToggleHeader =
+                isToggle =
                     l.listType == 'toggle' || l.listType == 'toggle_expanded';
               },
               image: (_) {},
@@ -115,6 +109,28 @@ class PdfExporter implements ExportRepository {
               code: (_) {},
               divider: (_) {},
             );
+            if (isToggle) {
+              toggleKeys.add(nodeKey);
+            }
+          }
+
+          bool isDescendantOfToggleKey(int index) {
+            final visited = <String>{};
+            String? currentParent = parentKeyByNodeKey['export-node-$index'];
+            while (currentParent != null && currentParent.isNotEmpty) {
+              if (toggleKeys.contains(currentParent)) return true;
+              if (!visited.add(currentParent)) break;
+              currentParent = parentKeyByNodeKey[currentParent];
+            }
+            return false;
+          }
+
+          for (int i = 0; i < document.nodes.length; i++) {
+            final node = document.nodes[i];
+            final nodeDepth = node.depth;
+
+            final isNestedUnderToggle =
+                node.isNestedUnderToggle || isDescendantOfToggleKey(i);
 
             pw.Widget? renderedWidget;
 
@@ -452,10 +468,6 @@ class PdfExporter implements ExportRepository {
                   child: groupedWidget,
                 ),
               );
-            }
-
-            if (isToggleHeader) {
-              activeToggleDepths.add(nodeDepth);
             }
           }
 

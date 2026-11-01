@@ -1139,13 +1139,13 @@ class _KetionDelegatingCommand extends EditCommand {
           final req = reqToCreate;
           final node = document.getNodeById(req.nodeId);
           if (node != null) {
-            final blockId = registry.blockIdForNode(req.nodeId);
-            if (blockId != null) {
-              if (req.isExpanded) {
-                adapter.restoreSubtree(blockId);
-              } else {
-                adapter.hideSubtree(blockId);
-              }
+            final blockId = registry.blockIdForNode(req.nodeId) ??
+                (node.metadata['blockId'] as String?) ??
+                req.nodeId;
+            if (req.isExpanded) {
+              adapter.restoreSubtree(blockId);
+            } else {
+              adapter.hideSubtree(blockId);
             }
             return ChangeParagraphMetadataCommand(
               ChangeParagraphMetadataRequest(

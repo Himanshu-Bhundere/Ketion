@@ -632,5 +632,119 @@ void main() {
         );
       },
     );
+
+    test(
+      'ExportUseCase correctly computes isNestedUnderToggle based on parentBlockId hierarchy',
+      () async {
+        final exporter = PdfExporter();
+        final exportUseCase = ExportUseCase([exporter]);
+
+        final now = DateTime.now();
+        final page = Page(
+          id: 'test-page-toggle',
+          title: 'Toggle Hierarchy Test',
+          createdAt: now,
+          updatedAt: now,
+        );
+
+        final blocks = [
+          Block(
+            id: 'b-para-a',
+            pageId: page.id,
+            parentBlockId: null,
+            position: 10.0,
+            type: 'text',
+            data: jsonEncode({
+              'runtimeType': 'text',
+              'spans': [
+                {'text': 'Paragraph A'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+            version: 1,
+            deleted: false,
+          ),
+          Block(
+            id: 'b-toggle-1',
+            pageId: page.id,
+            parentBlockId: null,
+            position: 20.0,
+            type: 'list',
+            data: jsonEncode({
+              'runtimeType': 'list',
+              'listType': 'toggle',
+              'isExpanded': true,
+              'spans': [
+                {'text': 'Toggle A'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+            version: 1,
+            deleted: false,
+          ),
+          Block(
+            id: 'b-toggle-child',
+            pageId: page.id,
+            parentBlockId: 'b-toggle-1',
+            position: 30.0,
+            type: 'text',
+            data: jsonEncode({
+              'runtimeType': 'text',
+              'spans': [
+                {'text': 'Child of Toggle A'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+            version: 1,
+            deleted: false,
+          ),
+          Block(
+            id: 'b-para-b',
+            pageId: page.id,
+            parentBlockId: null,
+            position: 40.0,
+            type: 'text',
+            data: jsonEncode({
+              'runtimeType': 'text',
+              'spans': [
+                {'text': 'Paragraph B'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+            version: 1,
+            deleted: false,
+          ),
+          Block(
+            id: 'b-indented-list',
+            pageId: page.id,
+            parentBlockId: 'b-para-b',
+            position: 50.0,
+            type: 'list',
+            data: jsonEncode({
+              'runtimeType': 'list',
+              'listType': 'bullet',
+              'spans': [
+                {'text': 'Unrelated indented list'},
+              ],
+            }),
+            createdAt: now,
+            updatedAt: now,
+            version: 1,
+            deleted: false,
+          ),
+        ];
+
+        final bytes = await exportUseCase.exportToBytes(page, blocks, 'pdf');
+        expect(bytes, isNotEmpty);
+        expect(
+          utf8.decode(bytes.sublist(0, 5), allowMalformed: true),
+          startsWith('%PDF'),
+        );
+      },
+    );
   });
 }

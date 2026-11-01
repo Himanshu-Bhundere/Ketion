@@ -830,6 +830,101 @@ void main() {
     );
 
     test(
+      '7c. hideSubtree does NOT collapse unrelated indented blocks outside toggle subtree',
+      () {
+        final coordinator = TestPersistenceCoordinator();
+        final snapshot = EditorPersistenceSnapshot('p-indented', {});
+        final adapter = KetionSuperEditorAdapter(
+          pageId: 'p-indented',
+          coordinator: coordinator,
+          snapshot: snapshot,
+        );
+
+        final registry = adapter.registry;
+
+        // Toggle at depth 0
+        final toggleNode = ParagraphNode(
+          id: 'toggle-node',
+          text: AttributedText('Toggle Header'),
+          metadata: const {
+            'blockId': 'b-toggle-main',
+            'listType': 'toggle',
+            'isExpanded': true,
+            'depth': 0,
+          },
+        );
+
+        // Valid child of toggle at depth 1
+        final toggleChild = ParagraphNode(
+          id: 'toggle-child',
+          text: AttributedText('Toggle Child'),
+          metadata: const {
+            'blockId': 'b-toggle-child',
+            'parentBlockId': 'b-toggle-main',
+            'depth': 1,
+          },
+        );
+
+        // Unrelated indented node at depth 1 with no parent or unrelated parent
+        final unrelatedIndented = ParagraphNode(
+          id: 'unrelated-indented',
+          text: AttributedText('Unrelated indented block'),
+          metadata: const {
+            'blockId': 'b-unrelated-indented',
+            'parentBlockId': 'b-other-parent',
+            'depth': 1,
+          },
+        );
+
+        registry.registerMapping(
+          nodeId: toggleNode.id,
+          blockId: 'b-toggle-main',
+        );
+        registry.registerMapping(
+          nodeId: toggleChild.id,
+          blockId: 'b-toggle-child',
+        );
+        registry.registerMapping(
+          nodeId: unrelatedIndented.id,
+          blockId: 'b-unrelated-indented',
+        );
+
+        final doc = MutableDocument(
+          nodes: [
+            toggleNode,
+            toggleChild,
+            unrelatedIndented,
+          ],
+        );
+
+        final composer = MutableDocumentComposer();
+        final editor = Editor(
+          editables: {
+            Editor.documentKey: doc,
+            Editor.composerKey: composer,
+          },
+        );
+        adapter.bind(doc, editor);
+
+        expect(doc.nodeCount, 3);
+
+        // Collapsing toggle should hide ONLY toggleChild, keeping unrelatedIndented visible!
+        adapter.hideSubtree('b-toggle-main');
+
+        expect(doc.nodeCount, 2);
+        expect(doc.getNodeAt(0)!.id, toggleNode.id);
+        expect(doc.getNodeAt(1)!.id, unrelatedIndented.id);
+
+        // Re-expanding restores toggleChild
+        adapter.restoreSubtree('b-toggle-main');
+        expect(doc.nodeCount, 3);
+        expect(doc.getNodeAt(0)!.id, toggleNode.id);
+        expect(doc.getNodeAt(1)!.id, toggleChild.id);
+        expect(doc.getNodeAt(2)!.id, unrelatedIndented.id);
+      },
+    );
+
+    test(
         '8. PDF blocks: Every block is separated vertically and exports valid PDF',
         () async {
       final page = Page(

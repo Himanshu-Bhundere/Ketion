@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ketion/features/reminders/domain/entities/reminder.dart';
 import 'package:ketion/features/reminders/domain/models/reminder_notification_content.dart';
@@ -31,7 +31,7 @@ class LocalNotificationScheduler implements ReminderScheduler {
       return;
     }
 
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final androidPlugin =
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
@@ -47,7 +47,7 @@ class LocalNotificationScheduler implements ReminderScheduler {
           // Method might not be available or fails on older Android versions/plugins.
         }
       }
-    } else if (Platform.isIOS) {
+    } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       final iosPlugin =
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin>();
@@ -97,6 +97,14 @@ class LocalNotificationScheduler implements ReminderScheduler {
       scenario: reminder.kind == ReminderKind.alarm
           ? WindowsNotificationScenario.alarm
           : WindowsNotificationScenario.reminder,
+      audio: reminder.kind == ReminderKind.alarm
+          ? WindowsNotificationAudio.preset(
+              sound: WindowsNotificationSound.alarm1,
+              shouldLoop: true,
+            )
+          : WindowsNotificationAudio.preset(
+              sound: WindowsNotificationSound.reminder,
+            ),
       actions: <WindowsAction>[
         if (reminder.kind != ReminderKind.alarm)
           const WindowsAction(

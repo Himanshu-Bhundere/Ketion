@@ -224,6 +224,28 @@ TextNode? findNearestToggleAncestor({
 
     currentParentId = parentNode.metadata['parentBlockId'] as String?;
   }
+
+  // Structural fallback: if parentBlockId chain is incomplete, search backwards
+  // for the nearest valid toggle at the expected depth.
+  final nodeDepth = node.metadata['depth'] as int? ?? 0;
+  if (nodeDepth > 0) {
+    final nodeIndex = document.getNodeIndexById(node.id);
+    if (nodeIndex > 0) {
+      for (int i = nodeIndex - 1; i >= 0; i--) {
+        final prevNode = document.getNodeAt(i);
+        if (prevNode == null) continue;
+        final prevDepth = prevNode.metadata['depth'] as int? ?? 0;
+        if (prevDepth < nodeDepth) {
+          if (prevNode is TextNode &&
+              KetionToggleComponentBuilder.isToggleNode(prevNode)) {
+            return prevNode;
+          }
+          // Stopped at nearest lower-depth structural boundary
+          break;
+        }
+      }
+    }
+  }
   return null;
 }
 
@@ -312,6 +334,25 @@ ParagraphNode? exitToggleBodyOnEmpty({
 /// Handles pressing Enter inside a toggle body block.
 ///
 /// Shared between hardware Enter and Android IME newline request.
+/// Moves the paragraph outside the innermost toggle subtree on Escape,
+/// preserving its text content.
+ParagraphNode? exitToggleBodyOnEscape({
+  required Editor editor,
+  required Document document,
+  required TextNode node,
+  EditorIdentityRegistry? registry,
+}) {
+  return exitToggleBodyOnEmpty(
+    editor: editor,
+    document: document,
+    node: node,
+    registry: registry,
+  );
+}
+
+bool isEmptyToggleExitLine(TextNode node) =>
+    node.text.toPlainText().trim().isEmpty;
+
 ParagraphNode? executeToggleBodyEnter({
   required Editor editor,
   required Document document,
@@ -321,7 +362,7 @@ ParagraphNode? executeToggleBodyEnter({
   String? newNodeId,
 }) {
   // Empty paragraph: exit the innermost toggle
-  if (node.text.isEmpty) {
+  if (isEmptyToggleExitLine(node)) {
     return exitToggleBodyOnEmpty(
       editor: editor,
       document: document,
@@ -444,7 +485,7 @@ ExecutionInstruction handleToggleBodyEnter({
     return ExecutionInstruction.continueExecution;
   }
 
-  executeToggleBodyEnter(
+  final movedNode = executeToggleBodyEnter(
     editor: editContext.editor,
     document: editContext.document,
     node: node,
@@ -452,7 +493,42 @@ ExecutionInstruction handleToggleBodyEnter({
     registry: registry,
   );
 
-  return ExecutionInstruction.haltExecution;
+  return movedNode == null
+      ? ExecutionInstruction.continueExecution
+      : ExecutionInstruction.haltExecution;
+}
+
+ExecutionInstruction exitToggleBodyWhenEscapePressed({
+  required SuperEditorContext editContext,
+  required KeyEvent keyEvent,
+  EditorIdentityRegistry? registry,
+}) {
+  if (keyEvent.logicalKey != LogicalKeyboardKey.escape ||
+      keyEvent is! KeyDownEvent) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final selection = editContext.composer.selection;
+  if (selection == null || !selection.isCollapsed) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final node = editContext.document.getNodeById(selection.extent.nodeId);
+  if (node is! TextNode ||
+      !isInsideToggleBody(node, editContext.document, registry)) {
+    return ExecutionInstruction.continueExecution;
+  }
+
+  final movedNode = exitToggleBodyOnEscape(
+    editor: editContext.editor,
+    document: editContext.document,
+    node: node,
+    registry: registry,
+  );
+
+  return movedNode == null
+      ? ExecutionInstruction.continueExecution
+      : ExecutionInstruction.haltExecution;
 }
 
 ExecutionInstruction splitToggleWhenEnterPressed({

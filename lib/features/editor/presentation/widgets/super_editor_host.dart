@@ -738,6 +738,12 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                       keyEvent: keyEvent,
                       registry: _adapter.registry,
                     ),
+                ({required editContext, required keyEvent}) =>
+                    exitToggleBodyWhenEscapePressed(
+                      editContext: editContext,
+                      keyEvent: keyEvent,
+                      registry: _adapter.registry,
+                    ),
                 splitCalloutWhenEnterPressed,
                 convertCalloutToParagraphWhenBackspacePressed,
                 ...defaultKeyboardActions,

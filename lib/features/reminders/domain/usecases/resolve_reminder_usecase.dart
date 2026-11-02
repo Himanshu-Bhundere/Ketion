@@ -76,9 +76,10 @@ class ResolveReminderUseCase {
         await deleteUseCase.execute(reminderId);
       }
     } else {
-      // One-shot: soft delete and cancel OS notification
-      // Both complete and dismiss map to soft-delete/cancel for one-shot
-      await deleteUseCase.execute(reminderId);
+      // Keep a completed one-shot reminder in SQLite until the shared expiry
+      // service removes it five minutes after its scheduled/snoozed fire time.
+      await repository.markCompleted(reminderId, true);
+      await scheduler.cancelReminder(reminderId);
     }
   }
 }

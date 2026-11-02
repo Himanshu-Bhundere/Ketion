@@ -14,7 +14,7 @@ class ReminderExpiryService {
   /// Returns the number of expired reminders deleted.
   Future<int> cleanupExpiredReminders({DateTime? now}) async {
     final nowUtc = (now ?? DateTime.now()).toUtc();
-    final activeReminders = await _repository.watchAllActiveReminders().first;
+    final activeReminders = await _repository.watchAllNotDeletedReminders().first;
     int expiredCount = 0;
 
     final scheduler = _scheduler;
@@ -34,13 +34,13 @@ class ReminderExpiryService {
   /// Determines whether a reminder is expired and eligible for deletion.
   ///
   /// A reminder is expired if:
-  /// 1. It is not already deleted or completed.
+  /// 1. It is not already deleted.
   /// 2. It is not recurring (one-shot).
   /// 3. It is not currently snoozed into the future.
   /// 4. Its effective fire time (snoozeUntil or reminderTime) was at least
   ///    5 minutes ago (UTC).
   bool isExpired(ReminderEntity reminder, {DateTime? now}) {
-    if (reminder.deleted || reminder.completed) {
+    if (reminder.deleted) {
       return false;
     }
 

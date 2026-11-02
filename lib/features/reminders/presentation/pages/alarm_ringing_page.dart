@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -23,16 +23,11 @@ class AlarmRingingPage extends ConsumerStatefulWidget {
 class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage> {
   AudioPlayer? _audioPlayer;
 
-  bool get _isAudioSupported =>
-      !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
-
   @override
   void initState() {
     super.initState();
-    if (_isAudioSupported) {
-      _audioPlayer = AudioPlayer();
-      _startAlarm();
-    }
+    _audioPlayer = AudioPlayer();
+    _startAlarm();
   }
 
   Future<void> _startAlarm() async {

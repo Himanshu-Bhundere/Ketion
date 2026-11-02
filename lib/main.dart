@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/core/bootstrap/app_bootstrap.dart';
@@ -37,6 +38,26 @@ class KetionApp extends ConsumerStatefulWidget {
 
 class _KetionAppState extends ConsumerState<KetionApp>
     with WidgetsBindingObserver {
+  Timer? _reminderCleanupTimer;
+  bool _isReminderCleanupRunning = false;
+
+  Future<void> _cleanupExpiredReminders() async {
+    if (_isReminderCleanupRunning) return;
+
+    _isReminderCleanupRunning = true;
+
+    try {
+      await ref
+          .read(reminderExpiryServiceProvider)
+          .cleanupExpiredReminders();
+    } catch (error, stackTrace) {
+      debugPrint('Reminder expiry cleanup failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    } finally {
+      _isReminderCleanupRunning = false;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,15 +84,16 @@ class _KetionAppState extends ConsumerState<KetionApp>
       },
     );
 
+    _reminderCleanupTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _cleanupExpiredReminders(),
+    );
+
     // Eagerly connect notification action dispatcher to Riverpod
     Future.microtask(() async {
       ref.read(notificationActionDispatcherProvider);
 
-      try {
-        await ref.read(reminderExpiryServiceProvider).cleanupExpiredReminders();
-      } catch (e) {
-        debugPrint('Error cleaning up expired reminders on startup: $e');
-      }
+      await _cleanupExpiredReminders();
 
       // Handle pending cold-start navigation
       final pending = NotificationBootstrap.pendingNavigation;
@@ -89,20 +111,13 @@ class _KetionAppState extends ConsumerState<KetionApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref
-          .read(reminderExpiryServiceProvider)
-          .cleanupExpiredReminders()
-          .catchError(
-        (Object e) {
-          debugPrint('Error cleaning up expired reminders on resume: $e');
-          return 0;
-        },
-      );
+      _cleanupExpiredReminders();
     }
   }
 
   @override
   void dispose() {
+    _reminderCleanupTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

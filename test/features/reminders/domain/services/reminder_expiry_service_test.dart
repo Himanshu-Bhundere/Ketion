@@ -5,6 +5,7 @@ import 'package:ketion/features/reminders/domain/models/reminder_kind.dart';
 import 'package:ketion/features/reminders/domain/models/reminder_notification_content.dart';
 import 'package:ketion/features/reminders/domain/repositories/reminder_repository.dart';
 import 'package:ketion/features/reminders/domain/services/reminder_expiry_service.dart';
+import 'package:ketion/features/reminders/domain/services/reminder_snooze_reconciler.dart';
 import 'package:ketion/features/reminders/presentation/services/reminder_scheduler.dart';
 
 class FakeReminderRepository implements ReminderRepository {
@@ -22,6 +23,14 @@ class FakeReminderRepository implements ReminderRepository {
         .where((r) => !r.completed && !r.deleted)
         .toList();
     return Stream.value(active);
+  }
+
+  @override
+  Stream<List<ReminderEntity>> watchAllNotDeletedReminders() {
+    final notDeleted = _store.values
+        .where((r) => !r.deleted)
+        .toList();
+    return Stream.value(notDeleted);
   }
 
   @override
@@ -119,19 +128,30 @@ void main() {
     }
 
     group('isExpired evaluation', () {
-      test('returns false if reminder is already completed or deleted', () {
+      test('returns true if reminder is completed and expired (>= 5 minutes ago)', () {
         final completed = createReminder(
           id: '1',
           reminderTime: now.subtract(const Duration(minutes: 10)),
           completed: true,
         );
+        expect(service.isExpired(completed, now: now), isTrue);
+      });
+
+      test('returns false if reminder is completed but fired less than 5 minutes ago', () {
+        final completedRecent = createReminder(
+          id: '1b',
+          reminderTime: now.subtract(const Duration(minutes: 3)),
+          completed: true,
+        );
+        expect(service.isExpired(completedRecent, now: now), isFalse);
+      });
+
+      test('returns false if reminder is deleted', () {
         final deleted = createReminder(
           id: '2',
           reminderTime: now.subtract(const Duration(minutes: 10)),
           deleted: true,
         );
-
-        expect(service.isExpired(completed, now: now), isFalse);
         expect(service.isExpired(deleted, now: now), isFalse);
       });
 
@@ -209,7 +229,7 @@ void main() {
     });
 
     group('cleanupExpiredReminders', () {
-      test('cleans up all and only expired one-shot reminders', () async {
+      test('cleans up all and only expired one-shot reminders, including completed ones', () async {
         final rExpired1 = createReminder(
           id: 'exp-1',
           reminderTime: now.subtract(const Duration(minutes: 10)),
@@ -218,6 +238,16 @@ void main() {
           id: 'exp-alarm',
           reminderTime: now.subtract(const Duration(minutes: 6)),
           kind: ReminderKind.alarm,
+        );
+        final rCompletedExpired = createReminder(
+          id: 'completed-exp',
+          reminderTime: now.subtract(const Duration(minutes: 8)),
+          completed: true,
+        );
+        final rCompletedRecent = createReminder(
+          id: 'completed-recent',
+          reminderTime: now.subtract(const Duration(minutes: 2)),
+          completed: true,
         );
         final rFuture = createReminder(
           id: 'future',
@@ -234,24 +264,58 @@ void main() {
           snoozeUntil: now.add(const Duration(minutes: 10)),
         );
 
-        repository.seed([rExpired1, rExpiredAlarm, rFuture, rRecurring, rSnoozed]);
+        repository.seed([
+          rExpired1,
+          rExpiredAlarm,
+          rCompletedExpired,
+          rCompletedRecent,
+          rFuture,
+          rRecurring,
+          rSnoozed,
+        ]);
 
         final cleanedCount = await service.cleanupExpiredReminders(now: now);
 
-        expect(cleanedCount, 2);
-        expect(scheduler.cancelledIds, containsAll(['exp-1', 'exp-alarm']));
+        expect(cleanedCount, 3);
+        expect(scheduler.cancelledIds, containsAll(['exp-1', 'exp-alarm', 'completed-exp']));
 
         final exp1After = await repository.getReminder('exp-1');
         final expAlarmAfter = await repository.getReminder('exp-alarm');
+        final completedExpAfter = await repository.getReminder('completed-exp');
+        final completedRecentAfter = await repository.getReminder('completed-recent');
         final futureAfter = await repository.getReminder('future');
         final recurringAfter = await repository.getReminder('recurring');
         final snoozedAfter = await repository.getReminder('snoozed');
 
         expect(exp1After!.deleted, isTrue);
         expect(expAlarmAfter!.deleted, isTrue);
+        expect(completedExpAfter!.deleted, isTrue);
+        expect(completedRecentAfter!.deleted, isFalse);
         expect(futureAfter!.deleted, isFalse);
         expect(recurringAfter!.deleted, isFalse);
         expect(snoozedAfter!.deleted, isFalse);
+      });
+    });
+
+    group('ReminderSnoozeReconciler', () {
+      test('clears snoozeUntil only in memory and preserves persisted snoozeUntil', () async {
+        final reconciler = ReminderSnoozeReconciler(repository);
+        final snoozeTime = DateTime.now().subtract(const Duration(minutes: 20));
+        final pastSnooze = createReminder(
+          id: 'snooze-reconcile-1',
+          reminderTime: DateTime.now().subtract(const Duration(hours: 1)),
+          snoozeUntil: snoozeTime,
+        );
+        repository.seed([pastSnooze]);
+
+        final updatedList = await reconciler.reconcileExpiredSnoozes([pastSnooze]);
+
+        // In-memory snapshot has snoozeUntil cleared for presentation
+        expect(updatedList.first.snoozeUntil, isNull);
+
+        // Repository still retains persisted snoozeUntil for expiry service
+        final persisted = await repository.getReminder('snooze-reconcile-1');
+        expect(persisted!.snoozeUntil, equals(snoozeTime));
       });
     });
   });

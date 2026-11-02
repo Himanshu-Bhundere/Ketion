@@ -15,9 +15,9 @@ class ReminderSnoozeReconciler {
 
     for (final reminder in reminders) {
       if (reminder.snoozeUntil != null && reminder.snoozeUntil!.isBefore(now)) {
-        final cleared =
-            reminder.copyWith(snoozeUntil: null, updatedAt: now.toUtc());
-        await repository.updateReminder(cleared);
+        final cleared = reminder.copyWith(snoozeUntil: null);
+
+
         updatedList.add(cleared);
       } else {
         updatedList.add(reminder);

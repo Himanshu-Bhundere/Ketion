@@ -34,6 +34,15 @@ class ReminderRepositoryImpl implements ReminderRepository {
   }
 
   @override
+  Stream<List<ReminderEntity>> watchAllNotDeletedReminders() {
+    final query = _db.select(_db.reminders)
+      ..where((tbl) => tbl.deleted.equals(false));
+    return query
+        .watch()
+        .map((rows) => rows.map(ReminderMapper.fromDb).toList());
+  }
+
+  @override
   Future<ReminderEntity?> getReminder(String id) async {
     final query = _db.select(_db.reminders)..where((tbl) => tbl.id.equals(id));
     final row = await query.getSingleOrNull();

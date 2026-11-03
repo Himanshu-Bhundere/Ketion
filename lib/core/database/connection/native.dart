@@ -6,10 +6,47 @@ import 'package:path/path.dart' as p;
 
 QueryExecutor connect() {
   return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'ketion.sqlite'));
+    final documentsDir = await getApplicationDocumentsDirectory();
 
-    // SQLite optimizations as per documentation
+    final Directory dbDirectory;
+
+    if (Platform.isWindows) {
+      final supportDir = await getApplicationSupportDirectory();
+
+      dbDirectory = Directory(
+        p.join(supportDir.path, 'Ketion'),
+      );
+
+      await dbDirectory.create(recursive: true);
+
+      final newDatabase = File(
+        p.join(dbDirectory.path, 'ketion.sqlite'),
+      );
+
+      final oldDatabase = File(
+        p.join(documentsDir.path, 'ketion.sqlite'),
+      );
+
+      // Migrate the existing database only if the new location
+      // does not already contain one.
+      if (!await newDatabase.exists() && await oldDatabase.exists()) {
+        await oldDatabase.copy(newDatabase.path);
+
+        // Preserve uncheckpointed SQLite WAL transactions.
+        final oldWal = File('${oldDatabase.path}-wal');
+
+        if (await oldWal.exists()) {
+          await oldWal.copy('${newDatabase.path}-wal');
+        }
+      }
+    } else {
+      dbDirectory = documentsDir;
+    }
+
+    final file = File(
+      p.join(dbDirectory.path, 'ketion.sqlite'),
+    );
+
     return NativeDatabase.createInBackground(
       file,
       setup: (db) {

@@ -26,8 +26,10 @@ class NotificationBootstrap {
       FlutterLocalNotificationsPlugin();
 
   static PendingNotificationNavigation? pendingNavigation;
+  static bool isInitialized = false;
 
   static Future<void> initialize() async {
+    isInitialized = false;
     try {
       tz.initializeTimeZones();
       final String currentTimeZone =
@@ -73,6 +75,8 @@ class NotificationBootstrap {
         onDidReceiveNotificationResponse: _onNotificationResponse,
       );
 
+      isInitialized = true;
+
       final notificationAppLaunchDetails =
           await plugin.getNotificationAppLaunchDetails();
       if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
@@ -81,8 +85,10 @@ class NotificationBootstrap {
           _handleInitialResponse(response);
         }
       }
-    } catch (e) {
-      appLogger.e('Failed to initialize notifications: $e');
+    } catch (error, stackTrace) {
+      appLogger.e('Failed to initialize notifications: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
     }
   }
 

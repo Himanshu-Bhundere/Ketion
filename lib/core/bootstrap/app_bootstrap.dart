@@ -22,6 +22,11 @@ class AppBootstrap {
 
     await WidgetBootstrap.initialize();
     await BackgroundBootstrap.initialize();
-    await NotificationBootstrap.initialize();
+    try {
+      await NotificationBootstrap.initialize();
+    } catch (error, stackTrace) {
+      appLogger.e('NotificationBootstrap initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 }

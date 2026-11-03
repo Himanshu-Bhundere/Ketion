@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/core/bootstrap/app_bootstrap.dart';
@@ -40,6 +41,51 @@ class _KetionAppState extends ConsumerState<KetionApp>
     with WidgetsBindingObserver {
   Timer? _reminderCleanupTimer;
   bool _isReminderCleanupRunning = false;
+
+  Future<void> _restoreReminderSchedules() async {
+    if (kIsWeb) return;
+
+    try {
+      final reminders = await ref
+          .read(reminderRepositoryProvider)
+          .watchAllActiveReminders()
+          .first;
+
+      final scheduler = ref.read(reminderSchedulerProvider);
+
+      for (final reminder in reminders) {
+        if (reminder.completed || reminder.deleted) {
+          continue;
+        }
+
+        final effectiveTime =
+            reminder.snoozeUntil != null &&
+                    reminder.snoozeUntil!.isAfter(DateTime.now())
+                ? reminder.snoozeUntil!
+                : reminder.reminderTime;
+
+        if (!effectiveTime.isAfter(DateTime.now())) {
+          continue;
+        }
+
+        final reminderToSchedule = reminder.copyWith(
+          reminderTime: effectiveTime,
+        );
+
+        try {
+          await scheduler.scheduleReminder(reminderToSchedule);
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Failed to restore reminder ${reminder.id}: $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Reminder schedule restoration failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
 
   Future<void> _cleanupExpiredReminders() async {
     if (_isReminderCleanupRunning) return;
@@ -92,6 +138,8 @@ class _KetionAppState extends ConsumerState<KetionApp>
     // Eagerly connect notification action dispatcher to Riverpod
     Future.microtask(() async {
       ref.read(notificationActionDispatcherProvider);
+
+      await _restoreReminderSchedules();
 
       await _cleanupExpiredReminders();
 

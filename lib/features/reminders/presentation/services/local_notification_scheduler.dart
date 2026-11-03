@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:ketion/features/reminders/domain/models/reminder_kind.dart';
 import 'package:ketion/features/reminders/presentation/utils/reminder_display_formatter.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 
 int notificationIdFor(String id) {
   // Stable FNV-1a hash
@@ -26,8 +27,23 @@ class LocalNotificationScheduler implements ReminderScheduler {
   @override
   Future<void> scheduleReminder(ReminderEntity reminder,
       {ReminderNotificationContent? content,}) async {
-    // Only schedule if the reminder time is in the future
-    if (reminder.reminderTime.isBefore(DateTime.now())) {
+    if (!NotificationBootstrap.isInitialized) {
+      throw StateError(
+        'Local notifications are not initialized. '
+        'Check NotificationBootstrap logs.',
+      );
+    }
+
+    final scheduledTime = tz.TZDateTime.from(
+      reminder.reminderTime,
+      tz.local,
+    );
+
+    if (!scheduledTime.isAfter(tz.TZDateTime.now(tz.local))) {
+      debugPrint(
+        'Skipping reminder ${reminder.id}: '
+        'scheduled time is not in the future.',
+      );
       return;
     }
 
@@ -142,11 +158,34 @@ class LocalNotificationScheduler implements ReminderScheduler {
             recurrenceRule: reminder.recurrenceRule,
           ),
       payload: payload,
-      scheduledDate: tz.TZDateTime.from(reminder.reminderTime, tz.local),
+      scheduledDate: scheduledTime,
       notificationDetails: notificationDetails,
       androidScheduleMode: reminder.kind == ReminderKind.alarm
           ? AndroidScheduleMode.alarmClock
           : AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
+  Future<void> showWindowsDiagnosticNotification() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) {
+      throw UnsupportedError(
+        'This diagnostic is only for Windows.',
+      );
+    }
+
+    if (!NotificationBootstrap.isInitialized) {
+      throw StateError('Notifications are not initialized.');
+    }
+
+    await flutterLocalNotificationsPlugin.show(
+      id: 900001,
+      title: 'Ketion notification test',
+      body: 'Windows notification delivery is available.',
+      notificationDetails: const NotificationDetails(
+        windows: WindowsNotificationDetails(
+          scenario: WindowsNotificationScenario.reminder,
+        ),
+      ),
     );
   }
 

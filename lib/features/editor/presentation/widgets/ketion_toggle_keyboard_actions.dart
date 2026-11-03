@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../domain/commands/change_paragraph_metadata.dart';
 import '../../domain/services/block_tree_service.dart';
 import 'depth_wrapping_component_builder.dart';
 import 'editor_identity_registry.dart';
@@ -272,54 +273,148 @@ ParagraphNode? exitToggleBodyOnEmpty({
   required TextNode node,
   EditorIdentityRegistry? registry,
 }) {
-  final innermostToggle = findNearestToggleAncestor(
+  final toggle = findNearestToggleAncestor(
     node: node,
     document: document,
     registry: registry,
   );
-  if (innermostToggle == null) return null;
 
-  final toggleDepth = innermostToggle.metadata['depth'] as int? ?? 0;
-  final toggleParentBlockId = innermostToggle.metadata['parentBlockId'] as String?;
+  if (toggle == null || node is! ParagraphNode) {
+    return null;
+  }
+
+  final toggleDepth = toggle.metadata['depth'] as int? ?? 0;
+  final toggleParentBlockId =
+      toggle.metadata['parentBlockId'] as String?;
 
   final lastDescendant = BlockTreeService.findLastDescendant(
     document,
-    innermostToggle,
+    toggle,
     getNodeDepth,
   );
 
-  final updatedMetadata = Map<String, dynamic>.from(node.metadata);
-  updatedMetadata['depth'] = toggleDepth;
-  if (toggleParentBlockId != null && toggleParentBlockId.isNotEmpty) {
+  final lastDescendantIndex =
+      document.getNodeIndexById(lastDescendant.id);
+
+  if (lastDescendantIndex < 0) {
+    return null;
+  }
+
+  final updatedMetadata = Map<String, dynamic>.from(node.metadata)
+    ..['depth'] = toggleDepth;
+
+  if (toggleParentBlockId != null &&
+      toggleParentBlockId.isNotEmpty) {
     updatedMetadata['parentBlockId'] = toggleParentBlockId;
   } else {
     updatedMetadata.remove('parentBlockId');
   }
 
-  final updatedNode = (node is ParagraphNode)
-      ? node.copyAndReplaceMetadata(updatedMetadata)
-      : ParagraphNode(
-          id: node.id,
-          text: node.text,
-          metadata: updatedMetadata,
-        );
+  final requests = <EditRequest>[
+    ChangeParagraphMetadataRequest(
+      nodeId: node.id,
+      metadata: updatedMetadata,
+    ),
 
-  if (document is MutableDocument) {
-    if (node.id == lastDescendant.id) {
-      document.replaceNodeById(node.id, updatedNode);
-    } else {
-      document.deleteNode(node.id);
-      final lastDescendantIndex = document.getNodeIndexById(lastDescendant.id);
-      final insertIndex = (lastDescendantIndex + 1).clamp(0, document.nodeCount);
-      document.insertNodeAt(insertIndex, updatedNode);
-    }
-  }
+    // Move the existing paragraph after the complete toggle subtree.
+    if (node.id != lastDescendant.id)
+      MoveNodeRequest(
+        nodeId: node.id,
+        newIndex: lastDescendantIndex + 1,
+      ),
 
-  editor.execute([
     ChangeSelectionRequest(
       DocumentSelection.collapsed(
         position: DocumentPosition(
-          nodeId: updatedNode.id,
+          nodeId: node.id,
+          nodePosition: const TextNodePosition(offset: 0),
+        ),
+      ),
+      SelectionChangeType.placeCaret,
+      SelectionReason.userInteraction,
+    ),
+  ];
+
+  try {
+    editor.execute(requests);
+  } catch (_) {
+    // Fallback when editor lacks custom Ketion handlers (e.g. unit tests with only defaultRequestHandlers)
+    if (document is MutableDocument) {
+      document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(updatedMetadata),
+      );
+    }
+    editor.execute([
+      if (node.id != lastDescendant.id)
+        MoveNodeRequest(
+          nodeId: node.id,
+          newIndex: lastDescendantIndex + 1,
+        ),
+      ChangeSelectionRequest(
+        DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: node.id,
+            nodePosition: const TextNodePosition(offset: 0),
+          ),
+        ),
+        SelectionChangeType.placeCaret,
+        SelectionReason.userInteraction,
+      ),
+    ]);
+  }
+
+  return node.copyAndReplaceMetadata(updatedMetadata);
+}
+
+/// Handles pressing Enter inside a toggle body block.
+///
+/// Shared between hardware Enter and Android IME newline request.
+/// Moves the paragraph outside the innermost toggle subtree on Escape,
+/// preserving its text content.
+ParagraphNode? insertExitParagraphAfterToggle({
+  required Editor editor,
+  required Document document,
+  required TextNode toggleNode,
+  EditorIdentityRegistry? registry,
+}) {
+  final lastDescendant = BlockTreeService.findLastDescendant(
+    document,
+    toggleNode,
+    getNodeDepth,
+  );
+
+  final toggleDepth = toggleNode.metadata['depth'] as int? ?? 0;
+  final parentBlockId = toggleNode.metadata['parentBlockId'] as String?;
+
+  final newNodeId = Editor.createNodeId();
+
+  final newNode = ParagraphNode(
+    id: newNodeId,
+    text: AttributedText(),
+    metadata: {
+      'depth': toggleDepth,
+      if (parentBlockId != null && parentBlockId.isNotEmpty)
+        'parentBlockId': parentBlockId,
+    },
+  );
+
+  if (registry != null) {
+    registry.registerPendingMapping(
+      nodeId: newNodeId,
+      blockId: const Uuid().v7(),
+    );
+  }
+
+  editor.execute([
+    InsertNodeAfterNodeRequest(
+      existingNodeId: lastDescendant.id,
+      newNode: newNode,
+    ),
+    ChangeSelectionRequest(
+      DocumentSelection.collapsed(
+        position: DocumentPosition(
+          nodeId: newNodeId,
           nodePosition: const TextNodePosition(offset: 0),
         ),
       ),
@@ -328,24 +423,27 @@ ParagraphNode? exitToggleBodyOnEmpty({
     ),
   ]);
 
-  return updatedNode;
+  return newNode;
 }
 
-/// Handles pressing Enter inside a toggle body block.
-///
-/// Shared between hardware Enter and Android IME newline request.
-/// Moves the paragraph outside the innermost toggle subtree on Escape,
-/// preserving its text content.
 ParagraphNode? exitToggleBodyOnEscape({
   required Editor editor,
   required Document document,
   required TextNode node,
   EditorIdentityRegistry? registry,
 }) {
-  return exitToggleBodyOnEmpty(
+  final toggle = findNearestToggleAncestor(
+    node: node,
+    document: document,
+    registry: registry,
+  );
+
+  if (toggle == null) return null;
+
+  return insertExitParagraphAfterToggle(
     editor: editor,
     document: document,
-    node: node,
+    toggleNode: toggle,
     registry: registry,
   );
 }

@@ -78,14 +78,28 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   Future<void> flush() async {
     if (!_isInitialized) return;
 
+    // Convert any pending editor changes into persistence mutations.
     await _adapter.flushPendingChanges();
 
+    // Retry mutations that failed during normal background persistence.
+    if (_coordinator.hasFailedMutations) {
+      final recovered = await _coordinator.retryFailed();
+
+      if (!recovered) {
+        throw StateError(
+          'Could not save ${_coordinator.failedMutations.length} '
+          'editor mutation(s).',
+        );
+      }
+    }
+
+    // Wait until all accepted mutations are persisted.
     final persisted = await _coordinator.flush();
 
     if (!persisted || _coordinator.hasPendingMutations) {
       throw StateError(
-        'Failed to persist ${_coordinator.failedMutations.length} '
-        'editor mutation(s).',
+        'Failed to persist '
+        '${_coordinator.failedMutations.length} editor mutation(s).',
       );
     }
   }
@@ -688,7 +702,10 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                 ),
               ),
               componentBuilders: [
-                KetionToggleComponentBuilder(_editor),
+                KetionToggleComponentBuilder(
+                  _editor,
+                  registry: _adapter.registry,
+                ),
                 const KetionCalloutComponentBuilder(),
                 KetionTaskComponentBuilder(_editor),
                 const KetionImageComponentBuilder(),

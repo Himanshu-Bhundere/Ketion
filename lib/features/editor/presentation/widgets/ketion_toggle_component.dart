@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
 
+import 'editor_identity_registry.dart';
 import 'ketion_edit_requests.dart';
+import 'ketion_toggle_keyboard_actions.dart';
+
+void _defaultOnExit() {}
 
 class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
   KetionToggleComponentViewModel({
@@ -15,10 +19,12 @@ class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
     required super.textStyleBuilder,
     required this.isExpanded,
     required this.setExpanded,
+    this.onExit = _defaultOnExit,
   });
 
   final bool isExpanded;
   final ValueChanged<bool> setExpanded;
+  final VoidCallback onExit;
 
   @override
   KetionToggleComponentViewModel copy() {
@@ -33,6 +39,7 @@ class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
       textStyleBuilder: textStyleBuilder,
       isExpanded: isExpanded,
       setExpanded: setExpanded,
+      onExit: onExit,
     )..internalCopy(this);
   }
 
@@ -48,9 +55,13 @@ class KetionToggleComponentViewModel extends ParagraphComponentViewModel {
 }
 
 class KetionToggleComponentBuilder implements ComponentBuilder {
-  const KetionToggleComponentBuilder(this.editor);
+  const KetionToggleComponentBuilder(
+    this.editor, {
+    this.registry,
+  });
 
   final Editor editor;
+  final EditorIdentityRegistry? registry;
 
   static bool isToggleNode(DocumentNode node) {
     if (node is! TextNode) return false;
@@ -103,6 +114,14 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
           ],
         );
       },
+      onExit: () {
+        insertExitParagraphAfterToggle(
+          editor: editor,
+          document: document,
+          toggleNode: node,
+          registry: registry,
+        );
+      },
     );
   }
 
@@ -124,6 +143,7 @@ class KetionToggleComponentBuilder implements ComponentBuilder {
       viewModel: componentViewModel,
       isExpanded: componentViewModel.isExpanded,
       onToggle: componentViewModel.setExpanded,
+      onExit: componentViewModel.onExit,
     );
   }
 }
@@ -134,12 +154,14 @@ class KetionToggleComponent extends StatefulWidget {
     required this.viewModel,
     required this.isExpanded,
     required this.onToggle,
+    this.onExit = _defaultOnExit,
     this.showDebugPaint = false,
   });
 
   final ParagraphComponentViewModel viewModel;
   final bool isExpanded;
   final ValueChanged<bool> onToggle;
+  final VoidCallback onExit;
   final bool showDebugPaint;
 
   @override
@@ -198,27 +220,39 @@ class _KetionToggleComponentState extends State<KetionToggleComponent>
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 4, top: 0),
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => widget.onToggle(!widget.isExpanded),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    alignment: Alignment.center,
-                    child: Icon(
-                      widget.isExpanded
-                          ? Icons.arrow_drop_down
-                          : Icons.arrow_right,
-                      size: 24,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => widget.onToggle(!widget.isExpanded),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          widget.isExpanded
+                              ? Icons.arrow_drop_down
+                              : Icons.arrow_right,
+                          size: 24,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.8),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (widget.isExpanded)
+                    IconButton(
+                      tooltip: 'Exit toggle',
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.subdirectory_arrow_right, size: 18),
+                      onPressed: widget.onExit,
+                    ),
+                ],
               ),
             ),
             Expanded(

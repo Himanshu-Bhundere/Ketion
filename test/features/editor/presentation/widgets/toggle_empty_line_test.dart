@@ -213,8 +213,55 @@ void main() {
     });
   });
 
+  group('insertExitParagraphAfterToggle', () {
+    test('inserts a new regular paragraph after toggle subtree', () {
+      final toggleNode = ParagraphNode(
+        id: 'toggle-1',
+        text: AttributedText('Toggle Header'),
+        metadata: const {
+          'blockId': 'block-toggle-1',
+          'blockType': 'toggle',
+          'depth': 0,
+        },
+      );
+
+      final childNode = ParagraphNode(
+        id: 'child-1',
+        text: AttributedText('Toggle Child'),
+        metadata: const {
+          'blockId': 'block-child-1',
+          'parentBlockId': 'block-toggle-1',
+          'depth': 1,
+        },
+      );
+
+      final document = MutableDocument(nodes: [toggleNode, childNode]);
+      final composer = MutableDocumentComposer();
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.cast<EditRequestHandler>(),
+        ],
+      );
+
+      final result = insertExitParagraphAfterToggle(
+        editor: editor,
+        document: document,
+        toggleNode: toggleNode,
+      );
+
+      expect(result, isNotNull);
+      expect(document.nodeCount, equals(3));
+      expect(document.getNodeAt(2)!.id, equals(result!.id));
+      expect(result.metadata['depth'], equals(0));
+    });
+  });
+
   group('exitToggleBodyOnEscape', () {
-    test('moves non-empty child outside toggle, preserving text and resetting depth', () {
+    test('inserts a new paragraph after toggle, preserving child content', () {
       final toggleNode = ParagraphNode(
         id: 'toggle-1',
         text: AttributedText('Toggle Header'),
@@ -254,9 +301,14 @@ void main() {
       );
 
       expect(result, isNotNull);
-      expect(result!.text.toPlainText(), equals('Child paragraph with text'));
+      expect(result!.text.toPlainText(), isEmpty);
       expect(result.metadata['depth'], equals(0));
       expect(result.metadata.containsKey('parentBlockId'), isFalse);
+      expect(document.nodeCount, equals(3));
+      expect(document.getNodeAt(0)!.id, equals('toggle-1'));
+      expect(document.getNodeAt(1)!.id, equals('child-1'));
+      expect(document.getNodeAt(2)!.id, equals(result.id));
+      expect((document.getNodeAt(1) as TextNode).text.toPlainText(), equals('Child paragraph with text'));
     });
   });
 }

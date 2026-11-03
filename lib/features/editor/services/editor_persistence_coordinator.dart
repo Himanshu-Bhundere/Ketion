@@ -227,8 +227,12 @@ class EditorPersistenceCoordinator {
           await gateway.executeMutation(mutation);
 
           _successController.add(mutation);
-        } catch (error) {
-          debugPrint('KETION: Mutation failed: $error');
+        } catch (error, stackTrace) {
+          debugPrint(
+            'KETION: Mutation failed '
+            '(${mutation.runtimeType}): $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
           _failed.add(mutation);
         }
       }

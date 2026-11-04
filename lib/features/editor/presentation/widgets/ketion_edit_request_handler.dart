@@ -110,7 +110,7 @@ EditCommand? _buildToggleChildInsertionCommand(
 
   if (KetionToggleComponentBuilder.isToggleNode(node)) {
     if (position.offset == node.text.length) {
-      return _InsertToggleChildCommand(
+      return _InsertToggleEndCommand(
         editor: editor,
         toggleNode: node,
         registry: registry,
@@ -171,8 +171,8 @@ class _ToggleBodyEnterCommand extends EditCommand {
   }
 }
 
-class _InsertToggleChildCommand extends EditCommand {
-  _InsertToggleChildCommand({
+class _InsertToggleEndCommand extends EditCommand {
+  _InsertToggleEndCommand({
     required this.editor,
     required this.toggleNode,
     required this.registry,
@@ -189,13 +189,26 @@ class _InsertToggleChildCommand extends EditCommand {
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    insertToggleChild(
-      editor: editor,
-      document: context.document,
-      toggleNode: toggleNode,
-      registry: registry,
-      newNodeId: newNodeId,
-    );
+    final isExpanded =
+        toggleNode.metadata['isExpanded'] as bool? ?? true;
+
+    if (!isExpanded) {
+      insertExitParagraphAfterToggle(
+        editor: editor,
+        document: context.document,
+        toggleNode: toggleNode,
+        registry: registry,
+        newNodeId: newNodeId,
+      );
+    } else {
+      insertToggleChild(
+        editor: editor,
+        document: context.document,
+        toggleNode: toggleNode,
+        registry: registry,
+        newNodeId: newNodeId,
+      );
+    }
   }
 }
 
@@ -1499,21 +1512,74 @@ class _KetionDelegatingCommand extends EditCommand {
     final data = BlockDataSerializer.encodeDocumentNode(node);
     final type = BlockDataSerializer.blockTypeFor(node);
 
-    final previousNodeId = document.getNodeBeforeById(newNodeId)?.id;
-    final nextNodeId = document.getNodeAfterById(newNodeId)?.id;
-
-    final previousBlockId =
-        previousNodeId != null ? registry.blockIdForNode(previousNodeId) : null;
-    final nextBlockId =
-        nextNodeId != null ? registry.blockIdForNode(nextNodeId) : null;
-
     final rawParent = node.metadata['parentBlockId'] as String?;
-    final providedParentBlockId = rawParent != null
-        ? (registry.blockIdForNode(rawParent) ?? rawParent)
-        : null;
+    final forceRootLevel = node.metadata['forceRootLevel'] == true ||
+        (node.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
 
-    final previousNode =
-        previousNodeId != null ? document.getNodeById(previousNodeId) : null;
+    final providedParentBlockId = forceRootLevel
+        ? null
+        : (rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null);
+
+    final hasExplicitParent = forceRootLevel || rawParent != null;
+
+    String? previousBlockId;
+    String? nextBlockId;
+
+    if (hasExplicitParent) {
+      var prevNode = document.getNodeBeforeById(newNodeId);
+      while (prevNode != null) {
+        final pBlockId = registry.blockIdForNode(prevNode.id);
+        if (pBlockId != null) {
+          final pBlock = snapshot.getBlock(pBlockId);
+          final pParent = pBlock?.parentBlockId ??
+              (prevNode.metadata['parentBlockId'] as String?);
+          final resolvedPParent = pParent != null
+              ? (registry.blockIdForNode(pParent) ?? pParent)
+              : null;
+          if (resolvedPParent == providedParentBlockId) {
+            previousBlockId = pBlockId;
+            break;
+          }
+        }
+        prevNode = document.getNodeBeforeById(prevNode.id);
+      }
+
+      var nextNode = document.getNodeAfterById(newNodeId);
+      while (nextNode != null) {
+        final nBlockId = registry.blockIdForNode(nextNode.id);
+        if (nBlockId != null) {
+          final nBlock = snapshot.getBlock(nBlockId);
+          final nParent = nBlock?.parentBlockId ??
+              (nextNode.metadata['parentBlockId'] as String?);
+          final resolvedNParent = nParent != null
+              ? (registry.blockIdForNode(nParent) ?? nParent)
+              : null;
+          if (resolvedNParent == providedParentBlockId) {
+            nextBlockId = nBlockId;
+            break;
+          }
+        }
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
+    } else {
+      final previousNodeId = document.getNodeBeforeById(newNodeId)?.id;
+      final nextNodeId = document.getNodeAfterById(newNodeId)?.id;
+
+      previousBlockId =
+          previousNodeId != null ? registry.blockIdForNode(previousNodeId) : null;
+      nextBlockId =
+          nextNodeId != null ? registry.blockIdForNode(nextNodeId) : null;
+    }
+
+    final previousNode = previousBlockId != null
+        ? resolveNodeByBlockId(
+            blockId: previousBlockId,
+            document: document,
+            registry: registry,
+          )
+        : null;
 
     final previousMetadata =
         previousNode?.metadata ?? const <String, dynamic>{};
@@ -1534,6 +1600,7 @@ class _KetionDelegatingCommand extends EditCommand {
       providedParentBlockId: providedParentBlockId,
       snapshot: snapshot,
       previousBlockIsToggle: previousBlockIsToggle,
+      forceRootLevel: forceRootLevel,
     );
   }
 
@@ -1541,13 +1608,67 @@ class _KetionDelegatingCommand extends EditCommand {
     final blockId = registry.blockIdForNode(nodeId);
     if (blockId == null) return null;
 
-    final previousNode = document.getNodeBeforeById(nodeId);
-    final nextNode = document.getNodeAfterById(nodeId);
+    final node = document.getNodeById(nodeId);
+    final rawParent = node?.metadata['parentBlockId'] as String?;
+    final forceRootLevel = node?.metadata['forceRootLevel'] == true ||
+        (node?.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
 
-    final previousBlockId =
-        previousNode != null ? registry.blockIdForNode(previousNode.id) : null;
-    final nextBlockId =
-        nextNode != null ? registry.blockIdForNode(nextNode.id) : null;
+    final providedParentBlockId = forceRootLevel
+        ? null
+        : (rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null);
+
+    final hasExplicitParent = forceRootLevel || rawParent != null;
+
+    String? previousBlockId;
+    String? nextBlockId;
+
+    if (hasExplicitParent) {
+      var prevNode = document.getNodeBeforeById(nodeId);
+      while (prevNode != null) {
+        final pBlockId = registry.blockIdForNode(prevNode.id);
+        if (pBlockId != null) {
+          final pBlock = snapshot.getBlock(pBlockId);
+          final pParent = pBlock?.parentBlockId ??
+              (prevNode.metadata['parentBlockId'] as String?);
+          final resolvedPParent = pParent != null
+              ? (registry.blockIdForNode(pParent) ?? pParent)
+              : null;
+          if (resolvedPParent == providedParentBlockId) {
+            previousBlockId = pBlockId;
+            break;
+          }
+        }
+        prevNode = document.getNodeBeforeById(prevNode.id);
+      }
+
+      var nextNode = document.getNodeAfterById(nodeId);
+      while (nextNode != null) {
+        final nBlockId = registry.blockIdForNode(nextNode.id);
+        if (nBlockId != null) {
+          final nBlock = snapshot.getBlock(nBlockId);
+          final nParent = nBlock?.parentBlockId ??
+              (nextNode.metadata['parentBlockId'] as String?);
+          final resolvedNParent = nParent != null
+              ? (registry.blockIdForNode(nParent) ?? nParent)
+              : null;
+          if (resolvedNParent == providedParentBlockId) {
+            nextBlockId = nBlockId;
+            break;
+          }
+        }
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
+    } else {
+      final previousNode = document.getNodeBeforeById(nodeId);
+      final nextNode = document.getNodeAfterById(nodeId);
+
+      previousBlockId =
+          previousNode != null ? registry.blockIdForNode(previousNode.id) : null;
+      nextBlockId =
+          nextNode != null ? registry.blockIdForNode(nextNode.id) : null;
+    }
 
     return StructuralMutationBuilder.buildMoveMutation(
       pageId: pageId,
@@ -1555,6 +1676,8 @@ class _KetionDelegatingCommand extends EditCommand {
       previousBlockId: previousBlockId,
       nextBlockId: nextBlockId,
       snapshot: snapshot,
+      providedParentBlockId: providedParentBlockId,
+      forceRootLevel: forceRootLevel,
     );
   }
 

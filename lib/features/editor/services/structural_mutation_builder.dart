@@ -119,24 +119,27 @@ class StructuralMutationBuilder {
     required EditorPersistenceSnapshot snapshot,
     String? providedParentBlockId,
     bool previousBlockIsToggle = false,
+    bool forceRootLevel = false,
   }) {
     BlockSnapshot? previousBlock;
     BlockSnapshot? nextBlock;
 
     // An explicitly provided parent takes precedence. Otherwise, infer
     // the new block's parent from its previous sibling.
-    String? parentBlockId = providedParentBlockId;
+    String? parentBlockId = forceRootLevel ? null : providedParentBlockId;
 
     if (previousBlockId != null) {
       final prev = snapshot.getBlock(previousBlockId);
 
       if (prev != null && !prev.deleted) {
-        // A block inserted directly after a toggle belongs inside it.
-        // For all other blocks, inherit the previous block's parent.
-        if (previousBlockIsToggle) {
-          parentBlockId = prev.blockId;
-        } else {
-          parentBlockId ??= prev.parentBlockId;
+        // A block inserted directly after a toggle belongs inside it
+        // ONLY if neither forceRootLevel nor an explicit parent was specified.
+        if (!forceRootLevel && providedParentBlockId == null) {
+          if (previousBlockIsToggle) {
+            parentBlockId = prev.blockId;
+          } else {
+            parentBlockId ??= prev.parentBlockId;
+          }
         }
 
         // Only use the previous block as a positional sibling when it
@@ -152,7 +155,7 @@ class StructuralMutationBuilder {
       final next = snapshot.getBlock(nextBlockId);
 
       if (next != null && !next.deleted) {
-        if (parentBlockId == null) {
+        if (parentBlockId == null && !forceRootLevel && providedParentBlockId == null) {
           parentBlockId = next.parentBlockId;
           nextBlock = next;
         } else if (parentBlockId == next.parentBlockId) {
@@ -186,37 +189,43 @@ class StructuralMutationBuilder {
     required String? previousBlockId,
     required String? nextBlockId,
     required EditorPersistenceSnapshot snapshot,
+    String? providedParentBlockId,
+    bool forceRootLevel = false,
   }) {
     final block = snapshot.getBlock(blockId);
     if (block == null || block.deleted) return null;
 
     BlockSnapshot? previousBlock;
     BlockSnapshot? nextBlock;
-    String? parentBlockId;
+    String? parentBlockId = forceRootLevel ? null : providedParentBlockId;
 
     if (previousBlockId != null) {
-      previousBlock = snapshot.getBlock(previousBlockId);
-      if (previousBlock != null && !previousBlock.deleted) {
-        if (previousBlock.type == 'toggle') {
-          parentBlockId = previousBlock.blockId;
-        } else {
-          parentBlockId = previousBlock.parentBlockId;
+      final prev = snapshot.getBlock(previousBlockId);
+      if (prev != null && !prev.deleted) {
+        if (!forceRootLevel && providedParentBlockId == null) {
+          if (prev.type == 'toggle') {
+            parentBlockId = prev.blockId;
+          } else {
+            parentBlockId = prev.parentBlockId;
+          }
         }
-      } else {
-        previousBlock = null;
+
+        if (prev.blockId != parentBlockId &&
+            prev.parentBlockId == parentBlockId) {
+          previousBlock = prev;
+        }
       }
     }
 
     if (nextBlockId != null) {
-      nextBlock = snapshot.getBlock(nextBlockId);
-      if (nextBlock != null && !nextBlock.deleted) {
-        if (parentBlockId == null) {
-          parentBlockId = nextBlock.parentBlockId;
-        } else if (parentBlockId != nextBlock.parentBlockId) {
-          nextBlock = null;
+      final next = snapshot.getBlock(nextBlockId);
+      if (next != null && !next.deleted) {
+        if (parentBlockId == null && !forceRootLevel && providedParentBlockId == null) {
+          parentBlockId = next.parentBlockId;
+          nextBlock = next;
+        } else if (parentBlockId == next.parentBlockId) {
+          nextBlock = next;
         }
-      } else {
-        nextBlock = null;
       }
     }
 

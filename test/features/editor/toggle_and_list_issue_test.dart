@@ -1074,4 +1074,243 @@ void main() {
       expect(result, ExecutionInstruction.continueExecution);
     });
   });
+
+  group('Collapsed Toggle Enter and Persistence Placement', () {
+    test('Enter at end of collapsed toggle heading inserts new regular paragraph after toggle subtree', () {
+      final toggle = ParagraphNode(
+        id: 'toggle-header',
+        text: AttributedText('My Collapsed Toggle'),
+        metadata: const {
+          'blockId': 'block-toggle',
+          'blockType': 'toggle',
+          'depth': 0,
+          'isExpanded': false,
+        },
+      );
+      final child1 = ParagraphNode(
+        id: 'toggle-child-1',
+        text: AttributedText('Child 1'),
+        metadata: const {
+          'blockId': 'block-child-1',
+          'parentBlockId': 'block-toggle',
+          'depth': 1,
+        },
+      );
+      final child2 = ParagraphNode(
+        id: 'toggle-child-2',
+        text: AttributedText('Child 2'),
+        metadata: const {
+          'blockId': 'block-child-2',
+          'parentBlockId': 'block-toggle',
+          'depth': 1,
+        },
+      );
+      final document = MutableDocument(nodes: [toggle, child1, child2]);
+      final composer = MutableDocumentComposer(
+        initialSelection: DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'toggle-header',
+            nodePosition: TextNodePosition(offset: toggle.text.length),
+          ),
+        ),
+      );
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      final registry = EditorIdentityRegistry();
+      registry.registerMapping(nodeId: 'toggle-header', blockId: 'block-toggle');
+      registry.registerMapping(nodeId: 'toggle-child-1', blockId: 'block-child-1');
+      registry.registerMapping(nodeId: 'toggle-child-2', blockId: 'block-child-2');
+
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = splitToggleWhenEnterPressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: LogicalKeyboardKey.enter,
+          timeStamp: Duration.zero,
+        ),
+        registry: registry,
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(document.nodeCount, equals(4));
+
+      final newNode = document.getNodeAt(3) as ParagraphNode;
+      expect(newNode.text.toPlainText(), isEmpty);
+      expect(newNode.metadata['depth'], equals(0));
+      expect(newNode.metadata.containsKey('parentBlockId'), isFalse);
+      expect(newNode.metadata['forceRootLevel'], isTrue);
+      expect(composer.selection?.extent.nodeId, equals(newNode.id));
+      expect((composer.selection?.extent.nodePosition as TextNodePosition).offset, equals(0));
+    });
+
+    test('Enter at end of expanded toggle heading continues to insert child under toggle', () {
+      final toggle = ParagraphNode(
+        id: 'toggle-header-exp',
+        text: AttributedText('Expanded Toggle'),
+        metadata: const {
+          'blockId': 'block-toggle-exp',
+          'blockType': 'toggle',
+          'depth': 0,
+          'isExpanded': true,
+        },
+      );
+      final document = MutableDocument(nodes: [toggle]);
+      final composer = MutableDocumentComposer(
+        initialSelection: DocumentSelection.collapsed(
+          position: DocumentPosition(
+            nodeId: 'toggle-header-exp',
+            nodePosition: TextNodePosition(offset: toggle.text.length),
+          ),
+        ),
+      );
+      final editor = Editor(
+        editables: {
+          Editor.documentKey: document,
+          Editor.composerKey: composer,
+        },
+        requestHandlers: [
+          ...defaultRequestHandlers.whereType<EditRequestHandler>(),
+        ],
+      );
+      final registry = EditorIdentityRegistry();
+      registry.registerMapping(nodeId: 'toggle-header-exp', blockId: 'block-toggle-exp');
+
+      final editContext = FakeSuperEditorContext(
+        editor: editor,
+        document: document,
+        composer: composer,
+      );
+
+      final result = splitToggleWhenEnterPressed(
+        editContext: editContext,
+        keyEvent: const KeyDownEvent(
+          physicalKey: PhysicalKeyboardKey.enter,
+          logicalKey: LogicalKeyboardKey.enter,
+          timeStamp: Duration.zero,
+        ),
+        registry: registry,
+      );
+
+      expect(result, ExecutionInstruction.haltExecution);
+      expect(document.nodeCount, equals(2));
+
+      final child = document.getNodeAt(1) as ParagraphNode;
+      expect(child.metadata['depth'], equals(1));
+      expect(child.metadata['parentBlockId'], equals('block-toggle-exp'));
+    });
+
+    test('StructuralMutationBuilder.buildInsertMutation with forceRootLevel assigns parentBlockId null and resolves position after toggle', () {
+      final snapshot = EditorPersistenceSnapshot('page-1', {
+        'block-toggle': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-toggle',
+          version: 1,
+          type: 'toggle',
+          parentBlockId: null,
+          position: 1000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'block-child-1': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-child-1',
+          version: 1,
+          type: 'paragraph',
+          parentBlockId: 'block-toggle',
+          position: 1000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'block-next-root': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-next-root',
+          version: 1,
+          type: 'paragraph',
+          parentBlockId: null,
+          position: 2000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+      });
+
+      final mutation = StructuralMutationBuilder.buildInsertMutation(
+        pageId: 'page-1',
+        blockId: 'block-new-p',
+        data: '{"text":""}',
+        type: 'paragraph',
+        previousBlockId: 'block-toggle',
+        nextBlockId: 'block-next-root',
+        snapshot: snapshot,
+        forceRootLevel: true,
+      );
+
+      expect(mutation, isNotNull);
+      expect(mutation!.parentBlockId, isNull);
+      expect(mutation.position, greaterThan(1000.0));
+      expect(mutation.position, lessThan(2000.0));
+    });
+
+    test('StructuralMutationBuilder.buildInsertMutation for nested toggle exit inherits outer toggle parent', () {
+      final snapshot = EditorPersistenceSnapshot('page-1', {
+        'block-outer': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-outer',
+          version: 1,
+          type: 'toggle',
+          parentBlockId: null,
+          position: 1000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'block-inner': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-inner',
+          version: 1,
+          type: 'toggle',
+          parentBlockId: 'block-outer',
+          position: 1000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'block-inner-child': BlockSnapshot(
+          pageId: 'page-1',
+          blockId: 'block-inner-child',
+          version: 1,
+          type: 'paragraph',
+          parentBlockId: 'block-inner',
+          position: 1000.0,
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+      });
+
+      final mutation = StructuralMutationBuilder.buildInsertMutation(
+        pageId: 'page-1',
+        blockId: 'block-new-p',
+        data: '{"text":""}',
+        type: 'paragraph',
+        previousBlockId: 'block-inner',
+        nextBlockId: null,
+        providedParentBlockId: 'block-outer',
+        snapshot: snapshot,
+      );
+
+      expect(mutation, isNotNull);
+      expect(mutation!.parentBlockId, equals('block-outer'));
+      expect(mutation.position, greaterThan(1000.0));
+    });
+  });
 }

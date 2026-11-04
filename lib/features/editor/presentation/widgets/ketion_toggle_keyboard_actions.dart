@@ -156,6 +156,8 @@ ParagraphNode splitToggleMiddleOfHeader({
       'depth': depth,
       if (parentBlockId != null && parentBlockId.isNotEmpty)
         'parentBlockId': parentBlockId,
+      if (parentBlockId == null || parentBlockId.isEmpty)
+        'forceRootLevel': true,
     },
   );
 
@@ -377,6 +379,7 @@ ParagraphNode? insertExitParagraphAfterToggle({
   required Document document,
   required TextNode toggleNode,
   EditorIdentityRegistry? registry,
+  String? newNodeId,
 }) {
   final lastDescendant = BlockTreeService.findLastDescendant(
     document,
@@ -387,21 +390,23 @@ ParagraphNode? insertExitParagraphAfterToggle({
   final toggleDepth = toggleNode.metadata['depth'] as int? ?? 0;
   final parentBlockId = toggleNode.metadata['parentBlockId'] as String?;
 
-  final newNodeId = Editor.createNodeId();
+  final effectiveNewNodeId = newNodeId ?? Editor.createNodeId();
 
   final newNode = ParagraphNode(
-    id: newNodeId,
+    id: effectiveNewNodeId,
     text: AttributedText(),
     metadata: {
       'depth': toggleDepth,
       if (parentBlockId != null && parentBlockId.isNotEmpty)
         'parentBlockId': parentBlockId,
+      if (parentBlockId == null || parentBlockId.isEmpty)
+        'forceRootLevel': true,
     },
   );
 
   if (registry != null) {
     registry.registerPendingMapping(
-      nodeId: newNodeId,
+      nodeId: effectiveNewNodeId,
       blockId: const Uuid().v7(),
     );
   }
@@ -414,7 +419,7 @@ ParagraphNode? insertExitParagraphAfterToggle({
     ChangeSelectionRequest(
       DocumentSelection.collapsed(
         position: DocumentPosition(
-          nodeId: newNodeId,
+          nodeId: effectiveNewNodeId,
           nodePosition: const TextNodePosition(offset: 0),
         ),
       ),
@@ -666,12 +671,25 @@ ExecutionInstruction splitToggleWhenEnterPressed({
     final position = selection.extent.nodePosition as TextNodePosition;
 
     if (position.offset == text.length) {
-      insertToggleChild(
-        editor: editContext.editor,
-        document: editContext.document,
-        toggleNode: node,
-        registry: registry,
-      );
+      final isExpanded =
+          node.metadata['isExpanded'] as bool? ?? true;
+
+      if (!isExpanded) {
+        insertExitParagraphAfterToggle(
+          editor: editContext.editor,
+          document: editContext.document,
+          toggleNode: node,
+          registry: registry,
+        );
+      } else {
+        insertToggleChild(
+          editor: editContext.editor,
+          document: editContext.document,
+          toggleNode: node,
+          registry: registry,
+        );
+      }
+
       return ExecutionInstruction.haltExecution;
     }
 

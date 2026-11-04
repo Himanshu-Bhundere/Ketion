@@ -220,39 +220,27 @@ class _KetionToggleComponentState extends State<KetionToggleComponent>
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 4, top: 0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => widget.onToggle(!widget.isExpanded),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        alignment: Alignment.center,
-                        child: Icon(
-                          widget.isExpanded
-                              ? Icons.arrow_drop_down
-                              : Icons.arrow_right,
-                          size: 24,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.8),
-                        ),
-                      ),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => widget.onToggle(!widget.isExpanded),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      widget.isExpanded
+                          ? Icons.arrow_drop_down
+                          : Icons.arrow_right,
+                      size: 24,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.8),
                     ),
                   ),
-                  if (widget.isExpanded)
-                    IconButton(
-                      tooltip: 'Exit toggle',
-                      visualDensity: VisualDensity.compact,
-                      icon: const Icon(Icons.subdirectory_arrow_right, size: 18),
-                      onPressed: widget.onExit,
-                    ),
-                ],
+                ),
               ),
             ),
             Expanded(

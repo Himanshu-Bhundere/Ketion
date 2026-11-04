@@ -420,7 +420,7 @@ void main() {
     });
 
     test(
-        'InsertNewlineAtCaretRequest at end of collapsed toggle expands it and inserts child',
+        'InsertNewlineAtCaretRequest at end of collapsed toggle exits toggle and inserts outside paragraph',
         () async {
       final snapshot = EditorPersistenceSnapshot('page-1', {});
       final coordinator = MockPersistenceCoordinator();
@@ -491,17 +491,19 @@ void main() {
       await adapter.flushPendingChanges();
       await Future<void>.delayed(Duration.zero);
 
-      // Should expand toggle and insert new child block
+      // Should preserve collapsed state and insert new paragraph outside toggle
       expect(
-          document.getNodeById(toggleNode.id)!.metadata['isExpanded'], isTrue,);
+        document.getNodeById(toggleNode.id)!.metadata['isExpanded'],
+        isFalse,
+      );
       expect(document.nodeCount, 2);
 
-      final childNode = document.getNodeAt(1)! as ParagraphNode;
-      expect(childNode.metadata['parentBlockId'], 'toggle-collapsed');
-      expect(childNode.metadata['depth'], 1);
+      final nextNode = document.getNodeAt(1)! as ParagraphNode;
+      expect(nextNode.metadata['parentBlockId'], isNull);
+      expect(nextNode.metadata['depth'], 0);
 
-      // Caret should be inside new child
-      expect(composer.selection?.extent.nodeId, childNode.id);
+      // Caret should be inside new paragraph
+      expect(composer.selection?.extent.nodeId, nextNode.id);
     });
 
     test(

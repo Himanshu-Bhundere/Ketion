@@ -12,14 +12,19 @@
 constexpr wchar_t kKetionAppUserModelId[] = L"com.ketion.app";
 
 void RegisterKetionToastIdentity() {
-  if (FAILED(::SetCurrentProcessExplicitAppUserModelID(
-          kKetionAppUserModelId))) {
+  HRESULT identityResult =
+      ::SetCurrentProcessExplicitAppUserModelID(kKetionAppUserModelId);
+  if (FAILED(identityResult)) {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to register Windows toast identity.\n");
     return;
   }
 
   PWSTR programsPath = nullptr;
   if (FAILED(::SHGetKnownFolderPath(
           FOLDERID_Programs, KF_FLAG_CREATE, nullptr, &programsPath))) {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to retrieve Start Menu programs folder path.\n");
     return;
   }
 
@@ -30,6 +35,8 @@ void RegisterKetionToastIdentity() {
   wchar_t exePath[MAX_PATH];
   DWORD pathLen = ::GetModuleFileNameW(nullptr, exePath, MAX_PATH);
   if (pathLen == 0 || pathLen >= MAX_PATH) {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to retrieve executable module file name.\n");
     return;
   }
 
@@ -37,6 +44,8 @@ void RegisterKetionToastIdentity() {
   HRESULT hr = ::CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARGS(&shellLink));
   if (FAILED(hr)) {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to create ShellLink instance.\n");
     return;
   }
 
@@ -55,17 +64,38 @@ void RegisterKetionToastIdentity() {
     hr = ::InitPropVariantFromString(kKetionAppUserModelId, &pv);
     if (SUCCEEDED(hr)) {
       hr = propStore->SetValue(PKEY_AppUserModel_ID, pv);
-      propStore->Commit();
+      if (FAILED(hr)) {
+        ::OutputDebugStringW(
+            L"Ketion: Failed to set AppUserModelID property on shortcut.\n");
+      }
+      hr = propStore->Commit();
+      if (FAILED(hr)) {
+        ::OutputDebugStringW(
+            L"Ketion: Failed to commit property store on shortcut.\n");
+      }
       ::PropVariantClear(&pv);
+    } else {
+      ::OutputDebugStringW(
+          L"Ketion: Failed to initialize PropVariant from AppUserModelId string.\n");
     }
     propStore->Release();
+  } else {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to query IPropertyStore on shortcut.\n");
   }
 
   IPersistFile* persistFile = nullptr;
   hr = shellLink->QueryInterface(IID_PPV_ARGS(&persistFile));
   if (SUCCEEDED(hr)) {
-    persistFile->Save(shortcutPath.c_str(), TRUE);
+    hr = persistFile->Save(shortcutPath.c_str(), TRUE);
+    if (FAILED(hr)) {
+      ::OutputDebugStringW(
+          L"Ketion: Failed to save shortcut to Start Menu.\n");
+    }
     persistFile->Release();
+  } else {
+    ::OutputDebugStringW(
+        L"Ketion: Failed to query IPersistFile on shortcut.\n");
   }
 
   shellLink->Release();

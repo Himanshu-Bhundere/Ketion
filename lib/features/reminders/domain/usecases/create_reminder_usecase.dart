@@ -32,11 +32,12 @@ class CreateReminderUseCase {
   }) async {
     if (timezone == null || timezone == 'UTC') {
       try {
-        final localTz = await FlutterTimezone.getLocalTimezone();
-        // Handle both cases where it might be a string or an object with an identifier.
-        timezone = (localTz as dynamic).toString();
+        final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+        timezone = timezoneInfo.identifier;
       } catch (e) {
-        timezone = 'UTC';
+        throw StateError(
+          'Unable to determine device timezone: $e',
+        );
       }
     }
     final now = DateTime.now().toUtc();

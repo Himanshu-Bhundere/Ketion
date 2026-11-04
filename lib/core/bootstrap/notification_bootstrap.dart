@@ -27,13 +27,17 @@ class NotificationBootstrap {
 
   static PendingNotificationNavigation? pendingNavigation;
   static bool isInitialized = false;
+  static String? initializationError;
+
+  static bool get isReady => isInitialized && initializationError == null;
 
   static Future<void> initialize() async {
     isInitialized = false;
+    initializationError = null;
     try {
       tz.initializeTimeZones();
-      final String currentTimeZone =
-          (await FlutterTimezone.getLocalTimezone()).identifier;
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      final currentTimeZone = timezoneInfo.identifier;
       tz.setLocalLocation(tz.getLocation(currentTimeZone));
 
       if (kIsWeb ||
@@ -76,6 +80,12 @@ class NotificationBootstrap {
       );
 
       isInitialized = true;
+      initializationError = null;
+      appLogger.i(
+        'Notification service initialized successfully. '
+        'Platform: ${defaultTargetPlatform.name}, '
+        'Timezone: $currentTimeZone',
+      );
 
       final notificationAppLaunchDetails =
           await plugin.getNotificationAppLaunchDetails();
@@ -86,7 +96,9 @@ class NotificationBootstrap {
         }
       }
     } catch (error, stackTrace) {
-      appLogger.e('Failed to initialize notifications: $error');
+      isInitialized = false;
+      initializationError = error.toString();
+      appLogger.e('Notification initialization failed: $error');
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }

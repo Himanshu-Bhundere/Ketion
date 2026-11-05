@@ -36,12 +36,14 @@ class BlockEditorWidget extends ConsumerStatefulWidget {
   final bool focusTitle;
   final Future<Result<void>> Function(String title) onTitleChanged;
   final Future<Result<void>> Function(String icon) onIconChanged;
+  final Future<Result<void>> Function(String?)? onCoverChanged;
 
   const BlockEditorWidget({
     super.key,
     required this.pageId,
     required this.onTitleChanged,
     required this.onIconChanged,
+    this.onCoverChanged,
     this.focusTitle = false,
   });
 
@@ -159,8 +161,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                 parentKey: vb.block.parentBlockId,
               );
             }).toList();
-            listIndex =
-                ListNumberingService.computeOrdinals(entries)[block.id];
+            listIndex = ListNumberingService.computeOrdinals(entries)[block.id];
           }
         } catch (_) {}
 
@@ -638,6 +639,7 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                                 focusTitle: widget.focusTitle,
                                 onTitleChanged: widget.onTitleChanged,
                                 onIconChanged: widget.onIconChanged,
+                                onCoverChanged: widget.onCoverChanged,
                               );
                             },
                           ),

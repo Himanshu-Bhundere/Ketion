@@ -9,6 +9,7 @@ class KetionEditorHost extends StatefulWidget {
   final bool focusTitle;
   final Future<Result<void>> Function(String) onTitleChanged;
   final Future<Result<void>> Function(String) onIconChanged;
+  final Future<Result<void>> Function(String?)? onCoverChanged;
   final EditorOpenTarget? openTarget;
 
   const KetionEditorHost({
@@ -16,6 +17,7 @@ class KetionEditorHost extends StatefulWidget {
     required this.pageId,
     required this.onTitleChanged,
     required this.onIconChanged,
+    this.onCoverChanged,
     this.focusTitle = false,
     this.openTarget,
   });
@@ -43,6 +45,7 @@ class KetionEditorHostState extends State<KetionEditorHost> {
         focusTitle: widget.focusTitle,
         onTitleChanged: widget.onTitleChanged,
         onIconChanged: widget.onIconChanged,
+        onCoverChanged: widget.onCoverChanged,
         openTarget: widget.openTarget,
       );
     } else {
@@ -51,6 +54,7 @@ class KetionEditorHostState extends State<KetionEditorHost> {
         focusTitle: widget.focusTitle,
         onTitleChanged: widget.onTitleChanged,
         onIconChanged: widget.onIconChanged,
+        onCoverChanged: widget.onCoverChanged,
       );
     }
   }

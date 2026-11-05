@@ -93,4 +93,65 @@ class MediaPickerService {
       return null;
     }
   }
+
+  Future<Attachment?> pickCoverImage({
+    required String pageId,
+    int maxSizeInBytes = 20 * 1024 * 1024,
+  }) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return null;
+
+    final file = result.files.single;
+
+    if (file.size == 0) {
+      throw StateError('Cover image is empty.');
+    }
+
+    if (file.size > maxSizeInBytes) {
+      throw StateError('Cover images must be 20 MB or smaller.');
+    }
+
+    String mimeType = 'image/jpeg';
+    final extension = file.extension?.toLowerCase() ??
+        file.name.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'png':
+        mimeType = 'image/png';
+        break;
+      case 'webp':
+        mimeType = 'image/webp';
+        break;
+      case 'gif':
+        mimeType = 'image/gif';
+        break;
+      case 'bmp':
+        mimeType = 'image/bmp';
+        break;
+      case 'jpg':
+      case 'jpeg':
+      default:
+        mimeType = 'image/jpeg';
+        break;
+    }
+
+    return _repository.saveAttachment(
+      pageId: pageId,
+      blockId: 'page-cover:$pageId',
+      sourceFile: file,
+      mimeType: mimeType,
+    );
+  }
+
+  Future<Attachment?> getAttachment(String id) {
+    return _repository.getAttachment(id);
+  }
+
+  Future<String?> resolveAttachmentPath(Attachment attachment) {
+    return _repository.resolveAttachmentPath(attachment);
+  }
 }

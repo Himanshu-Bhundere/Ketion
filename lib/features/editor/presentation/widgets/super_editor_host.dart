@@ -48,6 +48,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
   final bool focusTitle;
   final Future<Result<void>> Function(String) onTitleChanged;
   final Future<Result<void>> Function(String) onIconChanged;
+  final Future<Result<void>> Function(String?)? onCoverChanged;
   final EditorOpenTarget? openTarget;
 
   const SuperEditorHost({
@@ -55,6 +56,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
     required this.pageId,
     required this.onTitleChanged,
     required this.onIconChanged,
+    this.onCoverChanged,
     this.focusTitle = false,
     this.openTarget,
   });
@@ -538,6 +540,7 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
             focusTitle: widget.focusTitle,
             onTitleChanged: widget.onTitleChanged,
             onIconChanged: widget.onIconChanged,
+            onCoverChanged: widget.onCoverChanged,
           ),
         ),
         Expanded(

@@ -34,6 +34,8 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   Future<Result<void>> _updatePage({
     String? title,
     String? icon,
+    String? coverImage,
+    bool clearCover = false,
   }) {
     final previousChain = _pageUpdateChains[widget.pageId] ??
         Future.value(const Success<void>(null));
@@ -47,7 +49,12 @@ class _EditorPageState extends ConsumerState<EditorPage> {
       final page = (pageResult as Success<entity.Page>).value;
       final updatedPage = page.copyWith(
         title: title ?? page.title,
-        icon: icon ?? page.icon,
+        icon: icon != null ? (icon.isEmpty ? null : icon) : page.icon,
+        coverImage: clearCover
+            ? null
+            : (coverImage != null
+                ? (coverImage.isEmpty ? null : coverImage)
+                : page.coverImage),
       );
 
       final updateResult =
@@ -137,6 +144,10 @@ class _EditorPageState extends ConsumerState<EditorPage> {
           openTarget: widget.openTarget,
           onTitleChanged: (title) => _updatePage(title: title),
           onIconChanged: (icon) => _updatePage(icon: icon),
+          onCoverChanged: (cover) => _updatePage(
+            coverImage: cover,
+            clearCover: cover == null || cover.isEmpty,
+          ),
         ),
       ),
     );

@@ -1,16 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
 import 'package:ketion/core/router/routes.dart';
 
 class DesktopWorkspace extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
+  final VoidCallback onCreateNote;
 
   const DesktopWorkspace({
     super.key,
     required this.navigationShell,
+    required this.onCreateNote,
   });
 
   static const _destinations = <_DesktopDestination>[
@@ -41,36 +40,6 @@ class DesktopWorkspace extends StatelessWidget {
     ),
   ];
 
-  Future<void> _createNote(BuildContext context) async {
-    try {
-      final page = await CreateActionSheet.show(context);
-
-      if (page == null || !context.mounted) {
-        return;
-      }
-
-      unawaited(
-        context.pushNamed(
-          Routes.editorName,
-          pathParameters: {'pageId': page.id},
-          extra: const {'focusTitle': true},
-        ),
-      );
-    } catch (error, stackTrace) {
-      debugPrint('Desktop New Note failed: $error');
-      debugPrintStack(stackTrace: stackTrace);
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Unable to create a note. Check the application logs.'),
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final selectedIndex = navigationShell.currentIndex;
@@ -86,7 +55,7 @@ class DesktopWorkspace extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: ElevatedButton.icon(
-                    onPressed: () => _createNote(context),
+                    onPressed: onCreateNote,
                     icon: const Icon(Icons.add),
                     label: const Text('New Note'),
                   ),

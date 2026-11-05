@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,6 +201,7 @@ void main() {
     required page_entity.Page testPage,
     double width = 800,
     double height = 600,
+    ThemeData? theme,
   }) {
     return ProviderScope(
       overrides: [
@@ -209,6 +211,7 @@ void main() {
         pageRepositoryProvider.overrideWithValue(_MockPageRepo(testPage)),
       ],
       child: MaterialApp(
+        theme: theme,
         home: Scaffold(
           body: Center(
             child: SizedBox(
@@ -405,5 +408,74 @@ void main() {
         tester.widget<TextField>(revertedTextFieldsFinder.at(0));
     expect(revertedTextField.controller, same(originalController));
     expect(revertedTextField.focusNode, same(originalFocusNode));
+  });
+
+  testWidgets('Test A: Windows uses ordinary Draggable', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        blocks: createInitialTableBlock(),
+        testPage: testPage,
+        theme: ThemeData(platform: TargetPlatform.windows),
+      ),
+    );
+    await pumpUntilInitialized(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Draggable<String>), findsWidgets);
+    expect(find.byType(LongPressDraggable<String>), findsNothing);
+  });
+
+  testWidgets('Test B: Android uses LongPressDraggable', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        blocks: createInitialTableBlock(),
+        testPage: testPage,
+        theme: ThemeData(platform: TargetPlatform.android),
+      ),
+    );
+    await pumpUntilInitialized(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LongPressDraggable<String>), findsWidgets);
+  });
+
+  testWidgets('Test C: iOS uses LongPressDraggable', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        blocks: createInitialTableBlock(),
+        testPage: testPage,
+        theme: ThemeData(platform: TargetPlatform.iOS),
+      ),
+    );
+    await pumpUntilInitialized(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LongPressDraggable<String>), findsWidgets);
+  });
+
+  testWidgets('Test D: Actual Windows row dragging', (tester) async {
+    await tester.pumpWidget(
+      buildTestApp(
+        blocks: createInitialTableBlock(),
+        testPage: testPage,
+        theme: ThemeData(platform: TargetPlatform.windows),
+      ),
+    );
+    await pumpUntilInitialized(tester);
+    await tester.pumpAndSettle();
+
+    final handle = find.byIcon(Icons.drag_indicator).first;
+    expect(handle, findsOneWidget);
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(handle),
+      kind: PointerDeviceKind.mouse,
+    );
+
+    await gesture.moveBy(const Offset(0, 80));
+    await tester.pumpAndSettle();
+
+    await gesture.up();
+    await tester.pumpAndSettle();
   });
 }

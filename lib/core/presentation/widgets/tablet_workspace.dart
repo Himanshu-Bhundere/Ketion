@@ -3,8 +3,13 @@ import 'package:go_router/go_router.dart';
 
 class TabletWorkspace extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
+  final VoidCallback onCreateNote;
 
-  const TabletWorkspace({super.key, required this.navigationShell});
+  const TabletWorkspace({
+    super.key,
+    required this.navigationShell,
+    required this.onCreateNote,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +58,7 @@ class TabletWorkspace extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: FloatingActionButton(
-                    onPressed: () {
-                      // TODO: Open FAB creation menu
-                    },
+                    onPressed: onCreateNote,
                     child: const Icon(Icons.add),
                   ),
                 ),

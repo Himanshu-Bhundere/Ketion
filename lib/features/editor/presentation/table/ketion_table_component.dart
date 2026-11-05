@@ -598,6 +598,42 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
   int? _draggingColumnIndex;
   int? _dropTargetColumnIndex;
 
+  Widget _buildPlatformDraggable({
+    required String data,
+    required Widget feedback,
+    required Widget child,
+    VoidCallback? onDragStarted,
+    void Function(DragUpdateDetails)? onDragUpdate,
+    void Function(DraggableDetails)? onDragEnd,
+  }) {
+    final platform = Theme.of(context).platform;
+
+    final isDesktop =
+        platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
+
+    if (isDesktop) {
+      return Draggable<String>(
+        data: data,
+        feedback: feedback,
+        onDragStarted: onDragStarted,
+        onDragUpdate: onDragUpdate,
+        onDragEnd: onDragEnd,
+        child: child,
+      );
+    }
+
+    return LongPressDraggable<String>(
+      data: data,
+      feedback: feedback,
+      onDragStarted: onDragStarted,
+      onDragUpdate: onDragUpdate,
+      onDragEnd: onDragEnd,
+      child: child,
+    );
+  }
+
   List<Widget> _buildRowHandles() {
     if (_geometry == null) return [];
 
@@ -671,13 +707,15 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  LongPressDraggable<String>(
+                  _buildPlatformDraggable(
                     data: 'row_${row.id}',
                     onDragStarted: () {
                       _flushPendingCommit();
                       setState(() => _draggingRowId = row.id);
                     },
                     onDragEnd: (details) {
+                      if (!mounted) return;
+
                       setState(() {
                         _draggingRowId = null;
                         _dropTargetRowId = null;
@@ -706,10 +744,10 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                     child: Icon(
                       Icons.drag_indicator,
                       size: 16,
-                      color:
-                          (candidateData.isNotEmpty || _draggingRowId == row.id)
-                              ? Colors.blue
-                              : Colors.grey.shade400,
+                      color: (candidateData.isNotEmpty ||
+                              _draggingRowId == row.id)
+                          ? Colors.blue
+                          : Colors.grey.shade400,
                     ),
                   ),
                 ],
@@ -786,10 +824,11 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  LongPressDraggable<String>(
+                  _buildPlatformDraggable(
                     data: 'col_$c',
                     onDragStarted: () {
                       _flushPendingCommit();
+
                       setState(() {
                         _draggingColumnIndex = c;
                         _isColumnDragging = true;
@@ -798,6 +837,9 @@ class _KetionTableComponentState extends State<KetionTableComponent> {
                     onDragUpdate: _handleColumnDragUpdate,
                     onDragEnd: (details) {
                       _stopColumnAutoScroll();
+
+                      if (!mounted) return;
+
                       setState(() {
                         _draggingColumnIndex = null;
                         _dropTargetColumnIndex = null;

@@ -25,7 +25,7 @@ class SearchRepositoryImpl implements SearchRepository {
 
       // Case 1: Metadata-only search (query is empty)
       if (trimmedQuery.isEmpty) {
-        return _searchMetadataOnly(
+        return await _searchMetadataOnly(
           typeFilter: typeFilter,
           tagFilter: tagFilter,
           collectionFilter: collectionFilter,

@@ -106,4 +106,89 @@ void main() {
     );
     expect((pageOnly as Success<List<SearchResult>>).value, isEmpty);
   });
+
+  test(
+      'searchNotes supports tag and collection filters, including metadata-only',
+      () async {
+    // Insert pages
+    await database.into(database.pages).insert(
+          PagesCompanion.insert(
+            id: 'page_vacation',
+            title: const drift.Value('Vacation Plans'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+    await database.into(database.pages).insert(
+          PagesCompanion.insert(
+            id: 'page_work',
+            title: const drift.Value('Sprint Retrospective'),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+    // Insert tag & collection
+    await database.into(database.tags).insert(
+          TagsCompanion.insert(
+            id: 'tag_travel',
+            name: 'travel',
+            color: const drift.Value('#FF0000'),
+            createdAt: drift.Value(DateTime.now()),
+            updatedAt: drift.Value(DateTime.now()),
+          ),
+        );
+    await database.into(database.collections).insert(
+          CollectionsCompanion.insert(
+            id: 'coll_personal',
+            name: 'Personal Life',
+            createdAt: drift.Value(DateTime.now()),
+            updatedAt: drift.Value(DateTime.now()),
+          ),
+        );
+
+    // Associate tag and collection with page_vacation
+    await database.into(database.pageTags).insert(
+          PageTagsCompanion.insert(
+            pageId: 'page_vacation',
+            tagId: 'tag_travel',
+          ),
+        );
+    await database.into(database.pageCollections).insert(
+          PageCollectionsCompanion.insert(
+            pageId: 'page_vacation',
+            collectionId: 'coll_personal',
+          ),
+        );
+
+    // 1. Search with tag filter
+    final tagFiltered = await searchRepository.searchNotes(
+      'Vacation',
+      tagFilter: 'tag_travel',
+    );
+    expect(tagFiltered, isA<Success<List<SearchResult>>>());
+    final tagMatches = (tagFiltered as Success<List<SearchResult>>).value;
+    expect(tagMatches.any((m) => m.pageId == 'page_vacation'), isTrue);
+
+    // 2. Metadata-only search (empty query with tag filter)
+    final metaTagSearch = await searchRepository.searchNotes(
+      '',
+      tagFilter: 'tag_travel',
+    );
+    expect(metaTagSearch, isA<Success<List<SearchResult>>>());
+    final metaTagMatches = (metaTagSearch as Success<List<SearchResult>>).value;
+    expect(metaTagMatches.any((m) => m.pageId == 'page_vacation'), isTrue);
+    expect(metaTagMatches.any((m) => m.pageId == 'page_work'), isFalse);
+
+    // 3. Metadata-only search with collection filter
+    final metaCollSearch = await searchRepository.searchNotes(
+      '',
+      collectionFilter: 'coll_personal',
+    );
+    expect(metaCollSearch, isA<Success<List<SearchResult>>>());
+    final metaCollMatches =
+        (metaCollSearch as Success<List<SearchResult>>).value;
+    expect(metaCollMatches.any((m) => m.pageId == 'page_vacation'), isTrue);
+    expect(metaCollMatches.any((m) => m.pageId == 'page_work'), isFalse);
+  });
 }

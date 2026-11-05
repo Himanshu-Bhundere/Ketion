@@ -17,31 +17,81 @@ class SearchRepositoryImpl implements SearchRepository {
   Future<Result<List<SearchResult>>> searchNotes(
     String query, {
     String? typeFilter,
+    String? tagFilter,
+    String? collectionFilter,
   }) async {
     try {
-      // Sanitize the query to treat it as pure text, not FTS syntax.
-      // Escape double quotes and wrap in quotes for a phrase match.
-      // We append a * for prefix matching.
-      final sanitizedQuery = '"${query.replaceAll('"', '""')}"*';
+      final trimmedQuery = query.trim();
 
-      final String whereClause = typeFilter != null
-          ? 's.search_fts MATCH ? AND s.entityType = ?'
-          : 's.search_fts MATCH ?';
+      // Case 1: Metadata-only search (query is empty)
+      if (trimmedQuery.isEmpty) {
+        return _searchMetadataOnly(
+          typeFilter: typeFilter,
+          tagFilter: tagFilter,
+          collectionFilter: collectionFilter,
+        );
+      }
 
-      final variables = typeFilter != null
-          ? [
-              Variable.withString(sanitizedQuery),
-              Variable.withString(typeFilter),
-            ]
-          : [Variable.withString(sanitizedQuery)];
+      // Case 2: Full-text search with optional filters
+      final sanitizedQuery = '"${trimmedQuery.replaceAll('"', '""')}"*';
 
-      final rows = await _database.customSelect(
-        '''
+      final List<Variable> variables = [
+        Variable.withString(sanitizedQuery),
+      ];
+
+      final List<String> conditions = [
+        's.search_fts MATCH ?',
+      ];
+
+      if (typeFilter != null && typeFilter.isNotEmpty) {
+        conditions.add('s.entityType = ?');
+        variables.add(Variable.withString(typeFilter));
+      }
+
+      if (tagFilter != null && tagFilter.isNotEmpty) {
+        conditions.add('''
+          (
+            (s.entityType = 'tag' AND (s.entityId = ? OR s.content = ?))
+            OR
+            (s.pageId IS NOT NULL AND EXISTS (
+              SELECT 1 FROM page_tags pt
+              JOIN tags t ON t.id = pt.tag_id
+              WHERE pt.page_id = s.pageId AND (pt.tag_id = ? OR t.name = ?)
+            ))
+          )
+        ''');
+        variables.add(Variable.withString(tagFilter));
+        variables.add(Variable.withString(tagFilter));
+        variables.add(Variable.withString(tagFilter));
+        variables.add(Variable.withString(tagFilter));
+      }
+
+      if (collectionFilter != null && collectionFilter.isNotEmpty) {
+        conditions.add('''
+          (
+            (s.entityType = 'collection' AND (s.entityId = ? OR s.content = ?))
+            OR
+            (s.pageId IS NOT NULL AND EXISTS (
+              SELECT 1 FROM page_collections pc
+              JOIN collections c ON c.id = pc.collection_id
+              WHERE pc.page_id = s.pageId AND (pc.collection_id = ? OR c.name = ?)
+            ))
+          )
+        ''');
+        variables.add(Variable.withString(collectionFilter));
+        variables.add(Variable.withString(collectionFilter));
+        variables.add(Variable.withString(collectionFilter));
+        variables.add(Variable.withString(collectionFilter));
+      }
+
+      final whereClause = conditions.join(' AND ');
+
+      final sql = '''
         SELECT 
           s.entityId, 
           s.pageId, 
           s.entityType, 
-          snippet(search_fts, 3, '<mark>', '</mark>', '...', 64) as snippet,
+          COALESCE(snippet(search_fts, 3, '<mark>', '</mark>', '...', 64), p.title, s.content, '') as snippet,
           p.title as pageTitle,
           b.type as blockType,
           COALESCE(b.updated_at, p.updated_at, c.updated_at) as modifiedAt,
@@ -68,44 +118,119 @@ class SearchRepositoryImpl implements SearchRepository {
           )
         ORDER BY custom_rank DESC, fts_rank ASC
         LIMIT 100
-        ''',
-        variables: variables,
-      ).get();
+      ''';
 
-      final results = rows.map((row) {
-        final parsedModifiedAt = row.readNullable<DateTime>('modifiedAt');
-        final entityType = row.read<String>('entityType');
-        final blockType = row.readNullable<String>('blockType');
+      final rows = await _database
+          .customSelect(
+            sql,
+            variables: variables,
+          )
+          .get();
 
-        MatchType matchType = MatchType.unknown;
-        if (entityType == 'page') {
-          matchType = MatchType.pageTitle;
-        } else if (entityType == 'block') {
-          matchType = MatchType.blockContent;
-        } else if (entityType == 'tag') {
-          matchType = MatchType.tag;
-        } else if (entityType == 'collection') {
-          matchType = MatchType.collection;
-        }
-
-        return SearchResult(
-          entityId: row.read<String>('entityId'),
-          pageId: row.read<String?>('pageId'),
-          entityType: entityType,
-          snippet: row.read<String>('snippet'),
-          matchType: matchType,
-          pageTitle: row.readNullable<String>('pageTitle'),
-          blockType: blockType,
-          modifiedAt: parsedModifiedAt,
-          breadcrumb: row.readNullable<String>('breadcrumb'),
-        );
-      }).toList();
-
+      final results = _mapRowsToResults(rows);
       return Success(results);
     } catch (e, stackTrace) {
       _logger.e('Failed to search notes: $e', e, stackTrace);
       return Error(StorageFailure('Failed to search notes: $e'));
     }
+  }
+
+  Future<Result<List<SearchResult>>> _searchMetadataOnly({
+    String? typeFilter,
+    String? tagFilter,
+    String? collectionFilter,
+  }) async {
+    try {
+      final List<Variable> variables = [];
+      final List<String> conditions = [
+        'p.deleted = 0',
+        'p.is_archived = 0',
+      ];
+
+      if (tagFilter != null && tagFilter.isNotEmpty) {
+        conditions.add('''
+          EXISTS (
+            SELECT 1 FROM page_tags pt
+            JOIN tags t ON t.id = pt.tag_id
+            WHERE pt.page_id = p.id AND (pt.tag_id = ? OR t.name = ?)
+          )
+        ''');
+        variables.add(Variable.withString(tagFilter));
+        variables.add(Variable.withString(tagFilter));
+      }
+
+      if (collectionFilter != null && collectionFilter.isNotEmpty) {
+        conditions.add('''
+          EXISTS (
+            SELECT 1 FROM page_collections pc
+            JOIN collections c ON c.id = pc.collection_id
+            WHERE pc.page_id = p.id AND (pc.collection_id = ? OR c.name = ?)
+          )
+        ''');
+        variables.add(Variable.withString(collectionFilter));
+        variables.add(Variable.withString(collectionFilter));
+      }
+
+      final whereClause = conditions.join(' AND ');
+
+      final rows = await _database.customSelect(
+        '''
+        SELECT 
+          p.id as entityId, 
+          p.id as pageId, 
+          'page' as entityType, 
+          p.title as snippet,
+          p.title as pageTitle,
+          NULL as blockType,
+          p.updated_at as modifiedAt,
+          (SELECT name FROM collections WHERE id = (SELECT collection_id FROM page_collections WHERE page_id = p.id LIMIT 1)) as breadcrumb,
+          100 as custom_rank,
+          0.0 as fts_rank
+        FROM pages p
+        WHERE $whereClause
+        ORDER BY p.updated_at DESC
+        LIMIT 100
+        ''',
+        variables: variables,
+      ).get();
+
+      final results = _mapRowsToResults(rows);
+      return Success(results);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to search notes by metadata: $e', e, stackTrace);
+      return Error(StorageFailure('Failed to search notes by metadata: $e'));
+    }
+  }
+
+  List<SearchResult> _mapRowsToResults(List<QueryRow> rows) {
+    return rows.map((row) {
+      final parsedModifiedAt = row.readNullable<DateTime>('modifiedAt');
+      final entityType = row.read<String>('entityType');
+      final blockType = row.readNullable<String>('blockType');
+
+      MatchType matchType = MatchType.unknown;
+      if (entityType == 'page') {
+        matchType = MatchType.pageTitle;
+      } else if (entityType == 'block') {
+        matchType = MatchType.blockContent;
+      } else if (entityType == 'tag') {
+        matchType = MatchType.tag;
+      } else if (entityType == 'collection') {
+        matchType = MatchType.collection;
+      }
+
+      return SearchResult(
+        entityId: row.read<String>('entityId'),
+        pageId: row.read<String?>('pageId'),
+        entityType: entityType,
+        snippet: row.read<String>('snippet'),
+        matchType: matchType,
+        pageTitle: row.readNullable<String>('pageTitle'),
+        blockType: blockType,
+        modifiedAt: parsedModifiedAt,
+        breadcrumb: row.readNullable<String>('breadcrumb'),
+      );
+    }).toList();
   }
 
   @override

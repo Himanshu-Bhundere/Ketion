@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/search_providers.dart';
-import '../widgets/search_result_item.dart';
+import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
-import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
+import 'package:ketion/features/collections/presentation/providers/collection_providers.dart';
+import 'package:ketion/features/tags/presentation/providers/tag_providers.dart';
 import '../../../editor/domain/models/editor_open_target.dart';
+import '../providers/search_providers.dart';
+import '../widgets/search_result_item.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -19,6 +21,8 @@ class SearchPage extends ConsumerStatefulWidget {
 
 class _SearchPageState extends ConsumerState<SearchPage> {
   String? _selectedFilter;
+  String? _selectedTag;
+  String? _selectedCollection;
   final TextEditingController _controller = TextEditingController();
   Timer? _debounce;
 
@@ -28,6 +32,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       ref.read(searchNotifierProvider.notifier).search(
             _controller.text,
             typeFilter: _selectedFilter,
+            tagFilter: _selectedTag,
+            collectionFilter: _selectedCollection,
           );
     });
   }
@@ -42,29 +48,41 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(searchNotifierProvider);
+    final tags = ref.watch(tagsFutureProvider).valueOrNull ?? const [];
+    final collections =
+        ref.watch(collectionsFutureProvider).valueOrNull ?? const [];
 
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _controller,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Search notes...',
             border: InputBorder.none,
+            suffixIcon: _controller.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () {
+                      _controller.clear();
+                      _onSearch();
+                    },
+                  )
+                : null,
           ),
           onChanged: (value) => _onSearch(),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(56),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
                 FilterChip(
                   label: const Text('All'),
                   selected: _selectedFilter == null,
-                  onSelected: (selected) {
+                  onSelected: (_) {
                     setState(() => _selectedFilter = null);
                     _onSearch();
                   },
@@ -73,7 +91,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 FilterChip(
                   label: const Text('Pages'),
                   selected: _selectedFilter == 'page',
-                  onSelected: (selected) {
+                  onSelected: (_) {
                     setState(() => _selectedFilter = 'page');
                     _onSearch();
                   },
@@ -82,19 +100,110 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 FilterChip(
                   label: const Text('Blocks'),
                   selected: _selectedFilter == 'block',
-                  onSelected: (selected) {
+                  onSelected: (_) {
                     setState(() => _selectedFilter = 'block');
                     _onSearch();
                   },
                 ),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _selectedTag != null
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String?>(
+                      value: _selectedTag,
+                      hint: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.label_outline, size: 14),
+                          SizedBox(width: 4),
+                          Text('Tag', style: TextStyle(fontSize: 13)),
+                        ],
+                      ),
+                      icon: const Icon(Icons.arrow_drop_down, size: 18),
+                      isDense: true,
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child:
+                              Text('All Tags', style: TextStyle(fontSize: 13)),
+                        ),
+                        ...tags.map(
+                          (t) => DropdownMenuItem(
+                            value: t.id,
+                            child: Text(
+                              '#${t.name}',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        setState(() => _selectedTag = val);
+                        _onSearch();
+                      },
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Tags'),
-                  selected: _selectedFilter == 'tag',
-                  onSelected: (selected) {
-                    setState(() => _selectedFilter = 'tag');
-                    _onSearch();
-                  },
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _selectedCollection != null
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String?>(
+                      value: _selectedCollection,
+                      hint: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.folder_outlined, size: 14),
+                          SizedBox(width: 4),
+                          Text('Collection', style: TextStyle(fontSize: 13)),
+                        ],
+                      ),
+                      icon: const Icon(Icons.arrow_drop_down, size: 18),
+                      isDense: true,
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text(
+                            'All Collections',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ),
+                        ...collections.map(
+                          (c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(
+                              c.name,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        setState(() => _selectedCollection = val);
+                        _onSearch();
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -131,31 +240,42 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               return SearchResultItem(
                 result: result,
                 onTap: () {
-                  if (result.strongestMatch.entityType == 'tag') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Tag filtering coming soon: ${result.strongestMatch.snippet}',
+                  final targetPageId = result.strongestMatch.pageId;
+                  if (targetPageId != null && targetPageId.isNotEmpty) {
+                    context.push(
+                      '/editor/$targetPageId',
+                      extra: {
+                        'openTarget': EditorOpenTarget(
+                          pageId: targetPageId,
+                          targetBlockId:
+                              result.strongestMatch.entityType == 'block'
+                                  ? result.strongestMatch.entityId
+                                  : null,
                         ),
-                      ),
+                      },
                     );
-                    return;
+                  } else if (result.strongestMatch.entityType == 'tag') {
+                    setState(
+                      () => _selectedTag = result.strongestMatch.entityId,
+                    );
+                    _onSearch();
+                  } else if (result.strongestMatch.entityType == 'collection') {
+                    setState(
+                      () =>
+                          _selectedCollection = result.strongestMatch.entityId,
+                    );
+                    _onSearch();
+                  } else {
+                    final entityId = result.strongestMatch.entityId;
+                    context.push(
+                      '/editor/$entityId',
+                      extra: {
+                        'openTarget': EditorOpenTarget(
+                          pageId: entityId,
+                        ),
+                      },
+                    );
                   }
-
-                  final targetPageId = result.strongestMatch.pageId ??
-                      result.strongestMatch.entityId;
-                  context.push(
-                    '/editor/$targetPageId',
-                    extra: {
-                      'openTarget': EditorOpenTarget(
-                        pageId: targetPageId,
-                        targetBlockId:
-                            result.strongestMatch.entityType == 'block'
-                                ? result.strongestMatch.entityId
-                                : null,
-                      ),
-                    },
-                  );
                 },
               );
             },

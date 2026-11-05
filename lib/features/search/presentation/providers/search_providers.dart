@@ -26,8 +26,20 @@ class SearchNotifier
 
   SearchNotifier(this._searchNotes) : super(const AsyncValue.data([]));
 
-  void search(String query, {String? typeFilter}) {
-    if (query.trim().isEmpty) {
+  void search(
+    String query, {
+    String? typeFilter,
+    String? tagFilter,
+    String? collectionFilter,
+  }) {
+    final trimmedQuery = query.trim();
+    final hasMetadataFilter = (tagFilter != null && tagFilter.isNotEmpty) ||
+        (collectionFilter != null && collectionFilter.isNotEmpty) ||
+        (typeFilter != null && typeFilter.isNotEmpty);
+
+    if (trimmedQuery.isEmpty && !hasMetadataFilter) {
+      _debounceTimer?.cancel();
+      _currentRequestId++;
       state = const AsyncValue.data([]);
       return;
     }
@@ -38,18 +50,25 @@ class SearchNotifier
     final requestId = _currentRequestId;
 
     _debounceTimer = Timer(const Duration(milliseconds: 300), () async {
-      final result = await _searchNotes(query, typeFilter: typeFilter);
+      if (requestId != _currentRequestId) return;
+
+      final result = await _searchNotes(
+        trimmedQuery,
+        typeFilter: typeFilter,
+        tagFilter: tagFilter,
+        collectionFilter: collectionFilter,
+      );
 
       if (requestId != _currentRequestId) return;
 
       result.fold(
         (results) {
-          if (mounted) {
+          if (mounted && requestId == _currentRequestId) {
             state = AsyncValue.data(_groupResults(results));
           }
         },
         (failure) {
-          if (mounted) {
+          if (mounted && requestId == _currentRequestId) {
             state = AsyncValue.error(failure.message, StackTrace.current);
           }
         },

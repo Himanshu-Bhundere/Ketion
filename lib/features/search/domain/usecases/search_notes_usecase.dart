@@ -10,11 +10,23 @@ class SearchNotesUseCase {
   Future<Result<List<SearchResult>>> call(
     String query, {
     String? typeFilter,
+    String? tagFilter,
+    String? collectionFilter,
   }) async {
-    if (query.trim().isEmpty) {
+    final trimmedQuery = query.trim();
+    final hasMetadataFilter = (tagFilter != null && tagFilter.isNotEmpty) ||
+        (collectionFilter != null && collectionFilter.isNotEmpty) ||
+        (typeFilter != null && typeFilter.isNotEmpty);
+
+    if (trimmedQuery.isEmpty && !hasMetadataFilter) {
       return const Success([]);
     }
 
-    return _repository.searchNotes(query.trim(), typeFilter: typeFilter);
+    return _repository.searchNotes(
+      trimmedQuery,
+      typeFilter: typeFilter,
+      tagFilter: tagFilter,
+      collectionFilter: collectionFilter,
+    );
   }
 }

@@ -1,16 +1,21 @@
+import 'dart:async';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/presentation/widgets/create_action_sheet.dart';
+import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
+import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
+import 'package:ketion/core/theme/breakpoints.dart';
+import 'package:ketion/features/collections/presentation/providers/collection_providers.dart';
 import 'package:ketion/features/home/presentation/providers/home_providers.dart';
+import 'package:ketion/features/media/presentation/providers/attachment_provider.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
-import 'package:ketion/core/theme/breakpoints.dart';
-import 'dart:async';
-import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
+import 'package:ketion/features/tags/presentation/providers/tag_providers.dart';
 
 enum NoteSortOption { dateCreated, dateUpdated, alphabetical }
 
@@ -133,10 +138,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             return GridView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
+                maxCrossAxisExtent: 220,
                 mainAxisSpacing: AppSpacing.lg,
                 crossAxisSpacing: AppSpacing.lg,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.75,
               ),
               itemCount: sortedPages.length,
               itemBuilder: (context, index) =>
@@ -158,10 +163,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
             return GridView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
+                maxCrossAxisExtent: 220,
                 mainAxisSpacing: AppSpacing.lg,
                 crossAxisSpacing: AppSpacing.lg,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.75,
               ),
               itemCount: 6,
               itemBuilder: (context, index) => SkeletonLoader(
@@ -208,6 +213,55 @@ class _NotesPageState extends ConsumerState<NotesPage> {
   }
 
   Widget _buildListItem(BuildContext context, entity.Page page) {
+    final hasIcon = page.icon != null && page.icon!.isNotEmpty;
+    final hasCover = page.coverImage != null && page.coverImage!.isNotEmpty;
+
+    Widget leadingWidget;
+    if (hasCover) {
+      leadingWidget = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          _PageCoverThumbnail(
+            cover: page.coverImage!,
+            width: 44,
+            height: 44,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          if (hasIcon)
+            Positioned(
+              bottom: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.all(1),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  page.icon!,
+                  style: const TextStyle(fontSize: 14, height: 1),
+                ),
+              ),
+            ),
+        ],
+      );
+    } else if (hasIcon) {
+      leadingWidget = Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        child: Text(
+          page.icon!,
+          style: const TextStyle(fontSize: 28, height: 1),
+        ),
+      );
+    } else {
+      leadingWidget = Icon(
+        page.isFavorite ? Icons.star : Icons.description,
+        color: Theme.of(context).colorScheme.primary,
+      );
+    }
+
     return Card(
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceContainer,
@@ -216,13 +270,33 @@ class _NotesPageState extends ConsumerState<NotesPage> {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: ListTile(
-        leading: Icon(
-          page.isFavorite ? Icons.star : Icons.description,
-          color: Theme.of(context).colorScheme.primary,
+        leading: leadingWidget,
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                page.title.isEmpty ? 'Untitled' : page.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (page.isFavorite)
+              Icon(
+                Icons.star,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+          ],
         ),
-        title: Text(page.title.isEmpty ? 'Untitled' : page.title),
-        subtitle: Text(
-          'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
+              style: AppTypography.caption,
+            ),
+            _PageMetadataBadges(pageId: page.id),
+          ],
         ),
         onTap: () => _openNote(context, page),
       ),
@@ -230,8 +304,12 @@ class _NotesPageState extends ConsumerState<NotesPage> {
   }
 
   Widget _buildGridItem(BuildContext context, entity.Page page) {
+    final hasIcon = page.icon != null && page.icon!.isNotEmpty;
+    final hasCover = page.coverImage != null && page.coverImage!.isNotEmpty;
+
     return Card(
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       color: Theme.of(context).colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -239,31 +317,69 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       ),
       child: InkWell(
         onTap: () => _openNote(context, page),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                page.isFavorite ? Icons.star : Icons.description,
-                color: Theme.of(context).colorScheme.primary,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasCover)
+              _PageCoverThumbnail(
+                cover: page.coverImage!,
+                width: double.infinity,
+                height: 72,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                page.title.isEmpty ? 'Untitled' : page.title,
-                style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        if (hasIcon)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6.0),
+                            child: Text(
+                              page.icon!,
+                              style: const TextStyle(fontSize: 20, height: 1),
+                            ),
+                          )
+                        else if (!hasCover)
+                          Icon(
+                            Icons.description,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        const Spacer(),
+                        if (page.isFavorite)
+                          Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      page.title.isEmpty ? 'Untitled' : page.title,
+                      style: AppTypography.body
+                          .copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    _PageMetadataBadges(pageId: page.id),
+                    const Spacer(),
+                    Text(
+                      'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
+                      style: AppTypography.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              const Spacer(),
-              Text(
-                'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
-                style: AppTypography.caption,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -276,5 +392,147 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     } else {
       context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
     }
+  }
+}
+
+class _PageCoverThumbnail extends ConsumerWidget {
+  final String cover;
+  final double width;
+  final double height;
+  final BorderRadius borderRadius;
+
+  const _PageCoverThumbnail({
+    required this.cover,
+    this.width = double.infinity,
+    this.height = 70,
+    this.borderRadius = const BorderRadius.all(Radius.circular(6)),
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (cover.startsWith('http://') || cover.startsWith('https://')) {
+      return ClipRRect(
+        borderRadius: borderRadius,
+        child: Image.network(
+          cover,
+          width: width,
+          height: height,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
+      );
+    }
+
+    final attachmentAsync = ref.watch(attachmentProvider(cover));
+    return attachmentAsync.when(
+      data: (attachment) {
+        if (attachment == null) return const SizedBox.shrink();
+        final pathAsync = ref.watch(attachmentPathProvider(attachment));
+        return pathAsync.when(
+          data: (localPath) {
+            if (localPath == null || localPath.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            return ClipRRect(
+              borderRadius: borderRadius,
+              child: kIsWeb
+                  ? Image.network(
+                      localPath,
+                      width: width,
+                      height: height,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.file(
+                      io.File(localPath),
+                      width: width,
+                      height: height,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+            );
+          },
+          loading: () => SizedBox(width: width, height: height),
+          error: (_, __) => const SizedBox.shrink(),
+        );
+      },
+      loading: () => SizedBox(width: width, height: height),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _PageMetadataBadges extends ConsumerWidget {
+  final String pageId;
+
+  const _PageMetadataBadges({required this.pageId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagsAsync = ref.watch(pageTagsFutureProvider(pageId));
+    final collectionsAsync = ref.watch(pageCollectionsFutureProvider(pageId));
+
+    final tags = tagsAsync.valueOrNull ?? const [];
+    final collections = collectionsAsync.valueOrNull ?? const [];
+
+    if (tags.isEmpty && collections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 2,
+        children: [
+          ...collections.map(
+            (c) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondaryContainer
+                    .withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.folder_outlined,
+                    size: 10,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    c.name,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ...tags.map(
+            (t) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '#${t.name}',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

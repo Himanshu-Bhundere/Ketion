@@ -74,6 +74,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<List<page_entity.Page>>> getDeletedPages() async =>
       const Success([]);
+  @override
+  Future<Result<void>> updateCoverPosition(
+          String pageId, double offset,) async =>
+      const Success(null);
 }
 
 class DummyBlockRepository implements BlockRepository {

@@ -37,8 +37,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text',}) async =>
+  Future<Result<page_entity.Page>> createPage(
+    page_entity.Page newPage, {
+    String initialBlockType = 'text',
+  }) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -70,6 +72,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<List<page_entity.Page>>> getDeletedPages() async =>
       const Success([]);
+  @override
+  Future<Result<void>> updateCoverPosition(
+          String pageId, double offset,) async =>
+      const Success(null);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -429,7 +435,9 @@ void main() {
             {
               'id': 'row_1',
               'cells': List.generate(
-                  10, (i) => {'id': '1_$i', 'spans': <dynamic>[]},),
+                10,
+                (i) => {'id': '1_$i', 'spans': <dynamic>[]},
+              ),
             },
           ],
         }),

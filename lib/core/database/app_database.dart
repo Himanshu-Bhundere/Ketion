@@ -42,13 +42,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         await m.createAll();
+        await customStatement('''
+          ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL NOT NULL DEFAULT 0.5 CHECK (
+            cover_image_vertical_offset >= 0.0 AND cover_image_vertical_offset <= 1.0
+          );
+        ''');
         // Create unified FTS5 table for Pages, Blocks, and Tags
         await customStatement('''
           CREATE VIRTUAL TABLE search_fts USING fts5(
@@ -589,6 +594,13 @@ class AppDatabase extends _$AppDatabase {
             UPDATE pages
             SET deleted_at = updated_at
             WHERE deleted = 1 AND deleted_at IS NULL
+          ''');
+        }
+        if (from < 22) {
+          await customStatement('''
+            ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL NOT NULL DEFAULT 0.5 CHECK (
+              cover_image_vertical_offset >= 0.0 AND cover_image_vertical_offset <= 1.0
+            );
           ''');
         }
       },

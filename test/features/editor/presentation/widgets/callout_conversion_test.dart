@@ -42,8 +42,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text',}) async =>
+  Future<Result<page_entity.Page>> createPage(
+    page_entity.Page newPage, {
+    String initialBlockType = 'text',
+  }) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -75,6 +77,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<List<page_entity.Page>>> getDeletedPages() async =>
       const Success([]);
+  @override
+  Future<Result<void>> updateCoverPosition(
+          String pageId, double offset,) async =>
+      const Success(null);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -426,13 +432,15 @@ void main() {
         AttributedSpans(
           attributions: [
             const SpanMarker(
-                attribution: boldAttribution,
-                offset: 5,
-                markerType: SpanMarkerType.start,),
+              attribution: boldAttribution,
+              offset: 5,
+              markerType: SpanMarkerType.start,
+            ),
             const SpanMarker(
-                attribution: boldAttribution,
-                offset: 8,
-                markerType: SpanMarkerType.end,),
+              attribution: boldAttribution,
+              offset: 8,
+              markerType: SpanMarkerType.end,
+            ),
           ],
         ),
       );
@@ -471,8 +479,10 @@ void main() {
       expect(callout.text.toPlainText(), 'Some bold text  world');
 
       // Check attributes survived
-      expect(callout.text.hasAttributionAt(5, attribution: boldAttribution),
-          isTrue,);
+      expect(
+        callout.text.hasAttributionAt(5, attribution: boldAttribution),
+        isTrue,
+      );
 
       final selection = composer.selection;
       expect((selection!.extent.nodePosition as TextNodePosition).offset, 15);
@@ -541,7 +551,8 @@ void main() {
       // Reload
       await tester.pumpWidget(const SizedBox()); // Clear
       await tester.pumpWidget(
-          buildTestApp(blocks: List.from(testBlocks), testPage: testPage),);
+        buildTestApp(blocks: List.from(testBlocks), testPage: testPage),
+      );
       await pumpUntilInitialized(tester);
 
       final State stateReopened = tester.state(find.byType(SuperEditorHost));

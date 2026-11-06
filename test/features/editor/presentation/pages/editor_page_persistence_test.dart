@@ -88,6 +88,10 @@ class _FailingPageRepository implements PageRepository {
 
   @override
   Future<Result<List<Page>>> getDeletedPages() => _delegate.getDeletedPages();
+  @override
+  Future<Result<void>> updateCoverPosition(
+          String pageId, double offset,) async =>
+      const Success(null);
 }
 
 Future<void> _pumpUntilInitialized(WidgetTester tester) async {

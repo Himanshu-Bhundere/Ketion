@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/page.dart' as entity;
 
@@ -79,4 +80,21 @@ final deletedPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
     (pages) => pages,
     (error) => throw error,
   );
+});
+
+final pageCoverOffsetProvider =
+    StreamProvider.family<double, String>((ref, pageId) {
+  final db = ref.watch(appDatabaseProvider);
+  return db
+      .customSelect(
+        'SELECT cover_image_vertical_offset FROM pages WHERE id = ?',
+        variables: [Variable.withString(pageId)],
+        readsFrom: {db.pages},
+      )
+      .watchSingleOrNull()
+      .map((row) {
+        if (row == null) return 0.5;
+        final val = row.readNullable<double>('cover_image_vertical_offset');
+        return (val ?? 0.5).clamp(0.0, 1.0);
+      });
 });

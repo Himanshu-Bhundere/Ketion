@@ -17,4 +17,5 @@ abstract class PageRepository {
   Future<Result<List<Page>>> getChildPages(String parentId);
   Future<Result<List<Page>>> getTemplatePages();
   Future<Result<List<Page>>> getDeletedPages();
+  Future<Result<void>> updateCoverPosition(String pageId, double offset);
 }

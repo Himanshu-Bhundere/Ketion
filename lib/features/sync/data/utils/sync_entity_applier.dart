@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:ketion/core/database/app_database.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as domain_page;
 import 'package:ketion/features/blocks/domain/entities/block.dart'
@@ -31,6 +32,20 @@ class SyncEntityApplier {
       case 'pages':
         final page = domain_page.Page.fromJson(payload);
         await _db.into(_db.pages).insertOnConflictUpdate(page.toCompanion());
+        if (payload.containsKey('coverImageVerticalOffset')) {
+          final offsetVal = payload['coverImageVerticalOffset'];
+          if (offsetVal is num) {
+            final clamped = offsetVal.toDouble().clamp(0.0, 1.0);
+            await _db.customUpdate(
+              'UPDATE pages SET cover_image_vertical_offset = ? WHERE id = ?',
+              variables: [
+                Variable.withReal(clamped),
+                Variable.withString(entityId),
+              ],
+              updates: {_db.pages},
+            );
+          }
+        }
         break;
       case 'blocks':
         final block = domain_block.Block.fromJson(payload);

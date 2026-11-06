@@ -41,8 +41,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<page_entity.Page>> getPage(String id) async => Success(page);
   @override
-  Future<Result<page_entity.Page>> createPage(page_entity.Page newPage,
-          {String initialBlockType = 'text',}) async =>
+  Future<Result<page_entity.Page>> createPage(
+    page_entity.Page newPage, {
+    String initialBlockType = 'text',
+  }) async =>
       Success(page);
   @override
   Future<Result<void>> deletePage(String id) async => const Success(null);
@@ -74,6 +76,10 @@ class _MockPageRepo implements PageRepository {
   @override
   Future<Result<List<page_entity.Page>>> getDeletedPages() async =>
       const Success([]);
+  @override
+  Future<Result<void>> updateCoverPosition(
+          String pageId, double offset,) async =>
+      const Success(null);
 }
 
 class DummyBlockRepository implements BlockRepository {
@@ -663,7 +669,10 @@ void main() {
     final checklistOption = options.firstWhere((o) => o.title == 'Checklist');
 
     final target = SlashCommandTarget(
-        nodeId: firstNodeId, slashStartIndex: 0, slashEndIndex: 6,);
+      nodeId: firstNodeId,
+      slashStartIndex: 0,
+      slashEndIndex: 6,
+    );
     if (checklistOption is KetionSlashCommand) {
       final innerRequests =
           checklistOption.getEditRequestsWithDoc(firstNodeId, document);
@@ -691,9 +700,12 @@ void main() {
     // After execution, the slash text should be deleted
     // and replaced by a task node.
     expect(document.nodeCount, 1);
-    expect(document.first is TaskNode, isTrue,
-        reason:
-            'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}',);
+    expect(
+      document.first is TaskNode,
+      isTrue,
+      reason:
+          'Expected TaskNode but got ${document.first.runtimeType} with data ${(document.first as dynamic).metadata}',
+    );
 
     // Now undo
     editor.undo();

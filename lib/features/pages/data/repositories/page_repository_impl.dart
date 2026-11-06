@@ -29,8 +29,10 @@ class PageRepositoryImpl implements PageRepository {
   }
 
   @override
-  Future<Result<void>> createPage(domain.Page page,
-      {String initialBlockType = 'text',}) async {
+  Future<Result<void>> createPage(
+    domain.Page page, {
+    String initialBlockType = 'text',
+  }) async {
     try {
       final now = DateTime.now().toUtc();
       final newPage = page.copyWith(
@@ -309,7 +311,6 @@ class PageRepositoryImpl implements PageRepository {
     }
   }
 
-
   @override
   Future<Result<void>> restorePage(String id) async {
     try {
@@ -324,11 +325,11 @@ class PageRepositoryImpl implements PageRepository {
 
         final now = DateTime.now().toUtc();
         final restored = existingRecord.toDomain().copyWith(
-          deleted: false,
-          deletedAt: null,
-          version: existingRecord.version + 1,
-          updatedAt: now,
-        );
+              deleted: false,
+              deletedAt: null,
+              version: existingRecord.version + 1,
+              updatedAt: now,
+            );
 
         await (_db.update(_db.pages)..where((t) => t.id.equals(id)))
             .write(restored.toCompanion());
@@ -372,7 +373,8 @@ class PageRepositoryImpl implements PageRepository {
   Future<Result<void>> emptyTrash() async {
     try {
       await _db.transaction(() async {
-        await (_db.delete(_db.pages)..where((t) => t.deleted.equals(true))).go();
+        await (_db.delete(_db.pages)..where((t) => t.deleted.equals(true)))
+            .go();
       });
       return const Success(null);
     } catch (e, stackTrace) {
@@ -400,6 +402,66 @@ class PageRepositoryImpl implements PageRepository {
       return Success(records.map((r) => r.toDomain()).toList());
     } catch (e, stackTrace) {
       _logger.e('Failed to get deleted pages', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> updateCoverPosition(String pageId, double offset) async {
+    try {
+      final clampedOffset = offset.clamp(0.0, 1.0);
+      await _db.transaction(() async {
+        final existingRecord = await (_db.select(_db.pages)
+              ..where((t) => t.id.equals(pageId)))
+            .getSingleOrNull();
+        if (existingRecord == null) {
+          throw Exception('Page not found');
+        }
+
+        final now = DateTime.now().toUtc();
+        final newVersion = existingRecord.version + 1;
+
+        final updatedCompanion = PagesCompanion(
+          version: Value(newVersion),
+          updatedAt: Value(now),
+        );
+
+        await (_db.update(_db.pages)..where((t) => t.id.equals(pageId)))
+            .write(updatedCompanion);
+
+        await _db.customUpdate(
+          'UPDATE pages SET cover_image_vertical_offset = ? WHERE id = ?',
+          variables: [
+            Variable.withReal(clampedOffset),
+            Variable.withString(pageId),
+          ],
+          updates: {_db.pages},
+        );
+
+        final pageDomain = existingRecord.toDomain().copyWith(
+              version: newVersion,
+              updatedAt: now,
+            );
+        final payload = pageDomain.toJson();
+        payload['coverImageVerticalOffset'] = clampedOffset;
+
+        await _enqueueOrThrow(
+          SyncQueueItem(
+            id: const Uuid().v7(),
+            entityTable: 'pages',
+            entityId: pageId,
+            operation: 'update',
+            payload: jsonEncode(payload),
+            batchId: null,
+            version: newVersion,
+            updatedAt: now,
+            createdAt: now,
+          ),
+        );
+      });
+      return const Success(null);
+    } catch (e, stackTrace) {
+      _logger.e('Failed to update cover position', e, stackTrace);
       return Error(StorageFailure(e.toString()));
     }
   }

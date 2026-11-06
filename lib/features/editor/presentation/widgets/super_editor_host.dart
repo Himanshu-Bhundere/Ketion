@@ -49,6 +49,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
   final Future<Result<void>> Function(String) onTitleChanged;
   final Future<Result<void>> Function(String) onIconChanged;
   final Future<Result<void>> Function(String?)? onCoverChanged;
+  final Future<Result<void>> Function(double)? onCoverPositionChanged;
   final EditorOpenTarget? openTarget;
 
   const SuperEditorHost({
@@ -57,6 +58,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
     required this.onTitleChanged,
     required this.onIconChanged,
     this.onCoverChanged,
+    this.onCoverPositionChanged,
     this.focusTitle = false,
     this.openTarget,
   });
@@ -541,6 +543,7 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
             onTitleChanged: widget.onTitleChanged,
             onIconChanged: widget.onIconChanged,
             onCoverChanged: widget.onCoverChanged,
+            onCoverPositionChanged: widget.onCoverPositionChanged,
           ),
         ),
         Expanded(

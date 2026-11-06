@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io' as io;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,10 +10,10 @@ import 'package:ketion/core/theme/app_typography.dart';
 import 'package:ketion/core/theme/breakpoints.dart';
 import 'package:ketion/features/collections/presentation/providers/collection_providers.dart';
 import 'package:ketion/features/home/presentation/providers/home_providers.dart';
-import 'package:ketion/features/media/presentation/providers/attachment_provider.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/features/tags/presentation/providers/tag_providers.dart';
+import '../widgets/page_cover_image.dart';
 
 enum NoteSortOption { dateCreated, dateUpdated, alphabetical }
 
@@ -221,8 +219,9 @@ class _NotesPageState extends ConsumerState<NotesPage> {
       leadingWidget = Stack(
         clipBehavior: Clip.none,
         children: [
-          _PageCoverThumbnail(
-            cover: page.coverImage!,
+          PageCoverImage(
+            pageId: page.id,
+            coverImage: page.coverImage!,
             width: 44,
             height: 44,
             borderRadius: BorderRadius.circular(6),
@@ -321,10 +320,10 @@ class _NotesPageState extends ConsumerState<NotesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (hasCover)
-              _PageCoverThumbnail(
-                cover: page.coverImage!,
-                width: double.infinity,
-                height: 72,
+              PageCoverImage(
+                pageId: page.id,
+                coverImage: page.coverImage!,
+                aspectRatio: PageCoverImage.defaultAspectRatio,
                 borderRadius:
                     const BorderRadius.vertical(top: Radius.circular(12)),
               ),
@@ -392,72 +391,6 @@ class _NotesPageState extends ConsumerState<NotesPage> {
     } else {
       context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
     }
-  }
-}
-
-class _PageCoverThumbnail extends ConsumerWidget {
-  final String cover;
-  final double width;
-  final double height;
-  final BorderRadius borderRadius;
-
-  const _PageCoverThumbnail({
-    required this.cover,
-    this.width = double.infinity,
-    this.height = 70,
-    this.borderRadius = const BorderRadius.all(Radius.circular(6)),
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (cover.startsWith('http://') || cover.startsWith('https://')) {
-      return ClipRRect(
-        borderRadius: borderRadius,
-        child: Image.network(
-          cover,
-          width: width,
-          height: height,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-        ),
-      );
-    }
-
-    final attachmentAsync = ref.watch(attachmentProvider(cover));
-    return attachmentAsync.when(
-      data: (attachment) {
-        if (attachment == null) return const SizedBox.shrink();
-        final pathAsync = ref.watch(attachmentPathProvider(attachment));
-        return pathAsync.when(
-          data: (localPath) {
-            if (localPath == null || localPath.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return ClipRRect(
-              borderRadius: borderRadius,
-              child: kIsWeb
-                  ? Image.network(
-                      localPath,
-                      width: width,
-                      height: height,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.file(
-                      io.File(localPath),
-                      width: width,
-                      height: height,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
-            );
-          },
-          loading: () => SizedBox(width: width, height: height),
-          error: (_, __) => const SizedBox.shrink(),
-        );
-      },
-      loading: () => SizedBox(width: width, height: height),
-      error: (_, __) => const SizedBox.shrink(),
-    );
   }
 }
 

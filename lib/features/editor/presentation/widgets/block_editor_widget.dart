@@ -37,6 +37,7 @@ class BlockEditorWidget extends ConsumerStatefulWidget {
   final Future<Result<void>> Function(String title) onTitleChanged;
   final Future<Result<void>> Function(String icon) onIconChanged;
   final Future<Result<void>> Function(String?)? onCoverChanged;
+  final Future<Result<void>> Function(double)? onCoverPositionChanged;
 
   const BlockEditorWidget({
     super.key,
@@ -44,6 +45,7 @@ class BlockEditorWidget extends ConsumerStatefulWidget {
     required this.onTitleChanged,
     required this.onIconChanged,
     this.onCoverChanged,
+    this.onCoverPositionChanged,
     this.focusTitle = false,
   });
 
@@ -640,6 +642,8 @@ class _BlockEditorWidgetState extends ConsumerState<BlockEditorWidget> {
                                 onTitleChanged: widget.onTitleChanged,
                                 onIconChanged: widget.onIconChanged,
                                 onCoverChanged: widget.onCoverChanged,
+                                onCoverPositionChanged:
+                                    widget.onCoverPositionChanged,
                               );
                             },
                           ),

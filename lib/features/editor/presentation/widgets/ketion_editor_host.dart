@@ -10,6 +10,7 @@ class KetionEditorHost extends StatefulWidget {
   final Future<Result<void>> Function(String) onTitleChanged;
   final Future<Result<void>> Function(String) onIconChanged;
   final Future<Result<void>> Function(String?)? onCoverChanged;
+  final Future<Result<void>> Function(double)? onCoverPositionChanged;
   final EditorOpenTarget? openTarget;
 
   const KetionEditorHost({
@@ -18,6 +19,7 @@ class KetionEditorHost extends StatefulWidget {
     required this.onTitleChanged,
     required this.onIconChanged,
     this.onCoverChanged,
+    this.onCoverPositionChanged,
     this.focusTitle = false,
     this.openTarget,
   });
@@ -46,6 +48,7 @@ class KetionEditorHostState extends State<KetionEditorHost> {
         onTitleChanged: widget.onTitleChanged,
         onIconChanged: widget.onIconChanged,
         onCoverChanged: widget.onCoverChanged,
+        onCoverPositionChanged: widget.onCoverPositionChanged,
         openTarget: widget.openTarget,
       );
     } else {
@@ -55,6 +58,7 @@ class KetionEditorHostState extends State<KetionEditorHost> {
         onTitleChanged: widget.onTitleChanged,
         onIconChanged: widget.onIconChanged,
         onCoverChanged: widget.onCoverChanged,
+        onCoverPositionChanged: widget.onCoverPositionChanged,
       );
     }
   }

@@ -148,6 +148,9 @@ class _EditorPageState extends ConsumerState<EditorPage> {
             coverImage: cover,
             clearCover: cover == null || cover.isEmpty,
           ),
+          onCoverPositionChanged: (offset) => ref
+              .read(pageRepositoryProvider)
+              .updateCoverPosition(widget.pageId, offset),
         ),
       ),
     );

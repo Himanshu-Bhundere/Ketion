@@ -9,6 +9,7 @@ import 'package:ketion/core/theme/breakpoints.dart';
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
+import 'package:ketion/features/pages/presentation/widgets/page_cover_image.dart';
 import 'dart:async';
 import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 import 'package:ketion/features/reminders/presentation/utils/reminder_display_formatter.dart';
@@ -175,7 +176,7 @@ class HomePage extends ConsumerWidget {
         const Text('Recently Viewed', style: AppTypography.title),
         const SizedBox(height: AppSpacing.lg),
         SizedBox(
-          height: 160,
+          height: 220,
           child: recentPagesAsync.when(
             data: (pages) {
               if (pages.isEmpty) {
@@ -209,8 +210,8 @@ class HomePage extends ConsumerWidget {
               separatorBuilder: (context, index) =>
                   const SizedBox(width: AppSpacing.lg),
               itemBuilder: (context, index) => SkeletonLoader(
-                width: 140,
-                height: 160,
+                width: 160,
+                height: 220,
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
@@ -242,8 +243,12 @@ class HomePage extends ConsumerWidget {
     WidgetRef ref,
     entity.Page page,
   ) {
+    final hasCover = page.coverImage != null && page.coverImage!.isNotEmpty;
+    final hasIcon = page.icon != null && page.icon!.isNotEmpty;
+
     return SizedBox(
-      width: 140,
+      width: 160,
+      height: 220,
       child: Card(
         clipBehavior: Clip.antiAlias,
         elevation: 0,
@@ -259,32 +264,106 @@ class HomePage extends ConsumerWidget {
               pathParameters: {'pageId': page.id},
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  page.isFavorite ? Icons.star : Icons.description,
-                  color: Theme.of(context).colorScheme.primary,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasCover)
+                PageCoverImage(
+                  pageId: page.id,
+                  coverImage: page.coverImage!,
+                  height: 124,
+                  width: double.infinity,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
+                )
+              else
+                Container(
+                  height: 72,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(12)),
+                  ),
+                  alignment: Alignment.center,
+                  child: hasIcon
+                      ? Text(
+                          page.icon!,
+                          style: const TextStyle(fontSize: 28, height: 1),
+                        )
+                      : Icon(
+                          page.isFavorite
+                              ? Icons.star_border
+                              : Icons.description_outlined,
+                          size: 28,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  page.title.isEmpty ? 'Untitled' : page.title,
-                  style:
-                      AppTypography.body.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (hasCover) ...[
+                        Row(
+                          children: [
+                            if (hasIcon)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4.0),
+                                child: Text(
+                                  page.icon!,
+                                  style:
+                                      const TextStyle(fontSize: 16, height: 1),
+                                ),
+                              ),
+                            const Spacer(),
+                            if (page.isFavorite)
+                              Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                          ],
+                        ),
+                        if (hasIcon || page.isFavorite)
+                          const SizedBox(height: AppSpacing.xs),
+                      ] else ...[
+                        if (page.isFavorite)
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: Icon(
+                              Icons.star,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                      ],
+                      Text(
+                        page.title.isEmpty ? 'Untitled' : page.title,
+                        style: AppTypography.body
+                            .copyWith(fontWeight: FontWeight.w600),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
+                        style: AppTypography.caption,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
-                Text(
-                  'Updated ${page.updatedAt.toLocal().toString().substring(0, 10)}',
-                  style: AppTypography.caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

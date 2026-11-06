@@ -50,7 +50,7 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (Migrator m) async {
         await m.createAll();
         await customStatement('''
-          ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL NOT NULL DEFAULT 0.5 CHECK (
+          ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL DEFAULT 0.5 CHECK (
             cover_image_vertical_offset >= 0.0 AND cover_image_vertical_offset <= 1.0
           );
         ''');
@@ -598,9 +598,14 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 22) {
           await customStatement('''
-            ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL NOT NULL DEFAULT 0.5 CHECK (
+            ALTER TABLE pages ADD COLUMN cover_image_vertical_offset REAL DEFAULT 0.5 CHECK (
               cover_image_vertical_offset >= 0.0 AND cover_image_vertical_offset <= 1.0
             );
+          ''');
+          await customStatement('''
+            UPDATE pages
+            SET cover_image_vertical_offset = 0.5
+            WHERE cover_image_vertical_offset IS NULL;
           ''');
         }
       },

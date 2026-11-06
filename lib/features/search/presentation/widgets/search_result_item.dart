@@ -66,6 +66,8 @@ class SearchResultItem extends StatelessWidget {
       return strongest.pageTitle ?? 'Untitled Note';
     } else if (strongest.entityType == 'tag') {
       return 'Tag Match: ${strongest.snippet.replaceAll(RegExp(r'<[^>]*>'), '')}';
+    } else if (strongest.entityType == 'collection') {
+      return 'Collection: ${strongest.snippet.replaceAll(RegExp(r'<[^>]*>'), '')}';
     }
     return 'Result';
   }
@@ -80,6 +82,9 @@ class SearchResultItem extends StatelessWidget {
         break;
       case 'tag':
         icon = Icons.tag;
+        break;
+      case 'collection':
+        icon = Icons.folder_outlined;
         break;
       case 'block':
         icon = Icons.text_snippet_outlined;

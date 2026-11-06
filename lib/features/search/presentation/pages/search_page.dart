@@ -240,31 +240,39 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               return SearchResultItem(
                 result: result,
                 onTap: () {
-                  final targetPageId = result.strongestMatch.pageId;
-                  if (targetPageId != null && targetPageId.isNotEmpty) {
+                  final strongest = result.strongestMatch;
+                  if (strongest.entityType == 'tag') {
+                    setState(() {
+                      _selectedTag = strongest.entityId;
+                      _selectedCollection = null;
+                      _selectedFilter = null;
+                      _controller.clear();
+                    });
+                    FocusScope.of(context).unfocus();
+                    _onSearch();
+                  } else if (strongest.entityType == 'collection') {
+                    setState(() {
+                      _selectedCollection = strongest.entityId;
+                      _selectedTag = null;
+                      _selectedFilter = null;
+                      _controller.clear();
+                    });
+                    FocusScope.of(context).unfocus();
+                    _onSearch();
+                  } else if (strongest.pageId != null &&
+                      strongest.pageId!.isNotEmpty) {
+                    final targetPageId = strongest.pageId!;
                     context.push(
                       '/editor/$targetPageId',
                       extra: {
                         'openTarget': EditorOpenTarget(
                           pageId: targetPageId,
-                          targetBlockId:
-                              result.strongestMatch.entityType == 'block'
-                                  ? result.strongestMatch.entityId
-                                  : null,
+                          targetBlockId: strongest.entityType == 'block'
+                              ? strongest.entityId
+                              : null,
                         ),
                       },
                     );
-                  } else if (result.strongestMatch.entityType == 'tag') {
-                    setState(
-                      () => _selectedTag = result.strongestMatch.entityId,
-                    );
-                    _onSearch();
-                  } else if (result.strongestMatch.entityType == 'collection') {
-                    setState(
-                      () =>
-                          _selectedCollection = result.strongestMatch.entityId,
-                    );
-                    _onSearch();
                   } else {
                     final entityId = result.strongestMatch.entityId;
                     context.push(

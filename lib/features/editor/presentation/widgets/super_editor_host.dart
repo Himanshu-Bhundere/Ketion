@@ -51,6 +51,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
   final Future<Result<void>> Function(String?)? onCoverChanged;
   final Future<Result<void>> Function(double)? onCoverPositionChanged;
   final EditorOpenTarget? openTarget;
+  final ScrollController? scrollController;
 
   const SuperEditorHost({
     super.key,
@@ -61,6 +62,7 @@ class SuperEditorHost extends ConsumerStatefulWidget {
     this.onCoverPositionChanged,
     this.focusTitle = false,
     this.openTarget,
+    this.scrollController,
   });
 
   @override
@@ -77,7 +79,11 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   late final FocusNode _focusNode;
   late final EditorHistoryController _historyController;
   late final EditorPersistenceCoordinator _coordinator;
+  late final ScrollController _internalScrollController;
   bool _isInitialized = false;
+
+  ScrollController get scrollController =>
+      widget.scrollController ?? _internalScrollController;
 
   Future<void> flush() async {
     if (!_isInitialized) return;
@@ -131,12 +137,20 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     super.initState();
     _composer = MutableDocumentComposer();
     _focusNode = FocusNode();
+    _internalScrollController = ScrollController();
+    _focusNode.addListener(_handleFocusChange);
 
     // Defer initialization to avoid state access during initState which can cause
     // Riverpod assertion errors or freezes.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _initEditor();
     });
+  }
+
+  void _handleFocusChange() {
+    if (!_focusNode.hasFocus && _isInitialized) {
+      _adapter.flushPendingChanges();
+    }
   }
 
   Future<void> _initEditor() async {
@@ -501,8 +515,10 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       } catch (_) {}
     }
 
+    _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
     _composer.dispose();
+    _internalScrollController.dispose();
 
     super.dispose();
   }
@@ -532,53 +548,56 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final page = pageAsync.valueOrNull;
     if (page == null) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: PageHeader(
-            page: page,
-            focusTitle: widget.focusTitle,
-            onTitleChanged: widget.onTitleChanged,
-            onIconChanged: widget.onIconChanged,
-            onCoverChanged: widget.onCoverChanged,
-            onCoverPositionChanged: widget.onCoverPositionChanged,
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) {
+          _adapter.flushPendingChanges();
+        }
+      },
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          final hardwareKeyboard = HardwareKeyboard.instance;
+          final isMetaPressed = hardwareKeyboard.isMetaPressed ||
+              hardwareKeyboard.isControlPressed;
+
+          if (event.logicalKey == LogicalKeyboardKey.keyZ &&
+              isMetaPressed) {
+            final historyController =
+                ref.read(editorHistoryControllerProvider(widget.pageId));
+            if (hardwareKeyboard.isShiftPressed) {
+              historyController?.redo();
+            } else {
+              historyController?.undo();
+            }
+            return KeyEventResult.handled;
+          }
+
+          if (_slashController.handleKeyEvent(event)) {
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: CustomScrollView(
+        controller: scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: PageHeader(
+                page: page,
+                focusTitle: widget.focusTitle,
+                onTitleChanged: widget.onTitleChanged,
+                onIconChanged: widget.onIconChanged,
+                onCoverChanged: widget.onCoverChanged,
+                onCoverPositionChanged: widget.onCoverPositionChanged,
+              ),
+            ),
           ),
-        ),
-        Expanded(
-          child: Focus(
-            onFocusChange: (hasFocus) {
-              if (!hasFocus) {
-                _adapter.flushPendingChanges();
-              }
-            },
-            onKeyEvent: (node, event) {
-              if (event is KeyDownEvent) {
-                final hardwareKeyboard = HardwareKeyboard.instance;
-                final isMetaPressed = hardwareKeyboard.isMetaPressed ||
-                    hardwareKeyboard.isControlPressed;
-
-                if (event.logicalKey == LogicalKeyboardKey.keyZ &&
-                    isMetaPressed) {
-                  final historyController =
-                      ref.read(editorHistoryControllerProvider(widget.pageId));
-                  if (hardwareKeyboard.isShiftPressed) {
-                    historyController?.redo();
-                  } else {
-                    historyController?.undo();
-                  }
-                  return KeyEventResult.handled;
-                }
-
-                if (_slashController.handleKeyEvent(event)) {
-                  return KeyEventResult.handled;
-                }
-              }
-              return KeyEventResult.ignored;
-            },
-            child: SuperEditor(
-              editor: _editor,
+          SuperEditor(
+            scrollController: scrollController,
+            editor: _editor,
               focusNode: _focusNode,
               stylesheet: (Theme.of(context).brightness == Brightness.dark
                       ? defaultStylesheet.copyWith(
@@ -772,9 +791,17 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                 ...defaultKeyboardActions,
               ],
             ),
-          ),
+            SliverToBoxAdapter(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _focusNode.requestFocus();
+                },
+                child: const SizedBox(height: 120),
+              ),
+            ),
+          ],
         ),
-      ],
-    );
+      );
   }
 }

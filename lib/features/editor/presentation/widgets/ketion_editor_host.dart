@@ -12,6 +12,7 @@ class KetionEditorHost extends StatefulWidget {
   final Future<Result<void>> Function(String?)? onCoverChanged;
   final Future<Result<void>> Function(double)? onCoverPositionChanged;
   final EditorOpenTarget? openTarget;
+  final ScrollController? scrollController;
 
   const KetionEditorHost({
     super.key,
@@ -22,6 +23,7 @@ class KetionEditorHost extends StatefulWidget {
     this.onCoverPositionChanged,
     this.focusTitle = false,
     this.openTarget,
+    this.scrollController,
   });
 
   // Development-only migration switch.
@@ -50,6 +52,7 @@ class KetionEditorHostState extends State<KetionEditorHost> {
         onCoverChanged: widget.onCoverChanged,
         onCoverPositionChanged: widget.onCoverPositionChanged,
         openTarget: widget.openTarget,
+        scrollController: widget.scrollController,
       );
     } else {
       return BlockEditorWidget(

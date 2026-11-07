@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration {
@@ -607,6 +607,12 @@ class AppDatabase extends _$AppDatabase {
             SET cover_image_vertical_offset = 0.5
             WHERE cover_image_vertical_offset IS NULL;
           ''');
+        }
+        if (from < 23) {
+          await m.addColumn(
+            appSettingsTable,
+            appSettingsTable.assistiveBallEnabled,
+          );
         }
       },
       beforeOpen: (details) async {

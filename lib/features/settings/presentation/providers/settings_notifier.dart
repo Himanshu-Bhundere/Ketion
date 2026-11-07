@@ -64,6 +64,15 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
+  Future<void> toggleAssistiveBall(bool enabled) async {
+    final current = state.value;
+    if (current == null) return;
+
+    final updated = current.copyWith(assistiveBallEnabled: enabled);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
   Future<void> updateSyncFrequency(String frequency) async {
     final current = state.value;
     if (current == null) return;

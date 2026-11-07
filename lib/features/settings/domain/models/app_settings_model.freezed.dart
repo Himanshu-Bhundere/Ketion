@@ -29,6 +29,7 @@ mixin _$AppSettingsModel {
   EditorAppearance get editorAppearance => throw _privateConstructorUsedError;
   bool get highContrast => throw _privateConstructorUsedError;
   bool get reducedMotion => throw _privateConstructorUsedError;
+  bool get assistiveBallEnabled => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -53,6 +54,7 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       EditorAppearance editorAppearance,
       bool highContrast,
       bool reducedMotion,
+      bool assistiveBallEnabled,
       DateTime? lastCleanup});
 }
 
@@ -78,6 +80,7 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
     Object? editorAppearance = null,
     Object? highContrast = null,
     Object? reducedMotion = null,
+    Object? assistiveBallEnabled = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_value.copyWith(
@@ -117,6 +120,10 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
           ? _value.reducedMotion
           : reducedMotion // ignore: cast_nullable_to_non_nullable
               as bool,
+      assistiveBallEnabled: null == assistiveBallEnabled
+          ? _value.assistiveBallEnabled
+          : assistiveBallEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -143,6 +150,7 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       EditorAppearance editorAppearance,
       bool highContrast,
       bool reducedMotion,
+      bool assistiveBallEnabled,
       DateTime? lastCleanup});
 }
 
@@ -166,6 +174,7 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
     Object? editorAppearance = null,
     Object? highContrast = null,
     Object? reducedMotion = null,
+    Object? assistiveBallEnabled = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_$AppSettingsModelImpl(
@@ -205,6 +214,10 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
           ? _value.reducedMotion
           : reducedMotion // ignore: cast_nullable_to_non_nullable
               as bool,
+      assistiveBallEnabled: null == assistiveBallEnabled
+          ? _value.assistiveBallEnabled
+          : assistiveBallEnabled // ignore: cast_nullable_to_non_nullable
+              as bool,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -226,6 +239,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.editorAppearance = EditorAppearance.comfortable,
       this.highContrast = false,
       this.reducedMotion = false,
+      this.assistiveBallEnabled = false,
       this.lastCleanup});
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -259,11 +273,14 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   @JsonKey()
   final bool reducedMotion;
   @override
+  @JsonKey()
+  final bool assistiveBallEnabled;
+  @override
   final DateTime? lastCleanup;
 
   @override
   String toString() {
-    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, lastCleanup: $lastCleanup)';
+    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, assistiveBallEnabled: $assistiveBallEnabled, lastCleanup: $lastCleanup)';
   }
 
   @override
@@ -289,6 +306,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
                 other.highContrast == highContrast) &&
             (identical(other.reducedMotion, reducedMotion) ||
                 other.reducedMotion == reducedMotion) &&
+            (identical(other.assistiveBallEnabled, assistiveBallEnabled) ||
+                other.assistiveBallEnabled == assistiveBallEnabled) &&
             (identical(other.lastCleanup, lastCleanup) ||
                 other.lastCleanup == lastCleanup));
   }
@@ -306,6 +325,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       editorAppearance,
       highContrast,
       reducedMotion,
+      assistiveBallEnabled,
       lastCleanup);
 
   @JsonKey(ignore: true)
@@ -334,6 +354,7 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final EditorAppearance editorAppearance,
       final bool highContrast,
       final bool reducedMotion,
+      final bool assistiveBallEnabled,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
 
   factory _AppSettingsModel.fromJson(Map<String, dynamic> json) =
@@ -357,6 +378,8 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   bool get highContrast;
   @override
   bool get reducedMotion;
+  @override
+  bool get assistiveBallEnabled;
   @override
   DateTime? get lastCleanup;
   @override

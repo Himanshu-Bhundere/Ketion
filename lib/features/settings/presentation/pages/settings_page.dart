@@ -167,6 +167,31 @@ class SettingsPage extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text(
+                      'Assistive Ball',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.touch_app),
+                    title: const Text('Assistive Ball'),
+                    subtitle: const Text(
+                      'Floating shortcut for quick note capture and review',
+                    ),
+                    value: settings.assistiveBallEnabled,
+                    onChanged: (bool value) {
+                      ref
+                          .read(appSettingsProvider.notifier)
+                          .toggleAssistiveBall(value);
+                    },
+                  ),
+                  const Divider(),
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
                       'Storage & Cache',
                       style: TextStyle(
                         fontSize: 14,

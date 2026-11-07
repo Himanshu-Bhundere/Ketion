@@ -29,6 +29,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
               editorAppearance: Value(newModel.editorAppearance.name),
               highContrast: Value(newModel.highContrast),
               reducedMotion: Value(newModel.reducedMotion),
+              assistiveBallEnabled: Value(newModel.assistiveBallEnabled),
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             ),
@@ -55,6 +56,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       ),
       highContrast: entity.highContrast,
       reducedMotion: entity.reducedMotion,
+      assistiveBallEnabled: entity.assistiveBallEnabled,
       lastCleanup: entity.lastCleanup,
     );
   }
@@ -74,6 +76,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         editorAppearance: Value(settings.editorAppearance.name),
         highContrast: Value(settings.highContrast),
         reducedMotion: Value(settings.reducedMotion),
+        assistiveBallEnabled: Value(settings.assistiveBallEnabled),
         lastCleanup: Value(settings.lastCleanup),
         updatedAt: Value(DateTime.now()),
       ),

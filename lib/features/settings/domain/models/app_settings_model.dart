@@ -21,6 +21,7 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default(EditorAppearance.comfortable) EditorAppearance editorAppearance,
     @Default(false) bool highContrast,
     @Default(false) bool reducedMotion,
+    @Default(false) bool assistiveBallEnabled,
     DateTime? lastCleanup,
   }) = _AppSettingsModel;
 

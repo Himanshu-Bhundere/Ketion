@@ -17,6 +17,8 @@ class AppSettingsTable extends Table {
   BoolColumn get highContrast => boolean().withDefault(const Constant(false))();
   BoolColumn get reducedMotion =>
       boolean().withDefault(const Constant(false))();
+  BoolColumn get assistiveBallEnabled =>
+      boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastCleanup => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

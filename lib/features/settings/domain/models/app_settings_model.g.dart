@@ -24,6 +24,7 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
           EditorAppearance.comfortable,
       highContrast: json['highContrast'] as bool? ?? false,
       reducedMotion: json['reducedMotion'] as bool? ?? false,
+      assistiveBallEnabled: json['assistiveBallEnabled'] as bool? ?? false,
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),
@@ -41,6 +42,7 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'editorAppearance': _$EditorAppearanceEnumMap[instance.editorAppearance]!,
       'highContrast': instance.highContrast,
       'reducedMotion': instance.reducedMotion,
+      'assistiveBallEnabled': instance.assistiveBallEnabled,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };
 

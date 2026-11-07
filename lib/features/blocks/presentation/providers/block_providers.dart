@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/logger.dart';
 import '../../data/repositories/block_repository_impl.dart';
+import '../../domain/entities/block.dart' as entity;
 import '../../domain/repositories/block_repository.dart';
 import '../../domain/usecases/create_block_usecase.dart';
 import '../../domain/usecases/delete_block_usecase.dart';
@@ -58,4 +59,18 @@ final mergeBlocksUseCaseProvider = Provider<MergeBlocksUseCase>((ref) {
 final restoreBlockUseCaseProvider = Provider<RestoreBlockUseCase>((ref) {
   final repository = ref.watch(blockRepositoryProvider);
   return RestoreBlockUseCase(repository);
+});
+
+final pageBlocksProvider =
+    FutureProvider.family<List<entity.Block>, String>((ref, pageId) async {
+  final usecase = ref.watch(getPageBlocksUseCaseProvider);
+  final result = await usecase(pageId);
+  return result.fold(
+    (blocks) {
+      final sorted = List<entity.Block>.from(blocks);
+      sorted.sort((a, b) => a.position.compareTo(b.position));
+      return sorted;
+    },
+    (failure) => [],
+  );
 });

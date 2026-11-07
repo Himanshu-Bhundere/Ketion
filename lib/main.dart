@@ -12,6 +12,7 @@ import 'package:ketion/features/settings/presentation/providers/settings_provide
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
+import 'package:ketion/features/assistive_ball/presentation/widgets/root_assistive_ball_overlay.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -199,6 +200,11 @@ class _KetionAppState extends ConsumerState<KetionApp>
           ),
           themeMode: themeMode,
           routerConfig: appRouter,
+          builder: (context, child) {
+            return RootAssistiveBallOverlay(
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

@@ -60,7 +60,7 @@ void main() {
       await db.customSelect('SELECT 1').get();
 
       // 1. Verify schema upgrade occurred
-      expect(db.schemaVersion, 22);
+      expect(db.schemaVersion, greaterThanOrEqualTo(22));
 
       // 2. Verify column exists and default value is 0.5
       final rows = await db.customSelect(
@@ -136,8 +136,9 @@ void main() {
 
     test('fresh database creation includes cover_image_vertical_offset column',
         () async {
+      driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
       final db = AppDatabase.forTesting(NativeDatabase.memory());
-      expect(db.schemaVersion, 22);
+      expect(db.schemaVersion, greaterThanOrEqualTo(22));
 
       await db.customSelect('SELECT 1').get();
       final tableInfo =

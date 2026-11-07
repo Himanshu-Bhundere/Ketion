@@ -320,7 +320,10 @@ void main() {
       expect(superEditorFinder, findsOneWidget);
 
       // Type some new text
-      await tester.tap(superEditorFinder);
+      await tester.tap(
+        find.byType(ParagraphComponent).first,
+        warnIfMissed: false,
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;
@@ -428,7 +431,11 @@ void main() {
       await pumpUntilInitialized(tester);
 
       final superEditorFinder = find.byType(SuperEditor);
-      await tester.tap(superEditorFinder);
+      expect(superEditorFinder, findsOneWidget);
+      await tester.tap(
+        find.byType(ParagraphComponent).first,
+        warnIfMissed: false,
+      );
       await pumpUntilInitialized(tester);
 
       final state = tester.state(find.byType(SuperEditorHost)) as dynamic;

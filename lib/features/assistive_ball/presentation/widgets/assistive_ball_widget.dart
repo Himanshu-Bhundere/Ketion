@@ -1,9 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../pages/presentation/providers/page_providers.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 import '../providers/assistive_ball_provider.dart';
+import 'floating_note_view.dart';
+import 'note_selector_sheet.dart';
 
 class AssistiveBallWidget extends ConsumerStatefulWidget {
   final BoxConstraints parentConstraints;
@@ -21,7 +23,6 @@ class AssistiveBallWidget extends ConsumerStatefulWidget {
 class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  Animation<double>? _snapAnimation;
   bool _isDragging = false;
 
   static const double _ballSize = 52.0;
@@ -67,25 +68,62 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
 
   void _onPanEnd(DragEndDetails details) {
     setState(() => _isDragging = false);
+
     final ballState = ref.read(assistiveBallProvider);
-    final targetX = ballState.normalizedX < 0.5 ? 0.04 : 0.94;
+
+    final targetX = ballState.normalizedX < 0.5 ? 0.02 : 0.98;
+    final targetY = ballState.normalizedY < 0.5 ? 0.02 : 0.98;
 
     final startX = ballState.normalizedX;
-    _snapAnimation = Tween<double>(begin: startX, end: targetX).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
-    )..addListener(() {
-        ref.read(assistiveBallProvider.notifier).updatePosition(
-              _snapAnimation!.value,
-              ballState.normalizedY,
-            );
-      });
+    final startY = ballState.normalizedY;
 
-    _animController.forward(from: 0.0).then((_) {
-      ref.read(assistiveBallProvider.notifier).snapToNearestEdge(
+    final animation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    void update() {
+      final t = animation.value;
+
+      ref.read(assistiveBallProvider.notifier).updatePosition(
+            startX + (targetX - startX) * t,
+            startY + (targetY - startY) * t,
+          );
+    }
+
+    animation.addListener(update);
+
+    _animController.forward(from: 0).then((_) {
+      animation.removeListener(update);
+
+      if (!mounted) return;
+
+      ref.read(assistiveBallProvider.notifier).snapToNearestCorner(
             targetX,
-            ballState.normalizedY,
+            targetY,
           );
     });
+  }
+
+  Future<void> _openNoteSelector() async {
+    ref.read(assistiveBallProvider.notifier).closeMenu();
+
+    final selectedPageId = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const NoteSelectorSheet(),
+    );
+
+    if (!mounted || selectedPageId == null) return;
+
+    ref
+        .read(assistiveBallProvider.notifier)
+        .openFloatingNote(pageId: selectedPageId);
   }
 
   @override
@@ -98,43 +136,66 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
         ? AppColors.getAccentColor(settings.accentColor.name)
         : Theme.of(context).colorScheme.primary;
 
-    final parentW = widget.parentConstraints.maxWidth - _ballSize;
-    final parentH = widget.parentConstraints.maxHeight - _ballSize;
+    final parentWidth = widget.parentConstraints.maxWidth;
+    final parentHeight = widget.parentConstraints.maxHeight;
+
+    final parentW = parentWidth - _ballSize;
+    final parentH = parentHeight - _ballSize;
 
     final pixelLeft = (ballState.normalizedX * parentW).clamp(0.0, parentW);
     final pixelTop = (ballState.normalizedY * parentH).clamp(0.0, parentH);
 
     final isLeft = ballState.normalizedX < 0.5;
+    final isTop = ballState.normalizedY < 0.5;
+
+    final noteWidth = ballState.floatingNoteWidth.clamp(
+      280.0,
+      parentWidth - 32.0,
+    );
+    final noteHeight = ballState.floatingNoteHeight.clamp(
+      240.0,
+      parentHeight - 48.0,
+    );
+
+    final rawNoteLeft = isLeft ? pixelLeft : pixelLeft + _ballSize - noteWidth;
+    final rawNoteTop = isTop ? pixelTop + _ballSize + 8.0 : pixelTop - noteHeight - 8.0;
+
+    final noteLeft = rawNoteLeft.clamp(
+      16.0,
+      math.max(16.0, parentWidth - noteWidth - 16.0),
+    ).toDouble();
+    final noteTop = rawNoteTop.clamp(
+      24.0,
+      math.max(24.0, parentHeight - noteHeight - 24.0),
+    ).toDouble();
 
     return Stack(
       children: [
-        // Dismiss backdrop when menu is open
+        // 1. Transparent dismiss tap detector when menu is open
         if (ballState.isMenuOpen)
           Positioned.fill(
             child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
+              behavior: HitTestBehavior.translucent,
               onTap: () {
                 ref.read(assistiveBallProvider.notifier).closeMenu();
               },
-              child: Container(color: Colors.black26),
+              child: const SizedBox.expand(),
             ),
           ),
 
-        // Popout Menu
-        if (ballState.isMenuOpen)
+        // 2. Attached Floating Note Panel
+        if (ballState.isFloatingNoteOpen)
           Positioned(
-            left: isLeft ? pixelLeft + _ballSize + 12 : null,
-            right: !isLeft
-                ? widget.parentConstraints.maxWidth - pixelLeft + 12
-                : null,
-            top: (pixelTop - 50.0).clamp(
-              16.0,
-              widget.parentConstraints.maxHeight - 200.0,
+            left: noteLeft,
+            top: noteTop,
+            width: noteWidth,
+            height: noteHeight,
+            child: FloatingNoteView(
+              parentConstraints: widget.parentConstraints,
             ),
-            child: _buildPopoutMenu(accentColor),
           ),
 
-        // Assistive Ball
+        // 3. Assistive Ball
         Positioned(
           left: pixelLeft,
           top: pixelTop,
@@ -186,6 +247,20 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             ),
           ),
         ),
+
+        // 4. Popout Menu
+        if (ballState.isMenuOpen)
+          Positioned(
+            left: isLeft ? pixelLeft + _ballSize + 12 : null,
+            right: !isLeft
+                ? widget.parentConstraints.maxWidth - pixelLeft + 12
+                : null,
+            top: (pixelTop - 50.0).clamp(
+              16.0,
+              widget.parentConstraints.maxHeight - 200.0,
+            ),
+            child: _buildPopoutMenu(accentColor),
+          ),
       ],
     );
   }
@@ -220,26 +295,16 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
               },
             ),
             _buildMenuItem(
-              icon: Icons.history,
-              label: 'Recent Note',
-              onTap: () async {
-                final recentAsync = await ref.read(recentPagesProvider.future);
-                if (recentAsync.isNotEmpty) {
-                  ref
-                      .read(assistiveBallProvider.notifier)
-                      .openFloatingNote(pageId: recentAsync.first.id);
-                } else {
-                  ref.read(assistiveBallProvider.notifier).openFloatingNote();
-                }
-              },
+              icon: Icons.note_alt_outlined,
+              label: 'Note Selector',
+              onTap: _openNoteSelector,
             ),
             const Divider(height: 12),
             _buildMenuItem(
               icon: Icons.visibility_off_outlined,
               label: 'Hide Ball',
               onTap: () {
-                ref.read(assistiveBallProvider.notifier).closeMenu();
-                ref.read(assistiveBallProvider.notifier).setVisibility(false);
+                ref.read(assistiveBallProvider.notifier).setEnabled(false);
               },
             ),
           ],

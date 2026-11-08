@@ -7,6 +7,23 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
       MethodChannel('com.example.ketion/assistive_ball');
 
   @override
+  void Function(double x, double y)? onPositionChanged;
+
+  AssistiveBallPlatformServiceImpl() {
+    _channel.setMethodCallHandler(_handleMethodCall);
+  }
+
+  Future<dynamic> _handleMethodCall(MethodCall call) async {
+    if (call.method == 'onPositionChanged') {
+      final x = (call.arguments?['x'] as num?)?.toDouble();
+      final y = (call.arguments?['y'] as num?)?.toDouble();
+      if (x != null && y != null) {
+        onPositionChanged?.call(x, y);
+      }
+    }
+  }
+
+  @override
   bool get isSystemOverlaySupported {
     if (kIsWeb) return false;
     return defaultTargetPlatform == TargetPlatform.android ||

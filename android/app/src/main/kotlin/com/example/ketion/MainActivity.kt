@@ -13,6 +13,14 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.ketion/assistive_ball"
 
+    companion object {
+        private var methodChannel: MethodChannel? = null
+
+        fun notifyPositionChanged(x: Double, y: Double) {
+            methodChannel?.invokeMethod("onPositionChanged", mapOf("x" to x, "y" to y))
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -31,7 +39,9 @@ class MainActivity: FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel = channel
+        channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "checkOverlayPermission" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -53,8 +63,8 @@ class MainActivity: FlutterActivity() {
                     }
                 }
                 "showOverlay" -> {
-                    val x = (call.argument<Double>("x") ?: 0.9).toFloat()
-                    val y = (call.argument<Double>("y") ?: 0.5).toFloat()
+                    val x = (call.argument<Double>("x") ?: 0.98).toFloat()
+                    val y = (call.argument<Double>("y") ?: 0.02).toFloat()
                     AssistiveBallService.startService(this, x, y)
                     result.success(null)
                 }
@@ -63,14 +73,21 @@ class MainActivity: FlutterActivity() {
                     result.success(null)
                 }
                 "updatePosition" -> {
-                    val x = (call.argument<Double>("x") ?: 0.9).toFloat()
-                    val y = (call.argument<Double>("y") ?: 0.5).toFloat()
+                    val x = (call.argument<Double>("x") ?: 0.98).toFloat()
+                    val y = (call.argument<Double>("y") ?: 0.02).toFloat()
                     AssistiveBallService.updatePosition(this, x, y)
                     result.success(null)
                 }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun onDestroy() {
+        if (methodChannel != null) {
+            methodChannel = null
+        }
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -20,44 +20,103 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   }
 
   void _init() {
-    _ref.listen(appSettingsProvider, (previous, next) {
-      final settings = next.valueOrNull;
-      if (settings != null && settings.assistiveBallEnabled != state.isEnabled) {
-        state = state.copyWith(isEnabled: settings.assistiveBallEnabled);
-        if (state.isEnabled) {
-          _platformService.showSystemOverlay(
-            x: state.normalizedX,
-            y: state.normalizedY,
-          );
-        } else {
-          _platformService.hideSystemOverlay();
+    _platformService.onPositionChanged = (x, y) {
+      snapToNearestCorner(x, y);
+    };
+
+    _ref.listen(
+      appSettingsProvider,
+      (previous, next) {
+        final settings = next.valueOrNull;
+        if (settings != null) {
+          final enabledChanged =
+              settings.assistiveBallEnabled != state.isEnabled;
+          final posChanged =
+              (settings.assistiveBallNormalizedX != state.normalizedX ||
+                  settings.assistiveBallNormalizedY != state.normalizedY);
+
+          if (enabledChanged || posChanged) {
+            state = state.copyWith(
+              isEnabled: settings.assistiveBallEnabled,
+              isVisible: settings.assistiveBallEnabled,
+              normalizedX: settings.assistiveBallNormalizedX,
+              normalizedY: settings.assistiveBallNormalizedY,
+            );
+            if (state.isEnabled) {
+              _platformService.showSystemOverlay(
+                x: state.normalizedX,
+                y: state.normalizedY,
+              );
+            } else {
+              _platformService.hideSystemOverlay();
+            }
+          }
         }
-      }
-    },
+      },
       fireImmediately: true,
     );
   }
 
+  Future<void> setEnabled(bool enabled) async {
+    final settingsNotifier = _ref.read(appSettingsProvider.notifier);
+
+    await settingsNotifier.toggleAssistiveBall(enabled);
+
+    state = state.copyWith(
+      isEnabled: enabled,
+      isVisible: enabled,
+      isMenuOpen: false,
+      isFloatingNoteOpen: false,
+    );
+
+    if (enabled) {
+      await _platformService.showSystemOverlay(
+        x: state.normalizedX,
+        y: state.normalizedY,
+      );
+    } else {
+      await _platformService.hideSystemOverlay();
+    }
+  }
+
   void updatePosition(double nx, double ny) {
     final clampedX = nx.clamp(0.02, 0.98);
-    final clampedY = ny.clamp(0.08, 0.92);
+    final clampedY = ny.clamp(0.02, 0.98);
     state = state.copyWith(
       normalizedX: clampedX,
       normalizedY: clampedY,
     );
   }
 
-  void snapToNearestEdge(double nx, double ny) {
-    // Snap to left edge (0.04) or right edge (0.94)
-    final targetX = nx < 0.5 ? 0.04 : 0.94;
-    final clampedY = ny.clamp(0.08, 0.92);
+  Future<void> snapToNearestCorner(double nx, double ny) async {
+    const left = 0.02;
+    const right = 0.98;
+    const top = 0.02;
+    const bottom = 0.98;
+
+    final targetX = nx < 0.5 ? left : right;
+    final targetY = ny < 0.5 ? top : bottom;
 
     state = state.copyWith(
       normalizedX: targetX,
-      normalizedY: clampedY,
+      normalizedY: targetY,
     );
 
-    _platformService.updateSystemOverlayPosition(targetX, clampedY);
+    await _platformService.updateSystemOverlayPosition(
+      targetX,
+      targetY,
+    );
+
+    try {
+      await _ref.read(appSettingsProvider.notifier).updateAssistiveBallPosition(
+            targetX,
+            targetY,
+          );
+    } catch (_) {}
+  }
+
+  void snapToNearestEdge(double nx, double ny) {
+    snapToNearestCorner(nx, ny);
   }
 
   void toggleMenu() {
@@ -117,7 +176,7 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   }
 
   void setVisibility(bool isVisible) {
-    state = state.copyWith(isVisible: isVisible);
+    setEnabled(isVisible);
   }
 }
 

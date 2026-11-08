@@ -88,13 +88,20 @@ class AssistiveBallService : Service() {
             return START_NOT_STICKY
         }
 
-        val normX = intent?.getFloatExtra(EXTRA_X, 0.9f) ?: 0.9f
-        val normY = intent?.getFloatExtra(EXTRA_Y, 0.5f) ?: 0.5f
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedX = prefs.getFloat(KEY_NORM_X, 0.98f)
+        val savedY = prefs.getFloat(KEY_NORM_Y, 0.02f)
+
+        val normX = intent?.getFloatExtra(EXTRA_X, savedX) ?: savedX
+        val normY = intent?.getFloatExtra(EXTRA_Y, savedY) ?: savedY
+
+        val clampedX = normX.coerceIn(0.02f, 0.98f)
+        val clampedY = normY.coerceIn(0.02f, 0.98f)
 
         if (floatingView == null) {
-            setupFloatingView(normX, normY)
+            setupFloatingView(clampedX, clampedY)
         } else if (action == ACTION_UPDATE_POS) {
-            updateViewPosition(normX, normY)
+            updateViewPosition(clampedX, clampedY)
         }
 
         return START_STICKY
@@ -113,6 +120,12 @@ class AssistiveBallService : Service() {
         val density = resources.displayMetrics.density
         val ballSizePx = (ballSizeDp * density).toInt()
 
+        val maxAvailableX = (screenWidth - ballSizePx).coerceAtLeast(1)
+        val maxAvailableY = (screenHeight - ballSizePx).coerceAtLeast(1)
+
+        val clampedNormX = initialNormX.coerceIn(0.02f, 0.98f)
+        val clampedNormY = initialNormY.coerceIn(0.02f, 0.98f)
+
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -129,8 +142,8 @@ class AssistiveBallService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = ((screenWidth - ballSizePx) * initialNormX).toInt()
-            y = ((screenHeight - ballSizePx) * initialNormY).toInt()
+            x = (maxAvailableX * clampedNormX).toInt()
+            y = (maxAvailableY * clampedNormY).toInt()
         }
 
         val ballView = ImageView(this).apply {
@@ -184,15 +197,24 @@ class AssistiveBallService : Service() {
                             }
                             startActivity(openIntent)
                         } else {
-                            // Snap to nearest edge
-                            val currentX = layoutParams!!.x
-                            val targetX = if (currentX + ballSizePx / 2 < screenWidth / 2) {
-                                (16 * density).toInt()
-                            } else {
-                                screenWidth - ballSizePx - (16 * density).toInt()
-                            }
-                            layoutParams!!.x = targetX
+                            // Snap to nearest corner (0.02 or 0.98)
+                            val currentNormX = (layoutParams!!.x.toFloat() / maxAvailableX).coerceIn(0f, 1f)
+                            val currentNormY = (layoutParams!!.y.toFloat() / maxAvailableY).coerceIn(0f, 1f)
+
+                            val targetNormX = if (currentNormX < 0.5f) 0.02f else 0.98f
+                            val targetNormY = if (currentNormY < 0.5f) 0.02f else 0.98f
+
+                            layoutParams!!.x = (maxAvailableX * targetNormX).toInt()
+                            layoutParams!!.y = (maxAvailableY * targetNormY).toInt()
                             windowManager?.updateViewLayout(floatingView, layoutParams)
+
+                            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                            prefs.edit()
+                                .putFloat(KEY_NORM_X, targetNormX)
+                                .putFloat(KEY_NORM_Y, targetNormY)
+                                .apply()
+
+                            MainActivity.notifyPositionChanged(targetNormX.toDouble(), targetNormY.toDouble())
                         }
                         return true
                     }
@@ -213,9 +235,21 @@ class AssistiveBallService : Service() {
         val screenHeight = displayMetrics.heightPixels
         val ballSize = floatingView!!.width.takeIf { it > 0 } ?: (52 * resources.displayMetrics.density).toInt()
 
-        layoutParams!!.x = ((screenWidth - ballSize) * normX).toInt()
-        layoutParams!!.y = ((screenHeight - ballSize) * normY).toInt()
+        val clampedX = normX.coerceIn(0.02f, 0.98f)
+        val clampedY = normY.coerceIn(0.02f, 0.98f)
+
+        val maxAvailableX = (screenWidth - ballSize).coerceAtLeast(1)
+        val maxAvailableY = (screenHeight - ballSize).coerceAtLeast(1)
+
+        layoutParams!!.x = (maxAvailableX * clampedX).toInt()
+        layoutParams!!.y = (maxAvailableY * clampedY).toInt()
         windowManager?.updateViewLayout(floatingView, layoutParams)
+
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putFloat(KEY_NORM_X, clampedX)
+            .putFloat(KEY_NORM_Y, clampedY)
+            .apply()
     }
 
     private fun removeFloatingView() {
@@ -233,6 +267,10 @@ class AssistiveBallService : Service() {
     }
 
     companion object {
+        const val PREFS_NAME = "assistive_ball_prefs"
+        const val KEY_NORM_X = "norm_x"
+        const val KEY_NORM_Y = "norm_y"
+
         const val ACTION_START = "com.example.ketion.assistive_ball.START"
         const val ACTION_STOP = "com.example.ketion.assistive_ball.STOP"
         const val ACTION_UPDATE_POS = "com.example.ketion.assistive_ball.UPDATE_POS"

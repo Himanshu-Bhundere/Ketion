@@ -25,6 +25,10 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
       highContrast: json['highContrast'] as bool? ?? false,
       reducedMotion: json['reducedMotion'] as bool? ?? false,
       assistiveBallEnabled: json['assistiveBallEnabled'] as bool? ?? false,
+      assistiveBallNormalizedX:
+          (json['assistiveBallNormalizedX'] as num?)?.toDouble() ?? 0.98,
+      assistiveBallNormalizedY:
+          (json['assistiveBallNormalizedY'] as num?)?.toDouble() ?? 0.02,
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),
@@ -43,6 +47,8 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'highContrast': instance.highContrast,
       'reducedMotion': instance.reducedMotion,
       'assistiveBallEnabled': instance.assistiveBallEnabled,
+      'assistiveBallNormalizedX': instance.assistiveBallNormalizedX,
+      'assistiveBallNormalizedY': instance.assistiveBallNormalizedY,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };
 

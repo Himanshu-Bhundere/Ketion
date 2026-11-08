@@ -11,8 +11,8 @@ _$AssistiveBallStateImpl _$$AssistiveBallStateImplFromJson(
     _$AssistiveBallStateImpl(
       isEnabled: json['isEnabled'] as bool? ?? false,
       isVisible: json['isVisible'] as bool? ?? true,
-      normalizedX: (json['normalizedX'] as num?)?.toDouble() ?? 0.92,
-      normalizedY: (json['normalizedY'] as num?)?.toDouble() ?? 0.65,
+      normalizedX: (json['normalizedX'] as num?)?.toDouble() ?? 0.98,
+      normalizedY: (json['normalizedY'] as num?)?.toDouble() ?? 0.02,
       isMenuOpen: json['isMenuOpen'] as bool? ?? false,
       isFloatingNoteOpen: json['isFloatingNoteOpen'] as bool? ?? false,
       activePageId: json['activePageId'] as String?,

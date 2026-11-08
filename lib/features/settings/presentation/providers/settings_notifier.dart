@@ -65,10 +65,20 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
   }
 
   Future<void> toggleAssistiveBall(bool enabled) async {
-    final current = state.value;
-    if (current == null) return;
+    final current = state.value ?? await future;
 
     final updated = current.copyWith(assistiveBallEnabled: enabled);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
+  Future<void> updateAssistiveBallPosition(double x, double y) async {
+    final current = state.value ?? await future;
+
+    final updated = current.copyWith(
+      assistiveBallNormalizedX: x,
+      assistiveBallNormalizedY: y,
+    );
     state = AsyncData(updated);
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }

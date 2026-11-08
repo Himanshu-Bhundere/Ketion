@@ -83,18 +83,22 @@ void main() {
       final db = AppDatabase.forTesting(NativeDatabase.opened(sqliteDb));
       await db.customSelect('SELECT 1').get();
 
-      // 1. Verify schema upgrade occurred to 23
-      expect(db.schemaVersion, 23);
+      // 1. Verify schema upgrade occurred to 24
+      expect(db.schemaVersion, 24);
 
       // 2. Verify column exists and default is false (0)
       final rows = await db.customSelect(
-        'SELECT id, assistive_ball_enabled FROM app_settings_table WHERE id = ?',
+        'SELECT id, assistive_ball_enabled, assistive_ball_normalized_x, assistive_ball_normalized_y FROM app_settings_table WHERE id = ?',
         variables: [Variable.withString('default')],
       ).get();
 
       expect(rows.length, 1);
       final enabled = rows.first.read<bool>('assistive_ball_enabled');
       expect(enabled, isFalse);
+      final normX = rows.first.read<double>('assistive_ball_normalized_x');
+      final normY = rows.first.read<double>('assistive_ball_normalized_y');
+      expect(normX, 0.98);
+      expect(normY, 0.02);
 
       // 3. Verify repository read and update operations
       final repository = SettingsRepositoryImpl(db);

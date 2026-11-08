@@ -22,6 +22,8 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default(false) bool highContrast,
     @Default(false) bool reducedMotion,
     @Default(false) bool assistiveBallEnabled,
+    @Default(0.98) double assistiveBallNormalizedX,
+    @Default(0.02) double assistiveBallNormalizedY,
     DateTime? lastCleanup,
   }) = _AppSettingsModel;
 

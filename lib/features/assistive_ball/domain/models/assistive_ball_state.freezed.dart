@@ -245,8 +245,8 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
   const _$AssistiveBallStateImpl(
       {this.isEnabled = false,
       this.isVisible = true,
-      this.normalizedX = 0.92,
-      this.normalizedY = 0.65,
+      this.normalizedX = 0.98,
+      this.normalizedY = 0.02,
       this.isMenuOpen = false,
       this.isFloatingNoteOpen = false,
       this.activePageId,

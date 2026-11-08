@@ -5345,6 +5345,22 @@ class $AppSettingsTableTable extends AppSettingsTable
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("assistive_ball_enabled" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _assistiveBallNormalizedXMeta =
+      const VerificationMeta('assistiveBallNormalizedX');
+  @override
+  late final GeneratedColumn<double> assistiveBallNormalizedX =
+      GeneratedColumn<double>('assistive_ball_normalized_x', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.98));
+  static const VerificationMeta _assistiveBallNormalizedYMeta =
+      const VerificationMeta('assistiveBallNormalizedY');
+  @override
+  late final GeneratedColumn<double> assistiveBallNormalizedY =
+      GeneratedColumn<double>('assistive_ball_normalized_y', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.02));
   static const VerificationMeta _lastCleanupMeta =
       const VerificationMeta('lastCleanup');
   @override
@@ -5377,6 +5393,8 @@ class $AppSettingsTableTable extends AppSettingsTable
         highContrast,
         reducedMotion,
         assistiveBallEnabled,
+        assistiveBallNormalizedX,
+        assistiveBallNormalizedY,
         lastCleanup,
         createdAt,
         updatedAt
@@ -5456,6 +5474,20 @@ class $AppSettingsTableTable extends AppSettingsTable
           assistiveBallEnabled.isAcceptableOrUnknown(
               data['assistive_ball_enabled']!, _assistiveBallEnabledMeta));
     }
+    if (data.containsKey('assistive_ball_normalized_x')) {
+      context.handle(
+          _assistiveBallNormalizedXMeta,
+          assistiveBallNormalizedX.isAcceptableOrUnknown(
+              data['assistive_ball_normalized_x']!,
+              _assistiveBallNormalizedXMeta));
+    }
+    if (data.containsKey('assistive_ball_normalized_y')) {
+      context.handle(
+          _assistiveBallNormalizedYMeta,
+          assistiveBallNormalizedY.isAcceptableOrUnknown(
+              data['assistive_ball_normalized_y']!,
+              _assistiveBallNormalizedYMeta));
+    }
     if (data.containsKey('last_cleanup')) {
       context.handle(
           _lastCleanupMeta,
@@ -5508,6 +5540,12 @@ class $AppSettingsTableTable extends AppSettingsTable
           .read(DriftSqlType.bool, data['${effectivePrefix}reduced_motion'])!,
       assistiveBallEnabled: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}assistive_ball_enabled'])!,
+      assistiveBallNormalizedX: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}assistive_ball_normalized_x'])!,
+      assistiveBallNormalizedY: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}assistive_ball_normalized_y'])!,
       lastCleanup: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_cleanup']),
       createdAt: attachedDatabase.typeMapping
@@ -5537,6 +5575,8 @@ class AppSettingEntity extends DataClass
   final bool highContrast;
   final bool reducedMotion;
   final bool assistiveBallEnabled;
+  final double assistiveBallNormalizedX;
+  final double assistiveBallNormalizedY;
   final DateTime? lastCleanup;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5553,6 +5593,8 @@ class AppSettingEntity extends DataClass
       required this.highContrast,
       required this.reducedMotion,
       required this.assistiveBallEnabled,
+      required this.assistiveBallNormalizedX,
+      required this.assistiveBallNormalizedY,
       this.lastCleanup,
       required this.createdAt,
       required this.updatedAt});
@@ -5571,6 +5613,10 @@ class AppSettingEntity extends DataClass
     map['high_contrast'] = Variable<bool>(highContrast);
     map['reduced_motion'] = Variable<bool>(reducedMotion);
     map['assistive_ball_enabled'] = Variable<bool>(assistiveBallEnabled);
+    map['assistive_ball_normalized_x'] =
+        Variable<double>(assistiveBallNormalizedX);
+    map['assistive_ball_normalized_y'] =
+        Variable<double>(assistiveBallNormalizedY);
     if (!nullToAbsent || lastCleanup != null) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup);
     }
@@ -5593,6 +5639,8 @@ class AppSettingEntity extends DataClass
       highContrast: Value(highContrast),
       reducedMotion: Value(reducedMotion),
       assistiveBallEnabled: Value(assistiveBallEnabled),
+      assistiveBallNormalizedX: Value(assistiveBallNormalizedX),
+      assistiveBallNormalizedY: Value(assistiveBallNormalizedY),
       lastCleanup: lastCleanup == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCleanup),
@@ -5619,6 +5667,10 @@ class AppSettingEntity extends DataClass
       reducedMotion: serializer.fromJson<bool>(json['reducedMotion']),
       assistiveBallEnabled:
           serializer.fromJson<bool>(json['assistiveBallEnabled']),
+      assistiveBallNormalizedX:
+          serializer.fromJson<double>(json['assistiveBallNormalizedX']),
+      assistiveBallNormalizedY:
+          serializer.fromJson<double>(json['assistiveBallNormalizedY']),
       lastCleanup: serializer.fromJson<DateTime?>(json['lastCleanup']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -5640,6 +5692,10 @@ class AppSettingEntity extends DataClass
       'highContrast': serializer.toJson<bool>(highContrast),
       'reducedMotion': serializer.toJson<bool>(reducedMotion),
       'assistiveBallEnabled': serializer.toJson<bool>(assistiveBallEnabled),
+      'assistiveBallNormalizedX':
+          serializer.toJson<double>(assistiveBallNormalizedX),
+      'assistiveBallNormalizedY':
+          serializer.toJson<double>(assistiveBallNormalizedY),
       'lastCleanup': serializer.toJson<DateTime?>(lastCleanup),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -5659,6 +5715,8 @@ class AppSettingEntity extends DataClass
           bool? highContrast,
           bool? reducedMotion,
           bool? assistiveBallEnabled,
+          double? assistiveBallNormalizedX,
+          double? assistiveBallNormalizedY,
           Value<DateTime?> lastCleanup = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -5676,6 +5734,10 @@ class AppSettingEntity extends DataClass
         highContrast: highContrast ?? this.highContrast,
         reducedMotion: reducedMotion ?? this.reducedMotion,
         assistiveBallEnabled: assistiveBallEnabled ?? this.assistiveBallEnabled,
+        assistiveBallNormalizedX:
+            assistiveBallNormalizedX ?? this.assistiveBallNormalizedX,
+        assistiveBallNormalizedY:
+            assistiveBallNormalizedY ?? this.assistiveBallNormalizedY,
         lastCleanup: lastCleanup.present ? lastCleanup.value : this.lastCleanup,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -5709,6 +5771,12 @@ class AppSettingEntity extends DataClass
       assistiveBallEnabled: data.assistiveBallEnabled.present
           ? data.assistiveBallEnabled.value
           : this.assistiveBallEnabled,
+      assistiveBallNormalizedX: data.assistiveBallNormalizedX.present
+          ? data.assistiveBallNormalizedX.value
+          : this.assistiveBallNormalizedX,
+      assistiveBallNormalizedY: data.assistiveBallNormalizedY.present
+          ? data.assistiveBallNormalizedY.value
+          : this.assistiveBallNormalizedY,
       lastCleanup:
           data.lastCleanup.present ? data.lastCleanup.value : this.lastCleanup,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -5731,6 +5799,8 @@ class AppSettingEntity extends DataClass
           ..write('highContrast: $highContrast, ')
           ..write('reducedMotion: $reducedMotion, ')
           ..write('assistiveBallEnabled: $assistiveBallEnabled, ')
+          ..write('assistiveBallNormalizedX: $assistiveBallNormalizedX, ')
+          ..write('assistiveBallNormalizedY: $assistiveBallNormalizedY, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -5752,6 +5822,8 @@ class AppSettingEntity extends DataClass
       highContrast,
       reducedMotion,
       assistiveBallEnabled,
+      assistiveBallNormalizedX,
+      assistiveBallNormalizedY,
       lastCleanup,
       createdAt,
       updatedAt);
@@ -5771,6 +5843,8 @@ class AppSettingEntity extends DataClass
           other.highContrast == this.highContrast &&
           other.reducedMotion == this.reducedMotion &&
           other.assistiveBallEnabled == this.assistiveBallEnabled &&
+          other.assistiveBallNormalizedX == this.assistiveBallNormalizedX &&
+          other.assistiveBallNormalizedY == this.assistiveBallNormalizedY &&
           other.lastCleanup == this.lastCleanup &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -5789,6 +5863,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
   final Value<bool> highContrast;
   final Value<bool> reducedMotion;
   final Value<bool> assistiveBallEnabled;
+  final Value<double> assistiveBallNormalizedX;
+  final Value<double> assistiveBallNormalizedY;
   final Value<DateTime?> lastCleanup;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -5806,6 +5882,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.highContrast = const Value.absent(),
     this.reducedMotion = const Value.absent(),
     this.assistiveBallEnabled = const Value.absent(),
+    this.assistiveBallNormalizedX = const Value.absent(),
+    this.assistiveBallNormalizedY = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5824,6 +5902,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.highContrast = const Value.absent(),
     this.reducedMotion = const Value.absent(),
     this.assistiveBallEnabled = const Value.absent(),
+    this.assistiveBallNormalizedX = const Value.absent(),
+    this.assistiveBallNormalizedY = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -5844,6 +5924,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     Expression<bool>? highContrast,
     Expression<bool>? reducedMotion,
     Expression<bool>? assistiveBallEnabled,
+    Expression<double>? assistiveBallNormalizedX,
+    Expression<double>? assistiveBallNormalizedY,
     Expression<DateTime>? lastCleanup,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5864,6 +5946,10 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       if (reducedMotion != null) 'reduced_motion': reducedMotion,
       if (assistiveBallEnabled != null)
         'assistive_ball_enabled': assistiveBallEnabled,
+      if (assistiveBallNormalizedX != null)
+        'assistive_ball_normalized_x': assistiveBallNormalizedX,
+      if (assistiveBallNormalizedY != null)
+        'assistive_ball_normalized_y': assistiveBallNormalizedY,
       if (lastCleanup != null) 'last_cleanup': lastCleanup,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5884,6 +5970,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       Value<bool>? highContrast,
       Value<bool>? reducedMotion,
       Value<bool>? assistiveBallEnabled,
+      Value<double>? assistiveBallNormalizedX,
+      Value<double>? assistiveBallNormalizedY,
       Value<DateTime?>? lastCleanup,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -5902,6 +5990,10 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       highContrast: highContrast ?? this.highContrast,
       reducedMotion: reducedMotion ?? this.reducedMotion,
       assistiveBallEnabled: assistiveBallEnabled ?? this.assistiveBallEnabled,
+      assistiveBallNormalizedX:
+          assistiveBallNormalizedX ?? this.assistiveBallNormalizedX,
+      assistiveBallNormalizedY:
+          assistiveBallNormalizedY ?? this.assistiveBallNormalizedY,
       lastCleanup: lastCleanup ?? this.lastCleanup,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5950,6 +6042,14 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       map['assistive_ball_enabled'] =
           Variable<bool>(assistiveBallEnabled.value);
     }
+    if (assistiveBallNormalizedX.present) {
+      map['assistive_ball_normalized_x'] =
+          Variable<double>(assistiveBallNormalizedX.value);
+    }
+    if (assistiveBallNormalizedY.present) {
+      map['assistive_ball_normalized_y'] =
+          Variable<double>(assistiveBallNormalizedY.value);
+    }
     if (lastCleanup.present) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup.value);
     }
@@ -5980,6 +6080,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
           ..write('highContrast: $highContrast, ')
           ..write('reducedMotion: $reducedMotion, ')
           ..write('assistiveBallEnabled: $assistiveBallEnabled, ')
+          ..write('assistiveBallNormalizedX: $assistiveBallNormalizedX, ')
+          ..write('assistiveBallNormalizedY: $assistiveBallNormalizedY, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -10402,6 +10504,8 @@ typedef $$AppSettingsTableTableCreateCompanionBuilder
   Value<bool> highContrast,
   Value<bool> reducedMotion,
   Value<bool> assistiveBallEnabled,
+  Value<double> assistiveBallNormalizedX,
+  Value<double> assistiveBallNormalizedY,
   Value<DateTime?> lastCleanup,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -10421,6 +10525,8 @@ typedef $$AppSettingsTableTableUpdateCompanionBuilder
   Value<bool> highContrast,
   Value<bool> reducedMotion,
   Value<bool> assistiveBallEnabled,
+  Value<double> assistiveBallNormalizedX,
+  Value<double> assistiveBallNormalizedY,
   Value<DateTime?> lastCleanup,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -10473,6 +10579,14 @@ class $$AppSettingsTableTableFilterComposer
 
   ColumnFilters<bool> get assistiveBallEnabled => $composableBuilder(
       column: $table.assistiveBallEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get assistiveBallNormalizedX => $composableBuilder(
+      column: $table.assistiveBallNormalizedX,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get assistiveBallNormalizedY => $composableBuilder(
+      column: $table.assistiveBallNormalizedY,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastCleanup => $composableBuilder(
@@ -10537,6 +10651,14 @@ class $$AppSettingsTableTableOrderingComposer
       column: $table.assistiveBallEnabled,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get assistiveBallNormalizedX => $composableBuilder(
+      column: $table.assistiveBallNormalizedX,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get assistiveBallNormalizedY => $composableBuilder(
+      column: $table.assistiveBallNormalizedY,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnOrderings(column));
 
@@ -10592,6 +10714,12 @@ class $$AppSettingsTableTableAnnotationComposer
   GeneratedColumn<bool> get assistiveBallEnabled => $composableBuilder(
       column: $table.assistiveBallEnabled, builder: (column) => column);
 
+  GeneratedColumn<double> get assistiveBallNormalizedX => $composableBuilder(
+      column: $table.assistiveBallNormalizedX, builder: (column) => column);
+
+  GeneratedColumn<double> get assistiveBallNormalizedY => $composableBuilder(
+      column: $table.assistiveBallNormalizedY, builder: (column) => column);
+
   GeneratedColumn<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => column);
 
@@ -10641,6 +10769,8 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> highContrast = const Value.absent(),
             Value<bool> reducedMotion = const Value.absent(),
             Value<bool> assistiveBallEnabled = const Value.absent(),
+            Value<double> assistiveBallNormalizedX = const Value.absent(),
+            Value<double> assistiveBallNormalizedY = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10659,6 +10789,8 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             highContrast: highContrast,
             reducedMotion: reducedMotion,
             assistiveBallEnabled: assistiveBallEnabled,
+            assistiveBallNormalizedX: assistiveBallNormalizedX,
+            assistiveBallNormalizedY: assistiveBallNormalizedY,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -10677,6 +10809,8 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> highContrast = const Value.absent(),
             Value<bool> reducedMotion = const Value.absent(),
             Value<bool> assistiveBallEnabled = const Value.absent(),
+            Value<double> assistiveBallNormalizedX = const Value.absent(),
+            Value<double> assistiveBallNormalizedY = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -10695,6 +10829,8 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             highContrast: highContrast,
             reducedMotion: reducedMotion,
             assistiveBallEnabled: assistiveBallEnabled,
+            assistiveBallNormalizedX: assistiveBallNormalizedX,
+            assistiveBallNormalizedY: assistiveBallNormalizedY,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,

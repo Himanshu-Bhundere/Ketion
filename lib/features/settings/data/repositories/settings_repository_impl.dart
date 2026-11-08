@@ -30,6 +30,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
               highContrast: Value(newModel.highContrast),
               reducedMotion: Value(newModel.reducedMotion),
               assistiveBallEnabled: Value(newModel.assistiveBallEnabled),
+              assistiveBallNormalizedX: Value(newModel.assistiveBallNormalizedX),
+              assistiveBallNormalizedY: Value(newModel.assistiveBallNormalizedY),
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             ),
@@ -57,6 +59,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
       highContrast: entity.highContrast,
       reducedMotion: entity.reducedMotion,
       assistiveBallEnabled: entity.assistiveBallEnabled,
+      assistiveBallNormalizedX: entity.assistiveBallNormalizedX,
+      assistiveBallNormalizedY: entity.assistiveBallNormalizedY,
       lastCleanup: entity.lastCleanup,
     );
   }
@@ -77,6 +81,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
         highContrast: Value(settings.highContrast),
         reducedMotion: Value(settings.reducedMotion),
         assistiveBallEnabled: Value(settings.assistiveBallEnabled),
+        assistiveBallNormalizedX: Value(settings.assistiveBallNormalizedX),
+        assistiveBallNormalizedY: Value(settings.assistiveBallNormalizedY),
         lastCleanup: Value(settings.lastCleanup),
         updatedAt: Value(DateTime.now()),
       ),

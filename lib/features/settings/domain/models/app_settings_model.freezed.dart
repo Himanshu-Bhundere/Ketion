@@ -30,6 +30,8 @@ mixin _$AppSettingsModel {
   bool get highContrast => throw _privateConstructorUsedError;
   bool get reducedMotion => throw _privateConstructorUsedError;
   bool get assistiveBallEnabled => throw _privateConstructorUsedError;
+  double get assistiveBallNormalizedX => throw _privateConstructorUsedError;
+  double get assistiveBallNormalizedY => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,6 +57,8 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       bool highContrast,
       bool reducedMotion,
       bool assistiveBallEnabled,
+      double assistiveBallNormalizedX,
+      double assistiveBallNormalizedY,
       DateTime? lastCleanup});
 }
 
@@ -81,6 +85,8 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
     Object? highContrast = null,
     Object? reducedMotion = null,
     Object? assistiveBallEnabled = null,
+    Object? assistiveBallNormalizedX = null,
+    Object? assistiveBallNormalizedY = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_value.copyWith(
@@ -124,6 +130,14 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
           ? _value.assistiveBallEnabled
           : assistiveBallEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      assistiveBallNormalizedX: null == assistiveBallNormalizedX
+          ? _value.assistiveBallNormalizedX
+          : assistiveBallNormalizedX // ignore: cast_nullable_to_non_nullable
+              as double,
+      assistiveBallNormalizedY: null == assistiveBallNormalizedY
+          ? _value.assistiveBallNormalizedY
+          : assistiveBallNormalizedY // ignore: cast_nullable_to_non_nullable
+              as double,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -151,6 +165,8 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       bool highContrast,
       bool reducedMotion,
       bool assistiveBallEnabled,
+      double assistiveBallNormalizedX,
+      double assistiveBallNormalizedY,
       DateTime? lastCleanup});
 }
 
@@ -175,6 +191,8 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
     Object? highContrast = null,
     Object? reducedMotion = null,
     Object? assistiveBallEnabled = null,
+    Object? assistiveBallNormalizedX = null,
+    Object? assistiveBallNormalizedY = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_$AppSettingsModelImpl(
@@ -218,6 +236,14 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
           ? _value.assistiveBallEnabled
           : assistiveBallEnabled // ignore: cast_nullable_to_non_nullable
               as bool,
+      assistiveBallNormalizedX: null == assistiveBallNormalizedX
+          ? _value.assistiveBallNormalizedX
+          : assistiveBallNormalizedX // ignore: cast_nullable_to_non_nullable
+              as double,
+      assistiveBallNormalizedY: null == assistiveBallNormalizedY
+          ? _value.assistiveBallNormalizedY
+          : assistiveBallNormalizedY // ignore: cast_nullable_to_non_nullable
+              as double,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -240,6 +266,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.highContrast = false,
       this.reducedMotion = false,
       this.assistiveBallEnabled = false,
+      this.assistiveBallNormalizedX = 0.98,
+      this.assistiveBallNormalizedY = 0.02,
       this.lastCleanup});
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -276,11 +304,17 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   @JsonKey()
   final bool assistiveBallEnabled;
   @override
+  @JsonKey()
+  final double assistiveBallNormalizedX;
+  @override
+  @JsonKey()
+  final double assistiveBallNormalizedY;
+  @override
   final DateTime? lastCleanup;
 
   @override
   String toString() {
-    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, assistiveBallEnabled: $assistiveBallEnabled, lastCleanup: $lastCleanup)';
+    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, assistiveBallEnabled: $assistiveBallEnabled, assistiveBallNormalizedX: $assistiveBallNormalizedX, assistiveBallNormalizedY: $assistiveBallNormalizedY, lastCleanup: $lastCleanup)';
   }
 
   @override
@@ -308,6 +342,12 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
                 other.reducedMotion == reducedMotion) &&
             (identical(other.assistiveBallEnabled, assistiveBallEnabled) ||
                 other.assistiveBallEnabled == assistiveBallEnabled) &&
+            (identical(
+                    other.assistiveBallNormalizedX, assistiveBallNormalizedX) ||
+                other.assistiveBallNormalizedX == assistiveBallNormalizedX) &&
+            (identical(
+                    other.assistiveBallNormalizedY, assistiveBallNormalizedY) ||
+                other.assistiveBallNormalizedY == assistiveBallNormalizedY) &&
             (identical(other.lastCleanup, lastCleanup) ||
                 other.lastCleanup == lastCleanup));
   }
@@ -326,6 +366,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       highContrast,
       reducedMotion,
       assistiveBallEnabled,
+      assistiveBallNormalizedX,
+      assistiveBallNormalizedY,
       lastCleanup);
 
   @JsonKey(ignore: true)
@@ -355,6 +397,8 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final bool highContrast,
       final bool reducedMotion,
       final bool assistiveBallEnabled,
+      final double assistiveBallNormalizedX,
+      final double assistiveBallNormalizedY,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
 
   factory _AppSettingsModel.fromJson(Map<String, dynamic> json) =
@@ -380,6 +424,10 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   bool get reducedMotion;
   @override
   bool get assistiveBallEnabled;
+  @override
+  double get assistiveBallNormalizedX;
+  @override
+  double get assistiveBallNormalizedY;
   @override
   DateTime? get lastCleanup;
   @override

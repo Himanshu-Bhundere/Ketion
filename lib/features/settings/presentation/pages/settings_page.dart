@@ -4,6 +4,7 @@ import '../providers/settings_providers.dart';
 import '../../domain/models/app_settings_model.dart';
 import '../../../sync/presentation/providers/sync_providers.dart';
 import 'package:go_router/go_router.dart';
+import '../../../assistive_ball/presentation/providers/assistive_ball_provider.dart';
 
 class SettingsPage extends ConsumerWidget {
   final bool scrollToSync;
@@ -184,8 +185,8 @@ class SettingsPage extends ConsumerWidget {
                     value: settings.assistiveBallEnabled,
                     onChanged: (bool value) {
                       ref
-                          .read(appSettingsProvider.notifier)
-                          .toggleAssistiveBall(value);
+                          .read(assistiveBallProvider.notifier)
+                          .setEnabled(value);
                     },
                   ),
                   const Divider(),

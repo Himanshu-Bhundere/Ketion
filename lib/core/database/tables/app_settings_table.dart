@@ -19,6 +19,10 @@ class AppSettingsTable extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get assistiveBallEnabled =>
       boolean().withDefault(const Constant(false))();
+  RealColumn get assistiveBallNormalizedX =>
+      real().withDefault(const Constant(0.98))();
+  RealColumn get assistiveBallNormalizedY =>
+      real().withDefault(const Constant(0.02))();
   DateTimeColumn get lastCleanup => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

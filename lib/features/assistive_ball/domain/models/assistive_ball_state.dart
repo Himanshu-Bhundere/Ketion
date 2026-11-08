@@ -8,8 +8,8 @@ class AssistiveBallState with _$AssistiveBallState {
   const factory AssistiveBallState({
     @Default(false) bool isEnabled,
     @Default(true) bool isVisible,
-    @Default(0.92) double normalizedX,
-    @Default(0.65) double normalizedY,
+    @Default(0.98) double normalizedX,
+    @Default(0.02) double normalizedY,
     @Default(false) bool isMenuOpen,
     @Default(false) bool isFloatingNoteOpen,
     String? activePageId,

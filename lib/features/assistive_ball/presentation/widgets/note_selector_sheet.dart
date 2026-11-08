@@ -8,6 +8,7 @@ class NoteSelectorSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final pagesAsync = ref.watch(recentPagesProvider);
 
     return SafeArea(
@@ -15,12 +16,20 @@ class NoteSelectorSheet extends ConsumerWidget {
         height: MediaQuery.sizeOf(context).height * 0.65,
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
                 'Select a Note',
-                style: TextStyle(
-                  fontSize: 18,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -29,8 +38,13 @@ class NoteSelectorSheet extends ConsumerWidget {
               child: pagesAsync.when(
                 data: (pages) {
                   if (pages.isEmpty) {
-                    return const Center(
-                      child: Text('No notes available'),
+                    return Center(
+                      child: Text(
+                        'No notes available',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     );
                   }
 
@@ -54,8 +68,13 @@ class NoteSelectorSheet extends ConsumerWidget {
                 loading: () => const Center(
                   child: CircularProgressIndicator(),
                 ),
-                error: (_, __) => const Center(
-                  child: Text('Unable to load notes'),
+                error: (_, __) => Center(
+                  child: Text(
+                    'Unable to load notes',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -65,3 +84,4 @@ class NoteSelectorSheet extends ConsumerWidget {
     );
   }
 }
+

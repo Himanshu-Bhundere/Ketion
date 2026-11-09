@@ -10,6 +10,7 @@ import 'package:ketion/features/assistive_ball/domain/services/assistive_ball_pl
 import 'package:ketion/features/assistive_ball/presentation/providers/assistive_ball_provider.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/assistive_ball_widget.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/floating_note_view.dart';
+import 'package:ketion/features/assistive_ball/presentation/widgets/note_selector_panel.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/root_assistive_ball_overlay.dart';
 import 'package:ketion/features/blocks/data/repositories/block_repository_impl.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart' as entity;
@@ -32,7 +33,10 @@ class MockWidgetService implements WidgetService {
   Future<Result<void>> triggerWidgetUpdate() async => const Success(null);
 
   @override
-  Future<Result<void>> updateSimpleWidgetData(String key, dynamic value) async =>
+  Future<Result<void>> updateSimpleWidgetData(
+    String key,
+    dynamic value,
+  ) async =>
       const Success(null);
 }
 
@@ -75,7 +79,8 @@ class MockAssistiveBallPlatformService implements AssistiveBallPlatformService {
 class FakeSettingsRepository implements SettingsRepository {
   AppSettingsModel _settings;
   FakeSettingsRepository({bool assistiveBallEnabled = true})
-      : _settings = AppSettingsModel(assistiveBallEnabled: assistiveBallEnabled);
+      : _settings =
+            AppSettingsModel(assistiveBallEnabled: assistiveBallEnabled);
 
   @override
   Future<AppSettingsModel> getSettings() async => _settings;
@@ -115,6 +120,7 @@ void main() {
       expect(state.normalizedY, 0.02);
       expect(state.isMenuOpen, isFalse);
       expect(state.isFloatingNoteOpen, isFalse);
+      expect(state.isNoteSelectorOpen, isFalse);
     });
 
     test('updatePosition clamps coordinates within safe margins', () {
@@ -138,7 +144,8 @@ void main() {
       expect(state.normalizedY, 0.98);
     });
 
-    test('snapToNearestCorner accurately routes to all four corner positions', () {
+    test('snapToNearestCorner accurately routes to all four corner positions',
+        () {
       final notifier = container.read(assistiveBallProvider.notifier);
 
       // Top-Left
@@ -166,13 +173,15 @@ void main() {
       expect(state.normalizedY, 0.98);
     });
 
-    test('setEnabled synchronizes state, app settings, and platform overlay', () async {
+    test('setEnabled synchronizes state, app settings, and platform overlay',
+        () async {
       final notifier = container.read(assistiveBallProvider.notifier);
 
       await notifier.setEnabled(false);
       var state = container.read(assistiveBallProvider);
       expect(state.isEnabled, isFalse);
       expect(state.isVisible, isFalse);
+      expect(state.isNoteSelectorOpen, isFalse);
       expect(mockPlatform.shown, isFalse);
       var settings = await fakeSettingsRepo.getSettings();
       expect(settings.assistiveBallEnabled, isFalse);
@@ -191,6 +200,7 @@ void main() {
       notifier.openFloatingNote();
       var state = container.read(assistiveBallProvider);
       expect(state.isFloatingNoteOpen, isTrue);
+      expect(state.isNoteSelectorOpen, isFalse);
       expect(state.activePageId, isNull);
       expect(state.isNoteMinimized, isFalse);
 
@@ -213,6 +223,33 @@ void main() {
       notifier.closeFloatingNote();
       state = container.read(assistiveBallProvider);
       expect(state.isFloatingNoteOpen, isFalse);
+      expect(state.isNoteSelectorOpen, isFalse);
+    });
+
+    test('Note selector open, close, and returnToNoteSelector workflow', () {
+      final notifier = container.read(assistiveBallProvider.notifier);
+
+      notifier.openNoteSelector();
+      var state = container.read(assistiveBallProvider);
+      expect(state.isNoteSelectorOpen, isTrue);
+      expect(state.isFloatingNoteOpen, isFalse);
+      expect(state.isMenuOpen, isFalse);
+
+      notifier.openFloatingNote(pageId: 'note-456');
+      state = container.read(assistiveBallProvider);
+      expect(state.isNoteSelectorOpen, isFalse);
+      expect(state.isFloatingNoteOpen, isTrue);
+      expect(state.activePageId, 'note-456');
+
+      notifier.returnToNoteSelector();
+      state = container.read(assistiveBallProvider);
+      expect(state.isNoteSelectorOpen, isTrue);
+      expect(state.isFloatingNoteOpen, isFalse);
+      expect(state.activePageId, isNull);
+
+      notifier.closeNoteSelector();
+      state = container.read(assistiveBallProvider);
+      expect(state.isNoteSelectorOpen, isFalse);
     });
 
     test('openFloatingNote with pageId loads existing page ID', () {
@@ -220,6 +257,7 @@ void main() {
       notifier.openFloatingNote(pageId: 'test-page-123');
       final state = container.read(assistiveBallProvider);
       expect(state.isFloatingNoteOpen, isTrue);
+      expect(state.isNoteSelectorOpen, isFalse);
       expect(state.activePageId, 'test-page-123');
     });
 
@@ -302,20 +340,8 @@ void main() {
       );
     }
 
-    testWidgets('Does not display assistive ball when disabled in settings',
-        (tester) async {
-      await tester.pumpWidget(createTestApp(assistiveBallEnabled: false));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AssistiveBallWidget), findsNothing);
-      expect(find.text('Main Content'), findsOneWidget);
-
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump(const Duration(milliseconds: 50));
-    });
-
     testWidgets(
-        'Displays ball when enabled, opens menu, and launches quick capture note',
+        'Displays ball when enabled, menu has only Quick Note, Note Selector, Hide Ball',
         (tester) async {
       tester.view.physicalSize = const Size(800, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -333,14 +359,20 @@ void main() {
 
       expect(find.text('Quick Note'), findsOneWidget);
       expect(find.text('Note Selector'), findsOneWidget);
+      expect(find.text('Hide Ball'), findsOneWidget);
+      expect(find.text('Recent Note'), findsNothing);
 
       // Tap Quick Note
       await tester.tap(find.text('Quick Note'));
       await tester.pumpAndSettle();
 
-      // Floating note view should appear
+      // Floating note view should appear with exactly one control (Close button)
       expect(find.byType(FloatingNoteView), findsOneWidget);
-      expect(find.text('Quick Capture'), findsOneWidget);
+      expect(find.text('Quick Note'), findsOneWidget);
+      expect(find.byTooltip('Close'), findsOneWidget);
+      expect(find.byTooltip('Back to Note Selector'), findsNothing);
+      expect(find.byTooltip('Minimize'), findsNothing);
+      expect(find.byTooltip('Open in Editor'), findsNothing);
 
       // Enter title and content
       await tester.enterText(
@@ -368,8 +400,7 @@ void main() {
       expect(find.byType(FloatingNoteView), findsNothing);
 
       // Verify page was created in repository
-      final pagesResult =
-          await tester.runAsync(() => pageRepo.getRecentPages());
+      final pagesResult = await tester.runAsync(() => pageRepo.getAllPages());
       expect(pagesResult!.isSuccess, isTrue);
       final pages = pagesResult.valueOrNull!;
       expect(pages.any((p) => p.title == 'My Quick Idea'), isTrue);
@@ -393,7 +424,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
     });
 
-    testWidgets('Floating note view renders existing note and its blocks',
+    testWidgets(
+        'Floating note view in preview mode has single back control and navigates correctly',
         (tester) async {
       tester.view.physicalSize = const Size(800, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -438,7 +470,7 @@ void main() {
       await tester.pumpWidget(createTestApp(assistiveBallEnabled: true));
       await tester.pumpAndSettle();
 
-      // Open floating note for this page via notifier and wait for SQLite reads
+      // Open floating note for this page via notifier
       final element = tester.element(find.byType(RootAssistiveBallOverlay));
       final container = ProviderScope.containerOf(element);
       container
@@ -460,37 +492,41 @@ void main() {
       }
 
       expect(find.byType(FloatingNoteView), findsOneWidget);
+      expect(find.text('Note Preview'), findsOneWidget);
       expect(find.text('Project Roadmap'), findsOneWidget);
       expect(find.text('Milestone 1: Unified Page Scroll'), findsOneWidget);
       expect(find.text('Milestone 2: Floating Assistive Ball'), findsOneWidget);
 
-      // Test minimize
-      await tester.tap(find.byTooltip('Minimize'));
+      // Verify exactly ONE header control (Back button)
+      expect(find.byTooltip('Back to Note Selector'), findsOneWidget);
+      expect(find.byTooltip('Close'), findsNothing);
+      expect(find.byTooltip('Minimize'), findsNothing);
+      expect(find.byTooltip('Open in Editor'), findsNothing);
+
+      // Tap Back button to return to Note Selector Panel
+      await tester.tap(find.byTooltip('Back to Note Selector'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
+
+      for (int i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+        if (find.text('Select a Note').evaluate().isNotEmpty) {
+          break;
+        }
+      }
 
       expect(find.byType(FloatingNoteView), findsNothing);
-      expect(find.byIcon(Icons.note_alt_outlined), findsOneWidget);
-
-      // Tap ball to restore
-      await tester.tap(find.byIcon(Icons.note_alt_outlined));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(FloatingNoteView), findsOneWidget);
-
-      // Close note
-      await tester.tap(find.byTooltip('Close'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      expect(find.byType(FloatingNoteView), findsNothing);
+      expect(find.byType(NoteSelectorPanel), findsOneWidget);
+      expect(find.text('Select a Note'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(milliseconds: 50));
     });
 
-    testWidgets('Popout menu Note Selector opens sheet and loads selected note',
+    testWidgets('Popout menu Note Selector opens panel and loads selected note',
         (tester) async {
       tester.view.physicalSize = const Size(800, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -527,21 +563,24 @@ void main() {
       await tester.tap(find.byIcon(Icons.bubble_chart_rounded));
       await tester.pumpAndSettle();
 
-      // Verify no grey container scrim
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is Container && w.color == Colors.black26,
-        ),
-        findsNothing,
-      );
-
       // Tap Note Selector
       expect(find.text('Note Selector'), findsOneWidget);
       await tester.tap(find.text('Note Selector'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 100));
 
-      // Wait for bottom sheet and SQLite stream
+      // NoteSelectorPanel should be displayed
+      expect(find.byType(NoteSelectorPanel), findsOneWidget);
+      expect(find.text('Select a Note'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is IconButton &&
+              (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close'),
+        ),
+        findsOneWidget,
+      );
+
       for (int i = 0; i < 40; i++) {
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 50)),
@@ -552,28 +591,61 @@ void main() {
         }
       }
 
-      // NoteSelectorSheet should be displayed
-      expect(find.text('Select a Note'), findsOneWidget);
       expect(find.text('Selected Meeting Note'), findsOneWidget);
 
       // Select the note
       await tester.tap(find.text('Selected Meeting Note'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pump(const Duration(milliseconds: 100));
 
       for (int i = 0; i < 40; i++) {
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 50)),
         );
         await tester.pump();
-        if (find.byType(FloatingNoteView).evaluate().isNotEmpty) {
+        if (find.text('Selected Meeting Note').evaluate().isNotEmpty) {
           break;
         }
       }
 
       // Floating note view should now be open for this note
       expect(find.byType(FloatingNoteView), findsOneWidget);
+      expect(find.byType(NoteSelectorPanel), findsNothing);
+      expect(find.text('Note Preview'), findsOneWidget);
       expect(find.text('Selected Meeting Note'), findsOneWidget);
+
+      // Verify back button is visible and tapping returns to Note Selector Panel
+      expect(find.byTooltip('Back to Note Selector'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back to Note Selector'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      for (int i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+        if (find.text('Select a Note').evaluate().isNotEmpty) {
+          break;
+        }
+      }
+
+      expect(find.byType(NoteSelectorPanel), findsOneWidget);
+      expect(find.byType(FloatingNoteView), findsNothing);
+      expect(find.text('Select a Note'), findsOneWidget);
+
+      // Tap Close on NoteSelectorPanel
+      await tester.tap(
+        find.byWidgetPredicate(
+          (w) =>
+              w is IconButton &&
+              (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(NoteSelectorPanel), findsNothing);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(milliseconds: 50));

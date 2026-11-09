@@ -251,6 +251,30 @@ class PageRepositoryImpl implements PageRepository {
   }
 
   @override
+  Future<Result<List<domain.Page>>> getAllPages() async {
+    try {
+      final records = await (_db.select(_db.pages)
+            ..where((t) => t.deleted.equals(false))
+            ..where((t) => t.isArchived.equals(false))
+            ..where((t) => t.isTemplate.equals(false))
+            ..orderBy([
+              (t) => OrderingTerm(
+                    expression: t.updatedAt,
+                    mode: OrderingMode.desc,
+                  ),
+            ]))
+          .get();
+
+      return Success(
+        records.map((record) => record.toDomain()).toList(),
+      );
+    } catch (e, stackTrace) {
+      _logger.e('Failed to get all pages', e, stackTrace);
+      return Error(StorageFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Result<List<domain.Page>>> getFavoritePages() async {
     try {
       final records = await (_db.select(_db.pages)

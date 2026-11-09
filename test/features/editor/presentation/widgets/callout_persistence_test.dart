@@ -76,6 +76,9 @@ class _MockPageRepo implements PageRepository {
   Future<Result<List<page_entity.Page>>> getDeletedPages() async =>
       const Success([]);
   @override
+  Future<Result<List<page_entity.Page>>> getAllPages() async =>
+      const Success([]);
+  @override
   Future<Result<void>> updateCoverPosition(
           String pageId, double offset,) async =>
       const Success(null);

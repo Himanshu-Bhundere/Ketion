@@ -58,6 +58,15 @@ final recentPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
   return result.fold((pages) => pages, (error) => []);
 });
 
+final allPagesProvider = FutureProvider<List<entity.Page>>((ref) async {
+  final repository = ref.watch(pageRepositoryProvider);
+  final result = await repository.getAllPages();
+  return result.fold(
+    (pages) => pages,
+    (error) => throw error,
+  );
+});
+
 final favoritePagesProvider = FutureProvider<List<entity.Page>>((ref) async {
   final repo = ref.watch(pageRepositoryProvider);
   final result = await repo.getFavoritePages();

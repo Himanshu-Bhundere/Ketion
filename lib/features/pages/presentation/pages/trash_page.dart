@@ -252,4 +252,3 @@ class TrashPage extends ConsumerWidget {
     );
   }
 }
-

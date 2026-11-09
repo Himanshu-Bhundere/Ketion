@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import '../../../../core/router/routes.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../blocks/domain/entities/block.dart';
 import '../../../blocks/presentation/providers/block_providers.dart';
@@ -11,6 +9,7 @@ import '../../../editor/domain/models/block_data_models.dart';
 import '../../../pages/domain/entities/page.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
 import '../providers/assistive_ball_provider.dart';
+import 'rich_block_preview.dart';
 
 class FloatingNoteView extends ConsumerStatefulWidget {
   final BoxConstraints parentConstraints;
@@ -107,7 +106,9 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
           );
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to save quick note content')),
+              const SnackBar(
+                content: Text('Failed to save quick note content'),
+              ),
             );
           }
           return;
@@ -141,15 +142,6 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final width = ballState.floatingNoteWidth.clamp(
-      280.0,
-      widget.parentConstraints.maxWidth - 32.0,
-    );
-    final height = ballState.floatingNoteHeight.clamp(
-      240.0,
-      widget.parentConstraints.maxHeight - 48.0,
-    );
-
     return Material(
       elevation: 8,
       borderRadius: BorderRadius.circular(16),
@@ -174,66 +166,95 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                   : theme.colorScheme.surfaceContainerHighest,
               child: Row(
                 children: [
-                  Icon(
-                    ballState.activePageId != null
-                        ? Icons.description_outlined
-                        : Icons.edit_note,
-                    size: 18,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      ballState.activePageId != null
-                          ? 'Note Preview'
-                          : 'Quick Capture',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (ballState.activePageId != null)
+                  if (ballState.activePageId != null) ...[
                     IconButton(
-                      icon: const Icon(Icons.open_in_new, size: 18),
-                      tooltip: 'Open in Editor',
+                      icon: const Icon(Icons.arrow_back, size: 18),
+                      tooltip: 'Back to Note Selector',
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      constraints: const BoxConstraints.tightFor(
+                        width: 36,
+                        height: 36,
+                      ),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        overlayColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        foregroundColor: WidgetStateProperty.all(
+                          Theme.of(context).colorScheme.onSurface,
+                        ),
+                        mouseCursor: WidgetStateProperty.all(
+                          SystemMouseCursors.click,
+                        ),
+                      ),
                       onPressed: () {
-                        final pageId = ballState.activePageId!;
+                        ref
+                            .read(assistiveBallProvider.notifier)
+                            .returnToNoteSelector();
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.description_outlined,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Note Preview',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(
+                      Icons.edit_note,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Quick Note',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.close,
+                        size: 18,
+                      ),
+                      tooltip: 'Close',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 36,
+                        height: 36,
+                      ),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        overlayColor:
+                            WidgetStateProperty.all(Colors.transparent),
+                        foregroundColor: WidgetStateProperty.all(
+                          Theme.of(context).colorScheme.onSurface,
+                        ),
+                        mouseCursor: WidgetStateProperty.all(
+                          SystemMouseCursors.click,
+                        ),
+                      ),
+                      onPressed: () {
                         ref
                             .read(assistiveBallProvider.notifier)
                             .closeFloatingNote();
-                        context.pushNamed(
-                          Routes.editorName,
-                          pathParameters: {'pageId': pageId},
-                        );
                       },
                     ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.minimize, size: 18),
-                    tooltip: 'Minimize',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      ref
-                          .read(assistiveBallProvider.notifier)
-                          .minimizeFloatingNote();
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    tooltip: 'Close',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      ref
-                          .read(assistiveBallProvider.notifier)
-                          .closeFloatingNote();
-                    },
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -243,31 +264,6 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
               child: ballState.activePageId != null
                   ? _buildActiveNoteViewer(ballState.activePageId!, theme)
                   : _buildQuickCaptureForm(theme),
-            ),
-
-            // Bottom Resize Bar
-            Container(
-              height: 20,
-              color: Colors.transparent,
-              alignment: Alignment.bottomRight,
-              child: GestureDetector(
-                onPanUpdate: (details) {
-                  ref
-                      .read(assistiveBallProvider.notifier)
-                      .updateFloatingNoteSize(
-                        width + details.delta.dx,
-                        height + details.delta.dy,
-                      );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4, bottom: 4),
-                  child: Icon(
-                    Icons.south_east,
-                    size: 14,
-                    color: isDark ? Colors.grey[500] : Colors.grey[400],
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -310,16 +306,41 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                       );
                     }
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: blocks.map((b) {
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: List.generate(blocks.length, (index) {
+                        final block = blocks[index];
+
+                        int ordinal = 1;
+
+                        if (block.type == 'list') {
+                          final data = _decodeBlockData(block.data);
+                          if (data['listType'] == 'numbered') {
+                            for (int i = index - 1; i >= 0; i--) {
+                              final previous = blocks[i];
+
+                              if (previous.type != 'list') break;
+
+                              final previousData =
+                                  _decodeBlockData(previous.data);
+
+                              if (previousData['listType'] != 'numbered') {
+                                break;
+                              }
+
+                              ordinal++;
+                            }
+                          }
+                        }
+
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(
-                            _extractBlockText(b.data),
-                            style: theme.textTheme.bodyMedium,
+                          padding: const EdgeInsets.symmetric(vertical: 3),
+                          child: RichBlockPreview(
+                            key: ValueKey(block.id),
+                            block: block,
+                            listOrdinal: ordinal,
                           ),
                         );
-                      }).toList(),
+                      }),
                     );
                   },
                   loading: () => const Center(
@@ -340,41 +361,21 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
     );
   }
 
-  String _extractBlockText(String data) {
+  Map<String, dynamic> _decodeBlockData(String data) {
     try {
       final decoded = jsonDecode(data);
 
-      if (decoded is! Map<String, dynamic>) {
-        return data;
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
       }
-
-      final json = Map<String, dynamic>.from(decoded);
-
-      if (json['spans'] == null && json['text'] is String) {
-        return json['text'] as String;
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
       }
-
-      // Ketion removes runtimeType when persisting blocks.
-      // Restore the discriminator required by Freezed.
-      json['runtimeType'] = 'text';
-
-      final blockData = BlockDataModel.fromJson(json);
-
-      final extracted = blockData.maybeMap(
-        text: (value) => value.spans.map((span) => span.text).join(),
-        list: (value) => value.spans.map((span) => span.text).join(),
-        callout: (value) => value.spans.map((span) => span.text).join(),
-        orElse: () => '',
-      );
-
-      if (extracted.isEmpty && json['text'] is String) {
-        return json['text'] as String;
-      }
-
-      return extracted;
-    } catch (_) {
-      return data;
+    } catch (error, stackTrace) {
+      appLogger.e('Failed to decode preview block', error, stackTrace);
     }
+
+    return {};
   }
 
   Widget _buildQuickCaptureForm(ThemeData theme) {

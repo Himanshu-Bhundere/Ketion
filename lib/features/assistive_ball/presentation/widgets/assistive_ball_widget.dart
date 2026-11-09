@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../settings/presentation/providers/settings_providers.dart';
 import '../providers/assistive_ball_provider.dart';
 import 'floating_note_view.dart';
-import 'note_selector_sheet.dart';
+import 'note_selector_panel.dart';
 
 class AssistiveBallWidget extends ConsumerStatefulWidget {
   final BoxConstraints parentConstraints;
@@ -110,22 +110,6 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     });
   }
 
-  Future<void> _openNoteSelector() async {
-    ref.read(assistiveBallProvider.notifier).closeMenu();
-
-    final selectedPageId = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => const NoteSelectorSheet(),
-    );
-
-    if (!mounted || selectedPageId == null) return;
-
-    ref
-        .read(assistiveBallProvider.notifier)
-        .openFloatingNote(pageId: selectedPageId);
-  }
-
   @override
   Widget build(BuildContext context) {
     final ballState = ref.watch(assistiveBallProvider);
@@ -148,60 +132,44 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final isLeft = ballState.normalizedX < 0.5;
     final isTop = ballState.normalizedY < 0.5;
 
-    final noteWidth = ballState.floatingNoteWidth.clamp(
-      280.0,
-      parentWidth - 32.0,
+    final panelWidth = math.min(
+      ballState.floatingNoteWidth,
+      math.max(0.0, parentWidth - 24.0),
     );
-    final noteHeight = ballState.floatingNoteHeight.clamp(
-      240.0,
-      parentHeight - 48.0,
+    final panelHeight = math.min(
+      ballState.floatingNoteHeight,
+      math.max(0.0, parentHeight - 24.0),
     );
 
-    final rawNoteLeft = isLeft ? pixelLeft : pixelLeft + _ballSize - noteWidth;
-    final rawNoteTop = isTop ? pixelTop + _ballSize + 8.0 : pixelTop - noteHeight - 8.0;
+    final rawPanelLeft =
+        isLeft ? pixelLeft : pixelLeft + _ballSize - panelWidth;
+    final rawPanelTop =
+        isTop ? pixelTop + _ballSize + 8.0 : pixelTop - panelHeight - 8.0;
 
-    final noteLeft = rawNoteLeft.clamp(
-      16.0,
-      math.max(16.0, parentWidth - noteWidth - 16.0),
-    ).toDouble();
-    final noteTop = rawNoteTop.clamp(
-      24.0,
-      math.max(24.0, parentHeight - noteHeight - 24.0),
-    ).toDouble();
+    final panelLeft = rawPanelLeft
+        .clamp(
+          12.0,
+          math.max(12.0, parentWidth - panelWidth - 12.0),
+        )
+        .toDouble();
+    final panelTop = rawPanelTop
+        .clamp(
+          12.0,
+          math.max(12.0, parentHeight - panelHeight - 12.0),
+        )
+        .toDouble();
 
     return Stack(
+      clipBehavior: Clip.none,
       children: [
-        // 1. Transparent dismiss tap detector when menu is open
-        if (ballState.isMenuOpen)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                ref.read(assistiveBallProvider.notifier).closeMenu();
-              },
-              child: const SizedBox.expand(),
-            ),
-          ),
-
-        // 2. Attached Floating Note Panel
-        if (ballState.isFloatingNoteOpen)
-          Positioned(
-            left: noteLeft,
-            top: noteTop,
-            width: noteWidth,
-            height: noteHeight,
-            child: FloatingNoteView(
-              parentConstraints: widget.parentConstraints,
-            ),
-          ),
-
-        // 3. Assistive Ball
+        // 1. Assistive Ball (first child)
         Positioned(
           left: pixelLeft,
           top: pixelTop,
           width: _ballSize,
           height: _ballSize,
           child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onPanStart: _onPanStart,
             onPanUpdate: _onPanUpdate,
             onPanEnd: _onPanEnd,
@@ -248,16 +216,51 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
           ),
         ),
 
+        // 2. Note Selector Panel
+        if (ballState.isNoteSelectorOpen)
+          Positioned(
+            left: panelLeft,
+            top: panelTop,
+            width: panelWidth,
+            height: panelHeight,
+            child: Material(
+              type: MaterialType.transparency,
+              child: NoteSelectorPanel(
+                onClose: () {
+                  ref.read(assistiveBallProvider.notifier).closeNoteSelector();
+                },
+                onSelect: (pageId) {
+                  ref
+                      .read(assistiveBallProvider.notifier)
+                      .openFloatingNote(pageId: pageId);
+                },
+              ),
+            ),
+          ),
+
+        // 3. Floating Note
+        if (ballState.isFloatingNoteOpen)
+          Positioned(
+            left: panelLeft,
+            top: panelTop,
+            width: panelWidth,
+            height: panelHeight,
+            child: Material(
+              type: MaterialType.transparency,
+              child: FloatingNoteView(
+                parentConstraints: widget.parentConstraints,
+              ),
+            ),
+          ),
+
         // 4. Popout Menu
         if (ballState.isMenuOpen)
           Positioned(
             left: isLeft ? pixelLeft + _ballSize + 12 : null,
-            right: !isLeft
-                ? widget.parentConstraints.maxWidth - pixelLeft + 12
-                : null,
+            right: !isLeft ? parentWidth - pixelLeft + 12 : null,
             top: (pixelTop - 50.0).clamp(
               16.0,
-              widget.parentConstraints.maxHeight - 200.0,
+              math.max(16.0, parentHeight - 200.0),
             ),
             child: _buildPopoutMenu(accentColor),
           ),
@@ -290,6 +293,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             _buildMenuItem(
               icon: Icons.edit_note,
               label: 'Quick Note',
+              theme: theme,
               onTap: () {
                 ref.read(assistiveBallProvider.notifier).openFloatingNote();
               },
@@ -297,12 +301,16 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             _buildMenuItem(
               icon: Icons.note_alt_outlined,
               label: 'Note Selector',
-              onTap: _openNoteSelector,
+              theme: theme,
+              onTap: () {
+                ref.read(assistiveBallProvider.notifier).openNoteSelector();
+              },
             ),
             const Divider(height: 12),
             _buildMenuItem(
               icon: Icons.visibility_off_outlined,
               label: 'Hide Ball',
+              theme: theme,
               onTap: () {
                 ref.read(assistiveBallProvider.notifier).setEnabled(false);
               },
@@ -317,22 +325,36 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    required ThemeData theme,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
-            ),
-          ],
+    return SizedBox(
+      width: 190,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        mouseCursor: SystemMouseCursors.click,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        splashColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

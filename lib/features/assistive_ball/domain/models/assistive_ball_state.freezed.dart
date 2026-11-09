@@ -26,6 +26,7 @@ mixin _$AssistiveBallState {
   double get normalizedY => throw _privateConstructorUsedError;
   bool get isMenuOpen => throw _privateConstructorUsedError;
   bool get isFloatingNoteOpen => throw _privateConstructorUsedError;
+  bool get isNoteSelectorOpen => throw _privateConstructorUsedError;
   String? get activePageId => throw _privateConstructorUsedError;
   double get floatingNoteWidth => throw _privateConstructorUsedError;
   double get floatingNoteHeight => throw _privateConstructorUsedError;
@@ -52,6 +53,7 @@ abstract class $AssistiveBallStateCopyWith<$Res> {
       double normalizedY,
       bool isMenuOpen,
       bool isFloatingNoteOpen,
+      bool isNoteSelectorOpen,
       String? activePageId,
       double floatingNoteWidth,
       double floatingNoteHeight,
@@ -79,6 +81,7 @@ class _$AssistiveBallStateCopyWithImpl<$Res, $Val extends AssistiveBallState>
     Object? normalizedY = null,
     Object? isMenuOpen = null,
     Object? isFloatingNoteOpen = null,
+    Object? isNoteSelectorOpen = null,
     Object? activePageId = freezed,
     Object? floatingNoteWidth = null,
     Object? floatingNoteHeight = null,
@@ -110,6 +113,10 @@ class _$AssistiveBallStateCopyWithImpl<$Res, $Val extends AssistiveBallState>
       isFloatingNoteOpen: null == isFloatingNoteOpen
           ? _value.isFloatingNoteOpen
           : isFloatingNoteOpen // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isNoteSelectorOpen: null == isNoteSelectorOpen
+          ? _value.isNoteSelectorOpen
+          : isNoteSelectorOpen // ignore: cast_nullable_to_non_nullable
               as bool,
       activePageId: freezed == activePageId
           ? _value.activePageId
@@ -154,6 +161,7 @@ abstract class _$$AssistiveBallStateImplCopyWith<$Res>
       double normalizedY,
       bool isMenuOpen,
       bool isFloatingNoteOpen,
+      bool isNoteSelectorOpen,
       String? activePageId,
       double floatingNoteWidth,
       double floatingNoteHeight,
@@ -179,6 +187,7 @@ class __$$AssistiveBallStateImplCopyWithImpl<$Res>
     Object? normalizedY = null,
     Object? isMenuOpen = null,
     Object? isFloatingNoteOpen = null,
+    Object? isNoteSelectorOpen = null,
     Object? activePageId = freezed,
     Object? floatingNoteWidth = null,
     Object? floatingNoteHeight = null,
@@ -210,6 +219,10 @@ class __$$AssistiveBallStateImplCopyWithImpl<$Res>
       isFloatingNoteOpen: null == isFloatingNoteOpen
           ? _value.isFloatingNoteOpen
           : isFloatingNoteOpen // ignore: cast_nullable_to_non_nullable
+              as bool,
+      isNoteSelectorOpen: null == isNoteSelectorOpen
+          ? _value.isNoteSelectorOpen
+          : isNoteSelectorOpen // ignore: cast_nullable_to_non_nullable
               as bool,
       activePageId: freezed == activePageId
           ? _value.activePageId
@@ -249,6 +262,7 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
       this.normalizedY = 0.02,
       this.isMenuOpen = false,
       this.isFloatingNoteOpen = false,
+      this.isNoteSelectorOpen = false,
       this.activePageId,
       this.floatingNoteWidth = 340.0,
       this.floatingNoteHeight = 420.0,
@@ -278,6 +292,9 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
   @JsonKey()
   final bool isFloatingNoteOpen;
   @override
+  @JsonKey()
+  final bool isNoteSelectorOpen;
+  @override
   final String? activePageId;
   @override
   @JsonKey()
@@ -297,7 +314,7 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
 
   @override
   String toString() {
-    return 'AssistiveBallState(isEnabled: $isEnabled, isVisible: $isVisible, normalizedX: $normalizedX, normalizedY: $normalizedY, isMenuOpen: $isMenuOpen, isFloatingNoteOpen: $isFloatingNoteOpen, activePageId: $activePageId, floatingNoteWidth: $floatingNoteWidth, floatingNoteHeight: $floatingNoteHeight, floatingNoteNormalizedX: $floatingNoteNormalizedX, floatingNoteNormalizedY: $floatingNoteNormalizedY, isNoteMinimized: $isNoteMinimized)';
+    return 'AssistiveBallState(isEnabled: $isEnabled, isVisible: $isVisible, normalizedX: $normalizedX, normalizedY: $normalizedY, isMenuOpen: $isMenuOpen, isFloatingNoteOpen: $isFloatingNoteOpen, isNoteSelectorOpen: $isNoteSelectorOpen, activePageId: $activePageId, floatingNoteWidth: $floatingNoteWidth, floatingNoteHeight: $floatingNoteHeight, floatingNoteNormalizedX: $floatingNoteNormalizedX, floatingNoteNormalizedY: $floatingNoteNormalizedY, isNoteMinimized: $isNoteMinimized)';
   }
 
   @override
@@ -317,6 +334,8 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
                 other.isMenuOpen == isMenuOpen) &&
             (identical(other.isFloatingNoteOpen, isFloatingNoteOpen) ||
                 other.isFloatingNoteOpen == isFloatingNoteOpen) &&
+            (identical(other.isNoteSelectorOpen, isNoteSelectorOpen) ||
+                other.isNoteSelectorOpen == isNoteSelectorOpen) &&
             (identical(other.activePageId, activePageId) ||
                 other.activePageId == activePageId) &&
             (identical(other.floatingNoteWidth, floatingNoteWidth) ||
@@ -343,6 +362,7 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
       normalizedY,
       isMenuOpen,
       isFloatingNoteOpen,
+      isNoteSelectorOpen,
       activePageId,
       floatingNoteWidth,
       floatingNoteHeight,
@@ -373,6 +393,7 @@ abstract class _AssistiveBallState implements AssistiveBallState {
       final double normalizedY,
       final bool isMenuOpen,
       final bool isFloatingNoteOpen,
+      final bool isNoteSelectorOpen,
       final String? activePageId,
       final double floatingNoteWidth,
       final double floatingNoteHeight,
@@ -395,6 +416,8 @@ abstract class _AssistiveBallState implements AssistiveBallState {
   bool get isMenuOpen;
   @override
   bool get isFloatingNoteOpen;
+  @override
+  bool get isNoteSelectorOpen;
   @override
   String? get activePageId;
   @override

@@ -12,6 +12,7 @@ class AssistiveBallState with _$AssistiveBallState {
     @Default(0.02) double normalizedY,
     @Default(false) bool isMenuOpen,
     @Default(false) bool isFloatingNoteOpen,
+    @Default(false) bool isNoteSelectorOpen,
     String? activePageId,
     @Default(340.0) double floatingNoteWidth,
     @Default(420.0) double floatingNoteHeight,

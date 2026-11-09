@@ -15,6 +15,7 @@ _$AssistiveBallStateImpl _$$AssistiveBallStateImplFromJson(
       normalizedY: (json['normalizedY'] as num?)?.toDouble() ?? 0.02,
       isMenuOpen: json['isMenuOpen'] as bool? ?? false,
       isFloatingNoteOpen: json['isFloatingNoteOpen'] as bool? ?? false,
+      isNoteSelectorOpen: json['isNoteSelectorOpen'] as bool? ?? false,
       activePageId: json['activePageId'] as String?,
       floatingNoteWidth:
           (json['floatingNoteWidth'] as num?)?.toDouble() ?? 340.0,
@@ -36,6 +37,7 @@ Map<String, dynamic> _$$AssistiveBallStateImplToJson(
       'normalizedY': instance.normalizedY,
       'isMenuOpen': instance.isMenuOpen,
       'isFloatingNoteOpen': instance.isFloatingNoteOpen,
+      'isNoteSelectorOpen': instance.isNoteSelectorOpen,
       'activePageId': instance.activePageId,
       'floatingNoteWidth': instance.floatingNoteWidth,
       'floatingNoteHeight': instance.floatingNoteHeight,

@@ -22,6 +22,7 @@ class RootAssistiveBallOverlay extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
+          clipBehavior: Clip.none,
           children: [
             child,
             AssistiveBallWidget(parentConstraints: constraints),

@@ -67,6 +67,7 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
       isVisible: enabled,
       isMenuOpen: false,
       isFloatingNoteOpen: false,
+      isNoteSelectorOpen: false,
     );
 
     if (enabled) {
@@ -132,6 +133,7 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   void openFloatingNote({String? pageId}) {
     state = state.copyWith(
       isFloatingNoteOpen: true,
+      isNoteSelectorOpen: false,
       activePageId: pageId,
       isMenuOpen: false,
       isNoteMinimized: false,
@@ -141,8 +143,31 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   void closeFloatingNote() {
     state = state.copyWith(
       isFloatingNoteOpen: false,
+      isNoteSelectorOpen: false,
       activePageId: null,
       isNoteMinimized: false,
+    );
+  }
+
+  void openNoteSelector() {
+    state = state.copyWith(
+      isNoteSelectorOpen: true,
+      isFloatingNoteOpen: false,
+      isMenuOpen: false,
+    );
+  }
+
+  void closeNoteSelector() {
+    state = state.copyWith(
+      isNoteSelectorOpen: false,
+    );
+  }
+
+  void returnToNoteSelector() {
+    state = state.copyWith(
+      isNoteSelectorOpen: true,
+      isFloatingNoteOpen: false,
+      activePageId: null,
     );
   }
 

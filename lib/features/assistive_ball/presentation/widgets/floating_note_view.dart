@@ -115,7 +115,13 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
         }
       }
 
+      // Refresh homepage and recent-note consumers.
       ref.invalidate(recentPagesProvider);
+
+      // Refresh the Note Selector, which reads allPagesProvider.
+      ref.invalidate(allPagesProvider);
+
+      // Refresh favorite-note consumers.
       ref.invalidate(favoritePagesProvider);
 
       if (mounted) {

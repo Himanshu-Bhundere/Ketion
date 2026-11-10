@@ -9,6 +9,7 @@ import '../../../editor/domain/models/block_data_models.dart';
 import '../../../pages/domain/entities/page.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
 import '../providers/assistive_ball_provider.dart';
+import 'assistive_ball_header_button.dart';
 import 'rich_block_preview.dart';
 
 class FloatingNoteView extends ConsumerStatefulWidget {
@@ -173,26 +174,9 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
               child: Row(
                 children: [
                   if (ballState.activePageId != null) ...[
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, size: 18),
+                    AssistiveBallHeaderButton(
+                      icon: Icons.arrow_back,
                       tooltip: 'Back to Note Selector',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 36,
-                        height: 36,
-                      ),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        overlayColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        foregroundColor: WidgetStateProperty.all(
-                          Theme.of(context).colorScheme.onSurface,
-                        ),
-                        mouseCursor: WidgetStateProperty.all(
-                          SystemMouseCursors.click,
-                        ),
-                      ),
                       onPressed: () {
                         ref
                             .read(assistiveBallProvider.notifier)
@@ -231,29 +215,9 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        size: 18,
-                      ),
-                      tooltip: 'Close',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 36,
-                        height: 36,
-                      ),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        overlayColor:
-                            WidgetStateProperty.all(Colors.transparent),
-                        foregroundColor: WidgetStateProperty.all(
-                          Theme.of(context).colorScheme.onSurface,
-                        ),
-                        mouseCursor: WidgetStateProperty.all(
-                          SystemMouseCursors.click,
-                        ),
-                      ),
+                    AssistiveBallHeaderButton(
+                      icon: Icons.close,
+                      tooltip: 'Close Quick Note',
                       onPressed: () {
                         ref
                             .read(assistiveBallProvider.notifier)

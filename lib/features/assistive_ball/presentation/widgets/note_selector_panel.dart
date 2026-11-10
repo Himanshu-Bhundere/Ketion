@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
+import 'assistive_ball_header_button.dart';
 
 class NoteSelectorPanel extends ConsumerWidget {
   final VoidCallback onClose;
@@ -56,28 +57,9 @@ class NoteSelectorPanel extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      size: 18,
-                    ),
+                  AssistiveBallHeaderButton(
+                    icon: Icons.close,
                     tooltip: 'Close Note Selector',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 36,
-                      height: 36,
-                    ),
-                    style: ButtonStyle(
-                      backgroundColor:
-                          WidgetStateProperty.all(Colors.transparent),
-                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                      foregroundColor: WidgetStateProperty.all(
-                        theme.colorScheme.onSurface,
-                      ),
-                      mouseCursor: WidgetStateProperty.all(
-                        SystemMouseCursors.click,
-                      ),
-                    ),
                     onPressed: onClose,
                   ),
                 ],

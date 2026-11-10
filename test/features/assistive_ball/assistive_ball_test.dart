@@ -369,7 +369,16 @@ void main() {
       // Floating note view should appear with exactly one control (Close button)
       expect(find.byType(FloatingNoteView), findsOneWidget);
       expect(find.text('Quick Note'), findsOneWidget);
-      expect(find.byTooltip('Close'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              (w is Tooltip &&
+                  (w.message == 'Close Quick Note' || w.message == 'Close')) ||
+              (w is IconButton &&
+                  (w.tooltip == 'Close Quick Note' || w.tooltip == 'Close')),
+        ),
+        findsOneWidget,
+      );
       expect(find.byTooltip('Back to Note Selector'), findsNothing);
       expect(find.byTooltip('Minimize'), findsNothing);
       expect(find.byTooltip('Open in Editor'), findsNothing);
@@ -500,6 +509,7 @@ void main() {
       // Verify exactly ONE header control (Back button)
       expect(find.byTooltip('Back to Note Selector'), findsOneWidget);
       expect(find.byTooltip('Close'), findsNothing);
+      expect(find.byTooltip('Close Quick Note'), findsNothing);
       expect(find.byTooltip('Minimize'), findsNothing);
       expect(find.byTooltip('Open in Editor'), findsNothing);
 
@@ -575,8 +585,11 @@ void main() {
       expect(
         find.byWidgetPredicate(
           (w) =>
-              w is IconButton &&
-              (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close'),
+              (w is Tooltip &&
+                  (w.message == 'Close Note Selector' ||
+                      w.message == 'Close')) ||
+              (w is IconButton &&
+                  (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close')),
         ),
         findsOneWidget,
       );
@@ -638,8 +651,11 @@ void main() {
       await tester.tap(
         find.byWidgetPredicate(
           (w) =>
-              w is IconButton &&
-              (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close'),
+              (w is Tooltip &&
+                  (w.message == 'Close Note Selector' ||
+                      w.message == 'Close')) ||
+              (w is IconButton &&
+                  (w.tooltip == 'Close Note Selector' || w.tooltip == 'Close')),
         ),
       );
       await tester.pump();

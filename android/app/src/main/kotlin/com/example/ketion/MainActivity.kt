@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.ketion/assistive_ball"
+    private var pendingPermissionResult: MethodChannel.Result? = null
 
     companion object {
         private var methodChannel: MethodChannel? = null
@@ -52,12 +53,12 @@ class MainActivity: FlutterActivity() {
                 }
                 "requestOverlayPermission" -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                        pendingPermissionResult = result
                         val intent = Intent(
                             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:$packageName")
                         )
                         startActivity(intent)
-                        result.success(true)
                     } else {
                         result.success(true)
                     }
@@ -83,7 +84,26 @@ class MainActivity: FlutterActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        pendingPermissionResult?.let { res ->
+            val granted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Settings.canDrawOverlays(this)
+            } else {
+                true
+            }
+            res.success(granted)
+            pendingPermissionResult = null
+        }
+
+        if (intent?.getBooleanExtra("from_assistive_ball", false) == true) {
+            intent?.removeExtra("from_assistive_ball")
+            methodChannel?.invokeMethod("onBallClicked", null)
+        }
+    }
+
     override fun onDestroy() {
+        pendingPermissionResult = null
         if (methodChannel != null) {
             methodChannel = null
         }
@@ -93,5 +113,9 @@ class MainActivity: FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getBooleanExtra("from_assistive_ball", false)) {
+            intent.removeExtra("from_assistive_ball")
+            methodChannel?.invokeMethod("onBallClicked", null)
+        }
     }
 }

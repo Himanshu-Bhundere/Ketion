@@ -76,31 +76,54 @@ class AssistiveBallService : Service() {
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        val action = intent?.action
-        if (action == ACTION_STOP) {
-            removeFloatingView()
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        if (intent?.action == ACTION_STOP) {
+            prefs.edit().putBoolean(KEY_ENABLED, false).apply()
+            removeFloatingView()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        // ACTION_START explicitly enables the feature. A null intent means
+        // Android is recreating a previously sticky service.
+        if (intent?.action == ACTION_START) {
+            prefs.edit().putBoolean(KEY_ENABLED, true).apply()
+        }
+
+        if (!prefs.getBoolean(KEY_ENABLED, false)) {
+            removeFloatingView()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            !Settings.canDrawOverlays(this)
+        ) {
+            prefs.edit().putBoolean(KEY_ENABLED, false).apply()
+            removeFloatingView()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val savedX = prefs.getFloat(KEY_NORM_X, 0.98f)
         val savedY = prefs.getFloat(KEY_NORM_Y, 0.02f)
-
         val normX = intent?.getFloatExtra(EXTRA_X, savedX) ?: savedX
         val normY = intent?.getFloatExtra(EXTRA_Y, savedY) ?: savedY
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundServiceNotification()
+        }
 
         val clampedX = normX.coerceIn(0.02f, 0.98f)
         val clampedY = normY.coerceIn(0.02f, 0.98f)
 
         if (floatingView == null) {
             setupFloatingView(clampedX, clampedY)
-        } else if (action == ACTION_UPDATE_POS) {
+        } else if (intent?.action == ACTION_UPDATE_POS) {
             updateViewPosition(clampedX, clampedY)
         }
 
@@ -268,6 +291,7 @@ class AssistiveBallService : Service() {
 
     companion object {
         const val PREFS_NAME = "assistive_ball_prefs"
+        const val KEY_ENABLED = "enabled"
         const val KEY_NORM_X = "norm_x"
         const val KEY_NORM_Y = "norm_y"
 
@@ -291,6 +315,11 @@ class AssistiveBallService : Service() {
         }
 
         fun stopService(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(KEY_ENABLED, false)
+                .apply()
+
             val intent = Intent(context, AssistiveBallService::class.java).apply {
                 action = ACTION_STOP
             }

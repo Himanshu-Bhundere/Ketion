@@ -6490,9 +6490,10 @@ final class $$PagesTableReferences
       .createAlias($_aliasNameGenerator(db.pages.parentPageId, db.pages.id));
 
   $$PagesTableProcessedTableManager? get parentPageId {
-    if ($_item.parentPageId == null) return null;
+    final $_column = $_itemColumn<String>('parent_page_id');
+    if ($_column == null) return null;
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.parentPageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_parentPageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -6506,7 +6507,7 @@ final class $$PagesTableReferences
 
   $$BlocksTableProcessedTableManager get blocksRefs {
     final manager = $$BlocksTableTableManager($_db, $_db.blocks)
-        .filter((f) => f.pageId.id($_item.id));
+        .filter((f) => f.pageId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_blocksRefsTable($_db));
     return ProcessedTableManager(
@@ -6520,7 +6521,7 @@ final class $$PagesTableReferences
 
   $$RemindersTableProcessedTableManager get remindersRefs {
     final manager = $$RemindersTableTableManager($_db, $_db.reminders)
-        .filter((f) => f.pageId.id($_item.id));
+        .filter((f) => f.pageId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_remindersRefsTable($_db));
     return ProcessedTableManager(
@@ -6534,7 +6535,7 @@ final class $$PagesTableReferences
 
   $$HistoryPagesTableProcessedTableManager get historyPagesRefs {
     final manager = $$HistoryPagesTableTableManager($_db, $_db.historyPages)
-        .filter((f) => f.pageId.id($_item.id));
+        .filter((f) => f.pageId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_historyPagesRefsTable($_db));
     return ProcessedTableManager(
@@ -6550,7 +6551,7 @@ final class $$PagesTableReferences
   $$PageCollectionsTableProcessedTableManager get pageCollectionsRefs {
     final manager =
         $$PageCollectionsTableTableManager($_db, $_db.pageCollections)
-            .filter((f) => f.pageId.id($_item.id));
+            .filter((f) => f.pageId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache =
         $_typedResult.readTableOrNull(_pageCollectionsRefsTable($_db));
@@ -6565,7 +6566,7 @@ final class $$PagesTableReferences
 
   $$PageTagsTableProcessedTableManager get pageTagsRefs {
     final manager = $$PageTagsTableTableManager($_db, $_db.pageTags)
-        .filter((f) => f.pageId.id($_item.id));
+        .filter((f) => f.pageId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_pageTagsRefsTable($_db));
     return ProcessedTableManager(
@@ -7121,7 +7122,7 @@ class $$PagesTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (blocksRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Page, $PagesTable, Block>(
                         currentTable: table,
                         referencedTable:
                             $$PagesTableReferences._blocksRefsTable(db),
@@ -7132,7 +7133,7 @@ class $$PagesTableTableManager extends RootTableManager<
                             referencedItems.where((e) => e.pageId == item.id),
                         typedResults: items),
                   if (remindersRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Page, $PagesTable, Reminder>(
                         currentTable: table,
                         referencedTable:
                             $$PagesTableReferences._remindersRefsTable(db),
@@ -7143,7 +7144,7 @@ class $$PagesTableTableManager extends RootTableManager<
                             referencedItems.where((e) => e.pageId == item.id),
                         typedResults: items),
                   if (historyPagesRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Page, $PagesTable, HistoryPage>(
                         currentTable: table,
                         referencedTable:
                             $$PagesTableReferences._historyPagesRefsTable(db),
@@ -7155,7 +7156,8 @@ class $$PagesTableTableManager extends RootTableManager<
                             referencedItems.where((e) => e.pageId == item.id),
                         typedResults: items),
                   if (pageCollectionsRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Page, $PagesTable,
+                            PageCollection>(
                         currentTable: table,
                         referencedTable: $$PagesTableReferences
                             ._pageCollectionsRefsTable(db),
@@ -7167,7 +7169,7 @@ class $$PagesTableTableManager extends RootTableManager<
                             referencedItems.where((e) => e.pageId == item.id),
                         typedResults: items),
                   if (pageTagsRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Page, $PagesTable, PageTag>(
                         currentTable: table,
                         referencedTable:
                             $$PagesTableReferences._pageTagsRefsTable(db),
@@ -7238,10 +7240,11 @@ final class $$BlocksTableReferences
   static $PagesTable _pageIdTable(_$AppDatabase db) =>
       db.pages.createAlias($_aliasNameGenerator(db.blocks.pageId, db.pages.id));
 
-  $$PagesTableProcessedTableManager? get pageId {
-    if ($_item.pageId == null) return null;
+  $$PagesTableProcessedTableManager get pageId {
+    final $_column = $_itemColumn<String>('page_id')!;
+
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.pageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_pageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -7252,9 +7255,10 @@ final class $$BlocksTableReferences
       .createAlias($_aliasNameGenerator(db.blocks.parentBlockId, db.blocks.id));
 
   $$BlocksTableProcessedTableManager? get parentBlockId {
-    if ($_item.parentBlockId == null) return null;
+    final $_column = $_itemColumn<String>('parent_block_id');
+    if ($_column == null) return null;
     final manager = $$BlocksTableTableManager($_db, $_db.blocks)
-        .filter((f) => f.id($_item.parentBlockId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_parentBlockIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -7268,7 +7272,7 @@ final class $$BlocksTableReferences
 
   $$RemindersTableProcessedTableManager get remindersRefs {
     final manager = $$RemindersTableTableManager($_db, $_db.reminders)
-        .filter((f) => f.blockId.id($_item.id));
+        .filter((f) => f.blockId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_remindersRefsTable($_db));
     return ProcessedTableManager(
@@ -7677,7 +7681,7 @@ class $$BlocksTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (remindersRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Block, $BlocksTable, Reminder>(
                         currentTable: table,
                         referencedTable:
                             $$BlocksTableReferences._remindersRefsTable(db),
@@ -8109,10 +8113,11 @@ final class $$RemindersTableReferences
   static $PagesTable _pageIdTable(_$AppDatabase db) => db.pages
       .createAlias($_aliasNameGenerator(db.reminders.pageId, db.pages.id));
 
-  $$PagesTableProcessedTableManager? get pageId {
-    if ($_item.pageId == null) return null;
+  $$PagesTableProcessedTableManager get pageId {
+    final $_column = $_itemColumn<String>('page_id')!;
+
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.pageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_pageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -8123,9 +8128,10 @@ final class $$RemindersTableReferences
       .createAlias($_aliasNameGenerator(db.reminders.blockId, db.blocks.id));
 
   $$BlocksTableProcessedTableManager? get blockId {
-    if ($_item.blockId == null) return null;
+    final $_column = $_itemColumn<String>('block_id');
+    if ($_column == null) return null;
     final manager = $$BlocksTableTableManager($_db, $_db.blocks)
-        .filter((f) => f.id($_item.blockId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_blockIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -8587,8 +8593,8 @@ final class $$CollectionsTableReferences
 
   $$PageCollectionsTableProcessedTableManager get pageCollectionsRefs {
     final manager =
-        $$PageCollectionsTableTableManager($_db, $_db.pageCollections)
-            .filter((f) => f.collectionId.id($_item.id));
+        $$PageCollectionsTableTableManager($_db, $_db.pageCollections).filter(
+            (f) => f.collectionId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache =
         $_typedResult.readTableOrNull(_pageCollectionsRefsTable($_db));
@@ -8823,7 +8829,8 @@ class $$CollectionsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (pageCollectionsRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Collection, $CollectionsTable,
+                            PageCollection>(
                         currentTable: table,
                         referencedTable: $$CollectionsTableReferences
                             ._pageCollectionsRefsTable(db),
@@ -8885,7 +8892,7 @@ final class $$TagsTableReferences
 
   $$PageTagsTableProcessedTableManager get pageTagsRefs {
     final manager = $$PageTagsTableTableManager($_db, $_db.pageTags)
-        .filter((f) => f.tagId.id($_item.id));
+        .filter((f) => f.tagId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_pageTagsRefsTable($_db));
     return ProcessedTableManager(
@@ -9100,7 +9107,7 @@ class $$TagsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (pageTagsRefs)
-                    await $_getPrefetchedData(
+                    await $_getPrefetchedData<Tag, $TagsTable, PageTag>(
                         currentTable: table,
                         referencedTable:
                             $$TagsTableReferences._pageTagsRefsTable(db),
@@ -9155,10 +9162,11 @@ final class $$HistoryPagesTableReferences
   static $PagesTable _pageIdTable(_$AppDatabase db) => db.pages
       .createAlias($_aliasNameGenerator(db.historyPages.pageId, db.pages.id));
 
-  $$PagesTableProcessedTableManager? get pageId {
-    if ($_item.pageId == null) return null;
+  $$PagesTableProcessedTableManager get pageId {
+    final $_column = $_itemColumn<String>('page_id')!;
+
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.pageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_pageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -9427,10 +9435,11 @@ final class $$PageCollectionsTableReferences extends BaseReferences<
   static $PagesTable _pageIdTable(_$AppDatabase db) => db.pages.createAlias(
       $_aliasNameGenerator(db.pageCollections.pageId, db.pages.id));
 
-  $$PagesTableProcessedTableManager? get pageId {
-    if ($_item.pageId == null) return null;
+  $$PagesTableProcessedTableManager get pageId {
+    final $_column = $_itemColumn<String>('page_id')!;
+
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.pageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_pageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -9441,10 +9450,11 @@ final class $$PageCollectionsTableReferences extends BaseReferences<
       db.collections.createAlias($_aliasNameGenerator(
           db.pageCollections.collectionId, db.collections.id));
 
-  $$CollectionsTableProcessedTableManager? get collectionId {
-    if ($_item.collectionId == null) return null;
+  $$CollectionsTableProcessedTableManager get collectionId {
+    final $_column = $_itemColumn<String>('collection_id')!;
+
     final manager = $$CollectionsTableTableManager($_db, $_db.collections)
-        .filter((f) => f.id($_item.collectionId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_collectionIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -9730,10 +9740,11 @@ final class $$PageTagsTableReferences
   static $PagesTable _pageIdTable(_$AppDatabase db) => db.pages
       .createAlias($_aliasNameGenerator(db.pageTags.pageId, db.pages.id));
 
-  $$PagesTableProcessedTableManager? get pageId {
-    if ($_item.pageId == null) return null;
+  $$PagesTableProcessedTableManager get pageId {
+    final $_column = $_itemColumn<String>('page_id')!;
+
     final manager = $$PagesTableTableManager($_db, $_db.pages)
-        .filter((f) => f.id($_item.pageId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_pageIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
@@ -9743,10 +9754,11 @@ final class $$PageTagsTableReferences
   static $TagsTable _tagIdTable(_$AppDatabase db) =>
       db.tags.createAlias($_aliasNameGenerator(db.pageTags.tagId, db.tags.id));
 
-  $$TagsTableProcessedTableManager? get tagId {
-    if ($_item.tagId == null) return null;
+  $$TagsTableProcessedTableManager get tagId {
+    final $_column = $_itemColumn<String>('tag_id')!;
+
     final manager = $$TagsTableTableManager($_db, $_db.tags)
-        .filter((f) => f.id($_item.tagId!));
+        .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_tagIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(

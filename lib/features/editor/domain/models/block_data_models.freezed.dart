@@ -30,8 +30,12 @@ mixin _$TextSpanData {
   String? get pageLink => throw _privateConstructorUsedError;
   String? get pageLinkTitle => throw _privateConstructorUsedError;
 
+  /// Serializes this TextSpanData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of TextSpanData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TextSpanDataCopyWith<TextSpanData> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -64,6 +68,8 @@ class _$TextSpanDataCopyWithImpl<$Res, $Val extends TextSpanData>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TextSpanData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -146,6 +152,8 @@ class __$$TextSpanDataImplCopyWithImpl<$Res>
       _$TextSpanDataImpl _value, $Res Function(_$TextSpanDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TextSpanData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -266,12 +274,14 @@ class _$TextSpanDataImpl implements _TextSpanData {
                 other.pageLinkTitle == pageLinkTitle));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, text, bold, italic, underline,
       strikethrough, code, link, pageLink, pageLinkTitle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TextSpanData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TextSpanDataImplCopyWith<_$TextSpanDataImpl> get copyWith =>
@@ -318,8 +328,11 @@ abstract class _TextSpanData implements TextSpanData {
   String? get pageLink;
   @override
   String? get pageLinkTitle;
+
+  /// Create a copy of TextSpanData
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TextSpanDataImplCopyWith<_$TextSpanDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -333,8 +346,12 @@ mixin _$TableCellData {
   String get id => throw _privateConstructorUsedError;
   List<TextSpanData> get spans => throw _privateConstructorUsedError;
 
+  /// Serializes this TableCellData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of TableCellData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TableCellDataCopyWith<TableCellData> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -358,6 +375,8 @@ class _$TableCellDataCopyWithImpl<$Res, $Val extends TableCellData>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TableCellData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -396,6 +415,8 @@ class __$$TableCellDataImplCopyWithImpl<$Res>
       _$TableCellDataImpl _value, $Res Function(_$TableCellDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TableCellData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -450,12 +471,14 @@ class _$TableCellDataImpl implements _TableCellData {
             const DeepCollectionEquality().equals(other._spans, _spans));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, const DeepCollectionEquality().hash(_spans));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TableCellData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TableCellDataImplCopyWith<_$TableCellDataImpl> get copyWith =>
@@ -481,8 +504,11 @@ abstract class _TableCellData implements TableCellData {
   String get id;
   @override
   List<TextSpanData> get spans;
+
+  /// Create a copy of TableCellData
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TableCellDataImplCopyWith<_$TableCellDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -496,8 +522,12 @@ mixin _$TableRowData {
   String get id => throw _privateConstructorUsedError;
   List<TableCellData> get cells => throw _privateConstructorUsedError;
 
+  /// Serializes this TableRowData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of TableRowData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TableRowDataCopyWith<TableRowData> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -521,6 +551,8 @@ class _$TableRowDataCopyWithImpl<$Res, $Val extends TableRowData>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TableRowData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -559,6 +591,8 @@ class __$$TableRowDataImplCopyWithImpl<$Res>
       _$TableRowDataImpl _value, $Res Function(_$TableRowDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TableRowData
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -613,12 +647,14 @@ class _$TableRowDataImpl implements _TableRowData {
             const DeepCollectionEquality().equals(other._cells, _cells));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, id, const DeepCollectionEquality().hash(_cells));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TableRowData
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TableRowDataImplCopyWith<_$TableRowDataImpl> get copyWith =>
@@ -644,8 +680,11 @@ abstract class _TableRowData implements TableRowData {
   String get id;
   @override
   List<TableCellData> get cells;
+
+  /// Create a copy of TableRowData
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TableRowDataImplCopyWith<_$TableRowDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -847,6 +886,8 @@ mixin _$BlockDataModel {
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
+
+  /// Serializes this BlockDataModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 }
 
@@ -866,6 +907,9 @@ class _$BlockDataModelCopyWithImpl<$Res, $Val extends BlockDataModel>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -885,6 +929,8 @@ class __$$TextBlockDataImplCopyWithImpl<$Res>
       _$TextBlockDataImpl _value, $Res Function(_$TextBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -960,12 +1006,14 @@ class _$TextBlockDataImpl extends TextBlockData {
             (identical(other.quote, quote) || other.quote == quote));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType,
       const DeepCollectionEquality().hash(_spans), headingLevel, quote);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TextBlockDataImplCopyWith<_$TextBlockDataImpl> get copyWith =>
@@ -1170,7 +1218,10 @@ abstract class TextBlockData extends BlockDataModel {
   List<TextSpanData> get spans;
   int get headingLevel; // 0 for paragraph, 1, 2, 3 for H1, H2, H3
   bool get quote;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TextBlockDataImplCopyWith<_$TextBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1196,6 +1247,8 @@ class __$$ListBlockDataImplCopyWithImpl<$Res>
       _$ListBlockDataImpl _value, $Res Function(_$ListBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1281,7 +1334,7 @@ class _$ListBlockDataImpl extends ListBlockData {
                 other.listType == listType));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -1290,7 +1343,9 @@ class _$ListBlockDataImpl extends ListBlockData {
       isExpanded,
       listType);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ListBlockDataImplCopyWith<_$ListBlockDataImpl> get copyWith =>
@@ -1497,7 +1552,10 @@ abstract class ListBlockData extends BlockDataModel {
   bool get checked;
   bool get isExpanded;
   String get listType;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ListBlockDataImplCopyWith<_$ListBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1519,6 +1577,8 @@ class __$$UnknownBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$UnknownBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1570,12 +1630,14 @@ class _$UnknownBlockDataImpl extends UnknownBlockData {
             const DeepCollectionEquality().equals(other._rawData, _rawData));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, const DeepCollectionEquality().hash(_rawData));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$UnknownBlockDataImplCopyWith<_$UnknownBlockDataImpl> get copyWith =>
@@ -1777,7 +1839,10 @@ abstract class UnknownBlockData extends BlockDataModel {
       _$UnknownBlockDataImpl.fromJson;
 
   Map<String, dynamic> get rawData;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$UnknownBlockDataImplCopyWith<_$UnknownBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1799,6 +1864,8 @@ class __$$CalloutBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$CalloutBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1872,12 +1939,14 @@ class _$CalloutBlockDataImpl extends CalloutBlockData {
             (identical(other.color, color) || other.color == color));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType, const DeepCollectionEquality().hash(_spans), icon, color);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$CalloutBlockDataImplCopyWith<_$CalloutBlockDataImpl> get copyWith =>
@@ -2083,7 +2152,10 @@ abstract class CalloutBlockData extends BlockDataModel {
   List<TextSpanData> get spans;
   String get icon;
   String get color;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$CalloutBlockDataImplCopyWith<_$CalloutBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2105,6 +2177,8 @@ class __$$ImageBlockDataImplCopyWithImpl<$Res>
       _$ImageBlockDataImpl _value, $Res Function(_$ImageBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2158,11 +2232,13 @@ class _$ImageBlockDataImpl extends ImageBlockData {
             (identical(other.caption, caption) || other.caption == caption));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ImageBlockDataImplCopyWith<_$ImageBlockDataImpl> get copyWith =>
@@ -2366,7 +2442,10 @@ abstract class ImageBlockData extends BlockDataModel {
 
   String get attachmentId;
   String? get caption;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ImageBlockDataImplCopyWith<_$ImageBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2388,6 +2467,8 @@ class __$$VideoBlockDataImplCopyWithImpl<$Res>
       _$VideoBlockDataImpl _value, $Res Function(_$VideoBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2441,11 +2522,13 @@ class _$VideoBlockDataImpl extends VideoBlockData {
             (identical(other.caption, caption) || other.caption == caption));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$VideoBlockDataImplCopyWith<_$VideoBlockDataImpl> get copyWith =>
@@ -2649,7 +2732,10 @@ abstract class VideoBlockData extends BlockDataModel {
 
   String get attachmentId;
   String? get caption;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$VideoBlockDataImplCopyWith<_$VideoBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2671,6 +2757,8 @@ class __$$AudioBlockDataImplCopyWithImpl<$Res>
       _$AudioBlockDataImpl _value, $Res Function(_$AudioBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2724,11 +2812,13 @@ class _$AudioBlockDataImpl extends AudioBlockData {
             (identical(other.caption, caption) || other.caption == caption));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AudioBlockDataImplCopyWith<_$AudioBlockDataImpl> get copyWith =>
@@ -2932,7 +3022,10 @@ abstract class AudioBlockData extends BlockDataModel {
 
   String get attachmentId;
   String? get caption;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AudioBlockDataImplCopyWith<_$AudioBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2954,6 +3047,8 @@ class __$$PdfBlockDataImplCopyWithImpl<$Res>
       _$PdfBlockDataImpl _value, $Res Function(_$PdfBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3007,11 +3102,13 @@ class _$PdfBlockDataImpl extends PdfBlockData {
             (identical(other.caption, caption) || other.caption == caption));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PdfBlockDataImplCopyWith<_$PdfBlockDataImpl> get copyWith =>
@@ -3214,7 +3311,10 @@ abstract class PdfBlockData extends BlockDataModel {
 
   String get attachmentId;
   String? get caption;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PdfBlockDataImplCopyWith<_$PdfBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3236,6 +3336,8 @@ class __$$FileBlockDataImplCopyWithImpl<$Res>
       _$FileBlockDataImpl _value, $Res Function(_$FileBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3289,11 +3391,13 @@ class _$FileBlockDataImpl extends FileBlockData {
             (identical(other.caption, caption) || other.caption == caption));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, attachmentId, caption);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$FileBlockDataImplCopyWith<_$FileBlockDataImpl> get copyWith =>
@@ -3496,7 +3600,10 @@ abstract class FileBlockData extends BlockDataModel {
 
   String get attachmentId;
   String? get caption;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$FileBlockDataImplCopyWith<_$FileBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3518,6 +3625,8 @@ class __$$BookmarkBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$BookmarkBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3592,12 +3701,14 @@ class _$BookmarkBlockDataImpl extends BookmarkBlockData {
                 other.imageUrl == imageUrl));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, url, title, description, imageUrl);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$BookmarkBlockDataImplCopyWith<_$BookmarkBlockDataImpl> get copyWith =>
@@ -3805,7 +3916,10 @@ abstract class BookmarkBlockData extends BlockDataModel {
   String? get title;
   String? get description;
   String? get imageUrl;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$BookmarkBlockDataImplCopyWith<_$BookmarkBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3827,6 +3941,8 @@ class __$$TableBlockDataImplCopyWithImpl<$Res>
       _$TableBlockDataImpl _value, $Res Function(_$TableBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3890,12 +4006,14 @@ class _$TableBlockDataImpl extends TableBlockData {
             const DeepCollectionEquality().equals(other._rows, _rows));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType, columnCount, const DeepCollectionEquality().hash(_rows));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TableBlockDataImplCopyWith<_$TableBlockDataImpl> get copyWith =>
@@ -4099,7 +4217,10 @@ abstract class TableBlockData extends BlockDataModel {
 
   int get columnCount;
   List<TableRowData> get rows;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TableBlockDataImplCopyWith<_$TableBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -4121,6 +4242,8 @@ class __$$PageLinkBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$PageLinkBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -4164,11 +4287,13 @@ class _$PageLinkBlockDataImpl extends PageLinkBlockData {
             (identical(other.pageId, pageId) || other.pageId == pageId));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, pageId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$PageLinkBlockDataImplCopyWith<_$PageLinkBlockDataImpl> get copyWith =>
@@ -4370,7 +4495,10 @@ abstract class PageLinkBlockData extends BlockDataModel {
       _$PageLinkBlockDataImpl.fromJson;
 
   String get pageId;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$PageLinkBlockDataImplCopyWith<_$PageLinkBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -4392,6 +4520,8 @@ class __$$WebLinkBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$WebLinkBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -4435,11 +4565,13 @@ class _$WebLinkBlockDataImpl extends WebLinkBlockData {
             (identical(other.url, url) || other.url == url));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, url);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$WebLinkBlockDataImplCopyWith<_$WebLinkBlockDataImpl> get copyWith =>
@@ -4641,7 +4773,10 @@ abstract class WebLinkBlockData extends BlockDataModel {
       _$WebLinkBlockDataImpl.fromJson;
 
   String get url;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$WebLinkBlockDataImplCopyWith<_$WebLinkBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -4668,6 +4803,8 @@ class __$$ReminderBlockDataImplCopyWithImpl<$Res>
       $Res Function(_$ReminderBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -4755,12 +4892,14 @@ class _$ReminderBlockDataImpl extends ReminderBlockData {
                 other.completed == completed));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType, title, dueAt, timezone, recurrenceRule, completed);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ReminderBlockDataImplCopyWith<_$ReminderBlockDataImpl> get copyWith =>
@@ -4970,7 +5109,10 @@ abstract class ReminderBlockData extends BlockDataModel {
   String get timezone;
   String? get recurrenceRule;
   bool get completed;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ReminderBlockDataImplCopyWith<_$ReminderBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -4989,6 +5131,9 @@ class __$$DividerBlockDataImplCopyWithImpl<$Res>
   __$$DividerBlockDataImplCopyWithImpl(_$DividerBlockDataImpl _value,
       $Res Function(_$DividerBlockDataImpl) _then)
       : super(_value, _then);
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -5015,7 +5160,7 @@ class _$DividerBlockDataImpl extends DividerBlockData {
         (other.runtimeType == runtimeType && other is _$DividerBlockDataImpl);
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => runtimeType.hashCode;
 
@@ -5231,6 +5376,8 @@ class __$$CodeBlockDataImplCopyWithImpl<$Res>
       _$CodeBlockDataImpl _value, $Res Function(_$CodeBlockDataImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -5310,12 +5457,14 @@ class _$CodeBlockDataImpl extends CodeBlockData {
                 other.wrapLines == wrapLines));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
       Object.hash(runtimeType, code, language, showLineNumbers, wrapLines);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
@@ -5522,7 +5671,10 @@ abstract class CodeBlockData extends BlockDataModel {
   String get language;
   bool get showLineNumbers;
   bool get wrapLines;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of BlockDataModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$CodeBlockDataImplCopyWith<_$CodeBlockDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

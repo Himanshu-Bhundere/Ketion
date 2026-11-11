@@ -25,11 +25,15 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.9"
           channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Patch super_editor
+        run: dart run tool/patch_super_editor.dart
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -58,11 +62,15 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.9"
           channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Patch super_editor
+        run: dart run tool/patch_super_editor.dart
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -89,11 +97,15 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.9"
           channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Patch super_editor
+        run: dart run tool/patch_super_editor.dart
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -119,11 +131,15 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.9"
           channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Patch super_editor
+        run: dart run tool/patch_super_editor.dart
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -149,11 +165,15 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: "3.41.9"
           channel: stable
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Patch super_editor
+        run: dart run tool/patch_super_editor.dart
 
       - name: Run Build Runner
         run: dart run build_runner build --delete-conflicting-outputs
@@ -161,8 +181,20 @@ jobs:
       - name: Build iOS App
         run: flutter build ios --release --no-codesign
 
+      - name: Package and Ad-Hoc Sign IPA
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          codesign --force --deep --sign - Payload/Runner.app
+          codesign -dv Payload/Runner.app
+          zip -qr Ketion.ipa Payload
+          rm -rf Payload
+
       - name: Upload iOS Runner Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ketion-ios-build
-          path: build/ios/iphoneos
+          path: |
+            build/ios/iphoneos/Ketion.ipa
+            build/ios/iphoneos/Runner.app

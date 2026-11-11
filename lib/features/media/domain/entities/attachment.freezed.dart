@@ -38,8 +38,12 @@ mixin _$Attachment {
   bool get deleted => throw _privateConstructorUsedError;
   bool get isPinnedOffline => throw _privateConstructorUsedError;
 
+  /// Serializes this Attachment to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AttachmentCopyWith<Attachment> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -80,6 +84,8 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -210,6 +216,8 @@ class __$$AttachmentImplCopyWithImpl<$Res>
       _$AttachmentImpl _value, $Res Function(_$AttachmentImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -408,7 +416,7 @@ class _$AttachmentImpl implements _Attachment {
                 other.isPinnedOffline == isPinnedOffline));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -430,7 +438,9 @@ class _$AttachmentImpl implements _Attachment {
       deleted,
       isPinnedOffline);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AttachmentImplCopyWith<_$AttachmentImpl> get copyWith =>
@@ -501,8 +511,11 @@ abstract class _Attachment implements Attachment {
   bool get deleted;
   @override
   bool get isPinnedOffline;
+
+  /// Create a copy of Attachment
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AttachmentImplCopyWith<_$AttachmentImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -31,8 +31,12 @@ mixin _$Block {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
+  /// Serializes this Block to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of Block
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $BlockCopyWith<Block> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -64,6 +68,8 @@ class _$BlockCopyWithImpl<$Res, $Val extends Block>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Block
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -151,6 +157,8 @@ class __$$BlockImplCopyWithImpl<$Res>
       _$BlockImpl _value, $Res Function(_$BlockImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of Block
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -277,12 +285,14 @@ class _$BlockImpl implements _Block {
                 other.updatedAt == updatedAt));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, pageId, parentBlockId, type,
       position, data, version, deleted, createdAt, updatedAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Block
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$BlockImplCopyWith<_$BlockImpl> get copyWith =>
@@ -331,8 +341,11 @@ abstract class _Block implements Block {
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+
+  /// Create a copy of Block
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$BlockImplCopyWith<_$BlockImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

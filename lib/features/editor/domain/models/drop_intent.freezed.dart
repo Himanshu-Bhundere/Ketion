@@ -68,7 +68,9 @@ mixin _$DropIntent {
   }) =>
       throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DropIntentCopyWith<DropIntent> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -92,6 +94,8 @@ class _$DropIntentCopyWithImpl<$Res, $Val extends DropIntent>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -125,6 +129,8 @@ class __$$DropIntentBeforeImplCopyWithImpl<$Res>
       $Res Function(_$DropIntentBeforeImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -164,7 +170,9 @@ class _$DropIntentBeforeImpl implements DropIntentBefore {
   @override
   int get hashCode => Object.hash(runtimeType, targetBlockId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DropIntentBeforeImplCopyWith<_$DropIntentBeforeImpl> get copyWith =>
@@ -252,8 +260,11 @@ abstract class DropIntentBefore implements DropIntent {
 
   @override
   String get targetBlockId;
+
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DropIntentBeforeImplCopyWith<_$DropIntentBeforeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -277,6 +288,8 @@ class __$$DropIntentAfterImplCopyWithImpl<$Res>
       _$DropIntentAfterImpl _value, $Res Function(_$DropIntentAfterImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -316,7 +329,9 @@ class _$DropIntentAfterImpl implements DropIntentAfter {
   @override
   int get hashCode => Object.hash(runtimeType, targetBlockId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DropIntentAfterImplCopyWith<_$DropIntentAfterImpl> get copyWith =>
@@ -404,8 +419,11 @@ abstract class DropIntentAfter implements DropIntent {
 
   @override
   String get targetBlockId;
+
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DropIntentAfterImplCopyWith<_$DropIntentAfterImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -429,6 +447,8 @@ class __$$DropIntentChildImplCopyWithImpl<$Res>
       _$DropIntentChildImpl _value, $Res Function(_$DropIntentChildImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -468,7 +488,9 @@ class _$DropIntentChildImpl implements DropIntentChild {
   @override
   int get hashCode => Object.hash(runtimeType, targetBlockId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DropIntentChildImplCopyWith<_$DropIntentChildImpl> get copyWith =>
@@ -556,8 +578,11 @@ abstract class DropIntentChild implements DropIntent {
 
   @override
   String get targetBlockId;
+
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DropIntentChildImplCopyWith<_$DropIntentChildImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -581,6 +606,8 @@ class __$$DropIntentUnnestImplCopyWithImpl<$Res>
       $Res Function(_$DropIntentUnnestImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -620,7 +647,9 @@ class _$DropIntentUnnestImpl implements DropIntentUnnest {
   @override
   int get hashCode => Object.hash(runtimeType, targetBlockId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DropIntentUnnestImplCopyWith<_$DropIntentUnnestImpl> get copyWith =>
@@ -708,8 +737,11 @@ abstract class DropIntentUnnest implements DropIntent {
 
   @override
   String get targetBlockId;
+
+  /// Create a copy of DropIntent
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DropIntentUnnestImplCopyWith<_$DropIntentUnnestImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

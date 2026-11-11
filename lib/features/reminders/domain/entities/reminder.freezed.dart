@@ -38,8 +38,12 @@ mixin _$ReminderEntity {
   DateTime get updatedAt => throw _privateConstructorUsedError;
   bool get deleted => throw _privateConstructorUsedError;
 
+  /// Serializes this ReminderEntity to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of ReminderEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $ReminderEntityCopyWith<ReminderEntity> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -80,6 +84,8 @@ class _$ReminderEntityCopyWithImpl<$Res, $Val extends ReminderEntity>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of ReminderEntity
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -195,6 +201,8 @@ class __$$ReminderEntityImplCopyWithImpl<$Res>
       _$ReminderEntityImpl _value, $Res Function(_$ReminderEntityImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of ReminderEntity
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -369,7 +377,7 @@ class _$ReminderEntityImpl implements _ReminderEntity {
             (identical(other.deleted, deleted) || other.deleted == deleted));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -388,7 +396,9 @@ class _$ReminderEntityImpl implements _ReminderEntity {
       updatedAt,
       deleted);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of ReminderEntity
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ReminderEntityImplCopyWith<_$ReminderEntityImpl> get copyWith =>
@@ -457,8 +467,11 @@ abstract class _ReminderEntity implements ReminderEntity {
   DateTime get updatedAt;
   @override
   bool get deleted;
+
+  /// Create a copy of ReminderEntity
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ReminderEntityImplCopyWith<_$ReminderEntityImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

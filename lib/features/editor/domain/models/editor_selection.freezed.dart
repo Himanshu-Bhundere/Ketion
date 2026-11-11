@@ -20,7 +20,9 @@ mixin _$TextSelection {
   int get start => throw _privateConstructorUsedError;
   int get end => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TextSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $TextSelectionCopyWith<TextSelection> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -44,6 +46,8 @@ class _$TextSelectionCopyWithImpl<$Res, $Val extends TextSelection>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of TextSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -87,6 +91,8 @@ class __$$TextSelectionImplCopyWithImpl<$Res>
       _$TextSelectionImpl _value, $Res Function(_$TextSelectionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of TextSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -142,7 +148,9 @@ class _$TextSelectionImpl implements _TextSelection {
   @override
   int get hashCode => Object.hash(runtimeType, blockId, start, end);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of TextSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$TextSelectionImplCopyWith<_$TextSelectionImpl> get copyWith =>
@@ -161,8 +169,11 @@ abstract class _TextSelection implements TextSelection {
   int get start;
   @override
   int get end;
+
+  /// Create a copy of TextSelection
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$TextSelectionImplCopyWith<_$TextSelectionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -174,7 +185,9 @@ mixin _$DocumentSelection {
   String get endBlockId => throw _privateConstructorUsedError;
   int get endOffset => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DocumentSelectionCopyWith<DocumentSelection> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -199,6 +212,8 @@ class _$DocumentSelectionCopyWithImpl<$Res, $Val extends DocumentSelection>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DocumentSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -248,6 +263,8 @@ class __$$DocumentSelectionImplCopyWithImpl<$Res>
       $Res Function(_$DocumentSelectionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -319,7 +336,9 @@ class _$DocumentSelectionImpl implements _DocumentSelection {
   int get hashCode => Object.hash(
       runtimeType, startBlockId, startOffset, endBlockId, endOffset);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocumentSelectionImplCopyWith<_$DocumentSelectionImpl> get copyWith =>
@@ -342,8 +361,11 @@ abstract class _DocumentSelection implements DocumentSelection {
   String get endBlockId;
   @override
   int get endOffset;
+
+  /// Create a copy of DocumentSelection
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocumentSelectionImplCopyWith<_$DocumentSelectionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -412,6 +434,9 @@ class _$EditorSelectionCopyWithImpl<$Res, $Val extends EditorSelection>
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
+
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
 }
 
 /// @nodoc
@@ -433,6 +458,8 @@ class __$$EditorTextSelectionImplCopyWithImpl<$Res>
       $Res Function(_$EditorTextSelectionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -446,6 +473,8 @@ class __$$EditorTextSelectionImplCopyWithImpl<$Res>
     ));
   }
 
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $TextSelectionCopyWith<$Res> get selection {
@@ -480,7 +509,9 @@ class _$EditorTextSelectionImpl implements EditorTextSelection {
   @override
   int get hashCode => Object.hash(runtimeType, selection);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$EditorTextSelectionImplCopyWith<_$EditorTextSelectionImpl> get copyWith =>
@@ -561,7 +592,10 @@ abstract class EditorTextSelection implements EditorSelection {
       _$EditorTextSelectionImpl;
 
   TextSelection get selection;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$EditorTextSelectionImplCopyWith<_$EditorTextSelectionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -587,6 +621,8 @@ class __$$EditorDocumentSelectionImplCopyWithImpl<$Res>
       $Res Function(_$EditorDocumentSelectionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -600,6 +636,8 @@ class __$$EditorDocumentSelectionImplCopyWithImpl<$Res>
     ));
   }
 
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $DocumentSelectionCopyWith<$Res> get selection {
@@ -634,7 +672,9 @@ class _$EditorDocumentSelectionImpl implements EditorDocumentSelection {
   @override
   int get hashCode => Object.hash(runtimeType, selection);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$EditorDocumentSelectionImplCopyWith<_$EditorDocumentSelectionImpl>
@@ -715,7 +755,10 @@ abstract class EditorDocumentSelection implements EditorSelection {
       _$EditorDocumentSelectionImpl;
 
   DocumentSelection get selection;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$EditorDocumentSelectionImplCopyWith<_$EditorDocumentSelectionImpl>
       get copyWith => throw _privateConstructorUsedError;
 }
@@ -737,6 +780,8 @@ class __$$EditorBlockSelectionImplCopyWithImpl<$Res>
       $Res Function(_$EditorBlockSelectionImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -782,7 +827,9 @@ class _$EditorBlockSelectionImpl implements EditorBlockSelection {
   int get hashCode =>
       Object.hash(runtimeType, const DeepCollectionEquality().hash(_blockIds));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$EditorBlockSelectionImplCopyWith<_$EditorBlockSelectionImpl>
@@ -864,7 +911,10 @@ abstract class EditorBlockSelection implements EditorSelection {
       _$EditorBlockSelectionImpl;
 
   List<String> get blockIds;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of EditorSelection
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$EditorBlockSelectionImplCopyWith<_$EditorBlockSelectionImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

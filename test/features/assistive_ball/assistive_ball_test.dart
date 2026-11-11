@@ -74,6 +74,9 @@ class MockAssistiveBallPlatformService implements AssistiveBallPlatformService {
 
   @override
   void Function(double x, double y)? onPositionChanged;
+
+  @override
+  void Function()? onBallClicked;
 }
 
 class FakeSettingsRepository implements SettingsRepository {
@@ -259,6 +262,35 @@ void main() {
       expect(state.isFloatingNoteOpen, isTrue);
       expect(state.isNoteSelectorOpen, isFalse);
       expect(state.activePageId, 'test-page-123');
+    });
+
+    test('onBallClicked triggers openFloatingNote flow', () {
+      final stateBefore = container.read(assistiveBallProvider);
+      expect(stateBefore.isFloatingNoteOpen, isFalse);
+
+      mockPlatform.onBallClicked?.call();
+
+      final stateAfter = container.read(assistiveBallProvider);
+      expect(stateAfter.isFloatingNoteOpen, isTrue);
+    });
+
+    test('setEnabled true checks permission and shows system overlay',
+        () async {
+      final notifier = container.read(assistiveBallProvider.notifier);
+      await notifier.setEnabled(true);
+
+      final state = container.read(assistiveBallProvider);
+      expect(state.isEnabled, isTrue);
+      expect(mockPlatform.shown, isTrue);
+    });
+
+    test('setEnabled false hides system overlay and updates state', () async {
+      final notifier = container.read(assistiveBallProvider.notifier);
+      await notifier.setEnabled(false);
+
+      final state = container.read(assistiveBallProvider);
+      expect(state.isEnabled, isFalse);
+      expect(mockPlatform.shown, isFalse);
     });
 
     test('Sequential createPage and createBlock unit test', () async {

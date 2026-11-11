@@ -25,8 +25,12 @@ mixin _$InlineSpanModel {
   String get type => throw _privateConstructorUsedError;
   String? get value => throw _privateConstructorUsedError;
 
+  /// Serializes this InlineSpanModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of InlineSpanModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $InlineSpanModelCopyWith<InlineSpanModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -50,6 +54,8 @@ class _$InlineSpanModelCopyWithImpl<$Res, $Val extends InlineSpanModel>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of InlineSpanModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -98,6 +104,8 @@ class __$$InlineSpanModelImplCopyWithImpl<$Res>
       _$InlineSpanModelImpl _value, $Res Function(_$InlineSpanModelImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of InlineSpanModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -164,11 +172,13 @@ class _$InlineSpanModelImpl implements _InlineSpanModel {
             (identical(other.value, value) || other.value == value));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, offset, length, type, value);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of InlineSpanModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$InlineSpanModelImplCopyWith<_$InlineSpanModelImpl> get copyWith =>
@@ -201,8 +211,11 @@ abstract class _InlineSpanModel implements InlineSpanModel {
   String get type;
   @override
   String? get value;
+
+  /// Create a copy of InlineSpanModel
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$InlineSpanModelImplCopyWith<_$InlineSpanModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

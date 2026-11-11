@@ -34,8 +34,12 @@ mixin _$AppSettingsModel {
   double get assistiveBallNormalizedY => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
+  /// Serializes this AppSettingsModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of AppSettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AppSettingsModelCopyWith<AppSettingsModel> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -72,6 +76,8 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AppSettingsModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -178,6 +184,8 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
       $Res Function(_$AppSettingsModelImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AppSettingsModel
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -352,7 +360,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
                 other.lastCleanup == lastCleanup));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -370,7 +378,9 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       assistiveBallNormalizedY,
       lastCleanup);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AppSettingsModel
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AppSettingsModelImplCopyWith<_$AppSettingsModelImpl> get copyWith =>
@@ -430,8 +440,11 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   double get assistiveBallNormalizedY;
   @override
   DateTime? get lastCleanup;
+
+  /// Create a copy of AppSettingsModel
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AppSettingsModelImplCopyWith<_$AppSettingsModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

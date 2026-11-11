@@ -36,8 +36,12 @@ mixin _$SyncQueueItem {
   DateTime? get leaseUntil => throw _privateConstructorUsedError;
   String? get lastError => throw _privateConstructorUsedError;
 
+  /// Serializes this SyncQueueItem to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of SyncQueueItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $SyncQueueItemCopyWith<SyncQueueItem> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -76,6 +80,8 @@ class _$SyncQueueItemCopyWithImpl<$Res, $Val extends SyncQueueItem>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of SyncQueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -194,6 +200,8 @@ class __$$SyncQueueItemImplCopyWithImpl<$Res>
       _$SyncQueueItemImpl _value, $Res Function(_$SyncQueueItemImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of SyncQueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -371,7 +379,7 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
                 other.lastError == lastError));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -391,7 +399,9 @@ class _$SyncQueueItemImpl implements _SyncQueueItem {
       leaseUntil,
       lastError);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of SyncQueueItem
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$SyncQueueItemImplCopyWith<_$SyncQueueItemImpl> get copyWith =>
@@ -456,8 +466,11 @@ abstract class _SyncQueueItem implements SyncQueueItem {
   DateTime? get leaseUntil;
   @override
   String? get lastError;
+
+  /// Create a copy of SyncQueueItem
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$SyncQueueItemImplCopyWith<_$SyncQueueItemImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

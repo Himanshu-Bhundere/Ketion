@@ -21,7 +21,9 @@ mixin _$ExportDocument {
   DateTime? get createdAt => throw _privateConstructorUsedError;
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of ExportDocument
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $ExportDocumentCopyWith<ExportDocument> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -49,6 +51,8 @@ class _$ExportDocumentCopyWithImpl<$Res, $Val extends ExportDocument>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of ExportDocument
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -101,6 +105,8 @@ class __$$ExportDocumentImplCopyWithImpl<$Res>
       _$ExportDocumentImpl _value, $Res Function(_$ExportDocumentImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of ExportDocument
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -177,7 +183,9 @@ class _$ExportDocumentImpl implements _ExportDocument {
   int get hashCode => Object.hash(runtimeType, title,
       const DeepCollectionEquality().hash(_nodes), createdAt, updatedAt);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of ExportDocument
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ExportDocumentImplCopyWith<_$ExportDocumentImpl> get copyWith =>
@@ -200,8 +208,11 @@ abstract class _ExportDocument implements ExportDocument {
   DateTime? get createdAt;
   @override
   DateTime? get updatedAt;
+
+  /// Create a copy of ExportDocument
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ExportDocumentImplCopyWith<_$ExportDocumentImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -412,7 +423,9 @@ mixin _$DocumentNode {
   }) =>
       throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DocumentNodeCopyWith<DocumentNode> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -436,6 +449,8 @@ class _$DocumentNodeCopyWithImpl<$Res, $Val extends DocumentNode>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -483,6 +498,8 @@ class __$$DocParagraphImplCopyWithImpl<$Res>
       _$DocParagraphImpl _value, $Res Function(_$DocParagraphImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -565,7 +582,9 @@ class _$DocParagraphImpl implements DocParagraph {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocParagraphImplCopyWith<_$DocParagraphImpl> get copyWith =>
@@ -810,8 +829,11 @@ abstract class DocParagraph implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocParagraphImplCopyWith<_$DocParagraphImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -840,6 +862,8 @@ class __$$DocHeadingImplCopyWithImpl<$Res>
       _$DocHeadingImpl _value, $Res Function(_$DocHeadingImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -932,7 +956,9 @@ class _$DocHeadingImpl implements DocHeading {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocHeadingImplCopyWith<_$DocHeadingImpl> get copyWith =>
@@ -1179,8 +1205,11 @@ abstract class DocHeading implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocHeadingImplCopyWith<_$DocHeadingImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1210,6 +1239,8 @@ class __$$DocListImplCopyWithImpl<$Res>
       _$DocListImpl _value, $Res Function(_$DocListImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1314,7 +1345,9 @@ class _$DocListImpl implements DocList {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocListImplCopyWith<_$DocListImpl> get copyWith =>
@@ -1566,8 +1599,11 @@ abstract class DocList implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocListImplCopyWith<_$DocListImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1599,6 +1635,8 @@ class __$$DocImageImplCopyWithImpl<$Res>
       _$DocImageImpl _value, $Res Function(_$DocImageImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1719,7 +1757,9 @@ class _$DocImageImpl implements DocImage {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocImageImplCopyWith<_$DocImageImpl> get copyWith =>
@@ -1975,8 +2015,11 @@ abstract class DocImage implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocImageImplCopyWith<_$DocImageImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2010,6 +2053,8 @@ class __$$DocFileImplCopyWithImpl<$Res>
       _$DocFileImpl _value, $Res Function(_$DocFileImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2153,7 +2198,9 @@ class _$DocFileImpl implements DocFile {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
@@ -2413,8 +2460,11 @@ abstract class DocFile implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocFileImplCopyWith<_$DocFileImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2444,6 +2494,8 @@ class __$$DocCalloutImplCopyWithImpl<$Res>
       _$DocCalloutImpl _value, $Res Function(_$DocCalloutImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2546,7 +2598,9 @@ class _$DocCalloutImpl implements DocCallout {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
@@ -2796,8 +2850,11 @@ abstract class DocCallout implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocCalloutImplCopyWith<_$DocCalloutImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -2826,6 +2883,8 @@ class __$$DocTableImplCopyWithImpl<$Res>
       _$DocTableImpl _value, $Res Function(_$DocTableImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -2919,7 +2978,9 @@ class _$DocTableImpl implements DocTable {
       parentKey,
       isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
@@ -3167,8 +3228,11 @@ abstract class DocTable implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocTableImplCopyWith<_$DocTableImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3192,6 +3256,8 @@ class __$$DocDividerImplCopyWithImpl<$Res>
       _$DocDividerImpl _value, $Res Function(_$DocDividerImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3252,7 +3318,9 @@ class _$DocDividerImpl implements DocDivider {
   int get hashCode =>
       Object.hash(runtimeType, depth, parentKey, isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocDividerImplCopyWith<_$DocDividerImpl> get copyWith =>
@@ -3495,8 +3563,11 @@ abstract class DocDivider implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocDividerImplCopyWith<_$DocDividerImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3525,6 +3596,8 @@ class __$$DocCodeImplCopyWithImpl<$Res>
       _$DocCodeImpl _value, $Res Function(_$DocCodeImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3606,7 +3679,9 @@ class _$DocCodeImpl implements DocCode {
   int get hashCode => Object.hash(
       runtimeType, code, language, depth, parentKey, isNestedUnderToggle);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>
@@ -3854,8 +3929,11 @@ abstract class DocCode implements DocumentNode {
   String? get parentKey;
   @override
   bool get isNestedUnderToggle;
+
+  /// Create a copy of DocumentNode
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocCodeImplCopyWith<_$DocCodeImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3871,7 +3949,9 @@ mixin _$DocumentTextSpan {
   String? get link => throw _privateConstructorUsedError;
   String? get pageLink => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentTextSpan
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $DocumentTextSpanCopyWith<DocumentTextSpan> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -3903,6 +3983,8 @@ class _$DocumentTextSpanCopyWithImpl<$Res, $Val extends DocumentTextSpan>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of DocumentTextSpan
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -3979,6 +4061,8 @@ class __$$DocumentTextSpanImplCopyWithImpl<$Res>
       $Res Function(_$DocumentTextSpanImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of DocumentTextSpan
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -4090,7 +4174,9 @@ class _$DocumentTextSpanImpl implements _DocumentTextSpan {
   int get hashCode => Object.hash(runtimeType, text, bold, italic, underline,
       strikethrough, code, link, pageLink);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of DocumentTextSpan
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$DocumentTextSpanImplCopyWith<_$DocumentTextSpanImpl> get copyWith =>
@@ -4125,8 +4211,11 @@ abstract class _DocumentTextSpan implements DocumentTextSpan {
   String? get link;
   @override
   String? get pageLink;
+
+  /// Create a copy of DocumentTextSpan
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$DocumentTextSpanImplCopyWith<_$DocumentTextSpanImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

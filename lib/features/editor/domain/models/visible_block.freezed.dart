@@ -21,7 +21,9 @@ mixin _$VisibleBlock {
   bool get hasChildren => throw _privateConstructorUsedError;
   bool get isExpanded => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $VisibleBlockCopyWith<VisibleBlock> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -47,6 +49,8 @@ class _$VisibleBlockCopyWithImpl<$Res, $Val extends VisibleBlock>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -75,6 +79,8 @@ class _$VisibleBlockCopyWithImpl<$Res, $Val extends VisibleBlock>
     ) as $Val);
   }
 
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $BlockCopyWith<$Res> get block {
@@ -106,6 +112,8 @@ class __$$VisibleBlockImplCopyWithImpl<$Res>
       _$VisibleBlockImpl _value, $Res Function(_$VisibleBlockImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -177,7 +185,9 @@ class _$VisibleBlockImpl implements _VisibleBlock {
   int get hashCode =>
       Object.hash(runtimeType, block, depth, hasChildren, isExpanded);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$VisibleBlockImplCopyWith<_$VisibleBlockImpl> get copyWith =>
@@ -199,8 +209,11 @@ abstract class _VisibleBlock implements VisibleBlock {
   bool get hasChildren;
   @override
   bool get isExpanded;
+
+  /// Create a copy of VisibleBlock
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$VisibleBlockImplCopyWith<_$VisibleBlockImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -212,7 +225,9 @@ mixin _$ProjectedBlock {
   bool get hasChildren => throw _privateConstructorUsedError;
   String? get hiddenByAncestorId => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $ProjectedBlockCopyWith<ProjectedBlock> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -239,6 +254,8 @@ class _$ProjectedBlockCopyWithImpl<$Res, $Val extends ProjectedBlock>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -267,6 +284,8 @@ class _$ProjectedBlockCopyWithImpl<$Res, $Val extends ProjectedBlock>
     ) as $Val);
   }
 
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $BlockCopyWith<$Res> get block {
@@ -299,6 +318,8 @@ class __$$ProjectedBlockImplCopyWithImpl<$Res>
       _$ProjectedBlockImpl _value, $Res Function(_$ProjectedBlockImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -369,7 +390,9 @@ class _$ProjectedBlockImpl implements _ProjectedBlock {
   int get hashCode =>
       Object.hash(runtimeType, block, depth, hasChildren, hiddenByAncestorId);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$ProjectedBlockImplCopyWith<_$ProjectedBlockImpl> get copyWith =>
@@ -392,8 +415,11 @@ abstract class _ProjectedBlock implements ProjectedBlock {
   bool get hasChildren;
   @override
   String? get hiddenByAncestorId;
+
+  /// Create a copy of ProjectedBlock
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ProjectedBlockImplCopyWith<_$ProjectedBlockImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

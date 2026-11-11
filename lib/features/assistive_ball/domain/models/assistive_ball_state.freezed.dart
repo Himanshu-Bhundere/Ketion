@@ -34,8 +34,12 @@ mixin _$AssistiveBallState {
   double get floatingNoteNormalizedY => throw _privateConstructorUsedError;
   bool get isNoteMinimized => throw _privateConstructorUsedError;
 
+  /// Serializes this AssistiveBallState to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
+
+  /// Create a copy of AssistiveBallState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $AssistiveBallStateCopyWith<AssistiveBallState> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -72,6 +76,8 @@ class _$AssistiveBallStateCopyWithImpl<$Res, $Val extends AssistiveBallState>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of AssistiveBallState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -178,6 +184,8 @@ class __$$AssistiveBallStateImplCopyWithImpl<$Res>
       $Res Function(_$AssistiveBallStateImpl) _then)
       : super(_value, _then);
 
+  /// Create a copy of AssistiveBallState
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -352,7 +360,7 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
                 other.isNoteMinimized == isNoteMinimized));
   }
 
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
@@ -370,7 +378,9 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
       floatingNoteNormalizedY,
       isNoteMinimized);
 
-  @JsonKey(ignore: true)
+  /// Create a copy of AssistiveBallState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$AssistiveBallStateImplCopyWith<_$AssistiveBallStateImpl> get copyWith =>
@@ -430,8 +440,11 @@ abstract class _AssistiveBallState implements AssistiveBallState {
   double get floatingNoteNormalizedY;
   @override
   bool get isNoteMinimized;
+
+  /// Create a copy of AssistiveBallState
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AssistiveBallStateImplCopyWith<_$AssistiveBallStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

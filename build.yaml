@@ -1,6 +1,9 @@
 targets:
   $default:
     builders:
+      freezed:
+        generate_for:
+          - lib/**
       drift_dev:
         generate_for:
           - lib/core/database/**
@@ -8,5 +11,4 @@ targets:
         options:
           explicit_to_json: true
         generate_for:
-          exclude:
-            - test/**
+          - lib/**

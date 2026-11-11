@@ -24,9 +24,13 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
       snapToNearestCorner(x, y);
     };
 
+    _platformService.onBallClicked = () {
+      openFloatingNote();
+    };
+
     _ref.listen(
       appSettingsProvider,
-      (previous, next) {
+      (previous, next) async {
         final settings = next.valueOrNull;
         if (settings != null) {
           final enabledChanged =
@@ -36,19 +40,32 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
                   settings.assistiveBallNormalizedY != state.normalizedY);
 
           if (enabledChanged || posChanged) {
+            bool enabled = settings.assistiveBallEnabled;
+
+            if (enabled && _platformService.isSystemOverlaySupported) {
+              final hasPermission =
+                  await _platformService.checkOverlayPermission();
+              if (!hasPermission) {
+                enabled = false;
+                await _ref
+                    .read(appSettingsProvider.notifier)
+                    .toggleAssistiveBall(false);
+              }
+            }
+
             state = state.copyWith(
-              isEnabled: settings.assistiveBallEnabled,
-              isVisible: settings.assistiveBallEnabled,
+              isEnabled: enabled,
+              isVisible: enabled,
               normalizedX: settings.assistiveBallNormalizedX,
               normalizedY: settings.assistiveBallNormalizedY,
             );
             if (state.isEnabled) {
-              _platformService.showSystemOverlay(
+              await _platformService.showSystemOverlay(
                 x: state.normalizedX,
                 y: state.normalizedY,
               );
             } else {
-              _platformService.hideSystemOverlay();
+              await _platformService.hideSystemOverlay();
             }
           }
         }
@@ -58,8 +75,20 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   }
 
   Future<void> setEnabled(bool enabled) async {
-    final settingsNotifier = _ref.read(appSettingsProvider.notifier);
+    if (enabled && _platformService.isSystemOverlaySupported) {
+      final hasPermission = await _platformService.checkOverlayPermission();
+      if (!hasPermission) {
+        final requested = await _platformService.requestOverlayPermission();
+        if (!requested) return;
+      }
 
+      // Android's settings screen is asynchronous. Recheck after returning
+      // to Ketion before persisting the enabled state.
+      final permissionGranted = await _platformService.checkOverlayPermission();
+      if (!permissionGranted) return;
+    }
+
+    final settingsNotifier = _ref.read(appSettingsProvider.notifier);
     await settingsNotifier.toggleAssistiveBall(enabled);
 
     state = state.copyWith(

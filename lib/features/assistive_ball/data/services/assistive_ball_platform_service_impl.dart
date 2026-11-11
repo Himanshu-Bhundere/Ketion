@@ -9,6 +9,9 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
   @override
   void Function(double x, double y)? onPositionChanged;
 
+  @override
+  void Function()? onBallClicked;
+
   AssistiveBallPlatformServiceImpl() {
     _channel.setMethodCallHandler(_handleMethodCall);
   }
@@ -20,6 +23,9 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
       if (x != null && y != null) {
         onPositionChanged?.call(x, y);
       }
+    } else if (call.method == 'onBallClicked' ||
+        call.method == 'openQuickNote') {
+      onBallClicked?.call();
     }
   }
 
@@ -27,7 +33,8 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
   bool get isSystemOverlaySupported {
     if (kIsWeb) return false;
 
-    return defaultTargetPlatform == TargetPlatform.android;
+    return defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.windows;
   }
 
   @override

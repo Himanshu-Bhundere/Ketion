@@ -6,4 +6,5 @@ abstract class AssistiveBallPlatformService {
   Future<void> hideSystemOverlay();
   Future<void> updateSystemOverlayPosition(double x, double y);
   void Function(double x, double y)? onPositionChanged;
+  void Function()? onBallClicked;
 }

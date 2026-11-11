@@ -24,6 +24,8 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   bool _isDragging = false;
+  // ignore: unused_field
+  bool _isPointerInsideMenu = false;
 
   static const double _ballSize = 52.0;
 
@@ -254,7 +256,19 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
           ),
 
         // 4. Popout Menu
-        if (ballState.isMenuOpen)
+        if (ballState.isMenuOpen) ...[
+          // Outside-tap detector.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () {
+                ref.read(assistiveBallProvider.notifier).closeMenu();
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+
+          // Popup must be above the outside-tap detector.
           Positioned(
             left: isLeft ? pixelLeft + _ballSize + 12 : null,
             right: !isLeft ? parentWidth - pixelLeft + 12 : null,
@@ -264,6 +278,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             ),
             child: _buildPopoutMenu(accentColor),
           ),
+        ],
       ],
     );
   }
@@ -272,50 +287,67 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Material(
-      elevation: 6,
-      borderRadius: BorderRadius.circular(14),
-      color: isDark ? const Color(0xFF2A2D32) : Colors.white,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : Colors.black.withValues(alpha: 0.08),
+    return MouseRegion(
+      opaque: true,
+      cursor: SystemMouseCursors.basic,
+      onEnter: (_) {
+        if (mounted) {
+          setState(() => _isPointerInsideMenu = true);
+        }
+      },
+      onExit: (_) {
+        if (mounted) {
+          setState(() => _isPointerInsideMenu = false);
+        }
+      },
+      child: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(14),
+        color: isDark ? const Color(0xFF2A2D32) : Colors.white,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 6,
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildMenuItem(
-              icon: Icons.edit_note,
-              label: 'Quick Note',
-              theme: theme,
-              onTap: () {
-                ref.read(assistiveBallProvider.notifier).openFloatingNote();
-              },
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.08),
             ),
-            _buildMenuItem(
-              icon: Icons.note_alt_outlined,
-              label: 'Note Selector',
-              theme: theme,
-              onTap: () {
-                ref.read(assistiveBallProvider.notifier).openNoteSelector();
-              },
-            ),
-            const Divider(height: 12),
-            _buildMenuItem(
-              icon: Icons.visibility_off_outlined,
-              label: 'Hide Ball',
-              theme: theme,
-              onTap: () {
-                ref.read(assistiveBallProvider.notifier).setEnabled(false);
-              },
-            ),
-          ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMenuItem(
+                icon: Icons.edit_note,
+                label: 'Quick Note',
+                theme: theme,
+                onTap: () {
+                  ref.read(assistiveBallProvider.notifier).openFloatingNote();
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.note_alt_outlined,
+                label: 'Note Selector',
+                theme: theme,
+                onTap: () {
+                  ref.read(assistiveBallProvider.notifier).openNoteSelector();
+                },
+              ),
+              const Divider(height: 12),
+              _buildMenuItem(
+                icon: Icons.visibility_off_outlined,
+                label: 'Hide Ball',
+                theme: theme,
+                onTap: () {
+                  ref.read(assistiveBallProvider.notifier).setEnabled(false);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -329,31 +361,54 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
   }) {
     return SizedBox(
       width: 190,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        mouseCursor: SystemMouseCursors.click,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        splashColor: theme.colorScheme.primary.withValues(alpha: 0.12),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Icon(icon, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          mouseCursor: SystemMouseCursors.click,
+
+          // Explicitly control desktop interaction states.
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (states) {
+              if (states.contains(WidgetState.pressed)) {
+                return theme.colorScheme.primary.withValues(alpha: 0.12);
+              }
+
+              if (states.contains(WidgetState.hovered)) {
+                return theme.colorScheme.primary.withValues(alpha: 0.06);
+              }
+
+              return Colors.transparent;
+            },
+          ),
+
+          onTap: onTap,
+
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

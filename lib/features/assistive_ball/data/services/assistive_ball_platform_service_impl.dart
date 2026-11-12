@@ -33,8 +33,7 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
   bool get isSystemOverlaySupported {
     if (kIsWeb) return false;
 
-    return defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.windows;
+    return defaultTargetPlatform == TargetPlatform.android;
   }
 
   @override

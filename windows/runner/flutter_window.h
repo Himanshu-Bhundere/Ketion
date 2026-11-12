@@ -8,7 +8,6 @@
 
 #include <memory>
 
-#include "assistive_ball_window.h"
 #include "win32_window.h"
 
 // A window that does nothing but host a Flutter view.
@@ -32,8 +31,7 @@ class FlutterWindow : public Win32Window {
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
 
-  // Native assistive ball overlay.
-  std::unique_ptr<AssistiveBallWindow> assistive_ball_window_;
+  // Method channel for assistive ball integration.
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       assistive_ball_channel_;
 };

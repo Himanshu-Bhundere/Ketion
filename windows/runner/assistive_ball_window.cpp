@@ -182,33 +182,40 @@ void AssistiveBallWindow::Paint(HWND hwnd) {
 
   Ellipse(hdc, 0, 0, rect.right, rect.bottom);
 
-  // 3. Draw note / edit icon in white
-  HPEN whitePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-  SelectObject(hdc, whitePen);
+  // 3. Draw Assistive Ball icon (3 bubble nodes matching Icons.bubble_chart_rounded) in white
+  HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+  HPEN nullPen = CreatePen(PS_NULL, 0, RGB(0, 0, 0));
+  SelectObject(hdc, whiteBrush);
+  SelectObject(hdc, nullPen);
 
   int cx = rect.right / 2;
   int cy = rect.bottom / 2;
-  int halfSize = rect.right / 5;
+  int sz = rect.right;
 
-  // Document outline
-  MoveToEx(hdc, cx - halfSize, cy - halfSize - 1, nullptr);
-  LineTo(hdc, cx + halfSize - 3, cy - halfSize - 1);
-  LineTo(hdc, cx + halfSize, cy - halfSize + 2);
-  LineTo(hdc, cx + halfSize, cy + halfSize + 1);
-  LineTo(hdc, cx - halfSize, cy + halfSize + 1);
-  LineTo(hdc, cx - halfSize, cy - halfSize - 1);
+  // Node 1: Main bottom-left bubble
+  int r1 = static_cast<int>(sz * 0.15);
+  int x1 = cx - static_cast<int>(sz * 0.10);
+  int y1 = cy + static_cast<int>(sz * 0.08);
+  Ellipse(hdc, x1 - r1, y1 - r1, x1 + r1, y1 + r1);
 
-  // Note text lines
-  MoveToEx(hdc, cx - halfSize + 3, cy - 1, nullptr);
-  LineTo(hdc, cx + halfSize - 3, cy - 1);
-  MoveToEx(hdc, cx - halfSize + 3, cy + 4, nullptr);
-  LineTo(hdc, cx + halfSize - 4, cy + 4);
+  // Node 2: Top-right bubble
+  int r2 = static_cast<int>(sz * 0.12);
+  int x2 = cx + static_cast<int>(sz * 0.10);
+  int y2 = cy - static_cast<int>(sz * 0.10);
+  Ellipse(hdc, x2 - r2, y2 - r2, x2 + r2, y2 + r2);
+
+  // Node 3: Bottom-right small bubble
+  int r3 = static_cast<int>(sz * 0.08);
+  int x3 = cx + static_cast<int>(sz * 0.15);
+  int y3 = cy + static_cast<int>(sz * 0.14);
+  Ellipse(hdc, x3 - r3, y3 - r3, x3 + r3, y3 + r3);
 
   SelectObject(hdc, oldPen);
   SelectObject(hdc, oldBrush);
   DeleteObject(ballBrush);
   DeleteObject(ballPen);
-  DeleteObject(whitePen);
+  DeleteObject(whiteBrush);
+  DeleteObject(nullPen);
 
   EndPaint(hwnd, &ps);
 }
@@ -276,13 +283,12 @@ LRESULT AssistiveBallWindow::MessageHandler(HWND hwnd, UINT message,
       if (GetCapture() == hwnd) {
         ReleaseCapture();
         if (!is_dragging_) {
+          // Do not forcefully steal foreground focus with SetForegroundWindow.
+          // If the main window is minimized, show it without stealing focus.
           if (main_window_ && IsWindow(main_window_)) {
             if (IsIconic(main_window_)) {
-              ShowWindow(main_window_, SW_RESTORE);
-            } else {
-              ShowWindow(main_window_, SW_SHOW);
+              ShowWindow(main_window_, SW_SHOWNOACTIVATE);
             }
-            SetForegroundWindow(main_window_);
           }
           if (on_click_) {
             on_click_();

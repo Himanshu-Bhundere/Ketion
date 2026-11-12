@@ -127,7 +127,7 @@ class AttachmentStorageService {
   Future<String> resolvePath(String relativePath) async {
     if (kIsWeb) return relativePath;
     final mediaDir = await _attachmentsDir;
-    return p.join(mediaDir.path, relativePath);
+    return p.normalize(p.join(mediaDir.path, relativePath));
   }
 
   /// Performs garbage collection by deleting physical files that are not in the [validRelativePaths] set.

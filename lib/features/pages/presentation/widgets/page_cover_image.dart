@@ -2,6 +2,7 @@ import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../media/presentation/providers/attachment_provider.dart';
 import '../providers/page_providers.dart';
@@ -92,10 +93,18 @@ class _PageCoverImageState extends ConsumerState<PageCoverImage> {
       );
     }
 
-    // 2. Direct local file path
-    if (!kIsWeb && io.File(cover).existsSync()) {
+    // 2. Direct local file path (supports normalized Windows paths & file:// URIs)
+    String localFilePath = cover;
+    if (localFilePath.startsWith('file://')) {
+      try {
+        localFilePath = Uri.parse(localFilePath).toFilePath();
+      } catch (_) {}
+    }
+    localFilePath = p.normalize(localFilePath);
+
+    if (!kIsWeb && io.File(localFilePath).existsSync()) {
       return Image.file(
-        io.File(cover),
+        io.File(localFilePath),
         fit: widget.fit,
         alignment: alignment,
         width: widget.width ?? double.infinity,

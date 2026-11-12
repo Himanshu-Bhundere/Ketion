@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
+import '../../../pages/presentation/widgets/page_cover_image.dart';
 import 'assistive_ball_header_button.dart';
 
 class NoteSelectorPanel extends ConsumerWidget {
@@ -26,6 +27,7 @@ class NoteSelectorPanel extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF222428) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDark
@@ -85,10 +87,25 @@ class NoteSelectorPanel extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final page = pages[index];
 
+                      final hasCover =
+                          page.coverImage != null && page.coverImage!.isNotEmpty;
+
                       return ListTile(
                         dense: true,
-                        leading:
-                            const Icon(Icons.description_outlined, size: 20),
+                        leading: hasCover
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: PageCoverImage(
+                                    pageId: page.id,
+                                    coverImage: page.coverImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.description_outlined, size: 20),
                         title: Text(
                           page.title.isEmpty ? 'Untitled' : page.title,
                           maxLines: 1,

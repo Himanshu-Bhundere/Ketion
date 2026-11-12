@@ -8,6 +8,7 @@ import '../../../blocks/presentation/providers/block_providers.dart';
 import '../../../editor/domain/models/block_data_models.dart';
 import '../../../pages/domain/entities/page.dart';
 import '../../../pages/presentation/providers/page_providers.dart';
+import '../../../pages/presentation/widgets/page_cover_image.dart';
 import '../providers/assistive_ball_provider.dart';
 import 'assistive_ball_header_button.dart';
 import 'rich_block_preview.dart';
@@ -156,6 +157,7 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF222428) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDark
@@ -257,6 +259,21 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (page.coverImage != null && page.coverImage!.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      height: 120,
+                      width: double.infinity,
+                      child: PageCoverImage(
+                        pageId: page.id,
+                        coverImage: page.coverImage!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (page.icon != null && page.icon!.isNotEmpty)
                   Text(page.icon!, style: const TextStyle(fontSize: 24)),
                 const SizedBox(height: 6),

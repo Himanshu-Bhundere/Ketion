@@ -25,7 +25,11 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
     };
 
     _platformService.onBallClicked = () {
-      openFloatingNote();
+      if (state.isNoteMinimized) {
+        restoreFloatingNote();
+      } else {
+        toggleMenu();
+      }
     };
 
     _ref.listen(

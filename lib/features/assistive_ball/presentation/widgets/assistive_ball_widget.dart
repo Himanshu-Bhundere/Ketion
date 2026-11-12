@@ -24,8 +24,6 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   bool _isDragging = false;
-  // ignore: unused_field
-  bool _isPointerInsideMenu = false;
 
   static const double _ballSize = 52.0;
 
@@ -225,18 +223,15 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             top: panelTop,
             width: panelWidth,
             height: panelHeight,
-            child: Material(
-              type: MaterialType.transparency,
-              child: NoteSelectorPanel(
-                onClose: () {
-                  ref.read(assistiveBallProvider.notifier).closeNoteSelector();
-                },
-                onSelect: (pageId) {
-                  ref
-                      .read(assistiveBallProvider.notifier)
-                      .openFloatingNote(pageId: pageId);
-                },
-              ),
+            child: NoteSelectorPanel(
+              onClose: () {
+                ref.read(assistiveBallProvider.notifier).closeNoteSelector();
+              },
+              onSelect: (pageId) {
+                ref
+                    .read(assistiveBallProvider.notifier)
+                    .openFloatingNote(pageId: pageId);
+              },
             ),
           ),
 
@@ -247,11 +242,8 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             top: panelTop,
             width: panelWidth,
             height: panelHeight,
-            child: Material(
-              type: MaterialType.transparency,
-              child: FloatingNoteView(
-                parentConstraints: widget.parentConstraints,
-              ),
+            child: FloatingNoteView(
+              parentConstraints: widget.parentConstraints,
             ),
           ),
 
@@ -287,24 +279,11 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return MouseRegion(
-      opaque: true,
-      cursor: SystemMouseCursors.basic,
-      onEnter: (_) {
-        if (mounted) {
-          setState(() => _isPointerInsideMenu = true);
-        }
-      },
-      onExit: (_) {
-        if (mounted) {
-          setState(() => _isPointerInsideMenu = false);
-        }
-      },
-      child: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(14),
-        color: isDark ? const Color(0xFF2A2D32) : Colors.white,
-        child: Container(
+    return Material(
+      elevation: 6,
+      borderRadius: BorderRadius.circular(14),
+      color: isDark ? const Color(0xFF2A2D32) : Colors.white,
+      child: Container(
           padding: const EdgeInsets.symmetric(
             vertical: 8,
             horizontal: 6,
@@ -349,8 +328,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildMenuItem({

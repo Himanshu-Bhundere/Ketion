@@ -29,6 +29,8 @@ class _AssistiveBallHeaderButtonState extends State<AssistiveBallHeaderButton> {
 
     return Tooltip(
       message: widget.tooltip,
+      triggerMode: TooltipTriggerMode.manual,
+      waitDuration: const Duration(days: 365),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         onEnter: (_) {
@@ -64,7 +66,7 @@ class _AssistiveBallHeaderButtonState extends State<AssistiveBallHeaderButton> {
               color: _isPressed
                   ? theme.colorScheme.primary.withValues(alpha: 0.16)
                   : _isHovered
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.08)
                       : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),

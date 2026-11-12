@@ -64,8 +64,8 @@ class AssistiveBallService : Service() {
 
             val notification: Notification = Notification.Builder(this, channelId)
                 .setContentTitle("Ketion Assistive Ball")
-                .setContentText("Tap to open Ketion")
-                .setSmallIcon(android.R.drawable.ic_menu_edit)
+                .setContentText("Tap to interact with Ketion")
+                .setSmallIcon(R.drawable.ic_assistive_ball)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .build()
@@ -175,7 +175,7 @@ class AssistiveBallService : Service() {
                 setColor(Color.parseColor("#4B68FF"))
             }
             background = shape
-            setImageResource(android.R.drawable.ic_menu_edit)
+            setImageResource(R.drawable.ic_assistive_ball)
             setColorFilter(Color.WHITE)
             val paddingPx = (14 * density).toInt()
             setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
@@ -214,11 +214,14 @@ class AssistiveBallService : Service() {
                     }
                     MotionEvent.ACTION_UP -> {
                         if (isClick) {
-                            val openIntent = Intent(this@AssistiveBallService, MainActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                putExtra("from_assistive_ball", true)
+                            val handled = MainActivity.notifyBallClicked()
+                            if (!handled) {
+                                val openIntent = Intent(this@AssistiveBallService, MainActivity::class.java).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                    putExtra("from_assistive_ball", true)
+                                }
+                                startActivity(openIntent)
                             }
-                            startActivity(openIntent)
                         } else {
                             // Snap to nearest corner (0.02 or 0.98)
                             val currentNormX = (layoutParams!!.x.toFloat() / maxAvailableX).coerceIn(0f, 1f)

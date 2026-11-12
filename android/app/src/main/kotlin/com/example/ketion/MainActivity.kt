@@ -20,6 +20,15 @@ class MainActivity: FlutterActivity() {
         fun notifyPositionChanged(x: Double, y: Double) {
             methodChannel?.invokeMethod("onPositionChanged", mapOf("x" to x, "y" to y))
         }
+
+        fun notifyBallClicked(): Boolean {
+            return if (methodChannel != null) {
+                methodChannel?.invokeMethod("onBallClicked", null)
+                true
+            } else {
+                false
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

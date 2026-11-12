@@ -264,14 +264,14 @@ void main() {
       expect(state.activePageId, 'test-page-123');
     });
 
-    test('onBallClicked triggers openFloatingNote flow', () {
+    test('onBallClicked triggers toggleMenu flow', () {
       final stateBefore = container.read(assistiveBallProvider);
-      expect(stateBefore.isFloatingNoteOpen, isFalse);
+      expect(stateBefore.isMenuOpen, isFalse);
 
       mockPlatform.onBallClicked?.call();
 
       final stateAfter = container.read(assistiveBallProvider);
-      expect(stateAfter.isFloatingNoteOpen, isTrue);
+      expect(stateAfter.isMenuOpen, isTrue);
     });
 
     test('setEnabled true checks permission and shows system overlay',

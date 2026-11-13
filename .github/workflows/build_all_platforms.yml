@@ -186,7 +186,10 @@ jobs:
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          codesign --force --deep --sign - Payload/Runner.app
+          find Payload/Runner.app -type d -name "*.bundle" -exec codesign --force --sign - {} + 2>/dev/null || true
+          find Payload/Runner.app -type f -name "*.dylib" -exec codesign --force --sign - {} +
+          find Payload/Runner.app -type d -name "*.framework" -exec codesign --force --sign - {} +
+          codesign --force --sign - Payload/Runner.app
           codesign -dv Payload/Runner.app
           zip -qr Ketion.ipa Payload
           rm -rf Payload

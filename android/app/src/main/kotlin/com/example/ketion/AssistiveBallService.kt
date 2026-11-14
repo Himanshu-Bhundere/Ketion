@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
@@ -18,6 +19,7 @@ import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.ImageView
 import kotlin.math.abs
@@ -109,8 +111,8 @@ class AssistiveBallService : Service() {
             return START_NOT_STICKY
         }
 
-        val savedX = prefs.getFloat(KEY_NORM_X, 0.98f)
-        val savedY = prefs.getFloat(KEY_NORM_Y, 0.02f)
+        val savedX = prefs.getFloat(KEY_NORM_X, MAX_POSITION)
+        val savedY = prefs.getFloat(KEY_NORM_Y, MIN_POSITION)
         val normX = intent?.getFloatExtra(EXTRA_X, savedX) ?: savedX
         val normY = intent?.getFloatExtra(EXTRA_Y, savedY) ?: savedY
 
@@ -118,8 +120,8 @@ class AssistiveBallService : Service() {
             startForegroundServiceNotification()
         }
 
-        val clampedX = normX.coerceIn(0.02f, 0.98f)
-        val clampedY = normY.coerceIn(0.02f, 0.98f)
+        val clampedX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
 
         if (floatingView == null) {
             setupFloatingView(clampedX, clampedY)
@@ -130,24 +132,70 @@ class AssistiveBallService : Service() {
         return START_STICKY
     }
 
+    private data class UsableScreenArea(
+        val left: Int,
+        val top: Int,
+        val width: Int,
+        val height: Int
+    )
+
+    private fun getUsableScreenArea(): UsableScreenArea {
+        val wm = (windowManager ?: getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val metrics = wm.currentWindowMetrics
+            val insets = metrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            )
+            val bounds = metrics.bounds
+            UsableScreenArea(
+                left = insets.left,
+                top = insets.top,
+                width = (bounds.width() - insets.left - insets.right).coerceAtLeast(1),
+                height = (bounds.height() - insets.top - insets.bottom).coerceAtLeast(1)
+            )
+        } else {
+            val display = wm.defaultDisplay
+            val size = Point()
+            @Suppress("DEPRECATION")
+            display.getSize(size)
+            UsableScreenArea(
+                left = 0,
+                top = 0,
+                width = size.x.coerceAtLeast(1),
+                height = size.y.coerceAtLeast(1)
+            )
+        }
+    }
+
+    private fun calculatePixelPosition(
+        normX: Float,
+        normY: Float,
+        ballSizePx: Int,
+        usable: UsableScreenArea
+    ): Pair<Int, Int> {
+        val density = resources.displayMetrics.density
+        val marginPx = (MARGIN_DP * density).toInt()
+        val availableWidth = (usable.width - ballSizePx - 2 * marginPx).coerceAtLeast(1)
+        val availableHeight = (usable.height - ballSizePx - 2 * marginPx).coerceAtLeast(1)
+
+        val clampedNormX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedNormY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
+
+        val targetX = usable.left + marginPx + (clampedNormX * availableWidth).toInt()
+        val targetY = usable.top + marginPx + (clampedNormY * availableHeight).toInt()
+        return Pair(targetX, targetY)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun setupFloatingView(initialNormX: Float, initialNormY: Float) {
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        val displayMetrics = DisplayMetrics()
-        windowManager?.defaultDisplay?.getMetrics(displayMetrics)
-        val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
 
         val ballSizeDp = 52
         val density = resources.displayMetrics.density
         val ballSizePx = (ballSizeDp * density).toInt()
 
-        val maxAvailableX = (screenWidth - ballSizePx).coerceAtLeast(1)
-        val maxAvailableY = (screenHeight - ballSizePx).coerceAtLeast(1)
-
-        val clampedNormX = initialNormX.coerceIn(0.02f, 0.98f)
-        val clampedNormY = initialNormY.coerceIn(0.02f, 0.98f)
+        val usableArea = getUsableScreenArea()
+        val (initX, initY) = calculatePixelPosition(initialNormX, initialNormY, ballSizePx, usableArea)
 
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -160,13 +208,12 @@ class AssistiveBallService : Service() {
             ballSizePx,
             ballSizePx,
             layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = (maxAvailableX * clampedNormX).toInt()
-            y = (maxAvailableY * clampedNormY).toInt()
+            x = initX
+            y = initY
         }
 
         val ballView = ImageView(this).apply {
@@ -214,24 +261,27 @@ class AssistiveBallService : Service() {
                     }
                     MotionEvent.ACTION_UP -> {
                         if (isClick) {
-                            val handled = MainActivity.notifyBallClicked()
-                            if (!handled) {
-                                val openIntent = Intent(this@AssistiveBallService, MainActivity::class.java).apply {
-                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                    putExtra("from_assistive_ball", true)
-                                }
-                                startActivity(openIntent)
+                            val openIntent = Intent(this@AssistiveBallService, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                putExtra("from_assistive_ball", true)
                             }
+                            startActivity(openIntent)
                         } else {
-                            // Snap to nearest corner (0.02 or 0.98)
-                            val currentNormX = (layoutParams!!.x.toFloat() / maxAvailableX).coerceIn(0f, 1f)
-                            val currentNormY = (layoutParams!!.y.toFloat() / maxAvailableY).coerceIn(0f, 1f)
+                            val currentUsable = getUsableScreenArea()
+                            val curDensity = resources.displayMetrics.density
+                            val marginPx = (MARGIN_DP * curDensity).toInt()
+                            val availableW = (currentUsable.width - ballSizePx - 2 * marginPx).coerceAtLeast(1)
+                            val availableH = (currentUsable.height - ballSizePx - 2 * marginPx).coerceAtLeast(1)
 
-                            val targetNormX = if (currentNormX < 0.5f) 0.02f else 0.98f
-                            val targetNormY = if (currentNormY < 0.5f) 0.02f else 0.98f
+                            val currentNormX = ((layoutParams!!.x - currentUsable.left - marginPx).toFloat() / availableW).coerceIn(0f, 1f)
+                            val currentNormY = ((layoutParams!!.y - currentUsable.top - marginPx).toFloat() / availableH).coerceIn(0f, 1f)
 
-                            layoutParams!!.x = (maxAvailableX * targetNormX).toInt()
-                            layoutParams!!.y = (maxAvailableY * targetNormY).toInt()
+                            val targetNormX = if (currentNormX < 0.5f) MIN_POSITION else MAX_POSITION
+                            val targetNormY = if (currentNormY < 0.5f) MIN_POSITION else MAX_POSITION
+
+                            val (snapX, snapY) = calculatePixelPosition(targetNormX, targetNormY, ballSizePx, currentUsable)
+                            layoutParams!!.x = snapX
+                            layoutParams!!.y = snapY
                             windowManager?.updateViewLayout(floatingView, layoutParams)
 
                             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -255,22 +305,16 @@ class AssistiveBallService : Service() {
 
     private fun updateViewPosition(normX: Float, normY: Float) {
         if (floatingView == null || layoutParams == null || windowManager == null) return
-        val displayMetrics = DisplayMetrics()
-        windowManager?.defaultDisplay?.getMetrics(displayMetrics)
-        val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
         val ballSize = floatingView!!.width.takeIf { it > 0 } ?: (52 * resources.displayMetrics.density).toInt()
+        val usable = getUsableScreenArea()
+        val (newX, newY) = calculatePixelPosition(normX, normY, ballSize, usable)
 
-        val clampedX = normX.coerceIn(0.02f, 0.98f)
-        val clampedY = normY.coerceIn(0.02f, 0.98f)
-
-        val maxAvailableX = (screenWidth - ballSize).coerceAtLeast(1)
-        val maxAvailableY = (screenHeight - ballSize).coerceAtLeast(1)
-
-        layoutParams!!.x = (maxAvailableX * clampedX).toInt()
-        layoutParams!!.y = (maxAvailableY * clampedY).toInt()
+        layoutParams!!.x = newX
+        layoutParams!!.y = newY
         windowManager?.updateViewLayout(floatingView, layoutParams)
 
+        val clampedX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit()
             .putFloat(KEY_NORM_X, clampedX)
@@ -297,6 +341,10 @@ class AssistiveBallService : Service() {
         const val KEY_ENABLED = "enabled"
         const val KEY_NORM_X = "norm_x"
         const val KEY_NORM_Y = "norm_y"
+
+        const val MIN_POSITION = 0.05f
+        const val MAX_POSITION = 0.95f
+        const val MARGIN_DP = 14
 
         const val ACTION_START = "com.example.ketion.assistive_ball.START"
         const val ACTION_STOP = "com.example.ketion.assistive_ball.STOP"

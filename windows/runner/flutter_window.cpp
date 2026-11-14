@@ -32,6 +32,24 @@ bool FlutterWindow::OnCreate() {
           messenger, "com.example.ketion/assistive_ball",
           &flutter::StandardMethodCodec::GetInstance());
 
+  // Native assistive ball window instance
+  assistive_ball_window_ = std::make_unique<AssistiveBallWindow>();
+  assistive_ball_window_->SetOnClickCallback([this]() {
+    if (assistive_ball_channel_) {
+      assistive_ball_channel_->InvokeMethod("onBallClicked", nullptr);
+    }
+  });
+  assistive_ball_window_->SetOnPositionCallback([this](double nx, double ny) {
+    if (assistive_ball_channel_) {
+      auto args = std::make_unique<flutter::EncodableValue>(
+          flutter::EncodableMap{
+              {flutter::EncodableValue("x"), flutter::EncodableValue(nx)},
+              {flutter::EncodableValue("y"), flutter::EncodableValue(ny)},
+          });
+      assistive_ball_channel_->InvokeMethod("onPositionChanged", std::move(args));
+    }
+  });
+
   assistive_ball_channel_->SetMethodCallHandler(
       [this](const flutter::MethodCall<flutter::EncodableValue>& call,
              std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>>
@@ -40,9 +58,48 @@ bool FlutterWindow::OnCreate() {
         if (method == "checkOverlayPermission" ||
             method == "requestOverlayPermission") {
           result->Success(flutter::EncodableValue(true));
-        } else if (method == "showOverlay" ||
-                   method == "hideOverlay" ||
-                   method == "updatePosition") {
+        } else if (method == "showOverlay") {
+          if (!assistive_ball_window_->GetHandle()) {
+            assistive_ball_window_->Create(GetHandle());
+          }
+          const auto* args =
+              std::get_if<flutter::EncodableMap>(call.arguments());
+          if (args) {
+            auto it_x = args->find(flutter::EncodableValue("x"));
+            auto it_y = args->find(flutter::EncodableValue("y"));
+            if (it_x != args->end() && it_y != args->end()) {
+              double x = std::holds_alternative<double>(it_x->second)
+                             ? std::get<double>(it_x->second)
+                             : 0.05;
+              double y = std::holds_alternative<double>(it_y->second)
+                             ? std::get<double>(it_y->second)
+                             : 0.05;
+              assistive_ball_window_->UpdatePosition(x, y);
+            }
+          }
+          assistive_ball_window_->Show();
+          result->Success();
+        } else if (method == "hideOverlay") {
+          if (assistive_ball_window_) {
+            assistive_ball_window_->Hide();
+          }
+          result->Success();
+        } else if (method == "updatePosition") {
+          const auto* args =
+              std::get_if<flutter::EncodableMap>(call.arguments());
+          if (args && assistive_ball_window_) {
+            auto it_x = args->find(flutter::EncodableValue("x"));
+            auto it_y = args->find(flutter::EncodableValue("y"));
+            if (it_x != args->end() && it_y != args->end()) {
+              double x = std::holds_alternative<double>(it_x->second)
+                             ? std::get<double>(it_x->second)
+                             : 0.05;
+              double y = std::holds_alternative<double>(it_y->second)
+                             ? std::get<double>(it_y->second)
+                             : 0.05;
+              assistive_ball_window_->UpdatePosition(x, y);
+            }
+          }
           result->Success();
         } else {
           result->NotImplemented();
@@ -59,6 +116,10 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  if (assistive_ball_window_) {
+    assistive_ball_window_->Destroy();
+    assistive_ball_window_ = nullptr;
+  }
   if (assistive_ball_channel_) {
     assistive_ball_channel_ = nullptr;
   }

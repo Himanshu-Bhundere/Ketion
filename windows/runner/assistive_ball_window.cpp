@@ -76,8 +76,8 @@ void AssistiveBallWindow::Destroy() {
 
 void AssistiveBallWindow::Show(double norm_x, double norm_y) {
   if (!hwnd_) return;
-  norm_x_ = (std::max)(0.02, (std::min)(0.98, norm_x));
-  norm_y_ = (std::max)(0.02, (std::min)(0.98, norm_y));
+  norm_x_ = (std::max)(0.05, (std::min)(0.95, norm_x));
+  norm_y_ = (std::max)(0.05, (std::min)(0.95, norm_y));
 
   int px = 0;
   int py = 0;
@@ -96,8 +96,8 @@ void AssistiveBallWindow::Hide() {
 }
 
 void AssistiveBallWindow::UpdatePosition(double norm_x, double norm_y) {
-  norm_x_ = (std::max)(0.02, (std::min)(0.98, norm_x));
-  norm_y_ = (std::max)(0.02, (std::min)(0.98, norm_y));
+  norm_x_ = (std::max)(0.05, (std::min)(0.95, norm_x));
+  norm_y_ = (std::max)(0.05, (std::min)(0.95, norm_y));
 
   if (!hwnd_) return;
 
@@ -149,8 +149,8 @@ void AssistiveBallWindow::SnapToNearestCorner() {
   double curX = static_cast<double>(rect.left - workArea.left) / workWidth;
   double curY = static_cast<double>(rect.top - workArea.top) / workHeight;
 
-  norm_x_ = curX < 0.5 ? 0.02 : 0.98;
-  norm_y_ = curY < 0.5 ? 0.02 : 0.98;
+  norm_x_ = curX < 0.5 ? 0.05 : 0.95;
+  norm_y_ = curY < 0.5 ? 0.05 : 0.95;
 
   int targetX = workArea.left + static_cast<int>(workWidth * norm_x_);
   int targetY = workArea.top + static_cast<int>(workHeight * norm_y_);
@@ -174,9 +174,9 @@ void AssistiveBallWindow::Paint(HWND hwnd) {
   FillRect(hdc, &rect, bgBrush);
   DeleteObject(bgBrush);
 
-  // 2. Draw circular ball using Ketion primary color #4B68FF
-  HBRUSH ballBrush = CreateSolidBrush(RGB(75, 104, 255));
-  HPEN ballPen = CreatePen(PS_SOLID, 1, RGB(75, 104, 255));
+  // 2. Draw circular ball using Ketion primary color (purple #6200EE)
+  HBRUSH ballBrush = CreateSolidBrush(RGB(98, 0, 238));
+  HPEN ballPen = CreatePen(PS_SOLID, 1, RGB(98, 0, 238));
   HGDIOBJ oldBrush = SelectObject(hdc, ballBrush);
   HGDIOBJ oldPen = SelectObject(hdc, ballPen);
 

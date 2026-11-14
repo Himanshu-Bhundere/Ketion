@@ -15,7 +15,7 @@ class AssistiveBallWindow {
   bool Create(HWND main_window);
   void Destroy();
 
-  void Show(double norm_x = 0.98, double norm_y = 0.02);
+  void Show(double norm_x = 0.95, double norm_y = 0.05);
   void Hide();
   void UpdatePosition(double norm_x, double norm_y);
 
@@ -39,8 +39,8 @@ class AssistiveBallWindow {
   bool is_visible_ = false;
 
   int ball_size_px_ = 56;
-  double norm_x_ = 0.98;
-  double norm_y_ = 0.02;
+  double norm_x_ = 0.95;
+  double norm_y_ = 0.05;
 
   bool is_dragging_ = false;
   POINT drag_start_cursor_ = {0, 0};

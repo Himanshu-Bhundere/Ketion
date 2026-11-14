@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/presentation/widgets/app_shell.dart';
@@ -83,15 +83,18 @@ final appRouter = GoRouter(
       name: Routes.editorName,
       parentNavigatorKey: _rootNavigatorKey,
       path: Routes.editor,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final pageId = state.pathParameters['pageId']!;
         final extra = state.extra as Map<String, dynamic>?;
         final focusTitle = extra?['focusTitle'] as bool? ?? false;
         final openTarget = extra?['openTarget'] as EditorOpenTarget?;
-        return EditorPage(
-          pageId: pageId,
-          focusTitle: focusTitle,
-          openTarget: openTarget,
+        return CupertinoPage(
+          key: state.pageKey,
+          child: EditorPage(
+            pageId: pageId,
+            focusTitle: focusTitle,
+            openTarget: openTarget,
+          ),
         );
       },
     ),
@@ -99,13 +102,16 @@ final appRouter = GoRouter(
       name: Routes.alarmRingingName,
       parentNavigatorKey: _rootNavigatorKey,
       path: Routes.alarmRinging,
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final reminderId = state.pathParameters['reminderId']!;
         final extra = state.extra as Map<String, dynamic>?;
         final occurrenceTime = extra?['occurrenceTime'] as DateTime?;
-        return AlarmRingingPage(
-          reminderId: reminderId,
-          occurrenceTime: occurrenceTime,
+        return CupertinoPage(
+          key: state.pageKey,
+          child: AlarmRingingPage(
+            reminderId: reminderId,
+            occurrenceTime: occurrenceTime,
+          ),
         );
       },
     ),
@@ -113,7 +119,10 @@ final appRouter = GoRouter(
       name: Routes.trashName,
       parentNavigatorKey: _rootNavigatorKey,
       path: Routes.trash,
-      builder: (context, state) => const TrashPage(),
+      pageBuilder: (context, state) => CupertinoPage(
+        key: state.pageKey,
+        child: const TrashPage(),
+      ),
     ),
   ],
 );

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Page;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -366,48 +367,61 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
   }
 
   Widget _buildQuickCaptureForm(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(14.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: _titleController,
-            onChanged: (value) {
-              _quickTitle = value;
-            },
-            decoration: const InputDecoration(
-              hintText: 'Note title...',
-              border: InputBorder.none,
-              isDense: true,
-            ),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Divider(height: 12),
-          Expanded(
-            child: TextField(
-              controller: _contentController,
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(
+        left: 14.0,
+        right: 14.0,
+        top: 14.0,
+        bottom: math.max(14.0, viewInsets.bottom > 0 ? 8.0 : 14.0),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            TextField(
+              controller: _titleController,
+              onChanged: (value) {
+                _quickTitle = value;
+              },
               decoration: const InputDecoration(
-                hintText: 'Type your thoughts here...',
+                hintText: 'Note title...',
                 border: InputBorder.none,
+                isDense: true,
               ),
-              maxLines: null,
-              expands: true,
-              keyboardType: TextInputType.multiline,
-              style: theme.textTheme.bodyMedium,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: _isSaving ? null : _saveQuickNote,
-                child: Text(_isSaving ? 'Saving...' : 'Save Note'),
+            const Divider(height: 12),
+            Expanded(
+              child: TextField(
+                controller: _contentController,
+                decoration: const InputDecoration(
+                  hintText: 'Type your thoughts here...',
+                  border: InputBorder.none,
+                ),
+                maxLines: null,
+                expands: true,
+                keyboardType: TextInputType.multiline,
+                style: theme.textTheme.bodyMedium,
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _isSaving ? null : _saveQuickNote,
+                  child: Text(_isSaving ? 'Saving...' : 'Save Note'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

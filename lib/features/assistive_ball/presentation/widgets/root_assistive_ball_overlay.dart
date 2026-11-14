@@ -19,6 +19,18 @@ class RootAssistiveBallOverlay extends ConsumerWidget {
       return child;
     }
 
+    final platform = Theme.of(context).platform;
+    final isNativeOverlayPlatform =
+        platform == TargetPlatform.android ||
+        platform == TargetPlatform.windows;
+
+    if (isNativeOverlayPlatform &&
+        !ballState.isMenuOpen &&
+        !ballState.isFloatingNoteOpen &&
+        !ballState.isNoteSelectorOpen) {
+      return child;
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(

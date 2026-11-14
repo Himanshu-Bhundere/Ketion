@@ -48,8 +48,9 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    final parentW = widget.parentConstraints.maxWidth - _ballSize;
-    final parentH = widget.parentConstraints.maxHeight - _ballSize;
+    final padding = MediaQuery.paddingOf(context);
+    final parentW = widget.parentConstraints.maxWidth - _ballSize - padding.left - padding.right;
+    final parentH = widget.parentConstraints.maxHeight - _ballSize - padding.top - padding.bottom;
 
     if (parentW <= 0 || parentH <= 0) return;
 
@@ -71,8 +72,8 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
 
     final ballState = ref.read(assistiveBallProvider);
 
-    final targetX = ballState.normalizedX < 0.5 ? 0.02 : 0.98;
-    final targetY = ballState.normalizedY < 0.5 ? 0.02 : 0.98;
+    final targetX = ballState.normalizedX < 0.5 ? 0.05 : 0.95;
+    final targetY = ballState.normalizedY < 0.5 ? 0.05 : 0.95;
 
     final startX = ballState.normalizedX;
     final startY = ballState.normalizedY;
@@ -116,21 +117,42 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final settingsAsync = ref.watch(appSettingsProvider);
     final settings = settingsAsync.valueOrNull;
 
+    final platform = Theme.of(context).platform;
+    final isNativeOverlayPlatform =
+        platform == TargetPlatform.android ||
+        platform == TargetPlatform.windows;
+
     final accentColor = settings != null
         ? AppColors.getAccentColor(settings.accentColor.name)
         : Theme.of(context).colorScheme.primary;
 
+    final padding = MediaQuery.paddingOf(context);
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+
     final parentWidth = widget.parentConstraints.maxWidth;
     final parentHeight = widget.parentConstraints.maxHeight;
 
-    final parentW = parentWidth - _ballSize;
-    final parentH = parentHeight - _ballSize;
+    final availableWidth = math.max(
+      1.0,
+      parentWidth - _ballSize - padding.left - padding.right,
+    );
+    final availableHeight = math.max(
+      1.0,
+      parentHeight - _ballSize - padding.top - padding.bottom,
+    );
 
-    final pixelLeft = (ballState.normalizedX * parentW).clamp(0.0, parentW);
-    final pixelTop = (ballState.normalizedY * parentH).clamp(0.0, parentH);
+    final pixelLeft = padding.left +
+        (ballState.normalizedX * availableWidth).clamp(0.0, availableWidth);
+    final pixelTop = padding.top +
+        (ballState.normalizedY * availableHeight).clamp(0.0, availableHeight);
 
     final isLeft = ballState.normalizedX < 0.5;
     final isTop = ballState.normalizedY < 0.5;
+
+    final activeViewportHeight = math.max(
+      0.0,
+      parentHeight - viewInsets.bottom,
+    );
 
     final panelWidth = math.min(
       ballState.floatingNoteWidth,
@@ -138,7 +160,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     );
     final panelHeight = math.min(
       ballState.floatingNoteHeight,
-      math.max(0.0, parentHeight - 24.0),
+      math.max(0.0, activeViewportHeight - 24.0),
     );
 
     final rawPanelLeft =
@@ -155,7 +177,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final panelTop = rawPanelTop
         .clamp(
           12.0,
-          math.max(12.0, parentHeight - panelHeight - 12.0),
+          math.max(12.0, activeViewportHeight - panelHeight - 12.0),
         )
         .toDouble();
 
@@ -163,58 +185,59 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
       clipBehavior: Clip.none,
       children: [
         // 1. Assistive Ball (first child)
-        Positioned(
-          left: pixelLeft,
-          top: pixelTop,
-          width: _ballSize,
-          height: _ballSize,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onPanStart: _onPanStart,
-            onPanUpdate: _onPanUpdate,
-            onPanEnd: _onPanEnd,
-            onTap: () {
-              if (ballState.isNoteMinimized) {
-                ref.read(assistiveBallProvider.notifier).restoreFloatingNote();
-              } else {
-                ref.read(assistiveBallProvider.notifier).toggleMenu();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    accentColor,
-                    accentColor.withValues(alpha: 0.85),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withValues(alpha: 0.35),
-                    blurRadius: _isDragging ? 14 : 8,
-                    spreadRadius: _isDragging ? 2 : 1,
-                    offset: const Offset(0, 3),
+        if (!isNativeOverlayPlatform)
+          Positioned(
+            left: pixelLeft,
+            top: pixelTop,
+            width: _ballSize,
+            height: _ballSize,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: _onPanStart,
+              onPanUpdate: _onPanUpdate,
+              onPanEnd: _onPanEnd,
+              onTap: () {
+                if (ballState.isNoteMinimized) {
+                  ref.read(assistiveBallProvider.notifier).restoreFloatingNote();
+                } else {
+                  ref.read(assistiveBallProvider.notifier).toggleMenu();
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      accentColor,
+                      accentColor.withValues(alpha: 0.85),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Center(
-                child: Icon(
-                  ballState.isNoteMinimized
-                      ? Icons.note_alt_outlined
-                      : (ballState.isMenuOpen
-                          ? Icons.close
-                          : Icons.bubble_chart_rounded),
-                  color: Colors.white,
-                  size: 26,
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.35),
+                      blurRadius: _isDragging ? 14 : 8,
+                      spreadRadius: _isDragging ? 2 : 1,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Icon(
+                    ballState.isNoteMinimized
+                        ? Icons.note_alt_outlined
+                        : (ballState.isMenuOpen
+                            ? Icons.close
+                            : Icons.bubble_chart_rounded),
+                    color: Colors.white,
+                    size: 26,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
 
         // 2. Note Selector Panel
         if (ballState.isNoteSelectorOpen)

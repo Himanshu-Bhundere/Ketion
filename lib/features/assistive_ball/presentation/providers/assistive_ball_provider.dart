@@ -113,9 +113,12 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
     }
   }
 
+  static const double minPosition = 0.05;
+  static const double maxPosition = 0.95;
+
   void updatePosition(double nx, double ny) {
-    final clampedX = nx.clamp(0.02, 0.98);
-    final clampedY = ny.clamp(0.02, 0.98);
+    final clampedX = nx.clamp(minPosition, maxPosition);
+    final clampedY = ny.clamp(minPosition, maxPosition);
     state = state.copyWith(
       normalizedX: clampedX,
       normalizedY: clampedY,
@@ -123,10 +126,10 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   }
 
   Future<void> snapToNearestCorner(double nx, double ny) async {
-    const left = 0.02;
-    const right = 0.98;
-    const top = 0.02;
-    const bottom = 0.98;
+    const left = minPosition;
+    const right = maxPosition;
+    const top = minPosition;
+    const bottom = maxPosition;
 
     final targetX = nx < 0.5 ? left : right;
     final targetY = ny < 0.5 ? top : bottom;

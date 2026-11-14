@@ -130,8 +130,8 @@ void main() {
       final notifier = container.read(assistiveBallProvider.notifier);
       notifier.updatePosition(-1.0, 2.0);
       var state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.02);
-      expect(state.normalizedY, 0.98);
+      expect(state.normalizedX, 0.05);
+      expect(state.normalizedY, 0.95);
 
       notifier.updatePosition(0.5, 0.6);
       state = container.read(assistiveBallProvider);
@@ -143,8 +143,8 @@ void main() {
       final notifier = container.read(assistiveBallProvider.notifier);
       notifier.snapToNearestEdge(0.04, 0.7);
       final state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.02);
-      expect(state.normalizedY, 0.98);
+      expect(state.normalizedX, 0.05);
+      expect(state.normalizedY, 0.95);
     });
 
     test('snapToNearestCorner accurately routes to all four corner positions',
@@ -154,26 +154,26 @@ void main() {
       // Top-Left
       notifier.snapToNearestCorner(0.1, 0.1);
       var state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.02);
-      expect(state.normalizedY, 0.02);
+      expect(state.normalizedX, 0.05);
+      expect(state.normalizedY, 0.05);
 
       // Top-Right
       notifier.snapToNearestCorner(0.9, 0.1);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.98);
-      expect(state.normalizedY, 0.02);
+      expect(state.normalizedX, 0.95);
+      expect(state.normalizedY, 0.05);
 
       // Bottom-Left
       notifier.snapToNearestCorner(0.1, 0.9);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.02);
-      expect(state.normalizedY, 0.98);
+      expect(state.normalizedX, 0.05);
+      expect(state.normalizedY, 0.95);
 
       // Bottom-Right
       notifier.snapToNearestCorner(0.9, 0.9);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.98);
-      expect(state.normalizedY, 0.98);
+      expect(state.normalizedX, 0.95);
+      expect(state.normalizedY, 0.95);
     });
 
     test('setEnabled synchronizes state, app settings, and platform overlay',
@@ -360,6 +360,7 @@ void main() {
           widgetServiceProvider.overrideWithValue(mockWidgetService),
         ],
         child: MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.iOS),
           home: Scaffold(
             body: RootAssistiveBallOverlay(
               child: Container(

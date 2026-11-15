@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_editor/super_editor.dart';
 
-import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
-import 'package:ketion/core/router/app_router.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_edit_request_handler.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_toggle_component.dart';
@@ -969,47 +967,6 @@ void main() {
       expect(newChild.metadata['depth'], 1);
       expect(newChild.metadata['parentBlockId'], 'b-toggle-2');
       expect(composer.selection?.extent.nodeId, newChild.id);
-    });
-  });
-
-  group('Issue 4: Android Widget Deep Linking and Snapshot Pipeline', () {
-    test(
-        'WidgetBootstrap routes ketion://note/{id} directly to specific editor note',
-        () async {
-      const pageId = 'note-widget-12345';
-      await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/$pageId'));
-
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(
-          appRouter.routeInformationProvider.value.uri.path, contains(pageId),);
-    });
-
-    test('WidgetBootstrap ignores malformed or null note IDs gracefully',
-        () async {
-      final curPath = appRouter.routeInformationProvider.value.uri.path;
-      await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/null'));
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(appRouter.routeInformationProvider.value.uri.path, curPath);
-    });
-
-    test(
-        'WidgetBootstrap invokes onCreatePage on ketion://new-note and routes to created note',
-        () async {
-      bool called = false;
-      const newPageId = 'new-note-from-widget-789';
-
-      await WidgetBootstrap.handleDeepLink(
-        Uri.parse('ketion://new-note'),
-        () async {
-          called = true;
-          return newPageId;
-        },
-      );
-
-      expect(called, isTrue);
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(appRouter.routeInformationProvider.value.uri.path,
-          contains(newPageId),);
     });
   });
 }

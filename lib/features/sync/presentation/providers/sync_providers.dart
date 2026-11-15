@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/core/services/background_sync_scheduler.dart';
 import 'package:ketion/core/services/background_sync_scheduler_factory.dart';
 import 'package:ketion/core/database/app_database.dart';
-import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
 import 'package:ketion/features/auth/presentation/providers/auth_providers.dart';
 import 'package:ketion/features/sync/data/providers/google_drive_sync_provider.dart';
 import 'package:ketion/features/sync/data/repositories/sync_engine_repository_impl.dart';
@@ -59,9 +58,8 @@ final syncEngineRepositoryProvider = Provider<SyncEngineRepository>((ref) {
 
 final syncNowUseCaseProvider = Provider<SyncNowUseCase>((ref) {
   final engineRepo = ref.watch(syncEngineRepositoryProvider);
-  final widgetService = ref.watch(widgetServiceProvider);
   final attachmentSyncService = ref.watch(attachmentSyncServiceProvider);
-  return SyncNowUseCase(engineRepo, widgetService, attachmentSyncService);
+  return SyncNowUseCase(engineRepo, attachmentSyncService);
 });
 
 final enqueueSyncUseCaseProvider = Provider<EnqueueSyncUseCase>((ref) {

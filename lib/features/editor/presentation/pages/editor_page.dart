@@ -5,7 +5,6 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/utils/result.dart';
 import '../../../pages/domain/entities/page.dart' as entity;
 import '../../../pages/presentation/providers/page_providers.dart';
-import '../../../widgets/presentation/providers/widget_providers.dart';
 import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
 import '../../domain/models/editor_open_target.dart';
@@ -87,8 +86,6 @@ class _EditorPageState extends ConsumerState<EditorPage> {
       }
 
       await _editorHostKey.currentState?.flush();
-
-      await ref.read(updateWidgetsUseCaseProvider)();
 
       if (!context.mounted) return;
 

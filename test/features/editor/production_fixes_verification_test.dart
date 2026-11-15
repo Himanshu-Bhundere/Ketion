@@ -6,11 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:super_editor/super_editor.dart';
 
-import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
 import 'package:ketion/core/database/app_database.dart' hide Page, Block;
-import 'package:ketion/core/errors/failures.dart';
-import 'package:ketion/core/router/app_router.dart';
-import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart';
 import 'package:ketion/features/editor/domain/commands/change_paragraph_metadata.dart';
@@ -30,11 +26,8 @@ import 'package:ketion/features/import_export/domain/usecases/export_usecase.dar
 import 'package:ketion/features/pages/data/repositories/page_repository_impl.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart';
 import 'package:ketion/features/pages/domain/usecases/create_page_usecase.dart';
-import 'package:ketion/features/pages/domain/usecases/delete_page_usecase.dart';
 import 'package:ketion/features/pages/domain/usecases/update_page_usecase.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
-import 'package:ketion/features/widgets/domain/services/widget_service.dart';
-import 'package:ketion/features/widgets/domain/usecases/update_widgets_usecase.dart';
 import 'package:ketion/core/utils/logger.dart';
 
 class TestSuperEditorContext implements SuperEditorContext {
@@ -89,23 +82,6 @@ class TestPersistenceCoordinator implements EditorPersistenceCoordinator {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class FailingWidgetService implements WidgetService {
-  @override
-  Future<Result<void>> generateWidgetSnapshot() async {
-    return const Error(UnknownFailure('Simulated snapshot failure'));
-  }
-
-  @override
-  Future<Result<void>> triggerWidgetUpdate() async {
-    return const Error(UnknownFailure('Simulated native update failure'));
-  }
-
-  @override
-  Future<Result<void>> updateSimpleWidgetData(String key, dynamic value) async {
-    return const Success(null);
-  }
 }
 
 void main() {
@@ -475,124 +451,6 @@ void main() {
     });
   });
 
-  group('Issue 3: Widget Deep Links, Navigation Stack & Back Behavior', () {
-    test(
-        'ketion://new-note pushes editor above home and canPop or popping returns home',
-        () async {
-      const newPageId = 'created-widget-page';
-      await WidgetBootstrap.handleDeepLink(
-        Uri.parse('ketion://new-note'),
-        () async => newPageId,
-      );
-
-      await Future<void>.delayed(const Duration(milliseconds: 100));
-      expect(appRouter.routeInformationProvider.value.uri.path,
-          contains(newPageId),);
-
-      // Pop from editor
-      if (appRouter.canPop()) {
-        appRouter.pop();
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        expect(appRouter.routeInformationProvider.value.uri.path, Routes.home);
-      }
-    });
-
-    test(
-        'ketion://note/{id} validates note and rejects deleted or missing pages',
-        () async {
-      bool errorReported = false;
-
-      await WidgetBootstrap.handleDeepLink(
-        Uri.parse('ketion://note/missing-page-id'),
-        null,
-        (error) {
-          errorReported = true;
-        },
-        (pageId) async => false, // validation fails
-      );
-
-      expect(errorReported, isTrue);
-    });
-
-    test('Malformed note IDs (null, empty, undefined) are ignored safely',
-        () async {
-      final initialPath = appRouter.routeInformationProvider.value.uri.path;
-
-      await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/null'));
-      await WidgetBootstrap.handleDeepLink(
-          Uri.parse('ketion://note/undefined'),);
-      await WidgetBootstrap.handleDeepLink(Uri.parse('ketion://note/ '));
-
-      expect(appRouter.routeInformationProvider.value.uri.path, initialPath);
-    });
-  });
-
-  group('Issue 4: Widget Update Error Inspection & Resilience', () {
-    test('CreatePageUseCase logs error when UpdateWidgetsUseCase returns Error',
-        () async {
-      final db = AppDatabase.forTesting(NativeDatabase.memory());
-      final syncQueue = SyncQueueRepositoryImpl(db);
-      final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
-      final failingWidgetService = FailingWidgetService();
-      final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
-
-      final createPageUseCase =
-          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-
-      final result = await createPageUseCase(title: 'Resilient Page');
-      expect(result, isA<Success<Page>>());
-      final page = result.valueOrNull!;
-      expect(page.title, 'Resilient Page');
-
-      await db.close();
-    });
-
-    test('UpdatePageUseCase logs error when UpdateWidgetsUseCase returns Error',
-        () async {
-      final db = AppDatabase.forTesting(NativeDatabase.memory());
-      final syncQueue = SyncQueueRepositoryImpl(db);
-      final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
-      final failingWidgetService = FailingWidgetService();
-      final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
-
-      final createPageUseCase =
-          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final updatePageUseCase =
-          UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
-
-      final createResult = await createPageUseCase(title: 'Initial Title');
-      final page = createResult.valueOrNull!;
-
-      final updateResult =
-          await updatePageUseCase(page.copyWith(title: 'Updated Title'));
-      expect(updateResult, isA<Success<void>>());
-
-      await db.close();
-    });
-
-    test('DeletePageUseCase logs error when UpdateWidgetsUseCase returns Error',
-        () async {
-      final db = AppDatabase.forTesting(NativeDatabase.memory());
-      final syncQueue = SyncQueueRepositoryImpl(db);
-      final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
-      final failingWidgetService = FailingWidgetService();
-      final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
-
-      final createPageUseCase =
-          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final deletePageUseCase =
-          DeletePageUseCase(pageRepo, updateWidgetsUseCase);
-
-      final createResult = await createPageUseCase(title: 'To Be Deleted');
-      final page = createResult.valueOrNull!;
-
-      final deleteResult = await deletePageUseCase(page.id);
-      expect(deleteResult, isA<Success<void>>());
-
-      await db.close();
-    });
-  });
-
   group(
       'Issue 2: Checklist Indentation Hierarchy & Single Authority Indentation',
       () {
@@ -757,12 +615,8 @@ void main() {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       final syncQueue = SyncQueueRepositoryImpl(db);
       final pageRepo = PageRepositoryImpl(db, syncQueue, appLogger);
-      final failingWidgetService = FailingWidgetService();
-      final updateWidgetsUseCase = UpdateWidgetsUseCase(failingWidgetService);
-      final createPageUseCase =
-          CreatePageUseCase(pageRepo, updateWidgetsUseCase);
-      final updatePageUseCase =
-          UpdatePageUseCase(pageRepo, updateWidgetsUseCase);
+      final createPageUseCase = CreatePageUseCase(pageRepo);
+      final updatePageUseCase = UpdatePageUseCase(pageRepo);
 
       final createResult = await createPageUseCase(title: 'Original Title');
       final initialPage = createResult.valueOrNull!;

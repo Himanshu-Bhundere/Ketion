@@ -2,17 +2,14 @@ import 'dart:async';
 import 'package:uuid/uuid.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/result.dart';
-import '../../../../core/utils/logger.dart';
-import 'package:ketion/features/widgets/domain/usecases/update_widgets_usecase.dart';
 import '../entities/page.dart';
 import '../repositories/page_repository.dart';
 
 class CreatePageUseCase {
   final PageRepository _repository;
-  final UpdateWidgetsUseCase _updateWidgetsUseCase;
   final Uuid _uuid;
 
-  CreatePageUseCase(this._repository, this._updateWidgetsUseCase, [Uuid? uuid])
+  CreatePageUseCase(this._repository, [Uuid? uuid])
       : _uuid = uuid ?? const Uuid();
 
   Future<Result<Page>> call({
@@ -37,18 +34,6 @@ class CreatePageUseCase {
 
     final result =
         await _repository.createPage(page, initialBlockType: initialBlockType);
-    if (result is Success) {
-      try {
-        final widgetResult = await _updateWidgetsUseCase();
-        if (widgetResult is Error) {
-          appLogger.w(
-            'Widget refresh failed after createPage: ${widgetResult.failure}',
-          );
-        }
-      } catch (e) {
-        appLogger.w('Widget refresh failed after createPage: $e');
-      }
-    }
     return result.fold(
       (_) => Success(page),
       (Failure failure) => Error(failure),

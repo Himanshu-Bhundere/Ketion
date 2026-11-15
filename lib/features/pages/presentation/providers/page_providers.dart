@@ -4,7 +4,6 @@ import '../../domain/entities/page.dart' as entity;
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../widgets/presentation/providers/widget_providers.dart';
 import '../../data/repositories/page_repository_impl.dart';
 import '../../domain/repositories/page_repository.dart';
 import '../../domain/usecases/create_page_usecase.dart';
@@ -21,8 +20,7 @@ final pageRepositoryProvider = Provider<PageRepository>((ref) {
 
 final createPageUseCaseProvider = Provider<CreatePageUseCase>((ref) {
   final repository = ref.watch(pageRepositoryProvider);
-  final updateWidgetsUseCase = ref.watch(updateWidgetsUseCaseProvider);
-  return CreatePageUseCase(repository, updateWidgetsUseCase);
+  return CreatePageUseCase(repository);
 });
 
 final getPageUseCaseProvider = Provider<GetPageUseCase>((ref) {
@@ -32,14 +30,12 @@ final getPageUseCaseProvider = Provider<GetPageUseCase>((ref) {
 
 final updatePageUseCaseProvider = Provider<UpdatePageUseCase>((ref) {
   final repository = ref.watch(pageRepositoryProvider);
-  final updateWidgetsUseCase = ref.watch(updateWidgetsUseCaseProvider);
-  return UpdatePageUseCase(repository, updateWidgetsUseCase);
+  return UpdatePageUseCase(repository);
 });
 
 final deletePageUseCaseProvider = Provider<DeletePageUseCase>((ref) {
   final repository = ref.watch(pageRepositoryProvider);
-  final updateWidgetsUseCase = ref.watch(updateWidgetsUseCaseProvider);
-  return DeletePageUseCase(repository, updateWidgetsUseCase);
+  return DeletePageUseCase(repository);
 });
 
 final pageProvider =

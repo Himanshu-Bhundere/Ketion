@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ketion/core/database/app_database.dart' hide Page, Block;
 import 'package:ketion/core/utils/logger.dart';
-import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/blocks/data/repositories/block_repository_impl.dart';
 import 'package:ketion/features/blocks/domain/entities/block.dart' as entity;
 import 'package:ketion/features/blocks/presentation/providers/block_providers.dart';
@@ -17,21 +16,7 @@ import 'package:ketion/features/pages/data/repositories/page_repository_impl.dar
 import 'package:ketion/features/pages/domain/entities/page.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
-import 'package:ketion/features/widgets/domain/services/widget_service.dart';
-import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
 import 'package:super_editor/super_editor.dart';
-
-class MockWidgetService implements WidgetService {
-  @override
-  Future<Result<void>> generateWidgetSnapshot() async => const Success(null);
-
-  @override
-  Future<Result<void>> triggerWidgetUpdate() async => const Success(null);
-
-  @override
-  Future<Result<void>> updateSimpleWidgetData(String key, dynamic value) async =>
-      const Success(null);
-}
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
@@ -103,7 +88,6 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           pageRepositoryProvider.overrideWithValue(pageRepo),
           blockRepositoryProvider.overrideWithValue(blockRepo),
-          widgetServiceProvider.overrideWithValue(MockWidgetService()),
         ],
         child: MaterialApp.router(
           routerConfig: router,

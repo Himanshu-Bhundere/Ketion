@@ -1,32 +1,16 @@
-import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/result.dart';
-import 'package:ketion/features/widgets/domain/usecases/update_widgets_usecase.dart';
 import '../entities/page.dart';
 import '../repositories/page_repository.dart';
 
 class UpdatePageUseCase {
   final PageRepository _repository;
-  final UpdateWidgetsUseCase _updateWidgetsUseCase;
 
-  UpdatePageUseCase(this._repository, this._updateWidgetsUseCase);
+  UpdatePageUseCase(this._repository);
 
   Future<Result<void>> call(Page page) async {
     // The repository transaction owns the authoritative timestamp and version.
     // Callers can safely submit a stale page model without creating a competing
     // versioning policy in the presentation/application layers.
-    final result = await _repository.updatePage(page);
-    if (result is Success) {
-      try {
-        final widgetResult = await _updateWidgetsUseCase();
-        if (widgetResult is Error) {
-          appLogger.w(
-            'Widget refresh failed after updatePage: ${widgetResult.failure}',
-          );
-        }
-      } catch (e) {
-        appLogger.w('Widget refresh failed after updatePage: $e');
-      }
-    }
-    return result;
+    return await _repository.updatePage(page);
   }
 }

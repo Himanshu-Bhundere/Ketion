@@ -3,14 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/core/bootstrap/app_bootstrap.dart';
-import 'package:ketion/core/bootstrap/widget_bootstrap.dart';
 import 'package:ketion/core/theme/app_theme.dart';
 import 'package:ketion/core/theme/app_colors.dart';
 import 'package:ketion/core/router/app_router.dart';
 import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
-import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/root_assistive_ball_overlay.dart';
 
@@ -109,27 +107,6 @@ class _KetionAppState extends ConsumerState<KetionApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetBootstrap.listenToDeepLinks(
-      onCreatePage: () async {
-        final result = await ref.read(createPageUseCaseProvider)(title: '');
-        return result.fold(
-          (page) {
-            ref.invalidate(recentPagesProvider);
-            ref.invalidate(favoritePagesProvider);
-            ref.invalidate(pageProvider(page.id));
-            return page.id;
-          },
-          (error) => null,
-        );
-      },
-      onValidatePage: (pageId) async {
-        final result = await ref.read(getPageUseCaseProvider)(pageId);
-        return result.fold(
-          (page) => !page.deleted,
-          (error) => false,
-        );
-      },
-    );
 
     _reminderCleanupTimer = Timer.periodic(
       const Duration(minutes: 1),

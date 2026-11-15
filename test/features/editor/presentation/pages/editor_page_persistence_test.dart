@@ -18,23 +18,6 @@ import 'package:ketion/features/pages/domain/entities/page.dart';
 import 'package:ketion/features/pages/domain/repositories/page_repository.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
-import 'package:ketion/features/widgets/domain/services/widget_service.dart';
-import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
-
-class _MockWidgetService implements WidgetService {
-  @override
-  Future<Result<void>> generateWidgetSnapshot() async => const Success(null);
-
-  @override
-  Future<Result<void>> triggerWidgetUpdate() async => const Success(null);
-
-  @override
-  Future<Result<void>> updateSimpleWidgetData(
-    String key,
-    dynamic value,
-  ) async =>
-      const Success(null);
-}
 
 class _FailingPageRepository implements PageRepository {
   final PageRepository _delegate;
@@ -119,8 +102,6 @@ void main() {
   late PageRepositoryImpl realPageRepo;
   late _FailingPageRepository failingPageRepo;
   late BlockRepositoryImpl blockRepo;
-  late _MockWidgetService mockWidgetService;
-
   setUp(() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     db = AppDatabase.forTesting(NativeDatabase.memory());
@@ -128,7 +109,6 @@ void main() {
     realPageRepo = PageRepositoryImpl(db, syncQueueRepo, appLogger);
     failingPageRepo = _FailingPageRepository(realPageRepo);
     blockRepo = BlockRepositoryImpl(db, syncQueueRepo, appLogger);
-    mockWidgetService = _MockWidgetService();
   });
 
   group('EditorPage Persistence Lifecycle Tests', () {
@@ -169,7 +149,6 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             pageRepositoryProvider.overrideWithValue(failingPageRepo),
             blockRepositoryProvider.overrideWithValue(blockRepo),
-            widgetServiceProvider.overrideWithValue(mockWidgetService),
           ],
           child: MaterialApp.router(
             routerConfig: router,

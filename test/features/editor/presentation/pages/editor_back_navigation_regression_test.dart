@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ketion/core/database/app_database.dart' hide Page, Block;
 import 'package:ketion/core/utils/logger.dart';
-import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/blocks/data/repositories/block_repository_impl.dart';
 import 'package:ketion/features/blocks/presentation/providers/block_providers.dart';
 import 'package:ketion/features/editor/presentation/pages/editor_page.dart';
@@ -17,30 +16,6 @@ import 'package:ketion/features/pages/data/repositories/page_repository_impl.dar
 import 'package:ketion/features/pages/domain/entities/page.dart';
 import 'package:ketion/features/pages/presentation/providers/page_providers.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
-import 'package:ketion/features/widgets/domain/services/widget_service.dart';
-import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
-
-class MockWidgetService implements WidgetService {
-  int updateCount = 0;
-  int snapshotCount = 0;
-
-  @override
-  Future<Result<void>> generateWidgetSnapshot() async {
-    snapshotCount++;
-    return const Success(null);
-  }
-
-  @override
-  Future<Result<void>> triggerWidgetUpdate() async {
-    updateCount++;
-    return const Success(null);
-  }
-
-  @override
-  Future<Result<void>> updateSimpleWidgetData(String key, dynamic value) async {
-    return const Success(null);
-  }
-}
 
 Future<void> pumpUntilInitialized(WidgetTester tester) async {
   int attempts = 0;
@@ -88,7 +63,6 @@ void main() {
   late AppDatabase db;
   late PageRepositoryImpl pageRepo;
   late BlockRepositoryImpl blockRepo;
-  late MockWidgetService mockWidgetService;
 
   setUp(() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -96,7 +70,6 @@ void main() {
     final syncQueueRepo = SyncQueueRepositoryImpl(db);
     pageRepo = PageRepositoryImpl(db, syncQueueRepo, appLogger);
     blockRepo = BlockRepositoryImpl(db, syncQueueRepo, appLogger);
-    mockWidgetService = MockWidgetService();
   });
 
   tearDown(() {
@@ -104,7 +77,7 @@ void main() {
   });
 
   group('Editor Back Navigation Regression Tests', () {
-    testWidgets('Back navigation flushes pending changes and updates native widgets before popping',
+    testWidgets('Back navigation flushes pending changes before popping',
         (tester) async {
       final now = DateTime.now().toUtc();
       final page = Page(
@@ -140,7 +113,6 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             pageRepositoryProvider.overrideWithValue(pageRepo),
             blockRepositoryProvider.overrideWithValue(blockRepo),
-            widgetServiceProvider.overrideWithValue(mockWidgetService),
           ],
           child: MaterialApp.router(
             routerConfig: router,
@@ -161,10 +133,6 @@ void main() {
       // Home screen must be visible and valid, NOT a blank screen
       expect(find.text('Home Screen Content'), findsOneWidget);
       expect(find.byType(EditorPage), findsNothing);
-
-      // Widget service update must have executed
-      expect(mockWidgetService.snapshotCount, greaterThanOrEqualTo(1));
-      expect(mockWidgetService.updateCount, greaterThanOrEqualTo(1));
     });
 
     testWidgets('Rapid back presses do not cause duplicate navigation or blank route',
@@ -203,7 +171,6 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             pageRepositoryProvider.overrideWithValue(pageRepo),
             blockRepositoryProvider.overrideWithValue(blockRepo),
-            widgetServiceProvider.overrideWithValue(mockWidgetService),
           ],
           child: MaterialApp.router(
             routerConfig: router,
@@ -264,7 +231,6 @@ void main() {
             appDatabaseProvider.overrideWithValue(db),
             pageRepositoryProvider.overrideWithValue(pageRepo),
             blockRepositoryProvider.overrideWithValue(blockRepo),
-            widgetServiceProvider.overrideWithValue(mockWidgetService),
           ],
           child: MaterialApp.router(
             routerConfig: router,

@@ -15,20 +15,24 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
-import android.util.DisplayMetrics
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import kotlin.math.abs
 
 class AssistiveBallService : Service() {
 
     private var windowManager: WindowManager? = null
-    private var floatingView: View? = null
-    private var layoutParams: WindowManager.LayoutParams? = null
+    private var floatingBallView: View? = null
+    private var floatingMenuView: View? = null
+    private var ballLayoutParams: WindowManager.LayoutParams? = null
+    private var menuLayoutParams: WindowManager.LayoutParams? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -76,43 +80,38 @@ class AssistiveBallService : Service() {
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         if (intent?.action == ACTION_STOP) {
             prefs.edit().putBoolean(KEY_ENABLED, false).apply()
-            removeFloatingView()
+            removeFloatingViews()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        // ACTION_START explicitly enables the feature. A null intent means
-        // Android is recreating a previously sticky service.
         if (intent?.action == ACTION_START) {
             prefs.edit().putBoolean(KEY_ENABLED, true).apply()
         }
 
         if (!prefs.getBoolean(KEY_ENABLED, false)) {
-            removeFloatingView()
+            removeFloatingViews()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-            !Settings.canDrawOverlays(this)
-        ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             prefs.edit().putBoolean(KEY_ENABLED, false).apply()
-            removeFloatingView()
+            removeFloatingViews()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return START_NOT_STICKY
         }
 
-        val savedX = prefs.getFloat(KEY_NORM_X, MAX_POSITION)
-        val savedY = prefs.getFloat(KEY_NORM_Y, MIN_POSITION)
+        val savedX = prefs.getFloat(KEY_NORM_X, DEFAULT_NORM_X)
+        val savedY = prefs.getFloat(KEY_NORM_Y, DEFAULT_NORM_Y)
         val normX = intent?.getFloatExtra(EXTRA_X, savedX) ?: savedX
         val normY = intent?.getFloatExtra(EXTRA_Y, savedY) ?: savedY
 
@@ -120,13 +119,13 @@ class AssistiveBallService : Service() {
             startForegroundServiceNotification()
         }
 
-        val clampedX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
-        val clampedY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedX = normX.coerceIn(MIN_NORM_X, MAX_NORM_X)
+        val clampedY = normY.coerceIn(MIN_NORM_Y, MAX_NORM_Y)
 
-        if (floatingView == null) {
-            setupFloatingView(clampedX, clampedY)
+        if (floatingBallView == null) {
+            setupFloatingBallView(clampedX, clampedY)
         } else if (intent?.action == ACTION_UPDATE_POS) {
-            updateViewPosition(clampedX, clampedY)
+            updateBallPosition(clampedX, clampedY)
         }
 
         return START_STICKY
@@ -174,20 +173,21 @@ class AssistiveBallService : Service() {
         usable: UsableScreenArea
     ): Pair<Int, Int> {
         val density = resources.displayMetrics.density
-        val marginPx = (MARGIN_DP * density).toInt()
-        val availableWidth = (usable.width - ballSizePx - 2 * marginPx).coerceAtLeast(1)
-        val availableHeight = (usable.height - ballSizePx - 2 * marginPx).coerceAtLeast(1)
+        val spacingX = max((16 * density).toInt(), (usable.width * 0.016f).toInt())
+        val spacingY = max((16 * density).toInt(), (usable.height * 0.022f).toInt())
+        val availableWidth = (usable.width - ballSizePx - 2 * spacingX).coerceAtLeast(1)
+        val availableHeight = (usable.height - ballSizePx - 2 * spacingY).coerceAtLeast(1)
 
-        val clampedNormX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
-        val clampedNormY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedNormX = normX.coerceIn(MIN_NORM_X, MAX_NORM_X)
+        val clampedNormY = normY.coerceIn(MIN_NORM_Y, MAX_NORM_Y)
 
-        val targetX = usable.left + marginPx + (clampedNormX * availableWidth).toInt()
-        val targetY = usable.top + marginPx + (clampedNormY * availableHeight).toInt()
+        val targetX = usable.left + spacingX + (clampedNormX * availableWidth).toInt()
+        val targetY = usable.top + spacingY + (clampedNormY * availableHeight).toInt()
         return Pair(targetX, targetY)
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun setupFloatingView(initialNormX: Float, initialNormY: Float) {
+    private fun setupFloatingBallView(initialNormX: Float, initialNormY: Float) {
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
         val ballSizeDp = 52
@@ -204,7 +204,7 @@ class AssistiveBallService : Service() {
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
-        layoutParams = WindowManager.LayoutParams(
+        ballLayoutParams = WindowManager.LayoutParams(
             ballSizePx,
             ballSizePx,
             layoutType,
@@ -219,7 +219,8 @@ class AssistiveBallService : Service() {
         val ballView = ImageView(this).apply {
             val shape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#4B68FF"))
+                // Use Ketion's primary brand purple instead of blue
+                setColor(Color.parseColor("#6200EE"))
             }
             background = shape
             setImageResource(R.drawable.ic_assistive_ball)
@@ -237,12 +238,12 @@ class AssistiveBallService : Service() {
             private var isClick = false
 
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-                if (event == null || layoutParams == null) return false
+                if (event == null || ballLayoutParams == null) return false
 
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        initialX = layoutParams!!.x
-                        initialY = layoutParams!!.y
+                        initialX = ballLayoutParams!!.x
+                        initialY = ballLayoutParams!!.y
                         touchStartX = event.rawX
                         touchStartY = event.rawY
                         isClick = true
@@ -253,36 +254,34 @@ class AssistiveBallService : Service() {
                         val dy = event.rawY - touchStartY
                         if (abs(dx) > 10 || abs(dy) > 10) {
                             isClick = false
+                            dismissMenu()
                         }
-                        layoutParams!!.x = initialX + dx.toInt()
-                        layoutParams!!.y = initialY + dy.toInt()
-                        windowManager?.updateViewLayout(floatingView, layoutParams)
+                        ballLayoutParams!!.x = initialX + dx.toInt()
+                        ballLayoutParams!!.y = initialY + dy.toInt()
+                        windowManager?.updateViewLayout(floatingBallView, ballLayoutParams)
                         return true
                     }
                     MotionEvent.ACTION_UP -> {
                         if (isClick) {
-                            val openIntent = Intent(this@AssistiveBallService, MainActivity::class.java).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                                putExtra("from_assistive_ball", true)
-                            }
-                            startActivity(openIntent)
+                            toggleFloatingMenu()
                         } else {
                             val currentUsable = getUsableScreenArea()
                             val curDensity = resources.displayMetrics.density
-                            val marginPx = (MARGIN_DP * curDensity).toInt()
-                            val availableW = (currentUsable.width - ballSizePx - 2 * marginPx).coerceAtLeast(1)
-                            val availableH = (currentUsable.height - ballSizePx - 2 * marginPx).coerceAtLeast(1)
+                            val spacingX = max((16 * curDensity).toInt(), (currentUsable.width * 0.016f).toInt())
+                            val spacingY = max((16 * curDensity).toInt(), (currentUsable.height * 0.022f).toInt())
+                            val availableW = (currentUsable.width - ballSizePx - 2 * spacingX).coerceAtLeast(1)
+                            val availableH = (currentUsable.height - ballSizePx - 2 * spacingY).coerceAtLeast(1)
 
-                            val currentNormX = ((layoutParams!!.x - currentUsable.left - marginPx).toFloat() / availableW).coerceIn(0f, 1f)
-                            val currentNormY = ((layoutParams!!.y - currentUsable.top - marginPx).toFloat() / availableH).coerceIn(0f, 1f)
+                            val currentNormX = ((ballLayoutParams!!.x - currentUsable.left - spacingX).toFloat() / availableW).coerceIn(0f, 1f)
+                            val currentNormY = ((ballLayoutParams!!.y - currentUsable.top - spacingY).toFloat() / availableH).coerceIn(0f, 1f)
 
-                            val targetNormX = if (currentNormX < 0.5f) MIN_POSITION else MAX_POSITION
-                            val targetNormY = if (currentNormY < 0.5f) MIN_POSITION else MAX_POSITION
+                            val targetNormX = if (currentNormX < 0.5f) MIN_NORM_X else MAX_NORM_X
+                            val targetNormY = if (currentNormY < 0.5f) MIN_NORM_Y else MAX_NORM_Y
 
                             val (snapX, snapY) = calculatePixelPosition(targetNormX, targetNormY, ballSizePx, currentUsable)
-                            layoutParams!!.x = snapX
-                            layoutParams!!.y = snapY
-                            windowManager?.updateViewLayout(floatingView, layoutParams)
+                            ballLayoutParams!!.x = snapX
+                            ballLayoutParams!!.y = snapY
+                            windowManager?.updateViewLayout(floatingBallView, ballLayoutParams)
 
                             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                             prefs.edit()
@@ -299,22 +298,175 @@ class AssistiveBallService : Service() {
             }
         })
 
-        floatingView = ballView
-        windowManager?.addView(floatingView, layoutParams)
+        floatingBallView = ballView
+        windowManager?.addView(floatingBallView, ballLayoutParams)
     }
 
-    private fun updateViewPosition(normX: Float, normY: Float) {
-        if (floatingView == null || layoutParams == null || windowManager == null) return
-        val ballSize = floatingView!!.width.takeIf { it > 0 } ?: (52 * resources.displayMetrics.density).toInt()
+    private fun toggleFloatingMenu() {
+        if (floatingMenuView != null) {
+            dismissMenu()
+        } else {
+            showFloatingMenu()
+        }
+    }
+
+    private fun showFloatingMenu() {
+        val ballParams = ballLayoutParams ?: return
+        val density = resources.displayMetrics.density
+        val usableArea = getUsableScreenArea()
+
+        val menuWidthPx = (200 * density).toInt()
+        val isLeft = ballParams.x < (usableArea.width / 2)
+
+        val menuX = if (isLeft) {
+            ballParams.x + (60 * density).toInt()
+        } else {
+            (ballParams.x - menuWidthPx - (8 * density).toInt()).coerceAtLeast(usableArea.left)
+        }
+        val menuY = (ballParams.y - (20 * density).toInt()).coerceIn(
+            usableArea.top + (10 * density).toInt(),
+            (usableArea.height - (180 * density).toInt()).coerceAtLeast(usableArea.top)
+        )
+
+        val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            @Suppress("DEPRECATION")
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
+
+        menuLayoutParams = WindowManager.LayoutParams(
+            menuWidthPx,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            layoutType,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = menuX
+            y = menuY
+        }
+
+        val menuContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val bg = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 14f * density
+                setColor(Color.parseColor("#2A2D32"))
+                setStroke((1 * density).toInt(), Color.parseColor("#33FFFFFF"))
+            }
+            background = bg
+            elevation = 16f * density
+            setPadding((12 * density).toInt(), (10 * density).toInt(), (12 * density).toInt(), (10 * density).toInt())
+        }
+
+        // Quick Note Item
+        menuContainer.addView(createMenuItem("Quick Note", android.R.drawable.ic_menu_edit) {
+            dismissMenu()
+            launchKetionWithAction("quick_note")
+        })
+
+        // Note Selector Item
+        menuContainer.addView(createMenuItem("Note Selector", android.R.drawable.ic_menu_agenda) {
+            dismissMenu()
+            launchKetionWithAction("note_selector")
+        })
+
+        // Divider
+        val divider = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (1 * density).toInt()
+            ).apply {
+                setMargins(0, (6 * density).toInt(), 0, (6 * density).toInt())
+            }
+            setBackgroundColor(Color.parseColor("#22FFFFFF"))
+        }
+        menuContainer.addView(divider)
+
+        // Hide Ball Item
+        menuContainer.addView(createMenuItem("Hide Ball", android.R.drawable.ic_menu_close_clear_cancel) {
+            dismissMenu()
+            MainActivity.notifyHideBall()
+            stopService(this)
+        })
+
+        menuContainer.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                dismissMenu()
+                true
+            } else {
+                false
+            }
+        }
+
+        floatingMenuView = menuContainer
+        windowManager?.addView(floatingMenuView, menuLayoutParams)
+    }
+
+    private fun createMenuItem(title: String, iconRes: Int? = null, onClick: () -> Unit): View {
+        val density = resources.displayMetrics.density
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding((8 * density).toInt(), (10 * density).toInt(), (8 * density).toInt(), (10 * density).toInt())
+            isClickable = true
+            isFocusable = true
+
+            if (iconRes != null) {
+                val iconView = ImageView(this@AssistiveBallService).apply {
+                    setImageResource(iconRes)
+                    setColorFilter(Color.parseColor("#C4C7CF"))
+                    val iconSize = (18 * density).toInt()
+                    layoutParams = LinearLayout.LayoutParams(iconSize, iconSize).apply {
+                        marginEnd = (10 * density).toInt()
+                    }
+                }
+                addView(iconView)
+            }
+
+            val textView = TextView(this@AssistiveBallService).apply {
+                text = title
+                setTextColor(Color.parseColor("#E2E2E6"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            }
+            addView(textView)
+
+            setOnClickListener { onClick() }
+        }
+    }
+
+    private fun launchKetionWithAction(action: String) {
+        val openIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("action", action)
+            putExtra("from_assistive_ball", true)
+        }
+        startActivity(openIntent)
+    }
+
+    private fun dismissMenu() {
+        if (floatingMenuView != null && windowManager != null) {
+            try {
+                windowManager?.removeView(floatingMenuView)
+            } catch (_: Exception) {}
+            floatingMenuView = null
+        }
+    }
+
+    private fun updateBallPosition(normX: Float, normY: Float) {
+        if (floatingBallView == null || ballLayoutParams == null || windowManager == null) return
+        val ballSize = floatingBallView!!.width.takeIf { it > 0 } ?: (52 * resources.displayMetrics.density).toInt()
         val usable = getUsableScreenArea()
         val (newX, newY) = calculatePixelPosition(normX, normY, ballSize, usable)
 
-        layoutParams!!.x = newX
-        layoutParams!!.y = newY
-        windowManager?.updateViewLayout(floatingView, layoutParams)
+        ballLayoutParams!!.x = newX
+        ballLayoutParams!!.y = newY
+        windowManager?.updateViewLayout(floatingBallView, ballLayoutParams)
+        dismissMenu()
 
-        val clampedX = normX.coerceIn(MIN_POSITION, MAX_POSITION)
-        val clampedY = normY.coerceIn(MIN_POSITION, MAX_POSITION)
+        val clampedX = normX.coerceIn(MIN_NORM_X, MAX_NORM_X)
+        val clampedY = normY.coerceIn(MIN_NORM_Y, MAX_NORM_Y)
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit()
             .putFloat(KEY_NORM_X, clampedX)
@@ -322,17 +474,18 @@ class AssistiveBallService : Service() {
             .apply()
     }
 
-    private fun removeFloatingView() {
-        if (floatingView != null && windowManager != null) {
+    private fun removeFloatingViews() {
+        dismissMenu()
+        if (floatingBallView != null && windowManager != null) {
             try {
-                windowManager?.removeView(floatingView)
+                windowManager?.removeView(floatingBallView)
             } catch (_: Exception) {}
-            floatingView = null
+            floatingBallView = null
         }
     }
 
     override fun onDestroy() {
-        removeFloatingView()
+        removeFloatingViews()
         super.onDestroy()
     }
 
@@ -342,9 +495,14 @@ class AssistiveBallService : Service() {
         const val KEY_NORM_X = "norm_x"
         const val KEY_NORM_Y = "norm_y"
 
-        const val MIN_POSITION = 0.05f
-        const val MAX_POSITION = 0.95f
-        const val MARGIN_DP = 14
+        const val DEFAULT_NORM_X = 1.0f
+        const val DEFAULT_NORM_Y = 1.0f
+
+        const val MIN_NORM_X = 0.0f
+        const val MAX_NORM_X = 1.0f
+        const val MIN_NORM_Y = 0.0f
+        const val MAX_NORM_Y = 1.0f
+        const val MARGIN_DP = 20
 
         const val ACTION_START = "com.example.ketion.assistive_ball.START"
         const val ACTION_STOP = "com.example.ketion.assistive_ball.STOP"

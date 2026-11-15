@@ -12,22 +12,57 @@ class AssistiveBallPlatformServiceImpl implements AssistiveBallPlatformService {
   @override
   void Function()? onBallClicked;
 
+  void Function(bool isStandalone)? onOpenQuickNote;
+  void Function(bool isStandalone)? onOpenNoteSelector;
+  void Function()? onHideOverlay;
+
   AssistiveBallPlatformServiceImpl() {
     _channel.setMethodCallHandler(_handleMethodCall);
   }
 
   Future<dynamic> _handleMethodCall(MethodCall call) async {
-    if (call.method == 'onPositionChanged') {
-      final x = (call.arguments?['x'] as num?)?.toDouble();
-      final y = (call.arguments?['y'] as num?)?.toDouble();
-      if (x != null && y != null) {
-        onPositionChanged?.call(x, y);
-      }
-    } else if (call.method == 'onBallClicked' ||
-        call.method == 'openQuickNote') {
-      onBallClicked?.call();
+    switch (call.method) {
+      case 'onPositionChanged':
+        final x = (call.arguments?['x'] as num?)?.toDouble();
+        final y = (call.arguments?['y'] as num?)?.toDouble();
+        if (x != null && y != null) {
+          onPositionChanged?.call(x, y);
+        }
+        break;
+      case 'onBallClicked':
+        onBallClicked?.call();
+        break;
+      case 'openQuickNote':
+        final isStandalone =
+            call.arguments is Map && (call.arguments['isStandalone'] == true);
+        onOpenQuickNote?.call(isStandalone);
+        break;
+      case 'openNoteSelector':
+        final isStandalone =
+            call.arguments is Map && (call.arguments['isStandalone'] == true);
+        onOpenNoteSelector?.call(isStandalone);
+        break;
+      case 'hideOverlay':
+        onHideOverlay?.call();
+        break;
     }
   }
+
+  Future<void> setOverlayWindowMode({
+    required bool enable,
+    double width = 440,
+    double height = 580,
+  }) async {
+    if (!isSystemOverlaySupported) return;
+    try {
+      await _channel.invokeMethod<void>('setOverlayWindowMode', {
+        'enable': enable,
+        'width': width,
+        'height': height,
+      });
+    } catch (_) {}
+  }
+
 
   @override
   bool get isSystemOverlaySupported {

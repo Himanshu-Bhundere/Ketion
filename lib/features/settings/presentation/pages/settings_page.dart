@@ -13,6 +13,7 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final ballState = ref.watch(assistiveBallProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -182,7 +183,7 @@ class SettingsPage extends ConsumerWidget {
                     subtitle: const Text(
                       'Floating shortcut for quick note capture and review',
                     ),
-                    value: settings.assistiveBallEnabled,
+                    value: settings.assistiveBallEnabled && ballState.isEnabled,
                     onChanged: (bool value) {
                       ref
                           .read(assistiveBallProvider.notifier)

@@ -8,8 +8,8 @@ class AssistiveBallState with _$AssistiveBallState {
   const factory AssistiveBallState({
     @Default(false) bool isEnabled,
     @Default(true) bool isVisible,
-    @Default(0.98) double normalizedX,
-    @Default(0.02) double normalizedY,
+    @Default(1.0) double normalizedX,
+    @Default(1.0) double normalizedY,
     @Default(false) bool isMenuOpen,
     @Default(false) bool isFloatingNoteOpen,
     @Default(false) bool isNoteSelectorOpen,
@@ -19,6 +19,7 @@ class AssistiveBallState with _$AssistiveBallState {
     @Default(0.5) double floatingNoteNormalizedX,
     @Default(0.4) double floatingNoteNormalizedY,
     @Default(false) bool isNoteMinimized,
+    @Default(false) bool isStandaloneOverlay,
   }) = _AssistiveBallState;
 
   factory AssistiveBallState.fromJson(Map<String, dynamic> json) =>

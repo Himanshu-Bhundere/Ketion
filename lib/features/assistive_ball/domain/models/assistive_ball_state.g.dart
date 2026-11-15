@@ -11,8 +11,8 @@ _$AssistiveBallStateImpl _$$AssistiveBallStateImplFromJson(
     _$AssistiveBallStateImpl(
       isEnabled: json['isEnabled'] as bool? ?? false,
       isVisible: json['isVisible'] as bool? ?? true,
-      normalizedX: (json['normalizedX'] as num?)?.toDouble() ?? 0.98,
-      normalizedY: (json['normalizedY'] as num?)?.toDouble() ?? 0.02,
+      normalizedX: (json['normalizedX'] as num?)?.toDouble() ?? 1.0,
+      normalizedY: (json['normalizedY'] as num?)?.toDouble() ?? 1.0,
       isMenuOpen: json['isMenuOpen'] as bool? ?? false,
       isFloatingNoteOpen: json['isFloatingNoteOpen'] as bool? ?? false,
       isNoteSelectorOpen: json['isNoteSelectorOpen'] as bool? ?? false,
@@ -26,6 +26,7 @@ _$AssistiveBallStateImpl _$$AssistiveBallStateImplFromJson(
       floatingNoteNormalizedY:
           (json['floatingNoteNormalizedY'] as num?)?.toDouble() ?? 0.4,
       isNoteMinimized: json['isNoteMinimized'] as bool? ?? false,
+      isStandaloneOverlay: json['isStandaloneOverlay'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$AssistiveBallStateImplToJson(
@@ -44,4 +45,5 @@ Map<String, dynamic> _$$AssistiveBallStateImplToJson(
       'floatingNoteNormalizedX': instance.floatingNoteNormalizedX,
       'floatingNoteNormalizedY': instance.floatingNoteNormalizedY,
       'isNoteMinimized': instance.isNoteMinimized,
+      'isStandaloneOverlay': instance.isStandaloneOverlay,
     };

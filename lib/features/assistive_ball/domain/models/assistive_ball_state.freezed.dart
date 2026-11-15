@@ -33,6 +33,7 @@ mixin _$AssistiveBallState {
   double get floatingNoteNormalizedX => throw _privateConstructorUsedError;
   double get floatingNoteNormalizedY => throw _privateConstructorUsedError;
   bool get isNoteMinimized => throw _privateConstructorUsedError;
+  bool get isStandaloneOverlay => throw _privateConstructorUsedError;
 
   /// Serializes this AssistiveBallState to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -63,7 +64,8 @@ abstract class $AssistiveBallStateCopyWith<$Res> {
       double floatingNoteHeight,
       double floatingNoteNormalizedX,
       double floatingNoteNormalizedY,
-      bool isNoteMinimized});
+      bool isNoteMinimized,
+      bool isStandaloneOverlay});
 }
 
 /// @nodoc
@@ -94,6 +96,7 @@ class _$AssistiveBallStateCopyWithImpl<$Res, $Val extends AssistiveBallState>
     Object? floatingNoteNormalizedX = null,
     Object? floatingNoteNormalizedY = null,
     Object? isNoteMinimized = null,
+    Object? isStandaloneOverlay = null,
   }) {
     return _then(_value.copyWith(
       isEnabled: null == isEnabled
@@ -148,6 +151,10 @@ class _$AssistiveBallStateCopyWithImpl<$Res, $Val extends AssistiveBallState>
           ? _value.isNoteMinimized
           : isNoteMinimized // ignore: cast_nullable_to_non_nullable
               as bool,
+      isStandaloneOverlay: null == isStandaloneOverlay
+          ? _value.isStandaloneOverlay
+          : isStandaloneOverlay // ignore: cast_nullable_to_non_nullable
+              as bool,
     ) as $Val);
   }
 }
@@ -173,7 +180,8 @@ abstract class _$$AssistiveBallStateImplCopyWith<$Res>
       double floatingNoteHeight,
       double floatingNoteNormalizedX,
       double floatingNoteNormalizedY,
-      bool isNoteMinimized});
+      bool isNoteMinimized,
+      bool isStandaloneOverlay});
 }
 
 /// @nodoc
@@ -202,6 +210,7 @@ class __$$AssistiveBallStateImplCopyWithImpl<$Res>
     Object? floatingNoteNormalizedX = null,
     Object? floatingNoteNormalizedY = null,
     Object? isNoteMinimized = null,
+    Object? isStandaloneOverlay = null,
   }) {
     return _then(_$AssistiveBallStateImpl(
       isEnabled: null == isEnabled
@@ -256,6 +265,10 @@ class __$$AssistiveBallStateImplCopyWithImpl<$Res>
           ? _value.isNoteMinimized
           : isNoteMinimized // ignore: cast_nullable_to_non_nullable
               as bool,
+      isStandaloneOverlay: null == isStandaloneOverlay
+          ? _value.isStandaloneOverlay
+          : isStandaloneOverlay // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -266,8 +279,8 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
   const _$AssistiveBallStateImpl(
       {this.isEnabled = false,
       this.isVisible = true,
-      this.normalizedX = 0.98,
-      this.normalizedY = 0.02,
+      this.normalizedX = 1.0,
+      this.normalizedY = 1.0,
       this.isMenuOpen = false,
       this.isFloatingNoteOpen = false,
       this.isNoteSelectorOpen = false,
@@ -276,7 +289,8 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
       this.floatingNoteHeight = 420.0,
       this.floatingNoteNormalizedX = 0.5,
       this.floatingNoteNormalizedY = 0.4,
-      this.isNoteMinimized = false});
+      this.isNoteMinimized = false,
+      this.isStandaloneOverlay = false});
 
   factory _$AssistiveBallStateImpl.fromJson(Map<String, dynamic> json) =>
       _$$AssistiveBallStateImplFromJson(json);
@@ -319,10 +333,13 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
   @override
   @JsonKey()
   final bool isNoteMinimized;
+  @override
+  @JsonKey()
+  final bool isStandaloneOverlay;
 
   @override
   String toString() {
-    return 'AssistiveBallState(isEnabled: $isEnabled, isVisible: $isVisible, normalizedX: $normalizedX, normalizedY: $normalizedY, isMenuOpen: $isMenuOpen, isFloatingNoteOpen: $isFloatingNoteOpen, isNoteSelectorOpen: $isNoteSelectorOpen, activePageId: $activePageId, floatingNoteWidth: $floatingNoteWidth, floatingNoteHeight: $floatingNoteHeight, floatingNoteNormalizedX: $floatingNoteNormalizedX, floatingNoteNormalizedY: $floatingNoteNormalizedY, isNoteMinimized: $isNoteMinimized)';
+    return 'AssistiveBallState(isEnabled: $isEnabled, isVisible: $isVisible, normalizedX: $normalizedX, normalizedY: $normalizedY, isMenuOpen: $isMenuOpen, isFloatingNoteOpen: $isFloatingNoteOpen, isNoteSelectorOpen: $isNoteSelectorOpen, activePageId: $activePageId, floatingNoteWidth: $floatingNoteWidth, floatingNoteHeight: $floatingNoteHeight, floatingNoteNormalizedX: $floatingNoteNormalizedX, floatingNoteNormalizedY: $floatingNoteNormalizedY, isNoteMinimized: $isNoteMinimized, isStandaloneOverlay: $isStandaloneOverlay)';
   }
 
   @override
@@ -357,7 +374,9 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
                     other.floatingNoteNormalizedY, floatingNoteNormalizedY) ||
                 other.floatingNoteNormalizedY == floatingNoteNormalizedY) &&
             (identical(other.isNoteMinimized, isNoteMinimized) ||
-                other.isNoteMinimized == isNoteMinimized));
+                other.isNoteMinimized == isNoteMinimized) &&
+            (identical(other.isStandaloneOverlay, isStandaloneOverlay) ||
+                other.isStandaloneOverlay == isStandaloneOverlay));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -376,7 +395,8 @@ class _$AssistiveBallStateImpl implements _AssistiveBallState {
       floatingNoteHeight,
       floatingNoteNormalizedX,
       floatingNoteNormalizedY,
-      isNoteMinimized);
+      isNoteMinimized,
+      isStandaloneOverlay);
 
   /// Create a copy of AssistiveBallState
   /// with the given fields replaced by the non-null parameter values.
@@ -409,7 +429,8 @@ abstract class _AssistiveBallState implements AssistiveBallState {
       final double floatingNoteHeight,
       final double floatingNoteNormalizedX,
       final double floatingNoteNormalizedY,
-      final bool isNoteMinimized}) = _$AssistiveBallStateImpl;
+      final bool isNoteMinimized,
+      final bool isStandaloneOverlay}) = _$AssistiveBallStateImpl;
 
   factory _AssistiveBallState.fromJson(Map<String, dynamic> json) =
       _$AssistiveBallStateImpl.fromJson;
@@ -440,6 +461,8 @@ abstract class _AssistiveBallState implements AssistiveBallState {
   double get floatingNoteNormalizedY;
   @override
   bool get isNoteMinimized;
+  @override
+  bool get isStandaloneOverlay;
 
   /// Create a copy of AssistiveBallState
   /// with the given fields replaced by the non-null parameter values.

@@ -32,6 +32,19 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
       }
     };
 
+    if (_platformService is AssistiveBallPlatformServiceImpl) {
+      final impl = _platformService as AssistiveBallPlatformServiceImpl;
+      impl.onOpenQuickNote = (isStandalone) {
+        openFloatingNote(isStandalone: isStandalone);
+      };
+      impl.onOpenNoteSelector = (isStandalone) {
+        openNoteSelector(isStandalone: isStandalone);
+      };
+      impl.onHideOverlay = () {
+        setEnabled(false);
+      };
+    }
+
     _ref.listen(
       appSettingsProvider,
       (previous, next) async {
@@ -57,11 +70,16 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
               }
             }
 
+            final clampedX =
+                settings.assistiveBallNormalizedX < 0.5 ? minX : maxX;
+            final clampedY =
+                settings.assistiveBallNormalizedY < 0.5 ? minY : maxY;
+
             state = state.copyWith(
               isEnabled: enabled,
               isVisible: enabled,
-              normalizedX: settings.assistiveBallNormalizedX,
-              normalizedY: settings.assistiveBallNormalizedY,
+              normalizedX: clampedX,
+              normalizedY: clampedY,
             );
             if (state.isEnabled) {
               await _platformService.showSystemOverlay(
@@ -113,12 +131,14 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
     }
   }
 
-  static const double minPosition = 0.05;
-  static const double maxPosition = 0.95;
+  static const double minX = 0.0;
+  static const double maxX = 1.0;
+  static const double minY = 0.0;
+  static const double maxY = 1.0;
 
   void updatePosition(double nx, double ny) {
-    final clampedX = nx.clamp(minPosition, maxPosition);
-    final clampedY = ny.clamp(minPosition, maxPosition);
+    final clampedX = nx.clamp(minX, maxX);
+    final clampedY = ny.clamp(minY, maxY);
     state = state.copyWith(
       normalizedX: clampedX,
       normalizedY: clampedY,
@@ -126,13 +146,8 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
   }
 
   Future<void> snapToNearestCorner(double nx, double ny) async {
-    const left = minPosition;
-    const right = maxPosition;
-    const top = minPosition;
-    const bottom = maxPosition;
-
-    final targetX = nx < 0.5 ? left : right;
-    final targetY = ny < 0.5 ? top : bottom;
+    final targetX = nx < 0.5 ? minX : maxX;
+    final targetY = ny < 0.5 ? minY : maxY;
 
     state = state.copyWith(
       normalizedX: targetX,
@@ -166,37 +181,65 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
     }
   }
 
-  void openFloatingNote({String? pageId}) {
+  void openFloatingNote({String? pageId, bool isStandalone = false}) {
     state = state.copyWith(
       isFloatingNoteOpen: true,
       isNoteSelectorOpen: false,
       activePageId: pageId,
       isMenuOpen: false,
       isNoteMinimized: false,
+      isStandaloneOverlay: isStandalone,
     );
+
+    if (isStandalone && _platformService is AssistiveBallPlatformServiceImpl) {
+      (_platformService as AssistiveBallPlatformServiceImpl)
+          .setOverlayWindowMode(enable: true, width: 420, height: 560);
+    }
   }
 
   void closeFloatingNote() {
+    final wasStandalone = state.isStandaloneOverlay;
     state = state.copyWith(
       isFloatingNoteOpen: false,
       isNoteSelectorOpen: false,
       activePageId: null,
       isNoteMinimized: false,
+      isStandaloneOverlay: false,
     );
+
+    if (wasStandalone && _platformService is AssistiveBallPlatformServiceImpl) {
+      (_platformService as AssistiveBallPlatformServiceImpl)
+          .setOverlayWindowMode(enable: false);
+    }
   }
 
-  void openNoteSelector() {
+  void openNoteSelector({bool isStandalone = false}) {
     state = state.copyWith(
       isNoteSelectorOpen: true,
       isFloatingNoteOpen: false,
       isMenuOpen: false,
+      isStandaloneOverlay: isStandalone,
     );
+
+    if (isStandalone && _platformService is AssistiveBallPlatformServiceImpl) {
+      (_platformService as AssistiveBallPlatformServiceImpl)
+          .setOverlayWindowMode(enable: true, width: 440, height: 580);
+    }
   }
 
   void closeNoteSelector() {
+    final wasStandalone = state.isStandaloneOverlay;
     state = state.copyWith(
       isNoteSelectorOpen: false,
+      isStandaloneOverlay: false,
     );
+
+    if (wasStandalone && !state.isFloatingNoteOpen) {
+      if (_platformService is AssistiveBallPlatformServiceImpl) {
+        (_platformService as AssistiveBallPlatformServiceImpl)
+            .setOverlayWindowMode(enable: false);
+      }
+    }
   }
 
   void returnToNoteSelector() {
@@ -224,8 +267,8 @@ class AssistiveBallNotifier extends StateNotifier<AssistiveBallState> {
 
   void updateFloatingNotePosition(double nx, double ny) {
     state = state.copyWith(
-      floatingNoteNormalizedX: nx.clamp(0.05, 0.95),
-      floatingNoteNormalizedY: ny.clamp(0.05, 0.95),
+      floatingNoteNormalizedX: nx.clamp(0.0, 1.0),
+      floatingNoteNormalizedY: ny.clamp(0.0, 1.0),
     );
   }
 

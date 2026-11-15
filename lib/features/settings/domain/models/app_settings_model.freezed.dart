@@ -274,8 +274,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.highContrast = false,
       this.reducedMotion = false,
       this.assistiveBallEnabled = false,
-      this.assistiveBallNormalizedX = 0.98,
-      this.assistiveBallNormalizedY = 0.02,
+      this.assistiveBallNormalizedX = 1.0,
+      this.assistiveBallNormalizedY = 1.0,
       this.lastCleanup});
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>

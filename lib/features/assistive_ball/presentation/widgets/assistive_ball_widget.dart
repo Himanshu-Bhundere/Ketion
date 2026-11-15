@@ -49,8 +49,17 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
 
   void _onPanUpdate(DragUpdateDetails details) {
     final padding = MediaQuery.paddingOf(context);
-    final parentW = widget.parentConstraints.maxWidth - _ballSize - padding.left - padding.right;
-    final parentH = widget.parentConstraints.maxHeight - _ballSize - padding.top - padding.bottom;
+    const margin = 16.0;
+    final parentW = widget.parentConstraints.maxWidth -
+        _ballSize -
+        padding.left -
+        padding.right -
+        2 * margin;
+    final parentH = widget.parentConstraints.maxHeight -
+        _ballSize -
+        padding.top -
+        padding.bottom -
+        2 * margin;
 
     if (parentW <= 0 || parentH <= 0) return;
 
@@ -62,8 +71,8 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final nextPixelY = curPixelY + details.delta.dy;
 
     ref.read(assistiveBallProvider.notifier).updatePosition(
-          nextPixelX / parentW,
-          nextPixelY / parentH,
+          (nextPixelX / parentW).clamp(0.0, 1.0),
+          (nextPixelY / parentH).clamp(0.0, 1.0),
         );
   }
 
@@ -72,8 +81,8 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
 
     final ballState = ref.read(assistiveBallProvider);
 
-    final targetX = ballState.normalizedX < 0.5 ? 0.05 : 0.95;
-    final targetY = ballState.normalizedY < 0.5 ? 0.05 : 0.95;
+    final targetX = ballState.normalizedX < 0.5 ? 0.0 : 1.0;
+    final targetY = ballState.normalizedY < 0.5 ? 0.0 : 1.0;
 
     final startX = ballState.normalizedX;
     final startY = ballState.normalizedY;
@@ -132,19 +141,23 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
     final parentWidth = widget.parentConstraints.maxWidth;
     final parentHeight = widget.parentConstraints.maxHeight;
 
+    const margin = 16.0;
+    final safeLeft = padding.left + margin;
+    final safeTop = padding.top + margin;
+
     final availableWidth = math.max(
       1.0,
-      parentWidth - _ballSize - padding.left - padding.right,
+      parentWidth - _ballSize - safeLeft - (padding.right + margin),
     );
     final availableHeight = math.max(
       1.0,
-      parentHeight - _ballSize - padding.top - padding.bottom,
+      parentHeight - _ballSize - safeTop - (padding.bottom + margin),
     );
 
-    final pixelLeft = padding.left +
-        (ballState.normalizedX * availableWidth).clamp(0.0, availableWidth);
-    final pixelTop = padding.top +
-        (ballState.normalizedY * availableHeight).clamp(0.0, availableHeight);
+    final pixelLeft = safeLeft +
+        (ballState.normalizedX.clamp(0.0, 1.0) * availableWidth);
+    final pixelTop = safeTop +
+        (ballState.normalizedY.clamp(0.0, 1.0) * availableHeight);
 
     final isLeft = ballState.normalizedX < 0.5;
     final isTop = ballState.normalizedY < 0.5;

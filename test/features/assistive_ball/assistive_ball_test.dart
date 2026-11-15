@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ketion/core/database/app_database.dart' hide Page, Block;
 import 'package:ketion/core/utils/logger.dart';
-import 'package:ketion/core/utils/result.dart';
 import 'package:ketion/features/assistive_ball/domain/services/assistive_ball_platform_service.dart';
 import 'package:ketion/features/assistive_ball/presentation/providers/assistive_ball_provider.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/assistive_ball_widget.dart';
@@ -22,23 +21,6 @@ import 'package:ketion/features/settings/domain/models/app_settings_model.dart';
 import 'package:ketion/features/settings/domain/repositories/settings_repository.dart';
 import 'package:ketion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:ketion/features/sync/data/repositories/sync_queue_repository_impl.dart';
-import 'package:ketion/features/widgets/domain/services/widget_service.dart';
-import 'package:ketion/features/widgets/presentation/providers/widget_providers.dart';
-
-class MockWidgetService implements WidgetService {
-  @override
-  Future<Result<void>> generateWidgetSnapshot() async => const Success(null);
-
-  @override
-  Future<Result<void>> triggerWidgetUpdate() async => const Success(null);
-
-  @override
-  Future<Result<void>> updateSimpleWidgetData(
-    String key,
-    dynamic value,
-  ) async =>
-      const Success(null);
-}
 
 class MockAssistiveBallPlatformService implements AssistiveBallPlatformService {
   bool shown = false;
@@ -119,8 +101,8 @@ void main() {
 
     test('Initial state has default coordinates and closed menu', () {
       final state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.98);
-      expect(state.normalizedY, 0.02);
+      expect(state.normalizedX, 1.0);
+      expect(state.normalizedY, 1.0);
       expect(state.isMenuOpen, isFalse);
       expect(state.isFloatingNoteOpen, isFalse);
       expect(state.isNoteSelectorOpen, isFalse);
@@ -130,8 +112,8 @@ void main() {
       final notifier = container.read(assistiveBallProvider.notifier);
       notifier.updatePosition(-1.0, 2.0);
       var state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.05);
-      expect(state.normalizedY, 0.95);
+      expect(state.normalizedX, 0.0);
+      expect(state.normalizedY, 1.0);
 
       notifier.updatePosition(0.5, 0.6);
       state = container.read(assistiveBallProvider);
@@ -143,8 +125,8 @@ void main() {
       final notifier = container.read(assistiveBallProvider.notifier);
       notifier.snapToNearestEdge(0.04, 0.7);
       final state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.05);
-      expect(state.normalizedY, 0.95);
+      expect(state.normalizedX, 0.0);
+      expect(state.normalizedY, 1.0);
     });
 
     test('snapToNearestCorner accurately routes to all four corner positions',
@@ -154,26 +136,26 @@ void main() {
       // Top-Left
       notifier.snapToNearestCorner(0.1, 0.1);
       var state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.05);
-      expect(state.normalizedY, 0.05);
+      expect(state.normalizedX, 0.0);
+      expect(state.normalizedY, 0.0);
 
       // Top-Right
       notifier.snapToNearestCorner(0.9, 0.1);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.95);
-      expect(state.normalizedY, 0.05);
+      expect(state.normalizedX, 1.0);
+      expect(state.normalizedY, 0.0);
 
       // Bottom-Left
       notifier.snapToNearestCorner(0.1, 0.9);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.05);
-      expect(state.normalizedY, 0.95);
+      expect(state.normalizedX, 0.0);
+      expect(state.normalizedY, 1.0);
 
       // Bottom-Right
       notifier.snapToNearestCorner(0.9, 0.9);
       state = container.read(assistiveBallProvider);
-      expect(state.normalizedX, 0.95);
-      expect(state.normalizedY, 0.95);
+      expect(state.normalizedX, 1.0);
+      expect(state.normalizedY, 1.0);
     });
 
     test('setEnabled synchronizes state, app settings, and platform overlay',
@@ -331,7 +313,6 @@ void main() {
     late PageRepositoryImpl pageRepo;
     late BlockRepositoryImpl blockRepo;
     late MockAssistiveBallPlatformService mockPlatform;
-    late MockWidgetService mockWidgetService;
 
     setUp(() {
       driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -340,7 +321,6 @@ void main() {
       pageRepo = PageRepositoryImpl(db, syncQueueRepo, appLogger);
       blockRepo = BlockRepositoryImpl(db, syncQueueRepo, appLogger);
       mockPlatform = MockAssistiveBallPlatformService();
-      mockWidgetService = MockWidgetService();
     });
 
     Widget createTestApp({
@@ -357,7 +337,6 @@ void main() {
           blockRepositoryProvider.overrideWithValue(blockRepo),
           assistiveBallPlatformServiceProvider.overrideWithValue(mockPlatform),
           settingsRepositoryProvider.overrideWithValue(fakeSettings),
-          widgetServiceProvider.overrideWithValue(mockWidgetService),
         ],
         child: MaterialApp(
           theme: ThemeData(platform: TargetPlatform.iOS),

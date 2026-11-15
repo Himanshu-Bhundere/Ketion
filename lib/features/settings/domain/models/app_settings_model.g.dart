@@ -26,9 +26,9 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
       reducedMotion: json['reducedMotion'] as bool? ?? false,
       assistiveBallEnabled: json['assistiveBallEnabled'] as bool? ?? false,
       assistiveBallNormalizedX:
-          (json['assistiveBallNormalizedX'] as num?)?.toDouble() ?? 0.98,
+          (json['assistiveBallNormalizedX'] as num?)?.toDouble() ?? 1.0,
       assistiveBallNormalizedY:
-          (json['assistiveBallNormalizedY'] as num?)?.toDouble() ?? 0.02,
+          (json['assistiveBallNormalizedY'] as num?)?.toDouble() ?? 1.0,
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),

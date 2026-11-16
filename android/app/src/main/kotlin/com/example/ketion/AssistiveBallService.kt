@@ -25,6 +25,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class AssistiveBallService : Service() {
 

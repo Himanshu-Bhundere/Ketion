@@ -5352,7 +5352,7 @@ class $AppSettingsTableTable extends AppSettingsTable
       GeneratedColumn<double>('assistive_ball_normalized_x', aliasedName, false,
           type: DriftSqlType.double,
           requiredDuringInsert: false,
-          defaultValue: const Constant(0.98));
+          defaultValue: const Constant(1.0));
   static const VerificationMeta _assistiveBallNormalizedYMeta =
       const VerificationMeta('assistiveBallNormalizedY');
   @override
@@ -5360,7 +5360,7 @@ class $AppSettingsTableTable extends AppSettingsTable
       GeneratedColumn<double>('assistive_ball_normalized_y', aliasedName, false,
           type: DriftSqlType.double,
           requiredDuringInsert: false,
-          defaultValue: const Constant(0.02));
+          defaultValue: const Constant(1.0));
   static const VerificationMeta _lastCleanupMeta =
       const VerificationMeta('lastCleanup');
   @override

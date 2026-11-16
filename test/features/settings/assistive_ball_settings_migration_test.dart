@@ -97,8 +97,8 @@ void main() {
       expect(enabled, isFalse);
       final normX = rows.first.read<double>('assistive_ball_normalized_x');
       final normY = rows.first.read<double>('assistive_ball_normalized_y');
-      expect(normX, 0.98);
-      expect(normY, 0.02);
+      expect(normX, 1.0);
+      expect(normY, 1.0);
 
       // 3. Verify repository read and update operations
       final repository = SettingsRepositoryImpl(db);

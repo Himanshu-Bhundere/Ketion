@@ -39,6 +39,7 @@ target_link_libraries(${BINARY_NAME} PRIVATE
   "ole32.lib"
   "shell32.lib"
   "propsys.lib"
+  "imm32.lib"
 )
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 

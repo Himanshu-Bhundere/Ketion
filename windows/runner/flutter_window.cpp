@@ -19,6 +19,7 @@ void FlutterWindow::EnterOverlayMode(int width, int height) {
     normal_placement_.length = sizeof(WINDOWPLACEMENT);
     ::GetWindowPlacement(hwnd, &normal_placement_);
     ::GetWindowRect(hwnd, &normal_rect_);
+    was_iconic_before_overlay_ = ::IsIconic(hwnd) || (normal_placement_.showCmd == SW_SHOWMINIMIZED);
   }
   is_overlay_mode_ = true;
 
@@ -60,7 +61,10 @@ void FlutterWindow::EnterOverlayMode(int width, int height) {
                    : ::GetWindow(hwnd, GW_CHILD);
   if (child != nullptr) {
     ::MoveWindow(child, 0, 0, width, height, TRUE);
+    ::SetFocus(child);
+    saved_child_imc_ = ::ImmAssociateContext(child, nullptr);
   }
+  saved_window_imc_ = ::ImmAssociateContext(hwnd, nullptr);
 
   ::SetForegroundWindow(hwnd);
 }
@@ -71,6 +75,11 @@ void FlutterWindow::ExitOverlayMode() {
 
   is_overlay_mode_ = false;
 
+  // 1. Explicitly clear HWND_TOPMOST before modifying window styles
+  ::SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+
+  // 2. Restore standard overlapped window styles and strip topmost/toolwindow
   LONG_PTR style = ::GetWindowLongPtr(hwnd, GWL_STYLE);
   style &= ~(WS_POPUP);
   style |= WS_OVERLAPPEDWINDOW;
@@ -84,22 +93,19 @@ void FlutterWindow::ExitOverlayMode() {
   DWM_WINDOW_CORNER_PREFERENCE preference = DWMWCP_DEFAULT;
   DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &preference, sizeof(preference));
 
-  if (normal_placement_.showCmd == SW_SHOWMAXIMIZED || normal_placement_.showCmd == SW_SHOWMINIMIZED) {
-    ::SetWindowPlacement(hwnd, &normal_placement_);
-  } else {
-    int normalW = normal_rect_.right - normal_rect_.left;
-    int normalH = normal_rect_.bottom - normal_rect_.top;
-    if (normalW < 400 || normalH < 300) {
-      normalW = 1280;
-      normalH = 720;
-      normal_rect_.left = 100;
-      normal_rect_.top = 100;
-      normal_rect_.right = normal_rect_.left + normalW;
-      normal_rect_.bottom = normal_rect_.top + normalH;
-    }
-    ::SetWindowPos(hwnd, HWND_NOTOPMOST, normal_rect_.left, normal_rect_.top,
-                   normalW, normalH, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+  // 3. Restore geometry without topmost
+  int normalW = normal_rect_.right - normal_rect_.left;
+  int normalH = normal_rect_.bottom - normal_rect_.top;
+  if (normalW < 400 || normalH < 300) {
+    normalW = 1280;
+    normalH = 720;
+    normal_rect_.left = 100;
+    normal_rect_.top = 100;
+    normal_rect_.right = normal_rect_.left + normalW;
+    normal_rect_.bottom = normal_rect_.top + normalH;
   }
+  ::SetWindowPos(hwnd, HWND_NOTOPMOST, normal_rect_.left, normal_rect_.top,
+                 normalW, normalH, SWP_FRAMECHANGED | SWP_NOACTIVATE);
 
   HWND child = flutter_controller_ && flutter_controller_->view()
                    ? flutter_controller_->view()->GetNativeWindow()
@@ -110,7 +116,25 @@ void FlutterWindow::ExitOverlayMode() {
     ::MoveWindow(child, 0, 0, client.right - client.left, client.bottom - client.top, TRUE);
   }
 
-  // Ensure assistive ball stays topmost above the restored main window
+  // 4. Restore IME contexts if previously disassociated
+  if (saved_child_imc_ != nullptr) {
+    if (child != nullptr) {
+      ::ImmAssociateContext(child, saved_child_imc_);
+    }
+    saved_child_imc_ = nullptr;
+  }
+  if (saved_window_imc_ != nullptr) {
+    ::ImmAssociateContext(hwnd, saved_window_imc_);
+    saved_window_imc_ = nullptr;
+  }
+
+  // 5. Since overlay mode was opened while the user was working in another app,
+  // closing it must NOT pop up the main app over the user's active application.
+  // We minimize the window cleanly so focus returns to the previous app,
+  // and clicking Ketion on the taskbar will restore it as a regular, non-topmost window.
+  ::ShowWindow(hwnd, SW_MINIMIZE);
+
+  // 6. Ensure assistive ball stays topmost above normal windows
   if (assistive_ball_window_ && assistive_ball_window_->IsVisible()) {
     ::SetWindowPos(assistive_ball_window_->GetHandle(), HWND_TOPMOST, 0, 0, 0, 0,
                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
@@ -340,8 +364,36 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN: {
+      if (wparam == VK_BACK || wparam == VK_DELETE) {
+        HWND child = flutter_controller_ && flutter_controller_->view()
+                         ? flutter_controller_->view()->GetNativeWindow()
+                         : nullptr;
+        if (child != nullptr) {
+          HIMC hImc = ::ImmGetContext(child);
+          if (hImc) {
+            ::ImmNotifyIME(hImc, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+            ::ImmReleaseContext(child, hImc);
+          }
+        }
+      }
+      break;
+    }
+    case WM_SETFOCUS: {
+      HWND child = flutter_controller_ && flutter_controller_->view()
+                       ? flutter_controller_->view()->GetNativeWindow()
+                       : nullptr;
+      if (child != nullptr) {
+        ::SetFocus(child);
+      }
+      if (assistive_ball_window_ && assistive_ball_window_->IsVisible() && !is_overlay_mode_) {
+        ::SetWindowPos(assistive_ball_window_->GetHandle(), HWND_TOPMOST, 0, 0, 0, 0,
+                       SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+      }
+      break;
+    }
     case WM_ACTIVATE:
-    case WM_SETFOCUS:
     case WM_WINDOWPOSCHANGED:
     case WM_SHOWWINDOW: {
       if (assistive_ball_window_ && assistive_ball_window_->IsVisible() && !is_overlay_mode_) {

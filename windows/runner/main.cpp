@@ -1,10 +1,13 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <imm.h>
 #include <shlobj.h>
 #include <propkey.h>
 #include <propvarutil.h>
 #include <string>
+
+#pragma comment(lib, "imm32.lib")
 
 #include "flutter_window.h"
 #include "utils.h"
@@ -132,6 +135,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   ::MSG msg;
   while (::GetMessage(&msg, nullptr, 0, 0)) {
+    if ((msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) &&
+        (msg.wParam == VK_BACK || msg.wParam == VK_DELETE)) {
+      HWND targetHwnd = msg.hwnd;
+      if (targetHwnd) {
+        HIMC hImc = ::ImmGetContext(targetHwnd);
+        if (hImc) {
+          ::ImmNotifyIME(hImc, NI_COMPOSITIONSTR, CPS_CANCEL, 0);
+          ::ImmReleaseContext(targetHwnd, hImc);
+        }
+      }
+    }
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }

@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <imm.h>
 
 #include "assistive_ball_window.h"
 #include "win32_window.h"
@@ -34,8 +35,11 @@ class FlutterWindow : public Win32Window {
   void ExitOverlayMode();
 
   bool is_overlay_mode_ = false;
+  bool was_iconic_before_overlay_ = false;
   RECT normal_rect_ = {0, 0, 0, 0};
   WINDOWPLACEMENT normal_placement_ = {sizeof(WINDOWPLACEMENT)};
+  HIMC saved_child_imc_ = nullptr;
+  HIMC saved_window_imc_ = nullptr;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

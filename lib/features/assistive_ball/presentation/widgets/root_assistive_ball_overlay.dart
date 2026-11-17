@@ -53,7 +53,10 @@ class RootAssistiveBallOverlay extends ConsumerWidget {
                   )
                 : LayoutBuilder(
                     builder: (context, constraints) {
-                      return FloatingNoteView(parentConstraints: constraints);
+                      return FloatingNoteView(
+                        key: const ValueKey('standalone_floating_note_view'),
+                        parentConstraints: constraints,
+                      );
                     },
                   ),
           ),

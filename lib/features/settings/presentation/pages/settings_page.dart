@@ -180,8 +180,10 @@ class SettingsPage extends ConsumerWidget {
                   SwitchListTile(
                     secondary: const Icon(Icons.touch_app),
                     title: const Text('Assistive Ball'),
-                    subtitle: const Text(
-                      'Floating shortcut for quick note capture and review',
+                    subtitle: Text(
+                      Theme.of(context).platform == TargetPlatform.iOS
+                          ? 'In-app floating shortcut for quick note capture and review (system-wide overlays outside app are not permitted by iOS)'
+                          : 'Floating shortcut for quick note capture and review',
                     ),
                     value: settings.assistiveBallEnabled && ballState.isEnabled,
                     onChanged: (bool value) {

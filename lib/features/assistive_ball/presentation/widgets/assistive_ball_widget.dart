@@ -167,12 +167,23 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
       parentHeight - viewInsets.bottom,
     );
 
+    final isMobile = Theme.of(context).platform == TargetPlatform.iOS ||
+        Theme.of(context).platform == TargetPlatform.android ||
+        parentWidth < 600;
+
+    final targetWidth = isMobile
+        ? math.min(270.0, parentWidth * 0.72)
+        : ballState.floatingNoteWidth;
+    final targetHeight = isMobile
+        ? math.min(300.0, activeViewportHeight * 0.45)
+        : ballState.floatingNoteHeight;
+
     final panelWidth = math.min(
-      ballState.floatingNoteWidth,
+      targetWidth,
       math.max(0.0, parentWidth - 24.0),
     );
     final panelHeight = math.min(
-      ballState.floatingNoteHeight,
+      targetHeight,
       math.max(0.0, activeViewportHeight - 24.0),
     );
 
@@ -279,6 +290,7 @@ class _AssistiveBallWidgetState extends ConsumerState<AssistiveBallWidget>
             width: panelWidth,
             height: panelHeight,
             child: FloatingNoteView(
+              key: const ValueKey('in_app_floating_note_view'),
               parentConstraints: widget.parentConstraints,
             ),
           ),

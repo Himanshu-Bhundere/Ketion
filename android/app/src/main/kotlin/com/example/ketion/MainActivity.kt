@@ -8,14 +8,23 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.ketion/assistive_ball"
     private var pendingPermissionResult: MethodChannel.Result? = null
+    private var lastBallX: Int = -1
+    private var lastBallY: Int = -1
+    private var lastBallSize: Int = -1
+
+    override fun getBackgroundMode(): BackgroundMode {
+        return BackgroundMode.transparent
+    }
 
     companion object {
         private var methodChannel: MethodChannel? = null
@@ -110,21 +119,67 @@ class MainActivity: FlutterActivity() {
     private fun configureFloatingDialogMode(enable: Boolean) {
         if (enable) {
             val dm = resources.displayMetrics
-            val widthPx = (380 * dm.density).toInt().coerceAtMost(dm.widthPixels - 40)
-            val heightPx = (540 * dm.density).toInt().coerceAtMost(dm.heightPixels - 100)
+            val density = dm.density
+            val widthPx = (270 * density).toInt().coerceAtMost((dm.widthPixels * 0.72f).toInt())
+            val heightPx = (300 * density).toInt().coerceAtMost((dm.heightPixels * 0.45f).toInt())
 
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             window.setLayout(widthPx, heightPx)
-            window.setGravity(Gravity.CENTER)
-            window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL)
+
+            val bX = if (lastBallX >= 0) lastBallX else dm.widthPixels - (60 * density).toInt()
+            val bY = if (lastBallY >= 0) lastBallY else (100 * density).toInt()
+            val bSize = if (lastBallSize > 0) lastBallSize else (52 * density).toInt()
+
+            val isLeft = bX < (dm.widthPixels / 2)
+            val posX = if (isLeft) {
+                bX + bSize + (8 * density).toInt()
+            } else {
+                bX - widthPx - (8 * density).toInt()
+            }.coerceIn(12, (dm.widthPixels - widthPx - 12).coerceAtLeast(12))
+
+            val posY = (bY - (20 * density).toInt()).coerceIn(
+                (24 * density).toInt(),
+                (dm.heightPixels - heightPx - (24 * density).toInt()).coerceAtLeast(24)
+            )
+
+            window.setGravity(Gravity.TOP or Gravity.START)
+            val params = window.attributes
+            params.x = posX
+            params.y = posY
+            window.attributes = params
+
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+            )
         } else {
             window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT)
+            val params = window.attributes
+            params.x = 0
+            params.y = 0
+            window.attributes = params
             moveTaskToBack(true)
         }
     }
 
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event?.action == MotionEvent.ACTION_OUTSIDE) {
+            methodChannel?.invokeMethod("closeFloatingNote", null)
+            configureFloatingDialogMode(false)
+            return true
+        }
+        return super.onTouchEvent(event)
+    }
+
     private fun processIntentAction(intent: Intent?) {
         if (intent == null) return
+        val ballX = intent.getIntExtra("ball_x", -1)
+        val ballY = intent.getIntExtra("ball_y", -1)
+        val ballSize = intent.getIntExtra("ball_size", -1)
+        if (ballX >= 0) lastBallX = ballX
+        if (ballY >= 0) lastBallY = ballY
+        if (ballSize > 0) lastBallSize = ballSize
+
         val action = intent.getStringExtra("action")
         when (action) {
             "quick_note" -> {

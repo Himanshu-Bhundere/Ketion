@@ -439,10 +439,15 @@ class AssistiveBallService : Service() {
     }
 
     private fun launchKetionWithAction(action: String) {
+        val density = resources.displayMetrics.density
+        val ballSizePx = floatingBallView?.width?.takeIf { it > 0 } ?: (52 * density).toInt()
         val openIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("action", action)
             putExtra("from_assistive_ball", true)
+            putExtra("ball_x", ballLayoutParams?.x ?: 0)
+            putExtra("ball_y", ballLayoutParams?.y ?: 0)
+            putExtra("ball_size", ballSizePx)
         }
         startActivity(openIntent)
     }

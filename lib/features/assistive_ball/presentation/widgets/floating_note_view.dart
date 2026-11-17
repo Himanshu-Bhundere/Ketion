@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Page;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/utils/logger.dart';
@@ -27,28 +28,147 @@ class FloatingNoteView extends ConsumerStatefulWidget {
 }
 
 class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _contentController = TextEditingController();
-  String _quickTitle = '';
+  late final TextEditingController _titleController;
+  late final TextEditingController _contentController;
+  late final FocusNode _titleFocusNode;
+  late final FocusNode _contentFocusNode;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _contentController = TextEditingController();
+    _titleFocusNode = FocusNode(
+      onKeyEvent: (node, event) =>
+          _handleBackspaceOrDelete(_titleController, event),
+    );
+    _contentFocusNode = FocusNode(
+      onKeyEvent: (node, event) =>
+          _handleBackspaceOrDelete(_contentController, event),
+    );
+  }
+
+  KeyEventResult _handleBackspaceOrDelete(
+    TextEditingController controller,
+    KeyEvent event,
+  ) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+
+    final isBackspace = event.logicalKey == LogicalKeyboardKey.backspace;
+    final isDelete = event.logicalKey == LogicalKeyboardKey.delete;
+
+    if (!isBackspace && !isDelete) {
+      return KeyEventResult.ignored;
+    }
+
+    final text = controller.text;
+    final selection = controller.selection;
+
+    if (!selection.isValid) {
+      return KeyEventResult.ignored;
+    }
+
+    void syncEditingValue(String newText, int newOffset) {
+      final newValue = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newOffset),
+        composing: TextRange.empty,
+      );
+      controller.value = newValue;
+      SystemChannels.textInput.invokeMethod<void>(
+        'TextInput.setEditingState',
+        newValue.toJSON(),
+      );
+    }
+
+    // Range selection: delete entire highlighted segment
+    if (!selection.isCollapsed) {
+      final start = math.min(selection.start, selection.end);
+      final end = math.max(selection.start, selection.end);
+      if (start >= 0 && end <= text.length && start != end) {
+        final newText = text.replaceRange(start, end, '');
+        syncEditingValue(newText, start);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+
+    final cursor = selection.baseOffset;
+
+    if (isBackspace) {
+      if (cursor <= 0) {
+        return KeyEventResult.handled;
+      }
+
+      // Word deletion on Ctrl + Backspace
+      final isCtrl = HardwareKeyboard.instance.isControlPressed;
+      if (isCtrl) {
+        int newCursor = cursor - 1;
+        while (newCursor > 0 && text[newCursor - 1].trim().isEmpty) {
+          newCursor--;
+        }
+        while (newCursor > 0 && text[newCursor - 1].trim().isNotEmpty) {
+          newCursor--;
+        }
+        final newText = text.replaceRange(newCursor, cursor, '');
+        syncEditingValue(newText, newCursor);
+        return KeyEventResult.handled;
+      }
+
+      // Single character deletion (supporting UTF-16 surrogate pairs safely)
+      final charLength = (cursor >= 2 &&
+              text.codeUnitAt(cursor - 1) >= 0xDC00 &&
+              text.codeUnitAt(cursor - 1) <= 0xDFFF &&
+              text.codeUnitAt(cursor - 2) >= 0xD800 &&
+              text.codeUnitAt(cursor - 2) <= 0xDBFF)
+          ? 2
+          : 1;
+
+      final deleteStart = (cursor - charLength).clamp(0, text.length);
+      final newText = text.replaceRange(deleteStart, cursor, '');
+      syncEditingValue(newText, deleteStart);
+      return KeyEventResult.handled;
+    } else if (isDelete) {
+      if (cursor >= text.length) {
+        return KeyEventResult.handled;
+      }
+
+      final charLength = (cursor + 1 < text.length &&
+              text.codeUnitAt(cursor) >= 0xD800 &&
+              text.codeUnitAt(cursor) <= 0xDBFF &&
+              text.codeUnitAt(cursor + 1) >= 0xDC00 &&
+              text.codeUnitAt(cursor + 1) <= 0xDFFF)
+          ? 2
+          : 1;
+
+      final deleteEnd = (cursor + charLength).clamp(0, text.length);
+      final newText = text.replaceRange(cursor, deleteEnd, '');
+      syncEditingValue(newText, cursor);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _titleFocusNode.dispose();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
   void _resetQuickNoteFields() {
     _titleController.clear();
     _contentController.clear();
-    _quickTitle = '';
   }
 
   Future<void> _saveQuickNote() async {
-    final title = _quickTitle.trim().isNotEmpty
-        ? _quickTitle.trim()
-        : _titleController.text.trim();
+    final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (title.isEmpty && content.isEmpty) {
       ref.read(assistiveBallProvider.notifier).closeFloatingNote();
@@ -383,10 +503,14 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
         child: Column(
           children: [
             TextField(
+              key: const ValueKey('quick_note_title_input'),
               controller: _titleController,
-              onChanged: (value) {
-                _quickTitle = value;
-              },
+              focusNode: _titleFocusNode,
+              autocorrect: false,
+              enableSuggestions: false,
+              spellCheckConfiguration:
+                  const SpellCheckConfiguration.disabled(),
+              keyboardType: TextInputType.text,
               decoration: const InputDecoration(
                 hintText: 'Note title...',
                 border: InputBorder.none,
@@ -399,7 +523,13 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
             const Divider(height: 12),
             Expanded(
               child: TextField(
+                key: const ValueKey('quick_note_content_input'),
                 controller: _contentController,
+                focusNode: _contentFocusNode,
+                autocorrect: false,
+                enableSuggestions: false,
+                spellCheckConfiguration:
+                    const SpellCheckConfiguration.disabled(),
                 decoration: const InputDecoration(
                   hintText: 'Type your thoughts here...',
                   border: InputBorder.none,

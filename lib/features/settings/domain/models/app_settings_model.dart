@@ -24,6 +24,14 @@ class AppSettingsModel with _$AppSettingsModel {
     @Default(false) bool assistiveBallEnabled,
     @Default(1.0) double assistiveBallNormalizedX,
     @Default(1.0) double assistiveBallNormalizedY,
+    @Default([
+      'bullet_list',
+      'heading',
+      'image',
+      'file',
+      'hide_keyboard',
+    ])
+    List<String> toolbarSymbolOrder,
     DateTime? lastCleanup,
   }) = _AppSettingsModel;
 

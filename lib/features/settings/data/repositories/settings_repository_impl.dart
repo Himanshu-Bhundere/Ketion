@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/models/app_settings_model.dart';
@@ -32,6 +33,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
               assistiveBallEnabled: Value(newModel.assistiveBallEnabled),
               assistiveBallNormalizedX: Value(newModel.assistiveBallNormalizedX),
               assistiveBallNormalizedY: Value(newModel.assistiveBallNormalizedY),
+              toolbarSymbolOrder: Value(jsonEncode(newModel.toolbarSymbolOrder)),
               createdAt: DateTime.now(),
               updatedAt: DateTime.now(),
             ),
@@ -61,6 +63,21 @@ class SettingsRepositoryImpl implements SettingsRepository {
       assistiveBallEnabled: entity.assistiveBallEnabled,
       assistiveBallNormalizedX: entity.assistiveBallNormalizedX,
       assistiveBallNormalizedY: entity.assistiveBallNormalizedY,
+      toolbarSymbolOrder: () {
+        try {
+          final decoded = jsonDecode(entity.toolbarSymbolOrder);
+          if (decoded is List) {
+            return decoded.cast<String>();
+          }
+        } catch (_) {}
+        return const [
+          'bullet_list',
+          'heading',
+          'image',
+          'file',
+          'hide_keyboard',
+        ];
+      }(),
       lastCleanup: entity.lastCleanup,
     );
   }
@@ -83,6 +100,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         assistiveBallEnabled: Value(settings.assistiveBallEnabled),
         assistiveBallNormalizedX: Value(settings.assistiveBallNormalizedX),
         assistiveBallNormalizedY: Value(settings.assistiveBallNormalizedY),
+        toolbarSymbolOrder: Value(jsonEncode(settings.toolbarSymbolOrder)),
         lastCleanup: Value(settings.lastCleanup),
         updatedAt: Value(DateTime.now()),
       ),

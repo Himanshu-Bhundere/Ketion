@@ -23,6 +23,11 @@ class AppSettingsTable extends Table {
       real().withDefault(const Constant(1.0))();
   RealColumn get assistiveBallNormalizedY =>
       real().withDefault(const Constant(1.0))();
+  TextColumn get toolbarSymbolOrder => text().withDefault(
+        const Constant(
+          '["bullet_list","heading","image","file","hide_keyboard"]',
+        ),
+      )();
   DateTimeColumn get lastCleanup => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

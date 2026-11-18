@@ -83,8 +83,8 @@ void main() {
       final db = AppDatabase.forTesting(NativeDatabase.opened(sqliteDb));
       await db.customSelect('SELECT 1').get();
 
-      // 1. Verify schema upgrade occurred to 24
-      expect(db.schemaVersion, 24);
+      // 1. Verify schema upgrade occurred
+      expect(db.schemaVersion, greaterThanOrEqualTo(24));
 
       // 2. Verify column exists and default is false (0)
       final rows = await db.customSelect(

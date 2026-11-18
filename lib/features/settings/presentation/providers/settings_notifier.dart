@@ -83,6 +83,13 @@ class SettingsNotifier extends AsyncNotifier<AppSettingsModel> {
     await ref.read(settingsRepositoryProvider).updateSettings(updated);
   }
 
+  Future<void> updateToolbarSymbolOrder(List<String> order) async {
+    final current = state.value ?? await future;
+    final updated = current.copyWith(toolbarSymbolOrder: order);
+    state = AsyncData(updated);
+    await ref.read(settingsRepositoryProvider).updateSettings(updated);
+  }
+
   Future<void> updateSyncFrequency(String frequency) async {
     final current = state.value;
     if (current == null) return;

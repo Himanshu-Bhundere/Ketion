@@ -32,6 +32,7 @@ mixin _$AppSettingsModel {
   bool get assistiveBallEnabled => throw _privateConstructorUsedError;
   double get assistiveBallNormalizedX => throw _privateConstructorUsedError;
   double get assistiveBallNormalizedY => throw _privateConstructorUsedError;
+  List<String> get toolbarSymbolOrder => throw _privateConstructorUsedError;
   DateTime? get lastCleanup => throw _privateConstructorUsedError;
 
   /// Serializes this AppSettingsModel to a JSON map.
@@ -63,6 +64,7 @@ abstract class $AppSettingsModelCopyWith<$Res> {
       bool assistiveBallEnabled,
       double assistiveBallNormalizedX,
       double assistiveBallNormalizedY,
+      List<String> toolbarSymbolOrder,
       DateTime? lastCleanup});
 }
 
@@ -93,6 +95,7 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
     Object? assistiveBallEnabled = null,
     Object? assistiveBallNormalizedX = null,
     Object? assistiveBallNormalizedY = null,
+    Object? toolbarSymbolOrder = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_value.copyWith(
@@ -144,6 +147,10 @@ class _$AppSettingsModelCopyWithImpl<$Res, $Val extends AppSettingsModel>
           ? _value.assistiveBallNormalizedY
           : assistiveBallNormalizedY // ignore: cast_nullable_to_non_nullable
               as double,
+      toolbarSymbolOrder: null == toolbarSymbolOrder
+          ? _value.toolbarSymbolOrder
+          : toolbarSymbolOrder // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -173,6 +180,7 @@ abstract class _$$AppSettingsModelImplCopyWith<$Res>
       bool assistiveBallEnabled,
       double assistiveBallNormalizedX,
       double assistiveBallNormalizedY,
+      List<String> toolbarSymbolOrder,
       DateTime? lastCleanup});
 }
 
@@ -201,6 +209,7 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
     Object? assistiveBallEnabled = null,
     Object? assistiveBallNormalizedX = null,
     Object? assistiveBallNormalizedY = null,
+    Object? toolbarSymbolOrder = null,
     Object? lastCleanup = freezed,
   }) {
     return _then(_$AppSettingsModelImpl(
@@ -252,6 +261,10 @@ class __$$AppSettingsModelImplCopyWithImpl<$Res>
           ? _value.assistiveBallNormalizedY
           : assistiveBallNormalizedY // ignore: cast_nullable_to_non_nullable
               as double,
+      toolbarSymbolOrder: null == toolbarSymbolOrder
+          ? _value._toolbarSymbolOrder
+          : toolbarSymbolOrder // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       lastCleanup: freezed == lastCleanup
           ? _value.lastCleanup
           : lastCleanup // ignore: cast_nullable_to_non_nullable
@@ -276,7 +289,15 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       this.assistiveBallEnabled = false,
       this.assistiveBallNormalizedX = 1.0,
       this.assistiveBallNormalizedY = 1.0,
-      this.lastCleanup});
+      final List<String> toolbarSymbolOrder = const [
+        'bullet_list',
+        'heading',
+        'image',
+        'file',
+        'hide_keyboard'
+      ],
+      this.lastCleanup})
+      : _toolbarSymbolOrder = toolbarSymbolOrder;
 
   factory _$AppSettingsModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppSettingsModelImplFromJson(json);
@@ -317,12 +338,22 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
   @override
   @JsonKey()
   final double assistiveBallNormalizedY;
+  final List<String> _toolbarSymbolOrder;
+  @override
+  @JsonKey()
+  List<String> get toolbarSymbolOrder {
+    if (_toolbarSymbolOrder is EqualUnmodifiableListView)
+      return _toolbarSymbolOrder;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_toolbarSymbolOrder);
+  }
+
   @override
   final DateTime? lastCleanup;
 
   @override
   String toString() {
-    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, assistiveBallEnabled: $assistiveBallEnabled, assistiveBallNormalizedX: $assistiveBallNormalizedX, assistiveBallNormalizedY: $assistiveBallNormalizedY, lastCleanup: $lastCleanup)';
+    return 'AppSettingsModel(themeMode: $themeMode, syncFrequency: $syncFrequency, autoSync: $autoSync, cacheLimitMB: $cacheLimitMB, accentColor: $accentColor, fontSize: $fontSize, editorAppearance: $editorAppearance, highContrast: $highContrast, reducedMotion: $reducedMotion, assistiveBallEnabled: $assistiveBallEnabled, assistiveBallNormalizedX: $assistiveBallNormalizedX, assistiveBallNormalizedY: $assistiveBallNormalizedY, toolbarSymbolOrder: $toolbarSymbolOrder, lastCleanup: $lastCleanup)';
   }
 
   @override
@@ -356,6 +387,8 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
             (identical(
                     other.assistiveBallNormalizedY, assistiveBallNormalizedY) ||
                 other.assistiveBallNormalizedY == assistiveBallNormalizedY) &&
+            const DeepCollectionEquality()
+                .equals(other._toolbarSymbolOrder, _toolbarSymbolOrder) &&
             (identical(other.lastCleanup, lastCleanup) ||
                 other.lastCleanup == lastCleanup));
   }
@@ -376,6 +409,7 @@ class _$AppSettingsModelImpl implements _AppSettingsModel {
       assistiveBallEnabled,
       assistiveBallNormalizedX,
       assistiveBallNormalizedY,
+      const DeepCollectionEquality().hash(_toolbarSymbolOrder),
       lastCleanup);
 
   /// Create a copy of AppSettingsModel
@@ -409,6 +443,7 @@ abstract class _AppSettingsModel implements AppSettingsModel {
       final bool assistiveBallEnabled,
       final double assistiveBallNormalizedX,
       final double assistiveBallNormalizedY,
+      final List<String> toolbarSymbolOrder,
       final DateTime? lastCleanup}) = _$AppSettingsModelImpl;
 
   factory _AppSettingsModel.fromJson(Map<String, dynamic> json) =
@@ -438,6 +473,8 @@ abstract class _AppSettingsModel implements AppSettingsModel {
   double get assistiveBallNormalizedX;
   @override
   double get assistiveBallNormalizedY;
+  @override
+  List<String> get toolbarSymbolOrder;
   @override
   DateTime? get lastCleanup;
 

@@ -29,6 +29,10 @@ _$AppSettingsModelImpl _$$AppSettingsModelImplFromJson(
           (json['assistiveBallNormalizedX'] as num?)?.toDouble() ?? 1.0,
       assistiveBallNormalizedY:
           (json['assistiveBallNormalizedY'] as num?)?.toDouble() ?? 1.0,
+      toolbarSymbolOrder: (json['toolbarSymbolOrder'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const ['bullet_list', 'heading', 'image', 'file', 'hide_keyboard'],
       lastCleanup: json['lastCleanup'] == null
           ? null
           : DateTime.parse(json['lastCleanup'] as String),
@@ -49,6 +53,7 @@ Map<String, dynamic> _$$AppSettingsModelImplToJson(
       'assistiveBallEnabled': instance.assistiveBallEnabled,
       'assistiveBallNormalizedX': instance.assistiveBallNormalizedX,
       'assistiveBallNormalizedY': instance.assistiveBallNormalizedY,
+      'toolbarSymbolOrder': instance.toolbarSymbolOrder,
       'lastCleanup': instance.lastCleanup?.toIso8601String(),
     };
 

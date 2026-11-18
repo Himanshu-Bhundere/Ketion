@@ -8,6 +8,28 @@ import 'package:image/image.dart' as image_lib;
 
 import 'checksum_service.dart';
 
+class StorageAttachmentResult {
+  final String relativePath;
+  final String? thumbnailRelativePath;
+  final String hash;
+  final int? originalFileSize;
+  final int? compressedFileSize;
+
+  const StorageAttachmentResult({
+    required this.relativePath,
+    this.thumbnailRelativePath,
+    required this.hash,
+    this.originalFileSize,
+    this.compressedFileSize,
+  });
+
+  String get $1 => relativePath;
+  String? get $2 => thumbnailRelativePath;
+  String get $3 => hash;
+  int? get $4 => originalFileSize;
+  int? get $5 => compressedFileSize;
+}
+
 /// Service responsible for managing attachment files on the local filesystem.
 ///
 /// Uses content-addressable storage (SHA-256) for deduplication.
@@ -28,10 +50,11 @@ class AttachmentStorageService {
   /// Saves a file to the managed attachments directory using its SHA-256 hash.
   ///
   /// The path format is `Attachments/<first_two_chars>/<hash>.<ext>`.
-  /// Returns a tuple of (relativePath, optionalThumbnailRelativePath, hash).
-  Future<(String, String?, String)> saveAttachment(
+  /// Returns a [StorageAttachmentResult] with relative paths, hash, and optional compression metrics.
+  Future<StorageAttachmentResult> saveAttachment(
     PlatformFile sourceFile, {
     bool generateThumbnail = false,
+    bool compressImage = true,
   }) async {
     if (kIsWeb) {
       throw UnsupportedError(
@@ -40,7 +63,46 @@ class AttachmentStorageService {
     }
 
     final mediaDir = await _attachmentsDir;
-    final hash = await _checksumService.calculateSha256(sourceFile);
+    final originalSize = sourceFile.size;
+    int? compressedSize;
+    Uint8List? fileBytes = sourceFile.bytes;
+    if (fileBytes == null && sourceFile.path != null) {
+      final srcFile = io.File(sourceFile.path!);
+      if (await srcFile.exists()) {
+        fileBytes = await srcFile.readAsBytes();
+      }
+    }
+
+    final ext = sourceFile.extension?.toLowerCase() ?? '';
+    final isImage = ['jpg', 'jpeg', 'png', 'webp'].contains(ext);
+
+    // Optional image resizing and JPEG compression if image exceeds standard bounds
+    if (compressImage && isImage && fileBytes != null) {
+      try {
+        final image_lib.Image? decoded = image_lib.decodeImage(fileBytes);
+        if (decoded != null) {
+          image_lib.Image resized = decoded;
+          if (decoded.width > 1920 || decoded.height > 1920) {
+            if (decoded.width >= decoded.height) {
+              resized = image_lib.copyResize(decoded, width: 1920);
+            } else {
+              resized = image_lib.copyResize(decoded, height: 1920);
+            }
+          }
+          final compressed = image_lib.encodeJpg(resized, quality: 85);
+          if (compressed.length < originalSize) {
+            compressedSize = compressed.length;
+            fileBytes = Uint8List.fromList(compressed);
+          }
+        }
+      } catch (e) {
+        debugPrint('Image compression fallback: $e');
+      }
+    }
+
+    final hash = fileBytes != null
+        ? _checksumService.calculateSha256FromBytes(fileBytes)
+        : await _checksumService.calculateSha256(sourceFile);
 
     final prefix = hash.substring(0, 2);
     final extension = sourceFile.extension != null
@@ -60,10 +122,10 @@ class AttachmentStorageService {
     final destinationFile = io.File(destinationPath);
 
     if (!await destinationFile.exists()) {
-      if (sourceFile.path != null) {
+      if (fileBytes != null) {
+        await destinationFile.writeAsBytes(fileBytes);
+      } else if (sourceFile.path != null) {
         await io.File(sourceFile.path!).copy(destinationPath);
-      } else if (sourceFile.bytes != null) {
-        await destinationFile.writeAsBytes(sourceFile.bytes!);
       } else {
         throw Exception('Cannot save file: neither path nor bytes available.');
       }
@@ -79,8 +141,8 @@ class AttachmentStorageService {
 
       if (!await thumbFile.exists()) {
         try {
-          final bytes =
-              sourceFile.bytes ?? await io.File(sourceFile.path!).readAsBytes();
+          final bytes = fileBytes ??
+              (sourceFile.bytes ?? await io.File(sourceFile.path!).readAsBytes());
           final image_lib.Image? image = image_lib.decodeImage(bytes);
           if (image != null) {
             final thumbnail = image_lib.copyResize(image, width: 256);
@@ -95,7 +157,13 @@ class AttachmentStorageService {
       }
     }
 
-    return (relativePath, thumbnailRelativePath, hash);
+    return StorageAttachmentResult(
+      relativePath: relativePath,
+      thumbnailRelativePath: thumbnailRelativePath,
+      hash: hash,
+      originalFileSize: originalSize,
+      compressedFileSize: compressedSize,
+    );
   }
 
   /// Retrieves a file from the managed directory given its relative path.

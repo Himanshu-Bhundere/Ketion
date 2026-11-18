@@ -96,7 +96,7 @@ void main() {
     ); // we didn't insert any, but we can verify columns don't crash
     await driftDb
         .customSelect(
-          'SELECT accent_color, font_size, editor_appearance, high_contrast, reduced_motion FROM app_settings_table',
+          'SELECT accent_color, font_size, editor_appearance, high_contrast, reduced_motion, toolbar_symbol_order FROM app_settings_table',
         )
         .get();
 

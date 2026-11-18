@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
@@ -91,17 +92,24 @@ class GoogleDriveSyncProvider implements SyncProvider {
   Future<Result<String>> uploadAttachment(
     String localPath,
     String mimeType,
-    String checksum,
-  ) async {
+    String checksum, {
+    void Function(double progress)? onProgress,
+    bool Function()? isCancelled,
+  }) async {
     if (_driveApi == null || _attachmentsFolderId == null) {
       return const Error(SyncFailure('Drive API not initialized'));
     }
     try {
+      if (isCancelled?.call() == true) {
+        return const Error(SyncFailure('Upload cancelled by user'));
+      }
+
       // 1. Check if an attachment with this checksum already exists
       final q =
           "'$_attachmentsFolderId' in parents and appProperties has { key='checksum' and value='$checksum' } and trashed = false";
       final fileList = await _driveApi!.files.list(q: q);
       if (fileList.files != null && fileList.files!.isNotEmpty) {
+        onProgress?.call(1.0);
         return Success(fileList.files!.first.id ?? '');
       }
 
@@ -114,8 +122,27 @@ class GoogleDriveSyncProvider implements SyncProvider {
         return const Error(SyncFailure('Local file does not exist'));
       }
 
+      final fileLength = await file.length();
+      int bytesSent = 0;
+
+      final progressStream = file.openRead().transform(
+        StreamTransformer<List<int>, List<int>>.fromHandlers(
+          handleData: (data, sink) {
+            if (isCancelled?.call() == true) {
+              sink.addError(const SyncFailure('Upload cancelled by user'));
+              return;
+            }
+            bytesSent += data.length;
+            if (onProgress != null && fileLength > 0) {
+              onProgress((bytesSent / fileLength).clamp(0.0, 1.0));
+            }
+            sink.add(data);
+          },
+        ),
+      );
+
       final fileName = file.uri.pathSegments.last;
-      final media = drive.Media(file.openRead(), await file.length());
+      final media = drive.Media(progressStream, fileLength);
       final driveFile = drive.File()
         ..name = fileName
         ..parents = [_attachmentsFolderId!]
@@ -126,6 +153,7 @@ class GoogleDriveSyncProvider implements SyncProvider {
         uploadMedia: media,
       );
 
+      onProgress?.call(1.0);
       return Success(uploaded.id ?? '');
     } catch (e) {
       return Error(SyncFailure('Failed to upload attachment: $e'));

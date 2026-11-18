@@ -139,8 +139,10 @@ class FakeSyncProvider implements SyncProvider {
   Future<Result<String>> uploadAttachment(
     String localPath,
     String mimeType,
-    String checksum,
-  ) async {
+    String checksum, {
+    void Function(double progress)? onProgress,
+    bool Function()? isCancelled,
+  }) async {
     return const Success('uploaded_id');
   }
 

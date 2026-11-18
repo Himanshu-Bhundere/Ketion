@@ -1259,6 +1259,18 @@ class $AttachmentsTable extends Attachments
   late final GeneratedColumn<int> fileSize = GeneratedColumn<int>(
       'file_size', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _originalFileSizeMeta =
+      const VerificationMeta('originalFileSize');
+  @override
+  late final GeneratedColumn<int> originalFileSize = GeneratedColumn<int>(
+      'original_file_size', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _compressedFileSizeMeta =
+      const VerificationMeta('compressedFileSize');
+  @override
+  late final GeneratedColumn<int> compressedFileSize = GeneratedColumn<int>(
+      'compressed_file_size', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _widthMeta = const VerificationMeta('width');
   @override
   late final GeneratedColumn<int> width = GeneratedColumn<int>(
@@ -1342,6 +1354,8 @@ class $AttachmentsTable extends Attachments
         mimeType,
         checksumSha256,
         fileSize,
+        originalFileSize,
+        compressedFileSize,
         width,
         height,
         duration,
@@ -1401,6 +1415,18 @@ class $AttachmentsTable extends Attachments
           fileSize.isAcceptableOrUnknown(data['file_size']!, _fileSizeMeta));
     } else if (isInserting) {
       context.missing(_fileSizeMeta);
+    }
+    if (data.containsKey('original_file_size')) {
+      context.handle(
+          _originalFileSizeMeta,
+          originalFileSize.isAcceptableOrUnknown(
+              data['original_file_size']!, _originalFileSizeMeta));
+    }
+    if (data.containsKey('compressed_file_size')) {
+      context.handle(
+          _compressedFileSizeMeta,
+          compressedFileSize.isAcceptableOrUnknown(
+              data['compressed_file_size']!, _compressedFileSizeMeta));
     }
     if (data.containsKey('width')) {
       context.handle(
@@ -1471,6 +1497,10 @@ class $AttachmentsTable extends Attachments
           .read(DriftSqlType.string, data['${effectivePrefix}checksum_sha256']),
       fileSize: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}file_size'])!,
+      originalFileSize: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}original_file_size']),
+      compressedFileSize: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}compressed_file_size']),
       width: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}width']),
       height: attachedDatabase.typeMapping
@@ -1508,6 +1538,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
   final String mimeType;
   final String? checksumSha256;
   final int fileSize;
+  final int? originalFileSize;
+  final int? compressedFileSize;
   final int? width;
   final int? height;
   final int? duration;
@@ -1526,6 +1558,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
       required this.mimeType,
       this.checksumSha256,
       required this.fileSize,
+      this.originalFileSize,
+      this.compressedFileSize,
       this.width,
       this.height,
       this.duration,
@@ -1552,6 +1586,12 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
       map['checksum_sha256'] = Variable<String>(checksumSha256);
     }
     map['file_size'] = Variable<int>(fileSize);
+    if (!nullToAbsent || originalFileSize != null) {
+      map['original_file_size'] = Variable<int>(originalFileSize);
+    }
+    if (!nullToAbsent || compressedFileSize != null) {
+      map['compressed_file_size'] = Variable<int>(compressedFileSize);
+    }
     if (!nullToAbsent || width != null) {
       map['width'] = Variable<int>(width);
     }
@@ -1588,6 +1628,12 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
           ? const Value.absent()
           : Value(checksumSha256),
       fileSize: Value(fileSize),
+      originalFileSize: originalFileSize == null && nullToAbsent
+          ? const Value.absent()
+          : Value(originalFileSize),
+      compressedFileSize: compressedFileSize == null && nullToAbsent
+          ? const Value.absent()
+          : Value(compressedFileSize),
       width:
           width == null && nullToAbsent ? const Value.absent() : Value(width),
       height:
@@ -1618,6 +1664,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
       mimeType: serializer.fromJson<String>(json['mimeType']),
       checksumSha256: serializer.fromJson<String?>(json['checksumSha256']),
       fileSize: serializer.fromJson<int>(json['fileSize']),
+      originalFileSize: serializer.fromJson<int?>(json['originalFileSize']),
+      compressedFileSize: serializer.fromJson<int?>(json['compressedFileSize']),
       width: serializer.fromJson<int?>(json['width']),
       height: serializer.fromJson<int?>(json['height']),
       duration: serializer.fromJson<int?>(json['duration']),
@@ -1641,6 +1689,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
       'mimeType': serializer.toJson<String>(mimeType),
       'checksumSha256': serializer.toJson<String?>(checksumSha256),
       'fileSize': serializer.toJson<int>(fileSize),
+      'originalFileSize': serializer.toJson<int?>(originalFileSize),
+      'compressedFileSize': serializer.toJson<int?>(compressedFileSize),
       'width': serializer.toJson<int?>(width),
       'height': serializer.toJson<int?>(height),
       'duration': serializer.toJson<int?>(duration),
@@ -1662,6 +1712,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
           String? mimeType,
           Value<String?> checksumSha256 = const Value.absent(),
           int? fileSize,
+          Value<int?> originalFileSize = const Value.absent(),
+          Value<int?> compressedFileSize = const Value.absent(),
           Value<int?> width = const Value.absent(),
           Value<int?> height = const Value.absent(),
           Value<int?> duration = const Value.absent(),
@@ -1681,6 +1733,12 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
         checksumSha256:
             checksumSha256.present ? checksumSha256.value : this.checksumSha256,
         fileSize: fileSize ?? this.fileSize,
+        originalFileSize: originalFileSize.present
+            ? originalFileSize.value
+            : this.originalFileSize,
+        compressedFileSize: compressedFileSize.present
+            ? compressedFileSize.value
+            : this.compressedFileSize,
         width: width.present ? width.value : this.width,
         height: height.present ? height.value : this.height,
         duration: duration.present ? duration.value : this.duration,
@@ -1705,6 +1763,12 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
           ? data.checksumSha256.value
           : this.checksumSha256,
       fileSize: data.fileSize.present ? data.fileSize.value : this.fileSize,
+      originalFileSize: data.originalFileSize.present
+          ? data.originalFileSize.value
+          : this.originalFileSize,
+      compressedFileSize: data.compressedFileSize.present
+          ? data.compressedFileSize.value
+          : this.compressedFileSize,
       width: data.width.present ? data.width.value : this.width,
       height: data.height.present ? data.height.value : this.height,
       duration: data.duration.present ? data.duration.value : this.duration,
@@ -1734,6 +1798,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
           ..write('mimeType: $mimeType, ')
           ..write('checksumSha256: $checksumSha256, ')
           ..write('fileSize: $fileSize, ')
+          ..write('originalFileSize: $originalFileSize, ')
+          ..write('compressedFileSize: $compressedFileSize, ')
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('duration: $duration, ')
@@ -1757,6 +1823,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
       mimeType,
       checksumSha256,
       fileSize,
+      originalFileSize,
+      compressedFileSize,
       width,
       height,
       duration,
@@ -1778,6 +1846,8 @@ class AttachmentData extends DataClass implements Insertable<AttachmentData> {
           other.mimeType == this.mimeType &&
           other.checksumSha256 == this.checksumSha256 &&
           other.fileSize == this.fileSize &&
+          other.originalFileSize == this.originalFileSize &&
+          other.compressedFileSize == this.compressedFileSize &&
           other.width == this.width &&
           other.height == this.height &&
           other.duration == this.duration &&
@@ -1798,6 +1868,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
   final Value<String> mimeType;
   final Value<String?> checksumSha256;
   final Value<int> fileSize;
+  final Value<int?> originalFileSize;
+  final Value<int?> compressedFileSize;
   final Value<int?> width;
   final Value<int?> height;
   final Value<int?> duration;
@@ -1817,6 +1889,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     this.mimeType = const Value.absent(),
     this.checksumSha256 = const Value.absent(),
     this.fileSize = const Value.absent(),
+    this.originalFileSize = const Value.absent(),
+    this.compressedFileSize = const Value.absent(),
     this.width = const Value.absent(),
     this.height = const Value.absent(),
     this.duration = const Value.absent(),
@@ -1837,6 +1911,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     required String mimeType,
     this.checksumSha256 = const Value.absent(),
     required int fileSize,
+    this.originalFileSize = const Value.absent(),
+    this.compressedFileSize = const Value.absent(),
     this.width = const Value.absent(),
     this.height = const Value.absent(),
     this.duration = const Value.absent(),
@@ -1860,6 +1936,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     Expression<String>? mimeType,
     Expression<String>? checksumSha256,
     Expression<int>? fileSize,
+    Expression<int>? originalFileSize,
+    Expression<int>? compressedFileSize,
     Expression<int>? width,
     Expression<int>? height,
     Expression<int>? duration,
@@ -1880,6 +1958,9 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
       if (mimeType != null) 'mime_type': mimeType,
       if (checksumSha256 != null) 'checksum_sha256': checksumSha256,
       if (fileSize != null) 'file_size': fileSize,
+      if (originalFileSize != null) 'original_file_size': originalFileSize,
+      if (compressedFileSize != null)
+        'compressed_file_size': compressedFileSize,
       if (width != null) 'width': width,
       if (height != null) 'height': height,
       if (duration != null) 'duration': duration,
@@ -1902,6 +1983,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
       Value<String>? mimeType,
       Value<String?>? checksumSha256,
       Value<int>? fileSize,
+      Value<int?>? originalFileSize,
+      Value<int?>? compressedFileSize,
       Value<int?>? width,
       Value<int?>? height,
       Value<int?>? duration,
@@ -1921,6 +2004,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
       mimeType: mimeType ?? this.mimeType,
       checksumSha256: checksumSha256 ?? this.checksumSha256,
       fileSize: fileSize ?? this.fileSize,
+      originalFileSize: originalFileSize ?? this.originalFileSize,
+      compressedFileSize: compressedFileSize ?? this.compressedFileSize,
       width: width ?? this.width,
       height: height ?? this.height,
       duration: duration ?? this.duration,
@@ -1958,6 +2043,12 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
     }
     if (fileSize.present) {
       map['file_size'] = Variable<int>(fileSize.value);
+    }
+    if (originalFileSize.present) {
+      map['original_file_size'] = Variable<int>(originalFileSize.value);
+    }
+    if (compressedFileSize.present) {
+      map['compressed_file_size'] = Variable<int>(compressedFileSize.value);
     }
     if (width.present) {
       map['width'] = Variable<int>(width.value);
@@ -2005,6 +2096,8 @@ class AttachmentsCompanion extends UpdateCompanion<AttachmentData> {
           ..write('mimeType: $mimeType, ')
           ..write('checksumSha256: $checksumSha256, ')
           ..write('fileSize: $fileSize, ')
+          ..write('originalFileSize: $originalFileSize, ')
+          ..write('compressedFileSize: $compressedFileSize, ')
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('duration: $duration, ')
@@ -5361,6 +5454,15 @@ class $AppSettingsTableTable extends AppSettingsTable
           type: DriftSqlType.double,
           requiredDuringInsert: false,
           defaultValue: const Constant(1.0));
+  static const VerificationMeta _toolbarSymbolOrderMeta =
+      const VerificationMeta('toolbarSymbolOrder');
+  @override
+  late final GeneratedColumn<String> toolbarSymbolOrder =
+      GeneratedColumn<String>('toolbar_symbol_order', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(
+              '["bullet_list","heading","image","file","hide_keyboard"]'));
   static const VerificationMeta _lastCleanupMeta =
       const VerificationMeta('lastCleanup');
   @override
@@ -5395,6 +5497,7 @@ class $AppSettingsTableTable extends AppSettingsTable
         assistiveBallEnabled,
         assistiveBallNormalizedX,
         assistiveBallNormalizedY,
+        toolbarSymbolOrder,
         lastCleanup,
         createdAt,
         updatedAt
@@ -5488,6 +5591,12 @@ class $AppSettingsTableTable extends AppSettingsTable
               data['assistive_ball_normalized_y']!,
               _assistiveBallNormalizedYMeta));
     }
+    if (data.containsKey('toolbar_symbol_order')) {
+      context.handle(
+          _toolbarSymbolOrderMeta,
+          toolbarSymbolOrder.isAcceptableOrUnknown(
+              data['toolbar_symbol_order']!, _toolbarSymbolOrderMeta));
+    }
     if (data.containsKey('last_cleanup')) {
       context.handle(
           _lastCleanupMeta,
@@ -5546,6 +5655,8 @@ class $AppSettingsTableTable extends AppSettingsTable
       assistiveBallNormalizedY: attachedDatabase.typeMapping.read(
           DriftSqlType.double,
           data['${effectivePrefix}assistive_ball_normalized_y'])!,
+      toolbarSymbolOrder: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}toolbar_symbol_order'])!,
       lastCleanup: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_cleanup']),
       createdAt: attachedDatabase.typeMapping
@@ -5577,6 +5688,7 @@ class AppSettingEntity extends DataClass
   final bool assistiveBallEnabled;
   final double assistiveBallNormalizedX;
   final double assistiveBallNormalizedY;
+  final String toolbarSymbolOrder;
   final DateTime? lastCleanup;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -5595,6 +5707,7 @@ class AppSettingEntity extends DataClass
       required this.assistiveBallEnabled,
       required this.assistiveBallNormalizedX,
       required this.assistiveBallNormalizedY,
+      required this.toolbarSymbolOrder,
       this.lastCleanup,
       required this.createdAt,
       required this.updatedAt});
@@ -5617,6 +5730,7 @@ class AppSettingEntity extends DataClass
         Variable<double>(assistiveBallNormalizedX);
     map['assistive_ball_normalized_y'] =
         Variable<double>(assistiveBallNormalizedY);
+    map['toolbar_symbol_order'] = Variable<String>(toolbarSymbolOrder);
     if (!nullToAbsent || lastCleanup != null) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup);
     }
@@ -5641,6 +5755,7 @@ class AppSettingEntity extends DataClass
       assistiveBallEnabled: Value(assistiveBallEnabled),
       assistiveBallNormalizedX: Value(assistiveBallNormalizedX),
       assistiveBallNormalizedY: Value(assistiveBallNormalizedY),
+      toolbarSymbolOrder: Value(toolbarSymbolOrder),
       lastCleanup: lastCleanup == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCleanup),
@@ -5671,6 +5786,8 @@ class AppSettingEntity extends DataClass
           serializer.fromJson<double>(json['assistiveBallNormalizedX']),
       assistiveBallNormalizedY:
           serializer.fromJson<double>(json['assistiveBallNormalizedY']),
+      toolbarSymbolOrder:
+          serializer.fromJson<String>(json['toolbarSymbolOrder']),
       lastCleanup: serializer.fromJson<DateTime?>(json['lastCleanup']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -5696,6 +5813,7 @@ class AppSettingEntity extends DataClass
           serializer.toJson<double>(assistiveBallNormalizedX),
       'assistiveBallNormalizedY':
           serializer.toJson<double>(assistiveBallNormalizedY),
+      'toolbarSymbolOrder': serializer.toJson<String>(toolbarSymbolOrder),
       'lastCleanup': serializer.toJson<DateTime?>(lastCleanup),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -5717,6 +5835,7 @@ class AppSettingEntity extends DataClass
           bool? assistiveBallEnabled,
           double? assistiveBallNormalizedX,
           double? assistiveBallNormalizedY,
+          String? toolbarSymbolOrder,
           Value<DateTime?> lastCleanup = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt}) =>
@@ -5738,6 +5857,7 @@ class AppSettingEntity extends DataClass
             assistiveBallNormalizedX ?? this.assistiveBallNormalizedX,
         assistiveBallNormalizedY:
             assistiveBallNormalizedY ?? this.assistiveBallNormalizedY,
+        toolbarSymbolOrder: toolbarSymbolOrder ?? this.toolbarSymbolOrder,
         lastCleanup: lastCleanup.present ? lastCleanup.value : this.lastCleanup,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
@@ -5777,6 +5897,9 @@ class AppSettingEntity extends DataClass
       assistiveBallNormalizedY: data.assistiveBallNormalizedY.present
           ? data.assistiveBallNormalizedY.value
           : this.assistiveBallNormalizedY,
+      toolbarSymbolOrder: data.toolbarSymbolOrder.present
+          ? data.toolbarSymbolOrder.value
+          : this.toolbarSymbolOrder,
       lastCleanup:
           data.lastCleanup.present ? data.lastCleanup.value : this.lastCleanup,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -5801,6 +5924,7 @@ class AppSettingEntity extends DataClass
           ..write('assistiveBallEnabled: $assistiveBallEnabled, ')
           ..write('assistiveBallNormalizedX: $assistiveBallNormalizedX, ')
           ..write('assistiveBallNormalizedY: $assistiveBallNormalizedY, ')
+          ..write('toolbarSymbolOrder: $toolbarSymbolOrder, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -5824,6 +5948,7 @@ class AppSettingEntity extends DataClass
       assistiveBallEnabled,
       assistiveBallNormalizedX,
       assistiveBallNormalizedY,
+      toolbarSymbolOrder,
       lastCleanup,
       createdAt,
       updatedAt);
@@ -5845,6 +5970,7 @@ class AppSettingEntity extends DataClass
           other.assistiveBallEnabled == this.assistiveBallEnabled &&
           other.assistiveBallNormalizedX == this.assistiveBallNormalizedX &&
           other.assistiveBallNormalizedY == this.assistiveBallNormalizedY &&
+          other.toolbarSymbolOrder == this.toolbarSymbolOrder &&
           other.lastCleanup == this.lastCleanup &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -5865,6 +5991,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
   final Value<bool> assistiveBallEnabled;
   final Value<double> assistiveBallNormalizedX;
   final Value<double> assistiveBallNormalizedY;
+  final Value<String> toolbarSymbolOrder;
   final Value<DateTime?> lastCleanup;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -5884,6 +6011,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.assistiveBallEnabled = const Value.absent(),
     this.assistiveBallNormalizedX = const Value.absent(),
     this.assistiveBallNormalizedY = const Value.absent(),
+    this.toolbarSymbolOrder = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -5904,6 +6032,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     this.assistiveBallEnabled = const Value.absent(),
     this.assistiveBallNormalizedX = const Value.absent(),
     this.assistiveBallNormalizedY = const Value.absent(),
+    this.toolbarSymbolOrder = const Value.absent(),
     this.lastCleanup = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
@@ -5926,6 +6055,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
     Expression<bool>? assistiveBallEnabled,
     Expression<double>? assistiveBallNormalizedX,
     Expression<double>? assistiveBallNormalizedY,
+    Expression<String>? toolbarSymbolOrder,
     Expression<DateTime>? lastCleanup,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -5950,6 +6080,8 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
         'assistive_ball_normalized_x': assistiveBallNormalizedX,
       if (assistiveBallNormalizedY != null)
         'assistive_ball_normalized_y': assistiveBallNormalizedY,
+      if (toolbarSymbolOrder != null)
+        'toolbar_symbol_order': toolbarSymbolOrder,
       if (lastCleanup != null) 'last_cleanup': lastCleanup,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5972,6 +6104,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       Value<bool>? assistiveBallEnabled,
       Value<double>? assistiveBallNormalizedX,
       Value<double>? assistiveBallNormalizedY,
+      Value<String>? toolbarSymbolOrder,
       Value<DateTime?>? lastCleanup,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -5994,6 +6127,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
           assistiveBallNormalizedX ?? this.assistiveBallNormalizedX,
       assistiveBallNormalizedY:
           assistiveBallNormalizedY ?? this.assistiveBallNormalizedY,
+      toolbarSymbolOrder: toolbarSymbolOrder ?? this.toolbarSymbolOrder,
       lastCleanup: lastCleanup ?? this.lastCleanup,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -6050,6 +6184,9 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
       map['assistive_ball_normalized_y'] =
           Variable<double>(assistiveBallNormalizedY.value);
     }
+    if (toolbarSymbolOrder.present) {
+      map['toolbar_symbol_order'] = Variable<String>(toolbarSymbolOrder.value);
+    }
     if (lastCleanup.present) {
       map['last_cleanup'] = Variable<DateTime>(lastCleanup.value);
     }
@@ -6082,6 +6219,7 @@ class AppSettingsTableCompanion extends UpdateCompanion<AppSettingEntity> {
           ..write('assistiveBallEnabled: $assistiveBallEnabled, ')
           ..write('assistiveBallNormalizedX: $assistiveBallNormalizedX, ')
           ..write('assistiveBallNormalizedY: $assistiveBallNormalizedY, ')
+          ..write('toolbarSymbolOrder: $toolbarSymbolOrder, ')
           ..write('lastCleanup: $lastCleanup, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -7721,6 +7859,8 @@ typedef $$AttachmentsTableCreateCompanionBuilder = AttachmentsCompanion
   required String mimeType,
   Value<String?> checksumSha256,
   required int fileSize,
+  Value<int?> originalFileSize,
+  Value<int?> compressedFileSize,
   Value<int?> width,
   Value<int?> height,
   Value<int?> duration,
@@ -7742,6 +7882,8 @@ typedef $$AttachmentsTableUpdateCompanionBuilder = AttachmentsCompanion
   Value<String> mimeType,
   Value<String?> checksumSha256,
   Value<int> fileSize,
+  Value<int?> originalFileSize,
+  Value<int?> compressedFileSize,
   Value<int?> width,
   Value<int?> height,
   Value<int?> duration,
@@ -7785,6 +7927,14 @@ class $$AttachmentsTableFilterComposer
 
   ColumnFilters<int> get fileSize => $composableBuilder(
       column: $table.fileSize, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get originalFileSize => $composableBuilder(
+      column: $table.originalFileSize,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get compressedFileSize => $composableBuilder(
+      column: $table.compressedFileSize,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get width => $composableBuilder(
       column: $table.width, builder: (column) => ColumnFilters(column));
@@ -7848,6 +7998,14 @@ class $$AttachmentsTableOrderingComposer
 
   ColumnOrderings<int> get fileSize => $composableBuilder(
       column: $table.fileSize, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get originalFileSize => $composableBuilder(
+      column: $table.originalFileSize,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get compressedFileSize => $composableBuilder(
+      column: $table.compressedFileSize,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get width => $composableBuilder(
       column: $table.width, builder: (column) => ColumnOrderings(column));
@@ -7913,6 +8071,12 @@ class $$AttachmentsTableAnnotationComposer
   GeneratedColumn<int> get fileSize =>
       $composableBuilder(column: $table.fileSize, builder: (column) => column);
 
+  GeneratedColumn<int> get originalFileSize => $composableBuilder(
+      column: $table.originalFileSize, builder: (column) => column);
+
+  GeneratedColumn<int> get compressedFileSize => $composableBuilder(
+      column: $table.compressedFileSize, builder: (column) => column);
+
   GeneratedColumn<int> get width =>
       $composableBuilder(column: $table.width, builder: (column) => column);
 
@@ -7977,6 +8141,8 @@ class $$AttachmentsTableTableManager extends RootTableManager<
             Value<String> mimeType = const Value.absent(),
             Value<String?> checksumSha256 = const Value.absent(),
             Value<int> fileSize = const Value.absent(),
+            Value<int?> originalFileSize = const Value.absent(),
+            Value<int?> compressedFileSize = const Value.absent(),
             Value<int?> width = const Value.absent(),
             Value<int?> height = const Value.absent(),
             Value<int?> duration = const Value.absent(),
@@ -7997,6 +8163,8 @@ class $$AttachmentsTableTableManager extends RootTableManager<
             mimeType: mimeType,
             checksumSha256: checksumSha256,
             fileSize: fileSize,
+            originalFileSize: originalFileSize,
+            compressedFileSize: compressedFileSize,
             width: width,
             height: height,
             duration: duration,
@@ -8017,6 +8185,8 @@ class $$AttachmentsTableTableManager extends RootTableManager<
             required String mimeType,
             Value<String?> checksumSha256 = const Value.absent(),
             required int fileSize,
+            Value<int?> originalFileSize = const Value.absent(),
+            Value<int?> compressedFileSize = const Value.absent(),
             Value<int?> width = const Value.absent(),
             Value<int?> height = const Value.absent(),
             Value<int?> duration = const Value.absent(),
@@ -8037,6 +8207,8 @@ class $$AttachmentsTableTableManager extends RootTableManager<
             mimeType: mimeType,
             checksumSha256: checksumSha256,
             fileSize: fileSize,
+            originalFileSize: originalFileSize,
+            compressedFileSize: compressedFileSize,
             width: width,
             height: height,
             duration: duration,
@@ -10518,6 +10690,7 @@ typedef $$AppSettingsTableTableCreateCompanionBuilder
   Value<bool> assistiveBallEnabled,
   Value<double> assistiveBallNormalizedX,
   Value<double> assistiveBallNormalizedY,
+  Value<String> toolbarSymbolOrder,
   Value<DateTime?> lastCleanup,
   required DateTime createdAt,
   required DateTime updatedAt,
@@ -10539,6 +10712,7 @@ typedef $$AppSettingsTableTableUpdateCompanionBuilder
   Value<bool> assistiveBallEnabled,
   Value<double> assistiveBallNormalizedX,
   Value<double> assistiveBallNormalizedY,
+  Value<String> toolbarSymbolOrder,
   Value<DateTime?> lastCleanup,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -10599,6 +10773,10 @@ class $$AppSettingsTableTableFilterComposer
 
   ColumnFilters<double> get assistiveBallNormalizedY => $composableBuilder(
       column: $table.assistiveBallNormalizedY,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get toolbarSymbolOrder => $composableBuilder(
+      column: $table.toolbarSymbolOrder,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastCleanup => $composableBuilder(
@@ -10671,6 +10849,10 @@ class $$AppSettingsTableTableOrderingComposer
       column: $table.assistiveBallNormalizedY,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get toolbarSymbolOrder => $composableBuilder(
+      column: $table.toolbarSymbolOrder,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => ColumnOrderings(column));
 
@@ -10732,6 +10914,9 @@ class $$AppSettingsTableTableAnnotationComposer
   GeneratedColumn<double> get assistiveBallNormalizedY => $composableBuilder(
       column: $table.assistiveBallNormalizedY, builder: (column) => column);
 
+  GeneratedColumn<String> get toolbarSymbolOrder => $composableBuilder(
+      column: $table.toolbarSymbolOrder, builder: (column) => column);
+
   GeneratedColumn<DateTime> get lastCleanup => $composableBuilder(
       column: $table.lastCleanup, builder: (column) => column);
 
@@ -10783,6 +10968,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> assistiveBallEnabled = const Value.absent(),
             Value<double> assistiveBallNormalizedX = const Value.absent(),
             Value<double> assistiveBallNormalizedY = const Value.absent(),
+            Value<String> toolbarSymbolOrder = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10803,6 +10989,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             assistiveBallEnabled: assistiveBallEnabled,
             assistiveBallNormalizedX: assistiveBallNormalizedX,
             assistiveBallNormalizedY: assistiveBallNormalizedY,
+            toolbarSymbolOrder: toolbarSymbolOrder,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -10823,6 +11010,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             Value<bool> assistiveBallEnabled = const Value.absent(),
             Value<double> assistiveBallNormalizedX = const Value.absent(),
             Value<double> assistiveBallNormalizedY = const Value.absent(),
+            Value<String> toolbarSymbolOrder = const Value.absent(),
             Value<DateTime?> lastCleanup = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
@@ -10843,6 +11031,7 @@ class $$AppSettingsTableTableTableManager extends RootTableManager<
             assistiveBallEnabled: assistiveBallEnabled,
             assistiveBallNormalizedX: assistiveBallNormalizedX,
             assistiveBallNormalizedY: assistiveBallNormalizedY,
+            toolbarSymbolOrder: toolbarSymbolOrder,
             lastCleanup: lastCleanup,
             createdAt: createdAt,
             updatedAt: updatedAt,

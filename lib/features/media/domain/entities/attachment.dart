@@ -14,6 +14,8 @@ class Attachment with _$Attachment {
     required String mimeType,
     String? checksumSha256,
     required int fileSize,
+    int? originalFileSize,
+    int? compressedFileSize,
     int? width,
     int? height,
     int? duration,

@@ -23,8 +23,10 @@ abstract class SyncProvider {
   Future<Result<String>> uploadAttachment(
     String localPath,
     String mimeType,
-    String checksum,
-  );
+    String checksum, {
+    void Function(double progress)? onProgress,
+    bool Function()? isCancelled,
+  });
 
   /// Download an attachment from remote storage
   Future<Result<void>> downloadAttachment(

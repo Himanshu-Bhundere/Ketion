@@ -16,6 +16,8 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
   final AttachmentRepository _repository;
   final SyncProvider _syncProvider;
   final AttachmentStorageService _storageService;
+  final Set<String> _cancelledIds = {};
+  final Map<String, void Function(double progress)> _progressListeners = {};
 
   AttachmentSyncServiceImpl(
     this._repository,
@@ -23,11 +25,21 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
     this._storageService,
   );
 
+  void setProgressListener(String attachmentId, void Function(double progress) listener) {
+    _progressListeners[attachmentId] = listener;
+  }
+
+  void removeProgressListener(String attachmentId) {
+    _progressListeners.remove(attachmentId);
+  }
+
   @override
   Future<void> uploadAttachment(Attachment attachment) async {
     if (attachment.localPath == null || attachment.checksumSha256 == null) {
       return;
     }
+
+    _cancelledIds.remove(attachment.id);
 
     // Resolve absolute path
     final absolutePath = await _repository.resolveAttachmentPath(attachment);
@@ -36,6 +48,8 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
       absolutePath,
       attachment.mimeType,
       attachment.checksumSha256!,
+      onProgress: (p) => _progressListeners[attachment.id]?.call(p),
+      isCancelled: () => _cancelledIds.contains(attachment.id),
     );
 
     await result.fold(
@@ -134,7 +148,7 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
 
   @override
   Future<void> cancelSync(String attachmentId) async {
-    // To be implemented
+    _cancelledIds.add(attachmentId);
   }
 
   @override

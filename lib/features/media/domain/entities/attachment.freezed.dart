@@ -27,6 +27,8 @@ mixin _$Attachment {
   String get mimeType => throw _privateConstructorUsedError;
   String? get checksumSha256 => throw _privateConstructorUsedError;
   int get fileSize => throw _privateConstructorUsedError;
+  int? get originalFileSize => throw _privateConstructorUsedError;
+  int? get compressedFileSize => throw _privateConstructorUsedError;
   int? get width => throw _privateConstructorUsedError;
   int? get height => throw _privateConstructorUsedError;
   int? get duration => throw _privateConstructorUsedError;
@@ -62,6 +64,8 @@ abstract class $AttachmentCopyWith<$Res> {
       String mimeType,
       String? checksumSha256,
       int fileSize,
+      int? originalFileSize,
+      int? compressedFileSize,
       int? width,
       int? height,
       int? duration,
@@ -96,6 +100,8 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
     Object? mimeType = null,
     Object? checksumSha256 = freezed,
     Object? fileSize = null,
+    Object? originalFileSize = freezed,
+    Object? compressedFileSize = freezed,
     Object? width = freezed,
     Object? height = freezed,
     Object? duration = freezed,
@@ -136,6 +142,14 @@ class _$AttachmentCopyWithImpl<$Res, $Val extends Attachment>
           ? _value.fileSize
           : fileSize // ignore: cast_nullable_to_non_nullable
               as int,
+      originalFileSize: freezed == originalFileSize
+          ? _value.originalFileSize
+          : originalFileSize // ignore: cast_nullable_to_non_nullable
+              as int?,
+      compressedFileSize: freezed == compressedFileSize
+          ? _value.compressedFileSize
+          : compressedFileSize // ignore: cast_nullable_to_non_nullable
+              as int?,
       width: freezed == width
           ? _value.width
           : width // ignore: cast_nullable_to_non_nullable
@@ -196,6 +210,8 @@ abstract class _$$AttachmentImplCopyWith<$Res>
       String mimeType,
       String? checksumSha256,
       int fileSize,
+      int? originalFileSize,
+      int? compressedFileSize,
       int? width,
       int? height,
       int? duration,
@@ -228,6 +244,8 @@ class __$$AttachmentImplCopyWithImpl<$Res>
     Object? mimeType = null,
     Object? checksumSha256 = freezed,
     Object? fileSize = null,
+    Object? originalFileSize = freezed,
+    Object? compressedFileSize = freezed,
     Object? width = freezed,
     Object? height = freezed,
     Object? duration = freezed,
@@ -268,6 +286,14 @@ class __$$AttachmentImplCopyWithImpl<$Res>
           ? _value.fileSize
           : fileSize // ignore: cast_nullable_to_non_nullable
               as int,
+      originalFileSize: freezed == originalFileSize
+          ? _value.originalFileSize
+          : originalFileSize // ignore: cast_nullable_to_non_nullable
+              as int?,
+      compressedFileSize: freezed == compressedFileSize
+          ? _value.compressedFileSize
+          : compressedFileSize // ignore: cast_nullable_to_non_nullable
+              as int?,
       width: freezed == width
           ? _value.width
           : width // ignore: cast_nullable_to_non_nullable
@@ -323,6 +349,8 @@ class _$AttachmentImpl implements _Attachment {
       required this.mimeType,
       this.checksumSha256,
       required this.fileSize,
+      this.originalFileSize,
+      this.compressedFileSize,
       this.width,
       this.height,
       this.duration,
@@ -352,6 +380,10 @@ class _$AttachmentImpl implements _Attachment {
   @override
   final int fileSize;
   @override
+  final int? originalFileSize;
+  @override
+  final int? compressedFileSize;
+  @override
   final int? width;
   @override
   final int? height;
@@ -378,7 +410,7 @@ class _$AttachmentImpl implements _Attachment {
 
   @override
   String toString() {
-    return 'Attachment(id: $id, blockId: $blockId, driveFileId: $driveFileId, localPath: $localPath, mimeType: $mimeType, checksumSha256: $checksumSha256, fileSize: $fileSize, width: $width, height: $height, duration: $duration, thumbnailPath: $thumbnailPath, uploadStatus: $uploadStatus, createdAt: $createdAt, updatedAt: $updatedAt, version: $version, deleted: $deleted, isPinnedOffline: $isPinnedOffline)';
+    return 'Attachment(id: $id, blockId: $blockId, driveFileId: $driveFileId, localPath: $localPath, mimeType: $mimeType, checksumSha256: $checksumSha256, fileSize: $fileSize, originalFileSize: $originalFileSize, compressedFileSize: $compressedFileSize, width: $width, height: $height, duration: $duration, thumbnailPath: $thumbnailPath, uploadStatus: $uploadStatus, createdAt: $createdAt, updatedAt: $updatedAt, version: $version, deleted: $deleted, isPinnedOffline: $isPinnedOffline)';
   }
 
   @override
@@ -398,6 +430,10 @@ class _$AttachmentImpl implements _Attachment {
                 other.checksumSha256 == checksumSha256) &&
             (identical(other.fileSize, fileSize) ||
                 other.fileSize == fileSize) &&
+            (identical(other.originalFileSize, originalFileSize) ||
+                other.originalFileSize == originalFileSize) &&
+            (identical(other.compressedFileSize, compressedFileSize) ||
+                other.compressedFileSize == compressedFileSize) &&
             (identical(other.width, width) || other.width == width) &&
             (identical(other.height, height) || other.height == height) &&
             (identical(other.duration, duration) ||
@@ -418,25 +454,28 @@ class _$AttachmentImpl implements _Attachment {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      blockId,
-      driveFileId,
-      localPath,
-      mimeType,
-      checksumSha256,
-      fileSize,
-      width,
-      height,
-      duration,
-      thumbnailPath,
-      uploadStatus,
-      createdAt,
-      updatedAt,
-      version,
-      deleted,
-      isPinnedOffline);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        id,
+        blockId,
+        driveFileId,
+        localPath,
+        mimeType,
+        checksumSha256,
+        fileSize,
+        originalFileSize,
+        compressedFileSize,
+        width,
+        height,
+        duration,
+        thumbnailPath,
+        uploadStatus,
+        createdAt,
+        updatedAt,
+        version,
+        deleted,
+        isPinnedOffline
+      ]);
 
   /// Create a copy of Attachment
   /// with the given fields replaced by the non-null parameter values.
@@ -463,6 +502,8 @@ abstract class _Attachment implements Attachment {
       required final String mimeType,
       final String? checksumSha256,
       required final int fileSize,
+      final int? originalFileSize,
+      final int? compressedFileSize,
       final int? width,
       final int? height,
       final int? duration,
@@ -491,6 +532,10 @@ abstract class _Attachment implements Attachment {
   String? get checksumSha256;
   @override
   int get fileSize;
+  @override
+  int? get originalFileSize;
+  @override
+  int? get compressedFileSize;
   @override
   int? get width;
   @override

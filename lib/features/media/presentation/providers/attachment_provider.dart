@@ -13,3 +13,7 @@ final attachmentPathProvider =
   final repository = ref.watch(attachmentRepositoryProvider);
   return repository.resolveAttachmentPath(attachment);
 });
+
+/// Tracks real-time upload progress (0.0 to 1.0) for active attachments.
+final attachmentUploadProgressProvider =
+    StateProvider.family<double?, String>((ref, id) => null);

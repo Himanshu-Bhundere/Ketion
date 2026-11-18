@@ -42,7 +42,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.connection);
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration {
@@ -623,6 +623,16 @@ class AppDatabase extends _$AppDatabase {
             appSettingsTable,
             appSettingsTable.assistiveBallNormalizedY,
           );
+        }
+        if (from < 25) {
+          await m.addColumn(
+            appSettingsTable,
+            appSettingsTable.toolbarSymbolOrder,
+          );
+        }
+        if (from >= 11 && from < 26) {
+          await m.addColumn(attachments, attachments.originalFileSize);
+          await m.addColumn(attachments, attachments.compressedFileSize);
         }
       },
       beforeOpen: (details) async {

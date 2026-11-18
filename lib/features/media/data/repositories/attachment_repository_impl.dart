@@ -38,6 +38,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
     final localPath = mediaResult.$1;
     final thumbnailPath = mediaResult.$2;
     final sha256 = mediaResult.$3;
+    final originalFileSize = mediaResult.originalFileSize ?? fileSize;
+    final compressedFileSize = mediaResult.compressedFileSize;
+    final effectiveFileSize = compressedFileSize ?? fileSize;
 
     final id = _uuid.v4();
     final now = DateTime.now();
@@ -48,7 +51,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
       localPath: localPath,
       mimeType: mimeType,
       checksumSha256: sha256,
-      fileSize: fileSize,
+      fileSize: effectiveFileSize,
+      originalFileSize: originalFileSize,
+      compressedFileSize: compressedFileSize,
       thumbnailPath: thumbnailPath,
       uploadStatus: AttachmentUploadStatus.pending,
       createdAt: now,
@@ -67,7 +72,9 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
               localPath: Value(localPath),
               mimeType: mimeType,
               checksumSha256: Value(sha256),
-              fileSize: fileSize,
+              fileSize: effectiveFileSize,
+              originalFileSize: Value(originalFileSize),
+              compressedFileSize: Value(compressedFileSize),
               thumbnailPath: Value(thumbnailPath),
               uploadStatus: Value(AttachmentUploadStatus.pending.value),
               createdAt: Value(now),
@@ -271,6 +278,8 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
       mimeType: row.mimeType,
       checksumSha256: row.checksumSha256,
       fileSize: row.fileSize,
+      originalFileSize: row.originalFileSize,
+      compressedFileSize: row.compressedFileSize,
       width: row.width,
       height: row.height,
       duration: row.duration,

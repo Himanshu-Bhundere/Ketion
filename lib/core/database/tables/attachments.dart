@@ -9,6 +9,8 @@ class Attachments extends Table {
   TextColumn get mimeType => text()();
   TextColumn get checksumSha256 => text().nullable()();
   IntColumn get fileSize => integer()();
+  IntColumn get originalFileSize => integer().nullable()();
+  IntColumn get compressedFileSize => integer().nullable()();
   IntColumn get width => integer().nullable()();
   IntColumn get height => integer().nullable()();
   IntColumn get duration => integer().nullable()();

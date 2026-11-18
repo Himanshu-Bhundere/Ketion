@@ -20,6 +20,12 @@ class ChecksumService {
     final digest = sha256.convert(bytes);
     return digest.toString();
   }
+
+  /// Calculates the SHA-256 checksum directly from raw byte list.
+  String calculateSha256FromBytes(List<int> bytes) {
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
 }
 
 final checksumServiceProvider = Provider<ChecksumService>((ref) {

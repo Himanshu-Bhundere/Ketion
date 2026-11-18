@@ -28,12 +28,15 @@ abstract class KetionAttachmentComponentViewModel
 }
 
 class KetionVideoComponentViewModel extends KetionAttachmentComponentViewModel {
+  final Editor? editor;
+
   KetionVideoComponentViewModel({
     required super.nodeId,
     super.maxWidth,
     required super.padding,
     required super.createdAt,
     super.attachmentId,
+    this.editor,
   });
   @override
   KetionVideoComponentViewModel copy() => KetionVideoComponentViewModel(
@@ -42,6 +45,7 @@ class KetionVideoComponentViewModel extends KetionAttachmentComponentViewModel {
         padding: padding,
         createdAt: createdAt,
         attachmentId: attachmentId,
+        editor: editor,
       );
 }
 
@@ -194,7 +198,8 @@ class KetionReminderComponentViewModel
 }
 
 class KetionVideoComponentBuilder implements ComponentBuilder {
-  const KetionVideoComponentBuilder();
+  final Editor? editor;
+  const KetionVideoComponentBuilder([this.editor]);
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -208,6 +213,7 @@ class KetionVideoComponentBuilder implements ComponentBuilder {
       maxWidth: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
       createdAt: null,
+      editor: editor,
     );
   }
 
@@ -220,6 +226,8 @@ class KetionVideoComponentBuilder implements ComponentBuilder {
     return KetionVideoPlayerComponent(
       key: componentContext.componentKey,
       attachmentId: componentViewModel.attachmentId ?? '',
+      nodeId: componentViewModel.nodeId,
+      editor: componentViewModel.editor,
     );
   }
 }

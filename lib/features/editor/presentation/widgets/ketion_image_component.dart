@@ -5,11 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:ketion/core/theme/media_dimensions.dart';
 import '../../../media/presentation/providers/attachment_provider.dart';
+import '../../../media/data/repositories/attachment_repository_impl.dart';
+import '../../../media/data/services/attachment_export_service.dart';
+import '../../../media/data/services/attachment_sync_service_impl.dart';
 
 /// Ketion's custom ImageComponentBuilder to handle image attachments.
 /// It uses Riverpod to fetch the local path of the attachment if `imageUrl` is an attachment ID.
 class KetionImageComponentBuilder implements ComponentBuilder {
-  const KetionImageComponentBuilder();
+  final Editor? editor;
+  const KetionImageComponentBuilder([this.editor]);
 
   @override
   SingleColumnLayoutComponentViewModel? createViewModel(
@@ -28,6 +32,7 @@ class KetionImageComponentBuilder implements ComponentBuilder {
       selectionColor: const Color(0x00000000),
       metadata: node.metadata,
       createdAt: null,
+      editor: editor,
     );
   }
 
@@ -57,11 +62,13 @@ class KetionImageComponentViewModel
     required this.imageUrl,
     required this.selectionColor,
     this.metadata = const {},
+    this.editor,
   });
 
   final String imageUrl;
   final Color selectionColor;
   final Map<String, dynamic> metadata;
+  final Editor? editor;
 
   @override
   KetionImageComponentViewModel copy() {
@@ -73,6 +80,7 @@ class KetionImageComponentViewModel
       imageUrl: imageUrl,
       selectionColor: selectionColor,
       metadata: metadata,
+      editor: editor,
     );
   }
 }
@@ -121,6 +129,8 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
               return _buildPlaceholder(context, 'Image file not found.');
             }
 
+            final progress = ref.watch(attachmentUploadProgressProvider(attachmentId));
+
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Center(
@@ -130,22 +140,141 @@ class _KetionImageComponentState extends ConsumerState<KetionImageComponent> {
                   ),
                   child: AspectRatio(
                     aspectRatio: MediaDimensions.aspectRatio,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        MediaDimensions.borderRadius,
-                      ),
-                      child: ColoredBox(
-                        color: Colors.black12,
-                        child: kIsWeb
-                            ? Image.network(
-                                localPath,
-                                fit: BoxFit.contain,
-                              )
-                            : Image.file(
-                                io.File(localPath),
-                                fit: BoxFit.contain,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              MediaDimensions.borderRadius,
+                            ),
+                            child: ColoredBox(
+                              color: Colors.black12,
+                              child: kIsWeb
+                                  ? Image.network(
+                                      localPath,
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Image.file(
+                                      io.File(localPath),
+                                      fit: BoxFit.contain,
+                                    ),
+                            ),
+                          ),
+                        ),
+                        // Upload progress indicator overlay
+                        if (progress != null)
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            right: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black87,
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                      ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Uploading... ${(progress * 100).toInt()}%',
+                                          style: const TextStyle(color: Colors.white, fontSize: 11),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        LinearProgressIndicator(
+                                          value: progress,
+                                          backgroundColor: Colors.white24,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.white, size: 16),
+                                    onPressed: () {
+                                      ref.read(attachmentSyncServiceProvider).cancelSync(attachmentId);
+                                    },
+                                    tooltip: 'Cancel upload',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // Top-right contextual menu button
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Material(
+                            color: Colors.black54,
+                            shape: const CircleBorder(),
+                            child: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                              tooltip: 'Image options',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                              onSelected: (value) async {
+                                if (value == 'save') {
+                                  final success = await ref
+                                      .read(attachmentExportServiceProvider)
+                                      .saveAttachmentToDevice(localPath);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          success
+                                              ? 'Image saved successfully'
+                                              : 'Failed to save image',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } else if (value == 'delete') {
+                                  if (widget.viewModel.editor != null) {
+                                    widget.viewModel.editor!.execute([
+                                      DeleteNodeRequest(nodeId: widget.viewModel.nodeId),
+                                    ]);
+                                  }
+                                  await ref
+                                      .read(attachmentRepositoryProvider)
+                                      .deleteAttachment(attachmentId);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Image deleted from note')),
+                                    );
+                                  }
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'save',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.download, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Save to device'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Delete from note', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

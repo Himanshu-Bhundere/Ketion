@@ -42,6 +42,7 @@ import 'package:uuid/uuid.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
 import 'depth_wrapping_component_builder.dart';
 import 'ketion_list_item_component.dart';
+import 'floating_toolbar.dart';
 
 class SuperEditorHost extends ConsumerStatefulWidget {
   final String pageId;
@@ -150,6 +151,9 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   void _handleFocusChange() {
     if (!_focusNode.hasFocus && _isInitialized) {
       _adapter.flushPendingChanges();
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -456,6 +460,162 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     });
   }
 
+  void _onAddHeading() {
+    final targetNodeId = _composer.selection?.extent.nodeId ??
+        (_document.isNotEmpty ? _document.last.id : null);
+    if (targetNodeId == null) return;
+    final requests = KetionSlashCommandRegistry.allCommands
+        .firstWhere((c) => c.id == 'h2')
+        .getEditRequestsWithDoc(targetNodeId, _document);
+    if (requests.isNotEmpty) {
+      _editor.execute(requests);
+    }
+  }
+
+  void _onAddList() {
+    final targetNodeId = _composer.selection?.extent.nodeId ??
+        (_document.isNotEmpty ? _document.last.id : null);
+    if (targetNodeId == null) return;
+    final requests = KetionSlashCommandRegistry.allCommands
+        .firstWhere((c) => c.id == 'bulleted_list')
+        .getEditRequestsWithDoc(targetNodeId, _document);
+    if (requests.isNotEmpty) {
+      _editor.execute(requests);
+    }
+  }
+
+  Future<void> _onAddImage() async {
+    final targetNodeId = _composer.selection?.extent.nodeId ??
+        (_document.isNotEmpty ? _document.last.id : null);
+    if (targetNodeId == null) return;
+
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.isNotEmpty && mounted) {
+      final file = result.files.first;
+      if (file.path == null) return;
+
+      final newNodeId = Editor.createNodeId();
+      final newBlockId = const Uuid().v7();
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final attachment =
+          await ref.read(attachmentRepositoryProvider).saveAttachment(
+                pageId: widget.pageId,
+                blockId: newBlockId,
+                sourceFile: file,
+                mimeType: 'image/${file.extension}',
+              );
+
+      if (mounted) {
+        final placementMetadata =
+            KetionSlashCommandRegistry.inheritedPlacementMetadata(
+          targetNodeId,
+          _document,
+        );
+        final imageNode = ImageNode(
+          id: newNodeId,
+          imageUrl: attachment.id,
+          metadata: placementMetadata,
+        );
+        final emptyParagraph = ParagraphNode(
+          id: Editor.createNodeId(),
+          text: AttributedText(),
+          metadata: placementMetadata,
+        );
+        _editor.execute([
+          InsertNodeAfterNodeRequest(
+            existingNodeId: targetNodeId,
+            newNode: imageNode,
+          ),
+          InsertNodeAfterNodeRequest(
+            existingNodeId: imageNode.id,
+            newNode: emptyParagraph,
+          ),
+          ChangeSelectionRequest(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: emptyParagraph.id,
+                nodePosition: emptyParagraph.beginningPosition,
+              ),
+            ),
+            SelectionChangeType.placeCaret,
+            SelectionReason.userInteraction,
+          ),
+        ]);
+        _focusNode.requestFocus();
+      }
+    }
+  }
+
+  Future<void> _onAddFile() async {
+    final targetNodeId = _composer.selection?.extent.nodeId ??
+        (_document.isNotEmpty ? _document.last.id : null);
+    if (targetNodeId == null) return;
+
+    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (result != null && result.files.isNotEmpty && mounted) {
+      final file = result.files.first;
+      if (file.path == null) return;
+
+      final newNodeId = Editor.createNodeId();
+      final newBlockId = const Uuid().v7();
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final mimeType = file.extension == 'pdf'
+          ? 'application/pdf'
+          : 'application/octet-stream';
+
+      final attachment =
+          await ref.read(attachmentRepositoryProvider).saveAttachment(
+                pageId: widget.pageId,
+                blockId: newBlockId,
+                sourceFile: file,
+                mimeType: mimeType,
+              );
+
+      if (mounted) {
+        final placementMetadata =
+            KetionSlashCommandRegistry.inheritedPlacementMetadata(
+          targetNodeId,
+          _document,
+        );
+        final fileNode = KetionFileNode(
+          id: newNodeId,
+          attachmentId: attachment.id,
+          metadata: placementMetadata,
+        );
+        final emptyParagraph = ParagraphNode(
+          id: Editor.createNodeId(),
+          text: AttributedText(),
+          metadata: placementMetadata,
+        );
+        _editor.execute([
+          InsertNodeAfterNodeRequest(
+            existingNodeId: targetNodeId,
+            newNode: fileNode,
+          ),
+          InsertNodeAfterNodeRequest(
+            existingNodeId: fileNode.id,
+            newNode: emptyParagraph,
+          ),
+          ChangeSelectionRequest(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: emptyParagraph.id,
+                nodePosition: emptyParagraph.beginningPosition,
+              ),
+            ),
+            SelectionChangeType.placeCaret,
+            SelectionReason.userInteraction,
+          ),
+        ]);
+        _focusNode.requestFocus();
+      }
+    }
+  }
+
   Future<void> _handlePdfSlashSelected(SlashCommandTarget target) async {
     return _handleMediaSlashSelected(
       target,
@@ -548,12 +708,20 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final page = pageAsync.valueOrNull;
     if (page == null) return const SizedBox.shrink();
 
-    return Focus(
-      onFocusChange: (hasFocus) {
-        if (!hasFocus) {
-          _adapter.flushPendingChanges();
-        }
-      },
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    final isDesktop = Theme.of(context).platform == TargetPlatform.windows ||
+        Theme.of(context).platform == TargetPlatform.macOS ||
+        Theme.of(context).platform == TargetPlatform.linux;
+    final showToolbar = isKeyboardVisible || (isDesktop && _focusNode.hasFocus);
+
+    return Stack(
+      children: [
+        Focus(
+          onFocusChange: (hasFocus) {
+            if (!hasFocus) {
+              _adapter.flushPendingChanges();
+            }
+          },
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent) {
           final hardwareKeyboard = HardwareKeyboard.instance;
@@ -733,8 +901,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
                 ),
                 const KetionCalloutComponentBuilder(),
                 KetionTaskComponentBuilder(_editor),
-                const KetionImageComponentBuilder(),
-                const KetionVideoComponentBuilder(),
+                KetionImageComponentBuilder(_editor),
+                KetionVideoComponentBuilder(_editor),
                 const KetionAudioComponentBuilder(),
                 const KetionPdfComponentBuilder(),
                 const KetionFileComponentBuilder(),
@@ -802,6 +970,24 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
             ),
           ],
         ),
-      );
+      ),
+      if (showToolbar)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: FloatingToolbar(
+            onAddHeading: _onAddHeading,
+            onAddList: _onAddList,
+            onAddImage: _onAddImage,
+            onAddFile: _onAddFile,
+            onHideKeyboard: () {
+              _focusNode.unfocus();
+              FocusScope.of(context).unfocus();
+            },
+          ),
+        ),
+    ],
+  );
   }
 }

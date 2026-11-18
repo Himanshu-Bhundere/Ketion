@@ -4,6 +4,7 @@ import 'package:super_editor/super_editor.dart';
 import '../table/ketion_table_node.dart';
 import '../../domain/services/block_tree_service.dart';
 import 'ketion_toggle_component.dart';
+import 'super_editor_block_drag_wrapper.dart';
 
 /// Gets the effective depth of a node from its canonical indent property or metadata.
 int getNodeDepth(DocumentNode? node) {
@@ -242,6 +243,15 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
         editor: editor!,
         document: document,
         composer: composer,
+        child: content,
+      );
+    }
+
+    if (editor != null && node != null) {
+      content = SuperEditorBlockDragWrapper(
+        nodeId: node.id,
+        document: document,
+        editor: editor!,
         child: content,
       );
     }

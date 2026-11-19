@@ -22,6 +22,7 @@ import 'ketion_toggle_component.dart';
 import 'ketion_toggle_keyboard_actions.dart';
 import 'depth_wrapping_component_builder.dart';
 import '../table/ketion_table_node.dart';
+import '../../domain/services/block_tree_service.dart';
 
 /// Creates the Ketion semantic EditRequestHandler.
 ///
@@ -373,14 +374,208 @@ class _KetionUnindentNodeCommand extends EditCommand {
   }
 }
 
+DocumentNode _cloneNodeWithDepthAndMetadata(
+  DocumentNode node,
+  int newDepth,
+  Map<String, dynamic> newMetadata,
+) {
+  if (node is ParagraphNode) {
+    return node.copyAndReplaceMetadata(newMetadata);
+  } else if (node is ListItemNode) {
+    return node.type == ListItemType.ordered
+        ? ListItemNode.ordered(
+            id: node.id,
+            text: node.text,
+            indent: newDepth,
+            metadata: newMetadata,
+          )
+        : ListItemNode.unordered(
+            id: node.id,
+            text: node.text,
+            indent: newDepth,
+            metadata: newMetadata,
+          );
+  } else if (node is TaskNode) {
+    return TaskNode(
+      id: node.id,
+      text: node.text,
+      isComplete: node.isComplete,
+      indent: newDepth,
+      metadata: newMetadata,
+    );
+  } else if (node is KetionTableNode) {
+    return node.copyAndReplaceMetadata(newMetadata);
+  } else if (node is BlockNode) {
+    return node.copyAndReplaceMetadata(newMetadata);
+  } else {
+    try {
+      node.metadata.addAll(newMetadata);
+    } catch (_) {}
+    return node;
+  }
+}
+
+class _MoveBlockCommand extends EditCommand {
+  _MoveBlockCommand({
+    required this.sourceNodeId,
+    required this.targetNodeId,
+    required this.isBefore,
+    required this.registry,
+    required this.snapshot,
+  });
+
+  final String sourceNodeId;
+  final String targetNodeId;
+  final bool isBefore;
+  final EditorIdentityRegistry registry;
+  final EditorPersistenceSnapshot snapshot;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final document = context.document;
+    final sourceNode = document.getNodeById(sourceNodeId);
+    final targetNode = document.getNodeById(targetNodeId);
+    if (sourceNode == null || targetNode == null) return;
+    if (sourceNodeId == targetNodeId) return;
+
+    final oldSourceIndex = document.getNodeIndexById(sourceNodeId);
+    if (oldSourceIndex == -1) return;
+    final sourceDepth = getNodeDepth(sourceNode);
+
+    // Collect all contiguous descendants of sourceNode
+    final subtreeNodes = <DocumentNode>[sourceNode];
+    for (int i = oldSourceIndex + 1; i < document.nodeCount; i++) {
+      final candidate = document.getNodeAt(i);
+      if (candidate == null) break;
+      final depth = getNodeDepth(candidate);
+      if (depth <= sourceDepth) break;
+      subtreeNodes.add(candidate);
+    }
+
+    // Verify targetNode is not inside the source subtree
+    for (final node in subtreeNodes) {
+      if (node.id == targetNodeId) return;
+    }
+
+    // Determine target parentBlockId, depth, and insertion index
+    String? newParentBlockId;
+    int newDepth;
+    int insertIndex;
+
+    final targetIndex = document.getNodeIndexById(targetNodeId);
+    if (targetIndex == -1) return;
+
+    if (isBefore) {
+      final rawTargetParent = targetNode.metadata['parentBlockId'] as String?;
+      newParentBlockId = rawTargetParent != null
+          ? (registry.blockIdForNode(rawTargetParent) ?? rawTargetParent)
+          : null;
+      newDepth = getNodeDepth(targetNode);
+      insertIndex = targetIndex;
+    } else {
+      final isExpandedToggle =
+          KetionToggleComponentBuilder.isToggleNode(targetNode) &&
+              targetNode.metadata['isExpanded'] == true;
+      if (isExpandedToggle) {
+        final targetBlockId = registry.blockIdForNode(targetNode.id) ??
+            (targetNode.metadata['blockId'] as String?) ??
+            targetNode.id;
+        newParentBlockId = targetBlockId;
+        newDepth = getNodeDepth(targetNode) + 1;
+        insertIndex = targetIndex + 1;
+      } else {
+        final rawTargetParent = targetNode.metadata['parentBlockId'] as String?;
+        newParentBlockId = rawTargetParent != null
+            ? (registry.blockIdForNode(rawTargetParent) ?? rawTargetParent)
+            : null;
+        newDepth = getNodeDepth(targetNode);
+        final lastDescendant = BlockTreeService.findLastDescendant(
+          document,
+          targetNode,
+          getNodeDepth,
+        );
+        insertIndex = document.getNodeIndexById(lastDescendant.id) + 1;
+      }
+    }
+
+    // Remove subtree nodes from document
+    for (final node in subtreeNodes) {
+      document.deleteNode(node.id);
+    }
+
+    // Adjust insertIndex if source was before target
+    if (oldSourceIndex < insertIndex) {
+      insertIndex -= subtreeNodes.length;
+    }
+    insertIndex = insertIndex.clamp(0, document.nodeCount);
+
+    final depthDelta = newDepth - sourceDepth;
+
+    // Prepare updated subtree nodes
+    final updatedSubtreeNodes = <DocumentNode>[];
+    for (int i = 0; i < subtreeNodes.length; i++) {
+      final node = subtreeNodes[i];
+      if (i == 0) {
+        final newMetadata = <String, dynamic>{
+          ...node.metadata,
+          'depth': newDepth,
+        };
+        if (newParentBlockId != null) {
+          newMetadata['parentBlockId'] = newParentBlockId;
+          newMetadata.remove('forceRootLevel');
+        } else {
+          newMetadata.remove('parentBlockId');
+          newMetadata['forceRootLevel'] = true;
+        }
+        updatedSubtreeNodes.add(
+          _cloneNodeWithDepthAndMetadata(node, newDepth, newMetadata),
+        );
+      } else {
+        final candidateDepth = getNodeDepth(node);
+        final updatedDepth = (candidateDepth + depthDelta).clamp(0, 10);
+        final newMetadata = <String, dynamic>{
+          ...node.metadata,
+          'depth': updatedDepth,
+        };
+        updatedSubtreeNodes.add(
+          _cloneNodeWithDepthAndMetadata(node, updatedDepth, newMetadata),
+        );
+      }
+    }
+
+    // Insert updated nodes into document
+    for (int i = 0; i < updatedSubtreeNodes.length; i++) {
+      final node = updatedSubtreeNodes[i];
+      document.insertNodeAt(insertIndex + i, node);
+      executor.logChanges([
+        DocumentEdit(
+          NodeMovedEvent(
+            nodeId: node.id,
+            from: oldSourceIndex + i,
+            to: insertIndex + i,
+          ),
+        ),
+        DocumentEdit(NodeChangeEvent(node.id)),
+      ]);
+    }
+  }
+}
+
 class _MoveSubtreeCommand extends EditCommand {
   _MoveSubtreeCommand({
     required this.nodeId,
     required this.newIndex,
+    this.registry,
+    this.snapshot,
   });
 
   final String nodeId;
   final int newIndex;
+  final EditorIdentityRegistry? registry;
+  final EditorPersistenceSnapshot? snapshot;
 
   @override
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
@@ -417,17 +612,62 @@ class _MoveSubtreeCommand extends EditCommand {
     }
     insertIndex = insertIndex.clamp(0, document.nodeCount);
 
+    String? newParentBlockId;
+    int newDepth = 0;
+    if (insertIndex > 0) {
+      final prevNode = document.getNodeAt(insertIndex - 1);
+      if (prevNode != null) {
+        if (KetionToggleComponentBuilder.isToggleNode(prevNode) &&
+            prevNode.metadata['isExpanded'] == true) {
+          newParentBlockId = registry?.blockIdForNode(prevNode.id) ??
+              (prevNode.metadata['blockId'] as String?) ??
+              prevNode.id;
+          newDepth = getNodeDepth(prevNode) + 1;
+        } else {
+          newParentBlockId = prevNode.metadata['parentBlockId'] as String?;
+          newDepth = getNodeDepth(prevNode);
+        }
+      }
+    }
+
+    final depthDelta = newDepth - parentDepth;
+
     // Insert all subtree nodes at target index
     for (int i = 0; i < subtreeNodes.length; i++) {
-      document.insertNodeAt(insertIndex + i, subtreeNodes[i]);
+      final node = subtreeNodes[i];
+      DocumentNode nodeToInsert;
+      if (i == 0) {
+        final newMetadata = <String, dynamic>{
+          ...node.metadata,
+          'depth': newDepth,
+        };
+        if (newParentBlockId != null) {
+          newMetadata['parentBlockId'] = newParentBlockId;
+          newMetadata.remove('forceRootLevel');
+        } else {
+          newMetadata.remove('parentBlockId');
+          newMetadata['forceRootLevel'] = true;
+        }
+        nodeToInsert = _cloneNodeWithDepthAndMetadata(node, newDepth, newMetadata);
+      } else {
+        final candidateDepth = getNodeDepth(node);
+        final updatedDepth = (candidateDepth + depthDelta).clamp(0, 10);
+        final newMetadata = <String, dynamic>{
+          ...node.metadata,
+          'depth': updatedDepth,
+        };
+        nodeToInsert = _cloneNodeWithDepthAndMetadata(node, updatedDepth, newMetadata);
+      }
+      document.insertNodeAt(insertIndex + i, nodeToInsert);
       executor.logChanges([
         DocumentEdit(
           NodeMovedEvent(
-            nodeId: subtreeNodes[i].id,
+            nodeId: nodeToInsert.id,
             from: oldIndex + i,
             to: insertIndex + i,
           ),
         ),
+        DocumentEdit(NodeChangeEvent(nodeToInsert.id)),
       ]);
     }
   }
@@ -556,6 +796,9 @@ SemanticMutation? _translateRequest(
   }
 
   // --- Move requests ---
+  if (request is MoveBlockRequest) {
+    return MoveBlockMutation(nodeId: request.sourceNodeId);
+  }
   if (request is MoveNodeRequest) {
     return MoveBlockMutation(nodeId: request.nodeId);
   }
@@ -1050,11 +1293,23 @@ class _KetionDelegatingCommand extends EditCommand {
         return null;
 
       case MoveBlockMutation():
+        if (reqToCreate is MoveBlockRequest) {
+          final req = reqToCreate;
+          return _MoveBlockCommand(
+            sourceNodeId: req.sourceNodeId,
+            targetNodeId: req.targetNodeId,
+            isBefore: req.isBefore,
+            registry: registry,
+            snapshot: snapshot,
+          );
+        }
         if (reqToCreate is MoveNodeRequest) {
           final req = reqToCreate;
           return _MoveSubtreeCommand(
             nodeId: req.nodeId,
             newIndex: req.newIndex,
+            registry: registry,
+            snapshot: snapshot,
           );
         }
         return null;
@@ -1387,7 +1642,17 @@ class _KetionDelegatingCommand extends EditCommand {
       visited.add(currentParentId);
       depth++;
       final parent = snapshot.getBlock(currentParentId);
-      currentParentId = parent?.parentBlockId;
+      if (parent != null) {
+        currentParentId = parent.parentBlockId;
+      } else {
+        final parentNodeId =
+            registry.nodeIdForBlock(currentParentId) ?? currentParentId;
+        final parentNode = document.getNodeById(parentNodeId);
+        final rawParent = parentNode?.metadata['parentBlockId'] as String?;
+        currentParentId = rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null;
+      }
     }
     return depth;
   }
@@ -1630,8 +1895,8 @@ class _KetionDelegatingCommand extends EditCommand {
         final pBlockId = registry.blockIdForNode(prevNode.id);
         if (pBlockId != null) {
           final pBlock = snapshot.getBlock(pBlockId);
-          final pParent = pBlock?.parentBlockId ??
-              (prevNode.metadata['parentBlockId'] as String?);
+          final pParent = (prevNode.metadata['parentBlockId'] as String?) ??
+              pBlock?.parentBlockId;
           final resolvedPParent = pParent != null
               ? (registry.blockIdForNode(pParent) ?? pParent)
               : null;
@@ -1644,12 +1909,16 @@ class _KetionDelegatingCommand extends EditCommand {
       }
 
       var nextNode = document.getNodeAfterById(nodeId);
+      final nodeDepth = node != null ? getNodeDepth(node) : 0;
+      while (nextNode != null && getNodeDepth(nextNode) > nodeDepth) {
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
       while (nextNode != null) {
         final nBlockId = registry.blockIdForNode(nextNode.id);
         if (nBlockId != null) {
           final nBlock = snapshot.getBlock(nBlockId);
-          final nParent = nBlock?.parentBlockId ??
-              (nextNode.metadata['parentBlockId'] as String?);
+          final nParent = (nextNode.metadata['parentBlockId'] as String?) ??
+              nBlock?.parentBlockId;
           final resolvedNParent = nParent != null
               ? (registry.blockIdForNode(nParent) ?? nParent)
               : null;

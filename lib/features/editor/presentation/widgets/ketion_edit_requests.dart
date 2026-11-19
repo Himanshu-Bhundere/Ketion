@@ -34,6 +34,19 @@ class ExecuteCommandRequest implements EditRequest {
   ExecuteCommandRequest(this.command);
 }
 
+/// A semantic request to move a block relative to a target block.
+class MoveBlockRequest implements EditRequest {
+  final String sourceNodeId;
+  final String targetNodeId;
+  final bool isBefore;
+
+  const MoveBlockRequest({
+    required this.sourceNodeId,
+    required this.targetNodeId,
+    required this.isBefore,
+  });
+}
+
 class ToggleExpandedRequest implements EditRequest {
   final String nodeId;
   final bool isExpanded;

@@ -211,7 +211,7 @@ class StructuralMutationBuilder {
         }
 
         if (prev.blockId != parentBlockId &&
-            prev.parentBlockId == parentBlockId) {
+            (providedParentBlockId != null || prev.parentBlockId == parentBlockId)) {
           previousBlock = prev;
         }
       }
@@ -223,7 +223,7 @@ class StructuralMutationBuilder {
         if (parentBlockId == null && !forceRootLevel && providedParentBlockId == null) {
           parentBlockId = next.parentBlockId;
           nextBlock = next;
-        } else if (parentBlockId == next.parentBlockId) {
+        } else if (providedParentBlockId != null || parentBlockId == next.parentBlockId) {
           nextBlock = next;
         }
       }

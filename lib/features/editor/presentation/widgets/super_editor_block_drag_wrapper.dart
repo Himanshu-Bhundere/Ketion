@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:super_editor/super_editor.dart';
-import '../../domain/services/block_tree_service.dart';
 import 'depth_wrapping_component_builder.dart';
+import 'ketion_edit_requests.dart';
 
 class BlockDragPayload {
   final String nodeId;
@@ -58,42 +58,11 @@ class _SuperEditorBlockDragWrapperState
   void _handleDrop(String draggedNodeId, bool isBefore) {
     if (draggedNodeId == widget.nodeId) return;
 
-    final oldIndex = widget.document.getNodeIndexById(draggedNodeId);
-    final targetIndex = widget.document.getNodeIndexById(widget.nodeId);
-    if (oldIndex == -1 || targetIndex == -1) return;
-
-    final targetNode = widget.document.getNodeById(widget.nodeId);
-    if (targetNode == null) return;
-
-    // Find the last descendant of target node to respect any subtree (e.g. toggle or nested list items)
-    final lastTargetNode = BlockTreeService.findLastDescendant(
-      widget.document,
-      targetNode,
-      getNodeDepth,
-    );
-    final lastTargetIndex = widget.document.getNodeIndexById(lastTargetNode.id);
-
-    int newIndex;
-    if (oldIndex < targetIndex) {
-      // Dragging forward (down the document)
-      if (isBefore) {
-        newIndex = targetIndex - 1;
-      } else {
-        newIndex = lastTargetIndex;
-      }
-    } else {
-      // Dragging backward (up the document)
-      if (isBefore) {
-        newIndex = targetIndex;
-      } else {
-        newIndex = lastTargetIndex + 1;
-      }
-    }
-
     widget.editor.execute([
-      MoveNodeRequest(
-        nodeId: draggedNodeId,
-        newIndex: newIndex,
+      MoveBlockRequest(
+        sourceNodeId: draggedNodeId,
+        targetNodeId: widget.nodeId,
+        isBefore: isBefore,
       ),
     ]);
   }

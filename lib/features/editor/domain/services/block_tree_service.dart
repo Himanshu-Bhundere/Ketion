@@ -21,8 +21,12 @@ class BlockTreeService {
     }
   }
 
-  static bool isExpanded(Block block) {
+  static bool isExpanded(Block block, [Map<String, bool>? expansionOverrides]) {
     if (!isToggle(block)) return true;
+
+    if (expansionOverrides != null && expansionOverrides.containsKey(block.id)) {
+      return expansionOverrides[block.id]!;
+    }
 
     try {
       final data = jsonDecode(block.data) as Map<String, dynamic>;
@@ -37,6 +41,7 @@ class BlockTreeService {
   static List<VisibleBlock> buildVisibleTree(
     List<Block> blocks, {
     int maxDepth = 20,
+    Map<String, bool>? expansionOverrides,
   }) {
     final activeBlocks = blocks.where((block) => !block.deleted).toList();
     final activeIds = activeBlocks.map((b) => b.id).toSet();
@@ -82,7 +87,7 @@ class BlockTreeService {
       if (!visited.add(current.id)) return;
 
       final children = childrenMap[current.id] ?? [];
-      final expanded = isExpanded(current);
+      final expanded = isExpanded(current, expansionOverrides);
 
       visibleBlocks.add(
         VisibleBlock(

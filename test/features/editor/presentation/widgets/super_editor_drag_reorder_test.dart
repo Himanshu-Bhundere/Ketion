@@ -7,6 +7,7 @@ import 'package:super_editor/super_editor.dart';
 import 'package:ketion/features/editor/presentation/widgets/depth_wrapping_component_builder.dart';
 import 'package:ketion/features/editor/presentation/widgets/super_editor_block_drag_wrapper.dart';
 import 'package:ketion/features/editor/presentation/widgets/ketion_edit_request_handler.dart';
+import 'package:ketion/features/editor/presentation/widgets/ketion_edit_requests.dart';
 import 'package:ketion/features/editor/presentation/widgets/super_editor_adapter.dart';
 import 'package:ketion/features/editor/services/editor_persistence_coordinator.dart';
 import 'package:ketion/features/editor/services/editor_persistence_mutations.dart';
@@ -86,7 +87,45 @@ void main() {
 
       composer = MutableDocumentComposer();
       coordinator = _TestMockCoordinator();
-      snapshot = EditorPersistenceSnapshot('test-page', {});
+      snapshot = EditorPersistenceSnapshot('test-page', {
+        'b-p1': BlockSnapshot(
+          blockId: 'b-p1',
+          pageId: 'test-page',
+          version: 1,
+          position: 1000.0,
+          type: 'paragraph',
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'b-t1': BlockSnapshot(
+          blockId: 'b-t1',
+          pageId: 'test-page',
+          version: 1,
+          position: 2000.0,
+          type: 'toggle',
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'b-t1-child': BlockSnapshot(
+          blockId: 'b-t1-child',
+          pageId: 'test-page',
+          version: 1,
+          parentBlockId: 'b-t1',
+          position: 1000.0,
+          type: 'paragraph',
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+        'b-p2': BlockSnapshot(
+          blockId: 'b-p2',
+          pageId: 'test-page',
+          version: 1,
+          position: 3000.0,
+          type: 'paragraph',
+          createdAt: DateTime.now().toUtc(),
+          deleted: false,
+        ),
+      });
 
       adapter = KetionSuperEditorAdapter(
         pageId: 'test-page',
@@ -213,6 +252,89 @@ void main() {
         getNodeDepth,
       );
       expect(p1Last.id, 'node-p1');
+    });
+
+    test('MoveBlockRequest moves block into expanded toggle as first child and updates persistence accurately', () {
+      // Initial: ['node-p1', 'node-t1', 'node-t1-child', 'node-p2']
+      // Drop node-p2 on bottom half of node-t1 (isBefore: false)
+      editor.execute([
+        const MoveBlockRequest(
+          sourceNodeId: 'node-p2',
+          targetNodeId: 'node-t1',
+          isBefore: false,
+        ),
+      ]);
+
+      final nodeIds = [for (int i = 0; i < doc.nodeCount; i++) doc.getNodeAt(i)!.id];
+      expect(nodeIds, ['node-p1', 'node-t1', 'node-p2', 'node-t1-child']);
+
+      final p2 = doc.getNodeById('node-p2')!;
+      expect(p2.metadata['parentBlockId'], 'b-t1');
+      expect(p2.metadata['depth'], 1);
+
+      // Verify persistence mutation
+      final moveMutations = coordinator.mutations.whereType<MoveBlockMutation>().toList();
+      expect(moveMutations.isNotEmpty, true);
+      final lastMove = moveMutations.last;
+      expect(lastMove.blockId, 'b-p2');
+      expect(lastMove.parentBlockId, 'b-t1');
+      expect(lastMove.position < 1000.0, true);
+
+      // Verify snapshot updated
+      final p2Snapshot = snapshot.getBlock('b-p2')!;
+      expect(p2Snapshot.parentBlockId, 'b-t1');
+      expect(p2Snapshot.position, lastMove.position);
+    });
+
+    test('MoveBlockRequest moves block inside toggle before another child', () {
+      // Initial: ['node-p1', 'node-t1', 'node-t1-child', 'node-p2']
+      // Drop node-p2 before node-t1-child (isBefore: true)
+      editor.execute([
+        const MoveBlockRequest(
+          sourceNodeId: 'node-p2',
+          targetNodeId: 'node-t1-child',
+          isBefore: true,
+        ),
+      ]);
+
+      final nodeIds = [for (int i = 0; i < doc.nodeCount; i++) doc.getNodeAt(i)!.id];
+      expect(nodeIds, ['node-p1', 'node-t1', 'node-p2', 'node-t1-child']);
+
+      final p2 = doc.getNodeById('node-p2')!;
+      expect(p2.metadata['parentBlockId'], 'b-t1');
+      expect(p2.metadata['depth'], 1);
+
+      final moveMutations = coordinator.mutations.whereType<MoveBlockMutation>().toList();
+      expect(moveMutations.isNotEmpty, true);
+      final lastMove = moveMutations.last;
+      expect(lastMove.blockId, 'b-p2');
+      expect(lastMove.parentBlockId, 'b-t1');
+    });
+
+    test('MoveBlockRequest moves child out of toggle to root level', () {
+      // Initial: ['node-p1', 'node-t1', 'node-t1-child', 'node-p2']
+      // Drop node-t1-child before node-p1 (isBefore: true)
+      editor.execute([
+        const MoveBlockRequest(
+          sourceNodeId: 'node-t1-child',
+          targetNodeId: 'node-p1',
+          isBefore: true,
+        ),
+      ]);
+
+      final nodeIds = [for (int i = 0; i < doc.nodeCount; i++) doc.getNodeAt(i)!.id];
+      expect(nodeIds, ['node-t1-child', 'node-p1', 'node-t1', 'node-p2']);
+
+      final child = doc.getNodeById('node-t1-child')!;
+      expect(child.metadata['parentBlockId'], null);
+      expect(child.metadata['depth'], 0);
+
+      final moveMutations = coordinator.mutations.whereType<MoveBlockMutation>().toList();
+      expect(moveMutations.isNotEmpty, true);
+      final lastMove = moveMutations.last;
+      expect(lastMove.blockId, 'b-t1-child');
+      expect(lastMove.parentBlockId, null);
+      expect(lastMove.position < 1000.0, true);
     });
 
     testWidgets('Hover reveals drag handle on desktop platform', (tester) async {

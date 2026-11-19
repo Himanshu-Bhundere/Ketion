@@ -13,11 +13,19 @@ import '../../../editor/presentation/widgets/blocks/video_block_widget.dart';
 class RichBlockPreview extends StatelessWidget {
   final Block block;
   final int listOrdinal;
+  final int depth;
+  final bool isExpanded;
+  final bool hasChildren;
+  final VoidCallback? onToggle;
 
   const RichBlockPreview({
     super.key,
     required this.block,
     this.listOrdinal = 1,
+    this.depth = 0,
+    this.isExpanded = true,
+    this.hasChildren = false,
+    this.onToggle,
   });
 
   Map<String, dynamic> _decode() {
@@ -109,69 +117,57 @@ class RichBlockPreview extends StatelessWidget {
     final theme = Theme.of(context);
     final spans = _readSpans(data);
 
+    final Widget content;
     switch (block.type) {
+      case 'toggle':
+        content = _buildToggle(context, data, spans);
       case 'text':
-        return _buildText(context, data, spans);
-
+        content = _buildText(context, data, spans);
       case 'list':
-        return _buildList(context, data, spans);
-
+        content = _buildList(context, data, spans);
       case 'callout':
-        return _buildCallout(context, data, spans);
-
+        content = _buildCallout(context, data, spans);
       case 'code':
-        return _buildCode(context, data);
-
+        content = _buildCode(context, data);
       case 'divider':
-        return const Divider(height: 24);
-
+        content = const Divider(height: 24);
       case 'table':
-        return _buildTable(context, data);
-
+        content = _buildTable(context, data);
       case 'image':
-        return ImageBlockWidget(
+        content = ImageBlockWidget(
           block: block,
           onUpdate: (_) {},
         );
-
       case 'video':
-        return VideoBlockWidget(
+        content = VideoBlockWidget(
           block: block,
           onUpdate: (_) {},
         );
-
       case 'audio':
-        return AudioBlockWidget(
+        content = AudioBlockWidget(
           block: block,
           onUpdate: (_) {},
         );
-
       case 'pdf':
-        return PdfBlockWidget(
+        content = PdfBlockWidget(
           block: block,
           onUpdate: (_) {},
         );
-
       case 'file':
-        return FileBlockWidget(
+        content = FileBlockWidget(
           block: block,
           onUpdate: (_) {},
         );
-
       case 'bookmark':
-        return _buildBookmark(context, data);
-
+        content = _buildBookmark(context, data);
       case 'webLink':
-        return _buildLink(context, data);
-
+        content = _buildLink(context, data);
       case 'pageLink':
-        return _buildPageLink(context, data);
-
+        content = _buildPageLink(context, data);
       case 'reminder':
-        return _buildReminder(context, data);
-
+        content = _buildReminder(context, data);
       default:
-        return Padding(
+        content = Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Text(
             spans.map((s) => s.text).join(),
@@ -179,6 +175,53 @@ class RichBlockPreview extends StatelessWidget {
           ),
         );
     }
+
+    if (depth <= 0) return content;
+    return Padding(
+      padding: EdgeInsets.only(left: depth * 20.0),
+      child: content,
+    );
+  }
+
+  Widget _buildToggle(
+    BuildContext context,
+    Map<String, dynamic> data,
+    List<TextSpanData> spans,
+  ) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: InkWell(
+              onTap: onToggle,
+              borderRadius: BorderRadius.circular(4),
+              child: Center(
+                child: Icon(
+                  isExpanded ? Icons.arrow_drop_down : Icons.arrow_right,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: _richText(
+              context,
+              spans,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildText(
@@ -241,6 +284,9 @@ class RichBlockPreview extends StatelessWidget {
     List<TextSpanData> spans,
   ) {
     final type = data['listType'] as String? ?? 'bullet';
+    if (type == 'toggle') {
+      return _buildToggle(context, data, spans);
+    }
     final checked = data['checked'] as bool? ?? false;
 
     Widget marker;

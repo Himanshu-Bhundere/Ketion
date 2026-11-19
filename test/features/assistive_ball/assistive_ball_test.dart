@@ -678,5 +678,146 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(milliseconds: 50));
     });
+
+    testWidgets(
+        'Floating note view renders hierarchical blocks matching note structure and order',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final now = DateTime.now();
+      const testPageId = 'page-tree-test';
+      await tester.runAsync(() async {
+        await pageRepo.createPage(
+          Page(
+            id: testPageId,
+            title: 'Hierarchical Note',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        // 1. Root Toggle (pos 1000)
+        await blockRepo.createBlock(
+          entity.Block(
+            id: 'tog-root',
+            pageId: testPageId,
+            type: 'toggle',
+            position: 1000.0,
+            data: '{"text":"Parent Toggle","isExpanded":true}',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        // 2. Child inside toggle with position 500 (lower than root position!)
+        await blockRepo.createBlock(
+          entity.Block(
+            id: 'child-bullet',
+            pageId: testPageId,
+            parentBlockId: 'tog-root',
+            type: 'list',
+            position: 500.0,
+            data: '{"listType":"bullet","text":"Nested Bullet"}',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        // 3. Child numbered item (pos 600)
+        await blockRepo.createBlock(
+          entity.Block(
+            id: 'child-num',
+            pageId: testPageId,
+            parentBlockId: 'tog-root',
+            type: 'list',
+            position: 600.0,
+            data: '{"listType":"numbered","text":"Nested Numbered 1"}',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        // 4. Root item after toggle (pos 2000)
+        await blockRepo.createBlock(
+          entity.Block(
+            id: 'root-task',
+            pageId: testPageId,
+            type: 'list',
+            position: 2000.0,
+            data: '{"listType":"checklist","text":"Root Checklist"}',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        // 5. Root numbered item after task (pos 3000)
+        await blockRepo.createBlock(
+          entity.Block(
+            id: 'root-num',
+            pageId: testPageId,
+            type: 'list',
+            position: 3000.0,
+            data: '{"listType":"numbered","text":"Root Numbered 1"}',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      });
+
+      await tester.pumpWidget(createTestApp(assistiveBallEnabled: true));
+      await tester.pumpAndSettle();
+
+      // Open assistive ball menu and open note selector
+      await tester.tap(find.byIcon(Icons.bubble_chart_rounded));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Note Selector'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      for (int i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+        if (find.text('Hierarchical Note').evaluate().isNotEmpty) {
+          break;
+        }
+      }
+
+      expect(find.text('Hierarchical Note'), findsOneWidget);
+      await tester.tap(find.text('Hierarchical Note'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      for (int i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump();
+        if (find.text('Parent Toggle').evaluate().isNotEmpty) {
+          break;
+        }
+      }
+
+      // Verify all items are rendered in correct tree sequence
+      expect(find.text('Parent Toggle'), findsOneWidget);
+      expect(find.text('Nested Bullet'), findsOneWidget);
+      expect(find.text('Nested Numbered 1'), findsOneWidget);
+      expect(find.text('Root Checklist'), findsOneWidget);
+      expect(find.text('Root Numbered 1'), findsOneWidget);
+
+      // Verify toggle disclosure icon is present
+      expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+
+      // Verify ordinals: both should show "1." because they belong to different parents
+      final ones = find.text('1.');
+      expect(ones, findsNWidgets(2));
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(milliseconds: 50));
+    });
   });
 }

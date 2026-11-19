@@ -265,5 +265,79 @@ void main() {
       );
       expect(find.text('https://flutter.dev'), findsOneWidget);
     });
+
+    testWidgets('renders toggle block with disclosure arrow and indentation',
+        (tester) async {
+      bool toggleTapped = false;
+      final toggleBlock = Block(
+        id: 'tog1',
+        pageId: 'page1',
+        type: 'toggle',
+        position: 1000.0,
+        data: jsonEncode({
+          'spans': [
+            {'text': 'Expandable section'},
+          ],
+        }),
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(
+        buildTestable(
+          RichBlockPreview(
+            block: toggleBlock,
+            depth: 1,
+            isExpanded: true,
+            hasChildren: true,
+            onToggle: () => toggleTapped = true,
+          ),
+        ),
+      );
+
+      expect(find.text('Expandable section'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_drop_down));
+      expect(toggleTapped, isTrue);
+
+      // Verify indentation padding is applied when depth > 0
+      final paddingFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is Padding &&
+            widget.padding == const EdgeInsets.only(left: 20.0),
+      );
+      expect(paddingFinder, findsWidgets);
+    });
+
+    testWidgets('renders list item with toggle listType', (tester) async {
+      final toggleListBlock = Block(
+        id: 'togList1',
+        pageId: 'page1',
+        type: 'list',
+        position: 1000.0,
+        data: jsonEncode({
+          'listType': 'toggle',
+          'spans': [
+            {'text': 'Nested Toggle Item'},
+          ],
+        }),
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await tester.pumpWidget(
+        buildTestable(
+          RichBlockPreview(
+            block: toggleListBlock,
+            depth: 2,
+            isExpanded: false,
+          ),
+        ),
+      );
+
+      expect(find.text('Nested Toggle Item'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_right), findsOneWidget);
+    });
   });
 }

@@ -14,6 +14,26 @@ import '../../../pages/presentation/widgets/page_cover_image.dart';
 import '../providers/assistive_ball_provider.dart';
 import 'assistive_ball_header_button.dart';
 import 'rich_block_preview.dart';
+import '../../../editor/domain/services/block_tree_service.dart';
+import '../../../editor/presentation/providers/editor_state_provider.dart';
+
+final notePreviewBlocksProvider =
+    FutureProvider.family.autoDispose<List<Block>, String>((ref, pageId) async {
+  final coordinator = ref.watch(editorCoordinatorProvider(pageId));
+  if (coordinator != null) {
+    final sub = coordinator.onMutationSuccess.listen((_) {
+      ref.invalidateSelf();
+    });
+    ref.onDispose(sub.cancel);
+  }
+
+  final usecase = ref.watch(getPageBlocksUseCaseProvider);
+  final result = await usecase(pageId);
+  return result.fold(
+    (blocks) => blocks,
+    (failure) => <Block>[],
+  );
+});
 
 class FloatingNoteView extends ConsumerStatefulWidget {
   final BoxConstraints parentConstraints;
@@ -33,6 +53,7 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
   late final FocusNode _titleFocusNode;
   late final FocusNode _contentFocusNode;
   bool _isSaving = false;
+  final Map<String, bool> _previewExpansionOverrides = {};
 
   @override
   void initState() {
@@ -365,8 +386,11 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
   }
 
   Widget _buildActiveNoteViewer(String pageId, ThemeData theme) {
+    // Flush any pending debounce changes from the active editor so preview gets latest state
+    ref.read(editorFlushCallbackProvider(pageId))?.call();
+
     final pageAsync = ref.watch(pageProvider(pageId));
-    final blocksAsync = ref.watch(pageBlocksProvider(pageId));
+    final blocksAsync = ref.watch(notePreviewBlocksProvider(pageId));
 
     return pageAsync.when(
       data: (page) {
@@ -413,10 +437,17 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                         style: TextStyle(color: theme.hintColor),
                       );
                     }
+
+                    final visibleBlocks = BlockTreeService.buildVisibleTree(
+                      blocks,
+                      expansionOverrides: _previewExpansionOverrides,
+                    );
+
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: List.generate(blocks.length, (index) {
-                        final block = blocks[index];
+                      children: List.generate(visibleBlocks.length, (index) {
+                        final visible = visibleBlocks[index];
+                        final block = visible.block;
 
                         int ordinal = 1;
 
@@ -424,18 +455,29 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                           final data = _decodeBlockData(block.data);
                           if (data['listType'] == 'numbered') {
                             for (int i = index - 1; i >= 0; i--) {
-                              final previous = blocks[i];
+                              final prev = visibleBlocks[i];
 
-                              if (previous.type != 'list') break;
-
-                              final previousData =
-                                  _decodeBlockData(previous.data);
-
-                              if (previousData['listType'] != 'numbered') {
+                              // Stop if we hit a parent boundary or different depth/parent
+                              if (prev.depth < visible.depth ||
+                                  prev.block.parentBlockId !=
+                                      block.parentBlockId) {
                                 break;
                               }
 
-                              ordinal++;
+                              if (prev.depth == visible.depth &&
+                                  prev.block.parentBlockId ==
+                                      block.parentBlockId) {
+                                if (prev.block.type != 'list') break;
+
+                                final previousData =
+                                    _decodeBlockData(prev.block.data);
+
+                                if (previousData['listType'] != 'numbered') {
+                                  break;
+                                }
+
+                                ordinal++;
+                              }
                             }
                           }
                         }
@@ -446,6 +488,15 @@ class _FloatingNoteViewState extends ConsumerState<FloatingNoteView> {
                             key: ValueKey(block.id),
                             block: block,
                             listOrdinal: ordinal,
+                            depth: visible.depth,
+                            isExpanded: visible.isExpanded,
+                            hasChildren: visible.hasChildren,
+                            onToggle: () {
+                              setState(() {
+                                _previewExpansionOverrides[block.id] =
+                                    !visible.isExpanded;
+                              });
+                            },
                           ),
                         );
                       }),

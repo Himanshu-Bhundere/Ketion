@@ -305,6 +305,17 @@ class _KetionIndentNodeCommand extends EditCommand {
         node.copyAndReplaceMetadata(newMetadata),
       );
       executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else {
+      final currentDepth = getNodeDepth(node);
+      final newDepth = currentDepth + 1;
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newDepth,
+      };
+      final replacement =
+          _cloneNodeWithDepthAndMetadata(node, newDepth, newMetadata);
+      context.document.replaceNodeById(node.id, replacement);
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
     }
   }
 }
@@ -369,6 +380,17 @@ class _KetionUnindentNodeCommand extends EditCommand {
         node.id,
         node.copyAndReplaceMetadata(newMetadata),
       );
+      executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+    } else {
+      final currentDepth = getNodeDepth(node);
+      final newDepth = (currentDepth - 1).clamp(0, 99);
+      final newMetadata = <String, dynamic>{
+        ...node.metadata,
+        'depth': newDepth,
+      };
+      final replacement =
+          _cloneNodeWithDepthAndMetadata(node, newDepth, newMetadata);
+      context.document.replaceNodeById(node.id, replacement);
       executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
     }
   }
@@ -1160,6 +1182,17 @@ class _KetionDelegatingCommand extends EditCommand {
       }
 
       persistToKetionSynchronously(executor);
+
+      if (mutation is IndentBlockMutation ||
+          mutation is UnindentBlockMutation) {
+        final currentSelection = composer.selection;
+        if (currentSelection != null) {
+          composer.setSelectionWithReason(
+            currentSelection,
+            SelectionChangeType.placeCaret,
+          );
+        }
+      }
 
       if (request is InsertReminderRequest) {
         final newNodeId = (mutation as InsertBlockMutation).newNodeId;

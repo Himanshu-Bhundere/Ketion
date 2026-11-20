@@ -6,6 +6,7 @@ import '../../domain/commands/change_paragraph_metadata.dart';
 import '../../domain/services/block_tree_service.dart';
 import 'depth_wrapping_component_builder.dart';
 import 'editor_identity_registry.dart';
+import 'ketion_callout_node.dart';
 import 'ketion_edit_requests.dart';
 import 'ketion_toggle_component.dart';
 
@@ -722,7 +723,7 @@ ExecutionInstruction indentParagraphWhenTabPressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  if (keyEvent is! KeyDownEvent) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -737,7 +738,7 @@ ExecutionInstruction indentParagraphWhenTabPressed({
   }
 
   final node = editContext.document.getNodeById(selection.extent.nodeId);
-  if (node is! ParagraphNode) {
+  if (node == null || (node is! ParagraphNode && node is! KetionCalloutNode)) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -757,7 +758,7 @@ ExecutionInstruction unindentParagraphWhenShiftTabPressed({
     return ExecutionInstruction.continueExecution;
   }
 
-  if (keyEvent is! KeyDownEvent) {
+  if (keyEvent is! KeyDownEvent && keyEvent is! KeyRepeatEvent) {
     return ExecutionInstruction.continueExecution;
   }
 
@@ -772,7 +773,7 @@ ExecutionInstruction unindentParagraphWhenShiftTabPressed({
   }
 
   final node = editContext.document.getNodeById(selection.extent.nodeId);
-  if (node is! ParagraphNode) {
+  if (node == null || (node is! ParagraphNode && node is! KetionCalloutNode)) {
     return ExecutionInstruction.continueExecution;
   }
 

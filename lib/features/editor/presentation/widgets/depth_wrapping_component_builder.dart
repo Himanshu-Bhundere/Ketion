@@ -204,7 +204,12 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
     Document document,
     DocumentNode node,
   ) {
-    return innerBuilder.createViewModel(document, node);
+    final viewModel = innerBuilder.createViewModel(document, node);
+    if (viewModel == null) return null;
+
+    final depth = getNodeDepth(node);
+    viewModel.createdAt = DateTime.fromMillisecondsSinceEpoch(depth);
+    return viewModel;
   }
 
   @override
@@ -223,13 +228,12 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
       '[KETION_TOGGLE_DIAG] Component selected: nodeId=${node?.id}, type=${node?.runtimeType}, innerBuilder=${innerBuilder.runtimeType}, widget=${widget.runtimeType}, depth=$depth, metadata=${node?.metadata}',
     );
 
-    Widget content = widget;
-    if (depth > 0) {
-      content = Padding(
-        padding: EdgeInsets.only(left: depth * kIndentPerLevel),
-        child: content,
-      );
-    }
+    Widget content = DepthIndentWrapper(
+      nodeId: componentViewModel.nodeId,
+      document: document,
+      initialDepth: depth,
+      child: widget,
+    );
 
     final isIndentable =
         node is ParagraphNode || node is ListItemNode || node is TaskNode;
@@ -257,6 +261,77 @@ class DepthWrappingComponentBuilder implements ComponentBuilder {
     }
 
     return content;
+  }
+}
+
+/// Reactive wrapper that listens directly to [document] changes and updates its
+/// indentation padding immediately upon indent/outdent actions.
+class DepthIndentWrapper extends StatefulWidget {
+  final String nodeId;
+  final Document document;
+  final int initialDepth;
+  final Widget child;
+
+  const DepthIndentWrapper({
+    super.key,
+    required this.nodeId,
+    required this.document,
+    required this.initialDepth,
+    required this.child,
+  });
+
+  @override
+  State<DepthIndentWrapper> createState() => _DepthIndentWrapperState();
+}
+
+class _DepthIndentWrapperState extends State<DepthIndentWrapper> {
+  late int _depth;
+
+  @override
+  void initState() {
+    super.initState();
+    _depth = widget.initialDepth;
+    widget.document.addListener(_onDocumentChanged);
+  }
+
+  @override
+  void didUpdateWidget(DepthIndentWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.document != widget.document) {
+      oldWidget.document.removeListener(_onDocumentChanged);
+      widget.document.addListener(_onDocumentChanged);
+    }
+    _depth = getNodeDepth(widget.document.getNodeById(widget.nodeId));
+  }
+
+  @override
+  void dispose() {
+    widget.document.removeListener(_onDocumentChanged);
+    super.dispose();
+  }
+
+  void _onDocumentChanged(DocumentChangeLog changeLog) {
+    if (changeLog.wasNodeChanged(widget.nodeId)) {
+      final newDepth = getNodeDepth(widget.document.getNodeById(widget.nodeId));
+      if (newDepth != _depth && mounted) {
+        setState(() {
+          _depth = newDepth;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_depth > 0) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: _depth * DepthWrappingComponentBuilder.kIndentPerLevel,
+        ),
+        child: widget.child,
+      );
+    }
+    return widget.child;
   }
 }
 

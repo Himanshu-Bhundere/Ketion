@@ -46,9 +46,11 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     final activeNotifier = ref.read(activeEditorPageIdProvider.notifier);
     final currentPageId = widget.pageId;
     Future.microtask(() {
-      if (activeNotifier.state == currentPageId) {
-        activeNotifier.state = null;
-      }
+      try {
+        if (activeNotifier.mounted && activeNotifier.state == currentPageId) {
+          activeNotifier.state = null;
+        }
+      } catch (_) {}
     });
     super.deactivate();
   }

@@ -845,16 +845,24 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     final currentCoordinator = isInitialized ? _coordinator : null;
 
     Future.microtask(() {
-      if (currentCoordinator != null &&
-          coordNotifier.state == currentCoordinator) {
-        coordNotifier.state = null;
-      }
-      if (flushNotifier.state == flush) {
-        flushNotifier.state = null;
-      }
-      if (insertNotifier.state == insertIncomingItem) {
-        insertNotifier.state = null;
-      }
+      try {
+        if (coordNotifier.mounted) {
+          if (currentCoordinator != null &&
+              coordNotifier.state == currentCoordinator) {
+            coordNotifier.state = null;
+          }
+        }
+        if (flushNotifier.mounted) {
+          if (flushNotifier.state == flush) {
+            flushNotifier.state = null;
+          }
+        }
+        if (insertNotifier.mounted) {
+          if (insertNotifier.state == insertIncomingItem) {
+            insertNotifier.state = null;
+          }
+        }
+      } catch (_) {}
     });
     super.deactivate();
   }

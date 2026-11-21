@@ -104,47 +104,48 @@ class _SuperEditorBlockDragWrapperState
       ),
     );
 
+    Widget buildHandle({required bool isDragging}) {
+      Widget handle = SizedBox(
+        width: 24,
+        height: 24,
+        child: Center(child: dragHandle),
+      );
+
+      if (isDragging) {
+        return Opacity(
+          opacity: 0.3,
+          child: handle,
+        );
+      }
+
+      if (isDesktop) {
+        return MouseRegion(
+          cursor: SystemMouseCursors.grab,
+          child: Tooltip(
+            message: 'Drag to reorder',
+            waitDuration: const Duration(milliseconds: 500),
+            child: handle,
+          ),
+        );
+      }
+
+      return handle;
+    }
+
     final draggable = isDesktop
         ? Draggable<BlockDragPayload>(
             data: BlockDragPayload(widget.nodeId),
             feedback: feedbackWidget,
-            childWhenDragging: Opacity(
-              opacity: 0.3,
-              child: IconButton(
-                icon: dragHandle,
-                onPressed: () {},
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              ),
-            ),
-            child: IconButton(
-              icon: dragHandle,
-              onPressed: () {},
-              tooltip: 'Drag to reorder',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            ),
+            childWhenDragging: buildHandle(isDragging: true),
+            child: buildHandle(isDragging: false),
           )
         : LongPressDraggable<BlockDragPayload>(
             data: BlockDragPayload(widget.nodeId),
             feedback: feedbackWidget,
             hapticFeedbackOnStart: true,
-            childWhenDragging: Opacity(
-              opacity: 0.3,
-              child: IconButton(
-                icon: dragHandle,
-                onPressed: () {},
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-              ),
-            ),
-            child: IconButton(
-              icon: dragHandle,
-              onPressed: () {},
-              tooltip: 'Drag to reorder',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-            ),
+            delay: const Duration(milliseconds: 250),
+            childWhenDragging: buildHandle(isDragging: true),
+            child: buildHandle(isDragging: false),
           );
 
     return MouseRegion(
@@ -167,7 +168,7 @@ class _SuperEditorBlockDragWrapperState
           if (renderBox == null) return;
           final localPos = renderBox.globalToLocal(details.offset);
           final isTopHalf = localPos.dy < (renderBox.size.height / 2);
-          if (isTopHalf != _isDropBefore) {
+          if (_isDropBefore != isTopHalf || _isDropAfter != !isTopHalf) {
             setState(() {
               _isDropBefore = isTopHalf;
               _isDropAfter = !isTopHalf;

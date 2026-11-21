@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 class SceneDelegate: FlutterSceneDelegate {
   private static let shareChannelName = "com.example.ketion/share_target"
+  private static let appGroupId = "group.com.example.ketion"
   private static var pendingShares: [[String: Any]] = []
   private static var shareMethodChannel: FlutterMethodChannel?
 
@@ -22,9 +23,34 @@ class SceneDelegate: FlutterSceneDelegate {
   }
 
   override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-    super.scene(scene, openURLContexts: URLContexts)
+    // Only forward non-file URLs to Flutter engine so GoRouter does not treat
+    // file paths (e.g. file:///.../inbox/doc.pdf) as in-app navigation routes.
+    let nonFileUrls = URLContexts.filter { !$0.url.isFileURL }
+    if !nonFileUrls.isEmpty {
+      super.scene(scene, openURLContexts: Set(nonFileUrls))
+    }
     setupShareChannelIfNeeded()
     handleIncomingUrls(URLContexts)
+  }
+
+  private static func readAppGroupPendingShares() -> [[String: Any]] {
+    guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId) else {
+      return []
+    }
+    let manifestURL = groupURL.appendingPathComponent("pending_shares.json")
+    guard let data = try? Data(contentsOf: manifestURL),
+          let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] else {
+      return []
+    }
+    return json
+  }
+
+  private static func clearAppGroupPendingShares() {
+    guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId) else {
+      return
+    }
+    let manifestURL = groupURL.appendingPathComponent("pending_shares.json")
+    try? FileManager.default.removeItem(at: manifestURL)
   }
 
   private func setupShareChannelIfNeeded() {
@@ -36,11 +62,14 @@ class SceneDelegate: FlutterSceneDelegate {
 
     channel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
       if call.method == "getPendingShares" {
-        let shares = Self.pendingShares
+        var shares = Self.pendingShares
         Self.pendingShares.removeAll()
+        shares.append(contentsOf: Self.readAppGroupPendingShares())
+        Self.clearAppGroupPendingShares()
         result(shares)
       } else if call.method == "clearPendingShares" {
         Self.pendingShares.removeAll()
+        Self.clearAppGroupPendingShares()
         result(nil)
       } else {
         result(FlutterMethodNotImplemented)

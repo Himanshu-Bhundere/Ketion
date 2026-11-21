@@ -18,7 +18,21 @@ GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: Routes.home,
+  redirect: (context, state) {
+    final uriStr = state.uri.toString();
+    if (state.uri.scheme == 'file' ||
+        uriStr.startsWith('file:') ||
+        state.uri.path == Routes.root) {
+      return Routes.home;
+    }
+    return null;
+  },
+  errorBuilder: (context, state) => const HomePage(),
   routes: [
+    GoRoute(
+      path: Routes.root,
+      redirect: (context, state) => Routes.home,
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return AppShell(navigationShell: navigationShell);

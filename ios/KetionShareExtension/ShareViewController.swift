@@ -36,11 +36,38 @@ class ShareViewController: UIViewController {
         for item in items {
             guard let attachments = item.attachments else { continue }
             for provider in attachments {
-                if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                    group.enter()
+                    provider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { [weak self] (tempUrl, error) in
+                        defer { group.leave() }
+                        guard let self = self, let url = tempUrl else { return }
+                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                            extractedItems.append(itemMap)
+                        }
+                    }
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                    group.enter()
+                    provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { [weak self] (tempUrl, error) in
+                        defer { group.leave() }
+                        guard let self = self, let url = tempUrl else { return }
+                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                            extractedItems.append(itemMap)
+                        }
+                    }
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
                     group.enter()
                     provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { [weak self] (data, error) in
                         defer { group.leave() }
                         guard let self = self, let url = data as? URL else { return }
+                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                            extractedItems.append(itemMap)
+                        }
+                    }
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
+                    group.enter()
+                    provider.loadFileRepresentation(forTypeIdentifier: UTType.pdf.identifier) { [weak self] (tempUrl, error) in
+                        defer { group.leave() }
+                        guard let self = self, let url = tempUrl else { return }
                         if let itemMap = self.copyFileToAppGroup(url: url) {
                             extractedItems.append(itemMap)
                         }

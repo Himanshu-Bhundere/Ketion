@@ -264,12 +264,25 @@ class MainActivity: FlutterActivity() {
     private fun handleIncomingShareIntent(intent: Intent?) {
         if (intent == null) return
         val action = intent.action ?: return
-        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
+        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE && action != Intent.ACTION_VIEW) return
 
         val receivedItems = mutableListOf<Map<String, Any?>>()
 
         try {
-            if (action == Intent.ACTION_SEND) {
+            if (action == Intent.ACTION_VIEW) {
+                val uri = intent.data
+                val mimeType = intent.type ?: "application/octet-stream"
+                if (uri != null) {
+                    processUri(uri, mimeType)?.let { receivedItems.add(it) }
+                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
+                    for (i in 0 until intent.clipData!!.itemCount) {
+                        val clipUri = intent.clipData!!.getItemAt(i).uri
+                        if (clipUri != null) {
+                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
+                        }
+                    }
+                }
+            } else if (action == Intent.ACTION_SEND) {
                 val mimeType = intent.type ?: "application/octet-stream"
                 val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 val extraStream = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -281,6 +294,13 @@ class MainActivity: FlutterActivity() {
 
                 if (extraStream != null) {
                     processUri(extraStream, mimeType)?.let { receivedItems.add(it) }
+                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
+                    for (i in 0 until intent.clipData!!.itemCount) {
+                        val clipUri = intent.clipData!!.getItemAt(i).uri
+                        if (clipUri != null) {
+                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
+                        }
+                    }
                 } else if (!extraText.isNullOrBlank()) {
                     val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
                     receivedItems.add(
@@ -301,8 +321,17 @@ class MainActivity: FlutterActivity() {
                     intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 }
 
-                extraStreams?.forEach { uri ->
-                    processUri(uri, mimeType)?.let { receivedItems.add(it) }
+                if (!extraStreams.isNullOrEmpty()) {
+                    extraStreams.forEach { uri ->
+                        processUri(uri, mimeType)?.let { receivedItems.add(it) }
+                    }
+                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
+                    for (i in 0 until intent.clipData!!.itemCount) {
+                        val clipUri = intent.clipData!!.getItemAt(i).uri
+                        if (clipUri != null) {
+                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {

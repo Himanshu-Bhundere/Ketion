@@ -836,10 +836,26 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
   @override
   void deactivate() {
-    ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
-    ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state = null;
-    ref.read(editorInsertItemCallbackProvider(widget.pageId).notifier).state =
-        null;
+    final pageId = widget.pageId;
+    final coordNotifier = ref.read(editorCoordinatorProvider(pageId).notifier);
+    final flushNotifier = ref.read(editorFlushCallbackProvider(pageId).notifier);
+    final insertNotifier =
+        ref.read(editorInsertItemCallbackProvider(pageId).notifier);
+    final isInitialized = _isInitialized;
+    final currentCoordinator = isInitialized ? _coordinator : null;
+
+    Future.microtask(() {
+      if (currentCoordinator != null &&
+          coordNotifier.state == currentCoordinator) {
+        coordNotifier.state = null;
+      }
+      if (flushNotifier.state == flush) {
+        flushNotifier.state = null;
+      }
+      if (insertNotifier.state == insertIncomingItem) {
+        insertNotifier.state = null;
+      }
+    });
     super.deactivate();
   }
 

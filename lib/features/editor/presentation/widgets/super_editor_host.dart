@@ -658,7 +658,19 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _adapter.registry
           .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
 
-      final mimeType = item.mimeType ?? 'application/octet-stream';
+      String mimeType = item.mimeType ?? 'application/octet-stream';
+      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+        final ext = item.name.split('.').last.toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].contains(ext)) {
+          mimeType = 'image/${ext == 'jpg' ? 'jpeg' : ext}';
+        } else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(ext)) {
+          mimeType = 'video/$ext';
+        } else if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'].contains(ext)) {
+          mimeType = 'audio/$ext';
+        } else if (ext == 'pdf') {
+          mimeType = 'application/pdf';
+        }
+      }
       final attachment =
           await ref.read(attachmentRepositoryProvider).saveAttachment(
                 pageId: widget.pageId,
@@ -823,6 +835,15 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
   }
 
   @override
+  void deactivate() {
+    ref.read(editorCoordinatorProvider(widget.pageId).notifier).state = null;
+    ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state = null;
+    ref.read(editorInsertItemCallbackProvider(widget.pageId).notifier).state =
+        null;
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     if (_isInitialized) {
       if (_coordinator.hasPendingMutations) {
@@ -838,15 +859,6 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       _historyController.dispose();
       _adapter.dispose();
       _coordinator.close();
-
-      try {
-        ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
-            null;
-        ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state =
-            null;
-        ref.read(editorInsertItemCallbackProvider(widget.pageId).notifier).state =
-            null;
-      } catch (_) {}
     }
 
     _focusNode.removeListener(_handleFocusChange);

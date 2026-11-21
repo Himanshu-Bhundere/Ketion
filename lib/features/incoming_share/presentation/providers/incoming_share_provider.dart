@@ -43,6 +43,10 @@ class IncomingShareCoordinator {
   IncomingShareCoordinator(this._ref);
 
   String? getActiveEditorPageId() {
+    final activeFromProvider = _ref.read(activeEditorPageIdProvider);
+    if (activeFromProvider != null && activeFromProvider.isNotEmpty) {
+      return activeFromProvider;
+    }
     try {
       final uri = appRouter.routeInformationProvider.value.uri;
       final segments = uri.pathSegments;
@@ -51,7 +55,7 @@ class IncomingShareCoordinator {
         return segments[editorIndex + 1];
       }
     } catch (_) {}
-    return _ref.read(activeEditorPageIdProvider);
+    return null;
   }
 
   Future<void> handleIncomingItems(
@@ -137,9 +141,11 @@ class IncomingShareCoordinator {
     required List<IncomingShareItem> items,
     required List<String> pageIds,
   }) async {
+    final activePageId = getActiveEditorPageId();
     for (final pageId in pageIds) {
-      final insertCallback =
-          _ref.read(editorInsertItemCallbackProvider(pageId));
+      final insertCallback = activePageId == pageId
+          ? _ref.read(editorInsertItemCallbackProvider(pageId))
+          : null;
       if (insertCallback != null) {
         for (final item in items) {
           await insertCallback(item);

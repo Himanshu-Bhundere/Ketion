@@ -8,6 +8,7 @@ import '../../../pages/presentation/providers/page_providers.dart';
 import '../widgets/ketion_editor_host.dart';
 import '../widgets/editor_top_bar.dart';
 import '../../domain/models/editor_open_target.dart';
+import '../../../incoming_share/presentation/providers/incoming_share_provider.dart';
 
 class EditorPage extends ConsumerStatefulWidget {
   final String pageId;
@@ -29,6 +30,24 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   final GlobalKey<KetionEditorHostState> _editorHostKey = GlobalKey();
   static final Map<String, Future<Result<void>>> _pageUpdateChains = {};
   bool _isExiting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(activeEditorPageIdProvider.notifier).state = widget.pageId;
+      }
+    });
+  }
+
+  @override
+  void deactivate() {
+    if (ref.read(activeEditorPageIdProvider) == widget.pageId) {
+      ref.read(activeEditorPageIdProvider.notifier).state = null;
+    }
+    super.deactivate();
+  }
 
   Future<Result<void>> _updatePage({
     String? title,

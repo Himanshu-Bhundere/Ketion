@@ -159,7 +159,7 @@ void main() {
       adapter.bind(doc, editor);
     });
 
-    testWidgets('Renders Draggable on desktop and LongPressDraggable on mobile', (tester) async {
+    testWidgets('Renders Draggable on desktop and LongPressDraggable on mobile without conflicting tooltip', (tester) async {
       // 1. Desktop (Windows)
       await tester.pumpWidget(
         MaterialApp(
@@ -178,6 +178,7 @@ void main() {
 
       expect(find.byType(Draggable<BlockDragPayload>), findsOneWidget);
       expect(find.byType(LongPressDraggable<BlockDragPayload>), findsNothing);
+      expect(find.byType(Tooltip), findsOneWidget);
       expect(find.text('Hello Desktop'), findsOneWidget);
 
       // 2. Mobile (Android)
@@ -189,7 +190,7 @@ void main() {
               nodeId: 'node-p1',
               document: doc,
               editor: editor,
-              child: const Text('Hello Mobile'),
+              child: const Text('Hello Mobile Android'),
             ),
           ),
         ),
@@ -198,7 +199,81 @@ void main() {
 
       expect(find.byType(LongPressDraggable<BlockDragPayload>), findsOneWidget);
       expect(find.byType(Draggable<BlockDragPayload>), findsNothing);
-      expect(find.text('Hello Mobile'), findsOneWidget);
+      expect(find.byType(Tooltip), findsNothing);
+      expect(find.text('Hello Mobile Android'), findsOneWidget);
+
+      // 3. Mobile (iOS)
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.iOS),
+          home: Scaffold(
+            body: SuperEditorBlockDragWrapper(
+              nodeId: 'node-p1',
+              document: doc,
+              editor: editor,
+              child: const Text('Hello Mobile iOS'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LongPressDraggable<BlockDragPayload>), findsOneWidget);
+      expect(find.byType(Draggable<BlockDragPayload>), findsNothing);
+      expect(find.byType(Tooltip), findsNothing);
+      expect(find.text('Hello Mobile iOS'), findsOneWidget);
+    });
+
+    testWidgets('iOS long-press drag gesture triggers reorder without tooltip interference', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.iOS),
+          home: Scaffold(
+            body: Column(
+              children: [
+                SuperEditorBlockDragWrapper(
+                  nodeId: 'node-p1',
+                  document: doc,
+                  editor: editor,
+                  child: const SizedBox(height: 60, child: Text('Block 1')),
+                ),
+                SuperEditorBlockDragWrapper(
+                  nodeId: 'node-p2',
+                  document: doc,
+                  editor: editor,
+                  child: const SizedBox(height: 60, child: Text('Block 2')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final handleFinder = find.byKey(const ValueKey('block_drag_handle_node-p1'));
+      expect(handleFinder, findsOneWidget);
+
+      // Verify no tooltip widget wraps the handle on iOS
+      expect(find.byType(Tooltip), findsNothing);
+
+      // Perform long press to start dragging on iOS
+      final gesture = await tester.startGesture(tester.getCenter(handleFinder), pointer: 1);
+      // Wait for delay (250ms) to trigger long-press drag
+      await tester.pump(const Duration(milliseconds: 350));
+
+      // Move into the bottom half of node-p2
+      final p2Finder = find.text('Block 2');
+      await gesture.moveTo(tester.getCenter(p2Finder) + const Offset(0, 15));
+      await tester.pump();
+
+      // Release finger
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      // Verify node-p1 was moved after node-p2
+      final nodeIds = [for (int i = 0; i < doc.nodeCount; i++) doc.getNodeAt(i)!.id];
+      expect(nodeIds, contains('node-p1'));
+      expect(nodeIds, contains('node-p2'));
     });
 
     test('MoveNodeRequest moves standalone block forward correctly', () {

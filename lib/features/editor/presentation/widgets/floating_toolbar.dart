@@ -85,40 +85,45 @@ class _FloatingToolbarState extends ConsumerState<FloatingToolbar> {
   }
 
   Widget _getIconButtonForSymbol(BuildContext context, String symbolId) {
+    final platform = Theme.of(context).platform;
+    final isDesktop = platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
+
     switch (symbolId) {
       case 'bullet_list':
         return IconButton(
           key: const ValueKey('toolbar_bullet_list'),
           icon: const Icon(Icons.format_list_bulleted),
-          tooltip: 'Bullet List',
+          tooltip: isDesktop ? 'Bullet List' : null,
           onPressed: widget.onAddList,
         );
       case 'heading':
         return IconButton(
           key: const ValueKey('toolbar_heading'),
           icon: const Icon(Icons.title),
-          tooltip: 'Heading',
+          tooltip: isDesktop ? 'Heading' : null,
           onPressed: widget.onAddHeading,
         );
       case 'image':
         return IconButton(
           key: const ValueKey('toolbar_image'),
           icon: const Icon(Icons.image),
-          tooltip: 'Image',
+          tooltip: isDesktop ? 'Image' : null,
           onPressed: widget.onAddImage,
         );
       case 'file':
         return IconButton(
           key: const ValueKey('toolbar_file'),
           icon: const Icon(Icons.attach_file),
-          tooltip: 'File',
+          tooltip: isDesktop ? 'File' : null,
           onPressed: widget.onAddFile,
         );
       case 'hide_keyboard':
         return IconButton(
           key: const ValueKey('toolbar_hide_keyboard'),
           icon: const Icon(Icons.keyboard_hide),
-          tooltip: 'Hide Keyboard',
+          tooltip: isDesktop ? 'Hide Keyboard' : null,
           onPressed: widget.onHideKeyboard ??
               () {
                 FocusScope.of(context).unfocus();

@@ -14,9 +14,14 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.util.ArrayList
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.ketion/assistive_ball"
+    private val SHARE_CHANNEL = "com.example.ketion/share_target"
+    private var shareMethodChannel: MethodChannel? = null
+    private val pendingShares = mutableListOf<Map<String, Any?>>()
     private var pendingPermissionResult: MethodChannel.Result? = null
     private var lastBallX: Int = -1
     private var lastBallY: Int = -1
@@ -60,6 +65,8 @@ class MainActivity: FlutterActivity() {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
+
+        handleIncomingShareIntent(intent)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -107,6 +114,28 @@ class MainActivity: FlutterActivity() {
                 "setOverlayWindowMode" -> {
                     val enable = call.argument<Boolean>("enable") ?: false
                     configureFloatingDialogMode(enable)
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        val shareChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARE_CHANNEL)
+        shareMethodChannel = shareChannel
+        shareChannel.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getPendingShares" -> {
+                    val list = synchronized(pendingShares) {
+                        val copy = ArrayList(pendingShares)
+                        pendingShares.clear()
+                        copy
+                    }
+                    result.success(list)
+                }
+                "clearPendingShares" -> {
+                    synchronized(pendingShares) {
+                        pendingShares.clear()
+                    }
                     result.success(null)
                 }
                 else -> result.notImplemented()
@@ -221,6 +250,7 @@ class MainActivity: FlutterActivity() {
         if (methodChannel != null) {
             methodChannel = null
         }
+        shareMethodChannel = null
         super.onDestroy()
     }
 
@@ -228,5 +258,110 @@ class MainActivity: FlutterActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         processIntentAction(intent)
+        handleIncomingShareIntent(intent)
+    }
+
+    private fun handleIncomingShareIntent(intent: Intent?) {
+        if (intent == null) return
+        val action = intent.action ?: return
+        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
+
+        val receivedItems = mutableListOf<Map<String, Any?>>()
+
+        try {
+            if (action == Intent.ACTION_SEND) {
+                val mimeType = intent.type ?: "application/octet-stream"
+                val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                val extraStream = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                }
+
+                if (extraStream != null) {
+                    processUri(extraStream, mimeType)?.let { receivedItems.add(it) }
+                } else if (!extraText.isNullOrBlank()) {
+                    val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
+                    receivedItems.add(
+                        mapOf(
+                            "type" to if (isUrl) "link" else "text",
+                            "name" to if (isUrl) extraText else "Shared Text",
+                            "url" to if (isUrl) extraText else null,
+                            "text" to if (!isUrl) extraText else null
+                        )
+                    )
+                }
+            } else if (action == Intent.ACTION_SEND_MULTIPLE) {
+                val mimeType = intent.type ?: "application/octet-stream"
+                val extraStreams = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                }
+
+                extraStreams?.forEach { uri ->
+                    processUri(uri, mimeType)?.let { receivedItems.add(it) }
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to extract shared items", e)
+        }
+
+        if (receivedItems.isNotEmpty()) {
+            if (shareMethodChannel != null) {
+                shareMethodChannel?.invokeMethod("onShareReceived", receivedItems)
+            } else {
+                synchronized(pendingShares) {
+                    pendingShares.addAll(receivedItems)
+                }
+            }
+        }
+    }
+
+    private fun processUri(uri: Uri, fallbackMimeType: String): Map<String, Any?>? {
+        return try {
+            var name: String? = null
+            var size: Long? = null
+            if (uri.scheme == "content") {
+                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        name = cursor.getString(nameIndex)
+                    }
+                    if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                        size = cursor.getLong(sizeIndex)
+                    }
+                }
+            }
+            if (name == null) {
+                name = uri.lastPathSegment ?: "shared_file_${System.currentTimeMillis()}"
+            }
+
+            val mimeType = contentResolver.getType(uri) ?: fallbackMimeType
+            val safeName = name!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+            val shareDir = File(cacheDir, "shared_incoming")
+            if (!shareDir.exists()) shareDir.mkdirs()
+
+            val destFile = File(shareDir, "${System.currentTimeMillis()}_$safeName")
+            contentResolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            mapOf(
+                "type" to "file",
+                "name" to name,
+                "localPath" to destFile.absolutePath,
+                "mimeType" to mimeType,
+                "size" to (size ?: destFile.length())
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to process shared URI: $uri", e)
+            null
+        }
     }
 }

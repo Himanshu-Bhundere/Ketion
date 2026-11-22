@@ -1,6 +1,7 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
+#include <ole2.h>
 #include <imm.h>
 #include <shlobj.h>
 #include <propkey.h>
@@ -112,9 +113,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
-  // Initialize COM, so that it is available for use in the library and/or
-  // plugins.
-  ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  // Initialize OLE (and COM in apartment-threaded mode), so that drag-and-drop
+  // (RegisterDragDrop) and COM are available for use in the application and
+  // desktop_drop plugin.
+  ::OleInitialize(nullptr);
 
   RegisterKetionToastIdentity();
 
@@ -150,6 +152,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
-  ::CoUninitialize();
+  ::OleUninitialize();
   return EXIT_SUCCESS;
 }

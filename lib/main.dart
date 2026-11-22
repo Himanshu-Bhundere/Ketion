@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:ketion/core/bootstrap/app_bootstrap.dart';
 import 'package:ketion/core/theme/app_theme.dart';
 import 'package:ketion/core/theme/app_colors.dart';
@@ -11,6 +12,8 @@ import 'package:ketion/features/settings/presentation/providers/settings_provide
 import 'package:ketion/features/reminders/presentation/providers/reminder_providers.dart';
 import 'package:ketion/core/bootstrap/notification_bootstrap.dart';
 import 'package:ketion/features/assistive_ball/presentation/widgets/root_assistive_ball_overlay.dart';
+import 'package:ketion/features/incoming_share/domain/models/incoming_share_item.dart';
+import 'package:ketion/features/incoming_share/presentation/providers/incoming_share_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +43,7 @@ class _KetionAppState extends ConsumerState<KetionApp>
     with WidgetsBindingObserver {
   Timer? _reminderCleanupTimer;
   bool _isReminderCleanupRunning = false;
+  StreamSubscription<List<IncomingShareItem>>? _shareSubscription;
 
   Future<void> _restoreReminderSchedules() async {
     if (kIsWeb) return;
@@ -132,17 +136,58 @@ class _KetionAppState extends ConsumerState<KetionApp>
         );
       }
     });
+
+    // Listen for incoming share intents (Android/iOS)
+    final shareService = ref.read(incomingShareServiceProvider);
+    _shareSubscription = shareService.onShareReceived.listen((items) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        unawaited(
+          ref
+              .read(incomingShareCoordinatorProvider)
+              .handleIncomingItems(context, items),
+        );
+      }
+    });
+
+    // Check for pending cold-start shares
+    Future.delayed(const Duration(milliseconds: 600), () async {
+      final pendingShares = await shareService.getPendingShares();
+      if (pendingShares.isNotEmpty) {
+        await shareService.clearPendingShares();
+        final context = rootNavigatorKey.currentContext;
+        if (context != null && context.mounted) {
+          await ref
+              .read(incomingShareCoordinatorProvider)
+              .handleIncomingItems(context, pendingShares);
+        }
+      }
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _cleanupExpiredReminders();
+
+      final shareService = ref.read(incomingShareServiceProvider);
+      shareService.getPendingShares().then((pendingShares) async {
+        if (pendingShares.isNotEmpty) {
+          await shareService.clearPendingShares();
+          final context = rootNavigatorKey.currentContext;
+          if (context != null && context.mounted) {
+            await ref
+                .read(incomingShareCoordinatorProvider)
+                .handleIncomingItems(context, pendingShares);
+          }
+        }
+      });
     }
   }
 
   @override
   void dispose() {
+    _shareSubscription?.cancel();
     _reminderCleanupTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -178,8 +223,113 @@ class _KetionAppState extends ConsumerState<KetionApp>
           themeMode: themeMode,
           routerConfig: appRouter,
           builder: (context, child) {
-            return RootAssistiveBallOverlay(
-              child: child ?? const SizedBox.shrink(),
+            final isDragging = ref.watch(isDraggingFilesProvider);
+
+            return DropTarget(
+              onDragEntered: (_) {
+                ref.read(isDraggingFilesProvider.notifier).state = true;
+              },
+              onDragExited: (_) {
+                ref.read(isDraggingFilesProvider.notifier).state = false;
+              },
+              onDragDone: (detail) async {
+                ref.read(isDraggingFilesProvider.notifier).state = false;
+                if (detail.files.isEmpty) return;
+
+                final items = <IncomingShareItem>[];
+                for (final file in detail.files) {
+                  final length = await file.length();
+                  String? mimeType = file.mimeType;
+                  if (mimeType == null || mimeType.isEmpty) {
+                    final ext = file.name.split('.').last.toLowerCase();
+                    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext)) {
+                      mimeType = 'image/${ext == 'jpg' ? 'jpeg' : ext}';
+                    } else if (['mp4', 'mov', 'avi', 'mkv'].contains(ext)) {
+                      mimeType = 'video/$ext';
+                    } else if (['mp3', 'wav', 'm4a', 'flac'].contains(ext)) {
+                      mimeType = 'audio/$ext';
+                    } else if (ext == 'pdf') {
+                      mimeType = 'application/pdf';
+                    } else {
+                      mimeType = 'application/octet-stream';
+                    }
+                  }
+                  items.add(
+                    IncomingShareItem(
+                      type: IncomingShareType.file,
+                      name: file.name,
+                      localPath: file.path,
+                      mimeType: mimeType,
+                      size: length,
+                    ),
+                  );
+                }
+
+                final targetContext =
+                    rootNavigatorKey.currentContext ?? context;
+                if (targetContext.mounted && items.isNotEmpty) {
+                  await ref
+                      .read(incomingShareCoordinatorProvider)
+                      .handleIncomingItems(targetContext, items);
+                }
+              },
+              child: Stack(
+                children: [
+                  RootAssistiveBallOverlay(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                  if (isDragging)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Container(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.15),
+                          child: Center(
+                            child: Card(
+                              elevation: 8,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 20,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.file_download_outlined,
+                                      size: 48,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Drop files to attach to Ketion',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         );

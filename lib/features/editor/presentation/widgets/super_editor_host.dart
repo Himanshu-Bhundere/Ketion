@@ -40,6 +40,8 @@ import '../table/ketion_table_component.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../media/data/repositories/attachment_repository_impl.dart';
+import '../../../incoming_share/domain/models/incoming_share_item.dart';
+import '../../../incoming_share/presentation/providers/incoming_share_provider.dart';
 import 'depth_wrapping_component_builder.dart';
 import 'ketion_list_item_component.dart';
 import 'floating_toolbar.dart';
@@ -173,6 +175,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
           _coordinator;
       ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state =
           flush;
+      ref.read(editorInsertItemCallbackProvider(widget.pageId).notifier).state =
+          insertIncomingItem;
 
       final initialSnapshotMap = <String, BlockSnapshot>{};
       for (final block in blocks) {
@@ -628,6 +632,174 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
     );
   }
 
+  Future<void> insertIncomingItem(IncomingShareItem item) async {
+    if (!_isInitialized) return;
+
+    final targetNodeId = _composer.selection?.extent.nodeId ??
+        (_document.isNotEmpty ? _document.last.id : null);
+    if (targetNodeId == null) return;
+
+    final placementMetadata =
+        KetionSlashCommandRegistry.inheritedPlacementMetadata(
+      targetNodeId,
+      _document,
+    );
+
+    if (item.type == IncomingShareType.file) {
+      if (item.localPath == null) return;
+      final file = PlatformFile(
+        name: item.name,
+        path: item.localPath,
+        size: item.size ?? 0,
+      );
+
+      final newNodeId = Editor.createNodeId();
+      final newBlockId = const Uuid().v7();
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final mimeType = item.mimeType ?? 'application/octet-stream';
+      final attachment =
+          await ref.read(attachmentRepositoryProvider).saveAttachment(
+                pageId: widget.pageId,
+                blockId: newBlockId,
+                sourceFile: file,
+                mimeType: mimeType,
+              );
+
+      final lowerMime = attachment.mimeType.toLowerCase();
+      final BlockNode node;
+      if (lowerMime.startsWith('image/')) {
+        node = ImageNode(
+          id: newNodeId,
+          imageUrl: attachment.id,
+          metadata: placementMetadata,
+        );
+      } else if (lowerMime.startsWith('video/')) {
+        node = KetionVideoNode(
+          id: newNodeId,
+          attachmentId: attachment.id,
+          metadata: placementMetadata,
+        );
+      } else if (lowerMime.startsWith('audio/')) {
+        node = KetionAudioNode(
+          id: newNodeId,
+          attachmentId: attachment.id,
+          metadata: placementMetadata,
+        );
+      } else if (lowerMime == 'application/pdf') {
+        node = KetionPdfNode(
+          id: newNodeId,
+          attachmentId: attachment.id,
+          metadata: placementMetadata,
+        );
+      } else {
+        node = KetionFileNode(
+          id: newNodeId,
+          attachmentId: attachment.id,
+          metadata: placementMetadata,
+        );
+      }
+
+      final emptyParagraph = ParagraphNode(
+        id: Editor.createNodeId(),
+        text: AttributedText(),
+        metadata: placementMetadata,
+      );
+
+      _editor.execute([
+        InsertNodeAfterNodeRequest(
+          existingNodeId: targetNodeId,
+          newNode: node,
+        ),
+        InsertNodeAfterNodeRequest(
+          existingNodeId: node.id,
+          newNode: emptyParagraph,
+        ),
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: emptyParagraph.id,
+              nodePosition: emptyParagraph.beginningPosition,
+            ),
+          ),
+          SelectionChangeType.placeCaret,
+          SelectionReason.userInteraction,
+        ),
+      ]);
+    } else if (item.type == IncomingShareType.link) {
+      final newNodeId = Editor.createNodeId();
+      final newBlockId = const Uuid().v7();
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final node = KetionWebLinkNode(
+        id: newNodeId,
+        url: item.url ?? item.name,
+        metadata: placementMetadata,
+      );
+      final emptyParagraph = ParagraphNode(
+        id: Editor.createNodeId(),
+        text: AttributedText(),
+        metadata: placementMetadata,
+      );
+
+      _editor.execute([
+        InsertNodeAfterNodeRequest(
+          existingNodeId: targetNodeId,
+          newNode: node,
+        ),
+        InsertNodeAfterNodeRequest(
+          existingNodeId: node.id,
+          newNode: emptyParagraph,
+        ),
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: emptyParagraph.id,
+              nodePosition: emptyParagraph.beginningPosition,
+            ),
+          ),
+          SelectionChangeType.placeCaret,
+          SelectionReason.userInteraction,
+        ),
+      ]);
+    } else if (item.type == IncomingShareType.text) {
+      final newNodeId = Editor.createNodeId();
+      final newBlockId = const Uuid().v7();
+      _adapter.registry
+          .registerPendingMapping(nodeId: newNodeId, blockId: newBlockId);
+
+      final text = item.text ?? item.name;
+      final node = ParagraphNode(
+        id: newNodeId,
+        text: AttributedText(text),
+        metadata: placementMetadata,
+      );
+
+      _editor.execute([
+        InsertNodeAfterNodeRequest(
+          existingNodeId: targetNodeId,
+          newNode: node,
+        ),
+        ChangeSelectionRequest(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: node.id,
+              nodePosition: node.endPosition,
+            ),
+          ),
+          SelectionChangeType.placeCaret,
+          SelectionReason.userInteraction,
+        ),
+      ]);
+    }
+
+    if (mounted) {
+      _focusNode.requestFocus();
+    }
+  }
+
   void _scrollToTarget(EditorOpenTarget target) {
     if (target.targetBlockId == null) return;
 
@@ -671,6 +843,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         ref.read(editorCoordinatorProvider(widget.pageId).notifier).state =
             null;
         ref.read(editorFlushCallbackProvider(widget.pageId).notifier).state =
+            null;
+        ref.read(editorInsertItemCallbackProvider(widget.pageId).notifier).state =
             null;
       } catch (_) {}
     }

@@ -69,7 +69,7 @@ class SceneDelegate: FlutterSceneDelegate {
     guard !receivedItems.isEmpty else { return }
 
     if let channel = Self.shareMethodChannel {
-      channel.invokeMethod("onShareReceived", receivedItems)
+      channel.invokeMethod("onShareReceived", arguments: receivedItems)
     } else {
       Self.pendingShares.append(contentsOf: receivedItems)
     }

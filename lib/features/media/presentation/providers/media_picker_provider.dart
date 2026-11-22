@@ -53,6 +53,41 @@ class MediaPickerService {
     }
   }
 
+  Future<Attachment?> importExternalFile({
+    required String pageId,
+    required String blockId,
+    required PlatformFile file,
+    String? mimeType,
+  }) async {
+    try {
+      String resolvedMimeType = mimeType ?? 'application/octet-stream';
+      if (mimeType == null || mimeType == 'application/octet-stream') {
+        final extension = file.extension?.toLowerCase() ??
+            file.name.split('.').last.toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg'].contains(extension)) {
+          resolvedMimeType = 'image/${extension == 'jpg' ? 'jpeg' : extension}';
+        } else if (['mp4', 'mov', 'avi', 'mkv', 'webm'].contains(extension)) {
+          resolvedMimeType = 'video/$extension';
+        } else if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'].contains(extension)) {
+          resolvedMimeType = 'audio/$extension';
+        } else if (extension == 'pdf') {
+          resolvedMimeType = 'application/pdf';
+        }
+      }
+
+      final attachment = await _repository.saveAttachment(
+        pageId: pageId,
+        blockId: blockId,
+        sourceFile: file,
+        mimeType: resolvedMimeType,
+      );
+      return attachment;
+    } catch (e) {
+      debugPrint('[MediaPickerService] importExternalFile error: $e');
+      return null;
+    }
+  }
+
   Future<Attachment?> pickFile({
     required String pageId,
     required String blockId,

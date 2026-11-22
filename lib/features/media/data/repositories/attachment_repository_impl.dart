@@ -250,7 +250,8 @@ class AttachmentRepositoryImpl implements AttachmentRepository {
             (t) =>
                 t.deleted.equals(false) &
                 (t.uploadStatus.equals(AttachmentUploadStatus.pending.value) |
-                    t.uploadStatus.equals(AttachmentUploadStatus.failed.value)),
+                    t.uploadStatus.equals(AttachmentUploadStatus.failed.value) |
+                    t.uploadStatus.equals(AttachmentUploadStatus.uploading.value)),
           ))
         .get();
     return rows.map(_mapRowToEntity).toList();

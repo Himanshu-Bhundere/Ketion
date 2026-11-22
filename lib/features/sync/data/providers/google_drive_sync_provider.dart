@@ -125,24 +125,26 @@ class GoogleDriveSyncProvider implements SyncProvider {
       final fileLength = await file.length();
       int bytesSent = 0;
 
-      final progressStream = file.openRead().transform(
-        StreamTransformer<List<int>, List<int>>.fromHandlers(
-          handleData: (data, sink) {
-            if (isCancelled?.call() == true) {
-              sink.addError(const SyncFailure('Upload cancelled by user'));
-              return;
-            }
-            bytesSent += data.length;
-            if (onProgress != null && fileLength > 0) {
-              onProgress((bytesSent / fileLength).clamp(0.0, 1.0));
-            }
-            sink.add(data);
-          },
-        ),
-      );
+      Stream<List<int>> progressStream() async* {
+        await for (final chunk in file.openRead()) {
+          if (isCancelled?.call() == true) {
+            throw const SyncFailure('Upload cancelled by user');
+          }
+
+          yield chunk;
+
+          bytesSent += chunk.length;
+
+          if (fileLength > 0) {
+            onProgress?.call(
+              (bytesSent / fileLength).clamp(0.0, 1.0),
+            );
+          }
+        }
+      }
 
       final fileName = file.uri.pathSegments.last;
-      final media = drive.Media(progressStream, fileLength);
+      final media = drive.Media(progressStream(), fileLength);
       final driveFile = drive.File()
         ..name = fileName
         ..parents = [_attachmentsFolderId!]

@@ -7,6 +7,7 @@ import '../../domain/entities/attachment.dart';
 import '../../domain/entities/attachment_upload_status.dart';
 import '../../domain/repositories/attachment_repository.dart';
 import '../../domain/services/attachment_sync_service.dart';
+import '../../presentation/providers/attachment_provider.dart';
 import 'attachment_storage_service.dart';
 import '../../../sync/domain/providers/sync_provider.dart';
 import '../../../sync/presentation/providers/sync_providers.dart';
@@ -18,12 +19,17 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
   final AttachmentStorageService _storageService;
   final Set<String> _cancelledIds = {};
   final Map<String, void Function(double progress)> _progressListeners = {};
+  final void Function(String id, double? progress)? _onProgressChanged;
+  final void Function(String id)? _onStatusChanged;
 
   AttachmentSyncServiceImpl(
     this._repository,
     this._syncProvider,
-    this._storageService,
-  );
+    this._storageService, {
+    void Function(String id, double? progress)? onProgressChanged,
+    void Function(String id)? onStatusChanged,
+  })  : _onProgressChanged = onProgressChanged,
+        _onStatusChanged = onStatusChanged;
 
   void setProgressListener(String attachmentId, void Function(double progress) listener) {
     _progressListeners[attachmentId] = listener;
@@ -39,34 +45,71 @@ class AttachmentSyncServiceImpl implements AttachmentSyncService {
       return;
     }
 
-    _cancelledIds.remove(attachment.id);
+    final id = attachment.id;
+    _cancelledIds.remove(id);
 
-    // Resolve absolute path
-    final absolutePath = await _repository.resolveAttachmentPath(attachment);
+    _onProgressChanged?.call(id, 0);
 
-    final result = await _syncProvider.uploadAttachment(
-      absolutePath,
-      attachment.mimeType,
-      attachment.checksumSha256!,
-      onProgress: (p) => _progressListeners[attachment.id]?.call(p),
-      isCancelled: () => _cancelledIds.contains(attachment.id),
+    await _repository.updateAttachmentSyncStatus(
+      id,
+      AttachmentUploadStatus.uploading.value,
     );
 
-    await result.fold(
-      (driveFileId) async {
+    _onStatusChanged?.call(id);
+
+    try {
+      final absolutePath = await _repository.resolveAttachmentPath(attachment);
+
+      final result = await _syncProvider.uploadAttachment(
+        absolutePath,
+        attachment.mimeType,
+        attachment.checksumSha256!,
+        onProgress: (progress) {
+          _progressListeners[id]?.call(progress);
+          _onProgressChanged?.call(id, progress);
+        },
+        isCancelled: () => _cancelledIds.contains(id),
+      );
+
+      if (_cancelledIds.remove(id)) {
         await _repository.updateAttachmentSyncStatus(
-          attachment.id,
-          AttachmentUploadStatus.uploaded.value,
-          driveFileId: driveFileId,
+          id,
+          AttachmentUploadStatus.cancelled.value,
         );
-      },
-      (failure) async {
-        await _repository.updateAttachmentSyncStatus(
-          attachment.id,
-          AttachmentUploadStatus.failed.value,
-        );
-      },
-    );
+        return;
+      }
+
+      await result.fold(
+        (driveFileId) async {
+          await _repository.updateAttachmentSyncStatus(
+            id,
+            AttachmentUploadStatus.uploaded.value,
+            driveFileId: driveFileId,
+          );
+        },
+        (failure) async {
+          await _repository.updateAttachmentSyncStatus(
+            id,
+            AttachmentUploadStatus.failed.value,
+          );
+        },
+      );
+    } catch (e) {
+      final wasCancelled = _cancelledIds.remove(id);
+
+      await _repository.updateAttachmentSyncStatus(
+        id,
+        wasCancelled
+            ? AttachmentUploadStatus.cancelled.value
+            : AttachmentUploadStatus.failed.value,
+      );
+
+      if (!wasCancelled) rethrow;
+    } finally {
+      _cancelledIds.remove(id);
+      _onProgressChanged?.call(id, null);
+      _onStatusChanged?.call(id);
+    }
   }
 
   @override
@@ -177,5 +220,16 @@ final attachmentSyncServiceProvider = Provider<AttachmentSyncService>((ref) {
   final repository = ref.watch(attachmentRepositoryProvider);
   final syncProvider = ref.watch(syncProviderInterfaceProvider);
   final storageService = ref.watch(attachmentStorageServiceProvider);
-  return AttachmentSyncServiceImpl(repository, syncProvider, storageService);
+
+  return AttachmentSyncServiceImpl(
+    repository,
+    syncProvider,
+    storageService,
+    onProgressChanged: (id, progress) {
+      ref.read(attachmentUploadProgressProvider(id).notifier).state = progress;
+    },
+    onStatusChanged: (id) {
+      ref.invalidate(attachmentProvider(id));
+    },
+  );
 });

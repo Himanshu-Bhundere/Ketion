@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_editor/super_editor.dart';
+import '../../../../media/domain/entities/attachment_upload_status.dart';
 import '../../../../media/presentation/providers/attachment_provider.dart';
 import '../../../../media/data/repositories/attachment_repository_impl.dart';
 import '../../../../media/data/services/attachment_export_service.dart';
@@ -162,6 +163,42 @@ class KetionVideoPlayerComponent extends ConsumerWidget {
                             tooltip: 'Cancel upload',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (progress == null &&
+                    (attachment.uploadStatus == AttachmentUploadStatus.failed ||
+                        attachment.uploadStatus == AttachmentUploadStatus.cancelled))
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Video upload failed or cancelled',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              ref
+                                  .read(attachmentSyncServiceProvider)
+                                  .uploadAttachment(attachment);
+                            },
+                            child: const Text('Retry'),
                           ),
                         ],
                       ),

@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/utils/result.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/router/routes.dart';
 import '../../../blocks/domain/entities/block.dart' as entity_block;
 import '../../../blocks/presentation/providers/block_providers.dart';
 import '../../../editor/domain/models/block_data_models.dart';
@@ -93,48 +94,57 @@ class IncomingShareCoordinator {
       return;
     }
 
-    // Otherwise show the multi-note picker
+    // Otherwise route to the notes list and show the multi-note picker
     if (!navContext.mounted) return;
-    await IncomingShareNotePicker.show(
-      navContext,
-      items: items,
-      onConfirm: (selectedPageIds) async {
-        await importItemsToPages(
-          items: items,
-          pageIds: selectedPageIds,
-        );
-        if (navContext.mounted) {
-          ScaffoldMessenger.maybeOf(navContext)?.showSnackBar(
-            SnackBar(
-              content: Text(
-                'Attached ${items.length} item(s) to ${selectedPageIds.length} note(s)',
-              ),
-              duration: const Duration(seconds: 3),
-            ),
+
+    // Route to the notes list page as required when no note is open
+    appRouter.go(Routes.notes);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final currentNavContext = rootNavigatorKey.currentContext ?? navContext;
+      if (!currentNavContext.mounted) return;
+
+      await IncomingShareNotePicker.show(
+        currentNavContext,
+        items: items,
+        onConfirm: (selectedPageIds) async {
+          await importItemsToPages(
+            items: items,
+            pageIds: selectedPageIds,
           );
-        }
-      },
-      onCreateNewNote: () async {
-        final firstItem = items.first;
-        final noteTitle = firstItem.name.isNotEmpty
-            ? 'Shared: ${firstItem.name}'
-            : 'Shared Note';
+          if (currentNavContext.mounted) {
+            ScaffoldMessenger.maybeOf(currentNavContext)?.showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Attached ${items.length} item(s) to ${selectedPageIds.length} note(s)',
+                ),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
+        onCreateNewNote: () async {
+          final firstItem = items.first;
+          final noteTitle = firstItem.name.isNotEmpty
+              ? 'Shared: ${firstItem.name}'
+              : 'Shared Note';
 
-        final createPageUseCase = _ref.read(createPageUseCaseProvider);
-        final result = await createPageUseCase(
-          title: noteTitle,
-          icon: '📥',
-        );
+          final createPageUseCase = _ref.read(createPageUseCaseProvider);
+          final result = await createPageUseCase(
+            title: noteTitle,
+            icon: '📥',
+          );
 
-        if (result is Success) {
-          final newPage = (result as Success).value;
-          _ref.invalidate(allPagesProvider);
-          _ref.invalidate(recentPagesProvider);
-          return newPage.id as String;
-        }
-        return null;
-      },
-    );
+          if (result is Success) {
+            final newPage = (result as Success).value;
+            _ref.invalidate(allPagesProvider);
+            _ref.invalidate(recentPagesProvider);
+            return newPage.id as String;
+          }
+          return null;
+        },
+      );
+    });
   }
 
   Future<void> importItemsToPages({

@@ -15,14 +15,19 @@ import 'package:ketion/features/editor/domain/models/editor_open_target.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
-final appRouter = GoRouter(
+final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: Routes.home,
   redirect: (context, state) {
     final uriStr = state.uri.toString();
-    if (state.uri.scheme == 'file' ||
-        uriStr.startsWith('file:') ||
-        state.uri.path == Routes.root) {
+    if (state.uri.scheme == 'file' || uriStr.startsWith('file:')) {
+      return Routes.home;
+    }
+    if (state.uri.path == Routes.root) {
+      // If an editor note is active, preserve it instead of resetting to home
+      if (state.uri.pathSegments.contains('editor')) {
+        return null;
+      }
       return Routes.home;
     }
     return null;

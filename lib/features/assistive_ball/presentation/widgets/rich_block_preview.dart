@@ -142,6 +142,7 @@ class RichBlockPreview extends StatelessWidget {
         content = VideoBlockWidget(
           block: block,
           onUpdate: (_) {},
+          allowFullscreen: false,
         );
       case 'audio':
         content = AudioBlockWidget(

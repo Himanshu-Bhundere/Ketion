@@ -10,6 +10,7 @@ class KetionInFramePlayer extends StatefulWidget {
   final String? caption;
   final VideoPlayerController? controller;
   final bool isFullscreen;
+  final bool allowFullscreen;
 
   const KetionInFramePlayer({
     super.key,
@@ -17,6 +18,7 @@ class KetionInFramePlayer extends StatefulWidget {
     this.caption,
     this.controller,
     this.isFullscreen = false,
+    this.allowFullscreen = true,
   });
 
   @override
@@ -33,6 +35,7 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
   String? _errorMessage;
   int _initToken = 0;
   bool _isInFullScreen = false;
+  bool _showSpeedMenu = false;
 
   static const List<double> _availableSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -487,17 +490,21 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
                                     ),
                                   ),
                                   const Spacer(),
-                                  PopupMenuButton<double>(
-                                    tooltip: 'Playback Speed',
-                                    initialValue: _playbackSpeed,
-                                    onSelected: _changeSpeed,
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _showSpeedMenu = !_showSpeedMenu;
+                                      });
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 6.0,
                                         vertical: 2.0,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white24,
+                                        color: _showSpeedMenu
+                                            ? Theme.of(context).primaryColor
+                                            : Colors.white24,
                                         borderRadius:
                                             BorderRadius.circular(4.0),
                                       ),
@@ -510,26 +517,20 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
                                         ),
                                       ),
                                     ),
-                                    itemBuilder: (context) => _availableSpeeds
-                                        .map(
-                                          (speed) => PopupMenuItem<double>(
-                                            value: speed,
-                                            child: Text('$speed×'),
-                                          ),
-                                        )
-                                        .toList(),
                                   ),
-                                  const SizedBox(width: 10),
-                                  GestureDetector(
-                                    onTap: _toggleFullScreen,
-                                    child: Icon(
-                                      widget.isFullscreen
-                                          ? Icons.fullscreen_exit
-                                          : Icons.fullscreen,
-                                      color: Colors.white,
-                                      size: 22,
+                                  if (widget.allowFullscreen) ...[
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: _toggleFullScreen,
+                                      child: Icon(
+                                        widget.isFullscreen
+                                            ? Icons.fullscreen_exit
+                                            : Icons.fullscreen,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ],
@@ -538,6 +539,77 @@ class _KetionInFramePlayerState extends State<KetionInFramePlayer> {
                       ),
                     ),
                   ),
+
+                  // 5. In-frame speed selection popup menu
+                  if (_showSpeedMenu && _showControls)
+                    Positioned(
+                      right: 12,
+                      bottom: 50,
+                      child: Material(
+                        color: Colors.black87,
+                        elevation: 8,
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E),
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(
+                              color: Colors.white24,
+                              width: 1.0,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _availableSpeeds.map((speed) {
+                              final isSelected = _playbackSpeed == speed;
+                              return InkWell(
+                                onTap: () {
+                                  _changeSpeed(speed);
+                                  setState(() {
+                                    _showSpeedMenu = false;
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(4.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14.0,
+                                    vertical: 6.0,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${speed == 1.0 ? '1.0' : speed}×',
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? Theme.of(context).primaryColor
+                                              : Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (isSelected) ...[
+                                        const SizedBox(width: 8),
+                                        Icon(
+                                          Icons.check,
+                                          size: 14,
+                                          color:
+                                              Theme.of(context).primaryColor,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

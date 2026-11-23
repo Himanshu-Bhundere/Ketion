@@ -9,11 +9,13 @@ import '../players/ketion_in_frame_player.dart';
 class VideoBlockWidget extends ConsumerStatefulWidget {
   final Block block;
   final ValueChanged<Block> onUpdate;
+  final bool allowFullscreen;
 
   const VideoBlockWidget({
     super.key,
     required this.block,
     required this.onUpdate,
+    this.allowFullscreen = true,
   });
 
   @override
@@ -84,6 +86,7 @@ class _VideoBlockWidgetState extends ConsumerState<VideoBlockWidget> {
             return KetionInFramePlayer(
               filePath: localPath,
               caption: _blockData.caption,
+              allowFullscreen: widget.allowFullscreen,
             );
           },
           loading: () => const SizedBox(

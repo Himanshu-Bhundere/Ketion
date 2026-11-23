@@ -637,13 +637,13 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
 
     final targetNodeId = _composer.selection?.extent.nodeId ??
         (_document.isNotEmpty ? _document.last.id : null);
-    if (targetNodeId == null) return;
 
-    final placementMetadata =
-        KetionSlashCommandRegistry.inheritedPlacementMetadata(
-      targetNodeId,
-      _document,
-    );
+    final placementMetadata = targetNodeId != null
+        ? KetionSlashCommandRegistry.inheritedPlacementMetadata(
+            targetNodeId,
+            _document,
+          )
+        : <String, dynamic>{};
 
     if (item.type == IncomingShareType.file) {
       if (item.localPath == null) return;
@@ -720,10 +720,16 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       );
 
       _editor.execute([
-        InsertNodeAfterNodeRequest(
-          existingNodeId: targetNodeId,
-          newNode: node,
-        ),
+        if (targetNodeId != null)
+          InsertNodeAfterNodeRequest(
+            existingNodeId: targetNodeId,
+            newNode: node,
+          )
+        else
+          InsertNodeAtIndexRequest(
+            newNode: node,
+            nodeIndex: 0,
+          ),
         InsertNodeAfterNodeRequest(
           existingNodeId: node.id,
           newNode: emptyParagraph,
@@ -757,10 +763,16 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       );
 
       _editor.execute([
-        InsertNodeAfterNodeRequest(
-          existingNodeId: targetNodeId,
-          newNode: node,
-        ),
+        if (targetNodeId != null)
+          InsertNodeAfterNodeRequest(
+            existingNodeId: targetNodeId,
+            newNode: node,
+          )
+        else
+          InsertNodeAtIndexRequest(
+            newNode: node,
+            nodeIndex: 0,
+          ),
         InsertNodeAfterNodeRequest(
           existingNodeId: node.id,
           newNode: emptyParagraph,
@@ -790,10 +802,16 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
       );
 
       _editor.execute([
-        InsertNodeAfterNodeRequest(
-          existingNodeId: targetNodeId,
-          newNode: node,
-        ),
+        if (targetNodeId != null)
+          InsertNodeAfterNodeRequest(
+            existingNodeId: targetNodeId,
+            newNode: node,
+          )
+        else
+          InsertNodeAtIndexRequest(
+            newNode: node,
+            nodeIndex: 0,
+          ),
         ChangeSelectionRequest(
           DocumentSelection.collapsed(
             position: DocumentPosition(

@@ -12,12 +12,14 @@ class KetionVideoPlayerComponent extends ConsumerWidget {
   final String attachmentId;
   final String? nodeId;
   final Editor? editor;
+  final bool allowFullscreen;
 
   const KetionVideoPlayerComponent({
     super.key,
     required this.attachmentId,
     this.nodeId,
     this.editor,
+    this.allowFullscreen = true,
   });
 
   @override
@@ -54,7 +56,10 @@ class KetionVideoPlayerComponent extends ConsumerWidget {
 
             return Stack(
               children: [
-                KetionInFramePlayer(filePath: localPath),
+                KetionInFramePlayer(
+                  filePath: localPath,
+                  allowFullscreen: allowFullscreen,
+                ),
                 // Top-right contextual menu button
                 Positioned(
                   top: 8,

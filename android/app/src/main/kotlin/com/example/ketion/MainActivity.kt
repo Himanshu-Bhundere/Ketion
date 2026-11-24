@@ -269,39 +269,22 @@ class MainActivity: FlutterActivity() {
         val receivedItems = mutableListOf<Map<String, Any?>>()
 
         try {
+            val mimeType = intent.type ?: "application/octet-stream"
+            val urisToProcess = mutableListOf<Uri>()
+
             if (action == Intent.ACTION_VIEW) {
-                val uri = intent.data
-                val mimeType = intent.type ?: "application/octet-stream"
-                if (uri != null) {
-                    processUri(uri, mimeType)?.let { receivedItems.add(it) }
-                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
-                    for (i in 0 until intent.clipData!!.itemCount) {
-                        val clipUri = intent.clipData!!.getItemAt(i).uri
-                        if (clipUri != null) {
-                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
-                        }
-                    }
-                }
+                intent.data?.let { urisToProcess.add(it) }
             } else if (action == Intent.ACTION_SEND) {
-                val mimeType = intent.type ?: "application/octet-stream"
-                val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 val extraStream = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 } else {
                     @Suppress("DEPRECATION")
                     intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                 }
+                extraStream?.let { urisToProcess.add(it) }
 
-                if (extraStream != null) {
-                    processUri(extraStream, mimeType)?.let { receivedItems.add(it) }
-                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
-                    for (i in 0 until intent.clipData!!.itemCount) {
-                        val clipUri = intent.clipData!!.getItemAt(i).uri
-                        if (clipUri != null) {
-                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
-                        }
-                    }
-                } else if (!extraText.isNullOrBlank()) {
+                val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (!extraText.isNullOrBlank()) {
                     val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
                     receivedItems.add(
                         mapOf(
@@ -313,26 +296,55 @@ class MainActivity: FlutterActivity() {
                     )
                 }
             } else if (action == Intent.ACTION_SEND_MULTIPLE) {
-                val mimeType = intent.type ?: "application/octet-stream"
                 val extraStreams = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 } else {
                     @Suppress("DEPRECATION")
                     intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 }
+                extraStreams?.forEach { urisToProcess.add(it) }
 
-                if (!extraStreams.isNullOrEmpty()) {
-                    extraStreams.forEach { uri ->
-                        processUri(uri, mimeType)?.let { receivedItems.add(it) }
-                    }
-                } else if (intent.clipData != null && intent.clipData!!.itemCount > 0) {
-                    for (i in 0 until intent.clipData!!.itemCount) {
-                        val clipUri = intent.clipData!!.getItemAt(i).uri
-                        if (clipUri != null) {
-                            processUri(clipUri, mimeType)?.let { receivedItems.add(it) }
+                val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (!extraText.isNullOrBlank()) {
+                    val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
+                    receivedItems.add(
+                        mapOf(
+                            "type" to if (isUrl) "link" else "text",
+                            "name" to if (isUrl) extraText else "Shared Text",
+                            "url" to if (isUrl) extraText else null,
+                            "text" to if (!isUrl) extraText else null
+                        )
+                    )
+                }
+            }
+
+            // Also inspect ClipData for additional/fallback URIs and texts
+            intent.clipData?.let { clipData ->
+                for (i in 0 until clipData.itemCount) {
+                    val clipItem = clipData.getItemAt(i)
+                    clipItem.uri?.let { clipUri ->
+                        if (!urisToProcess.contains(clipUri)) {
+                            urisToProcess.add(clipUri)
                         }
                     }
+                    val clipText = clipItem.text?.toString()
+                    if (urisToProcess.isEmpty() && receivedItems.isEmpty() && !clipText.isNullOrBlank()) {
+                        val isUrl = clipText.startsWith("http://") || clipText.startsWith("https://")
+                        receivedItems.add(
+                            mapOf(
+                                "type" to if (isUrl) "link" else "text",
+                                "name" to if (isUrl) clipText else "Shared Text",
+                                "url" to if (isUrl) clipText else null,
+                                "text" to if (!isUrl) clipText else null
+                            )
+                        )
+                    }
                 }
+            }
+
+            // Process all gathered URIs
+            for (uri in urisToProcess) {
+                processUri(uri, mimeType)?.let { receivedItems.add(it) }
             }
         } catch (e: Exception) {
             android.util.Log.e("MainActivity", "Failed to extract shared items", e)
@@ -369,13 +381,19 @@ class MainActivity: FlutterActivity() {
                 name = uri.lastPathSegment ?: "shared_file_${System.currentTimeMillis()}"
             }
 
-            val mimeType = contentResolver.getType(uri) ?: fallbackMimeType
+            val mimeType = (if (uri.scheme == "content") contentResolver.getType(uri) else null) ?: fallbackMimeType
             val safeName = name!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
             val shareDir = File(cacheDir, "shared_incoming")
             if (!shareDir.exists()) shareDir.mkdirs()
 
             val destFile = File(shareDir, "${System.currentTimeMillis()}_$safeName")
-            contentResolver.openInputStream(uri)?.use { input ->
+            val inputStream = if (uri.scheme == "file" && uri.path != null) {
+                File(uri.path!!).inputStream()
+            } else {
+                contentResolver.openInputStream(uri)
+            }
+
+            inputStream?.use { input ->
                 destFile.outputStream().use { output ->
                     input.copyTo(output)
                 }

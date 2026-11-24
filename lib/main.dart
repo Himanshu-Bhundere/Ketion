@@ -140,13 +140,24 @@ class _KetionAppState extends ConsumerState<KetionApp>
     // Listen for incoming share intents (Android/iOS)
     final shareService = ref.read(incomingShareServiceProvider);
     _shareSubscription = shareService.onShareReceived.listen((items) {
-      final context = rootNavigatorKey.currentContext;
-      if (context != null && context.mounted) {
+      void dispatch(BuildContext ctx) {
         unawaited(
           ref
               .read(incomingShareCoordinatorProvider)
-              .handleIncomingItems(context, items),
+              .handleIncomingItems(ctx, items),
         );
+      }
+
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        dispatch(context);
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            dispatch(ctx);
+          }
+        });
       }
     });
 
@@ -154,12 +165,26 @@ class _KetionAppState extends ConsumerState<KetionApp>
     Future.delayed(const Duration(milliseconds: 600), () async {
       final pendingShares = await shareService.getPendingShares();
       if (pendingShares.isNotEmpty) {
-        await shareService.clearPendingShares();
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && context.mounted) {
-          await ref
-              .read(incomingShareCoordinatorProvider)
-              .handleIncomingItems(context, pendingShares);
+        final currentCtx = rootNavigatorKey.currentContext;
+        if (currentCtx != null && currentCtx.mounted) {
+          await shareService.clearPendingShares();
+          if (currentCtx.mounted) {
+            await ref
+                .read(incomingShareCoordinatorProvider)
+                .handleIncomingItems(currentCtx, pendingShares);
+          }
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            final delayedCtx = rootNavigatorKey.currentContext;
+            if (delayedCtx != null && delayedCtx.mounted) {
+              await shareService.clearPendingShares();
+              if (delayedCtx.mounted) {
+                await ref
+                    .read(incomingShareCoordinatorProvider)
+                    .handleIncomingItems(delayedCtx, pendingShares);
+              }
+            }
+          });
         }
       }
     });
@@ -173,12 +198,14 @@ class _KetionAppState extends ConsumerState<KetionApp>
       final shareService = ref.read(incomingShareServiceProvider);
       shareService.getPendingShares().then((pendingShares) async {
         if (pendingShares.isNotEmpty) {
-          await shareService.clearPendingShares();
           final context = rootNavigatorKey.currentContext;
           if (context != null && context.mounted) {
-            await ref
-                .read(incomingShareCoordinatorProvider)
-                .handleIncomingItems(context, pendingShares);
+            await shareService.clearPendingShares();
+            if (context.mounted) {
+              await ref
+                  .read(incomingShareCoordinatorProvider)
+                  .handleIncomingItems(context, pendingShares);
+            }
           }
         }
       });

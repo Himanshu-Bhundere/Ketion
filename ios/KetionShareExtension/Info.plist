@@ -39,6 +39,8 @@
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.adobe.pdf"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data"
         || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.content"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.item"
+        || ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"
     ).@count &gt; 0
 ).@count &gt; 0</string>
 		</dict>

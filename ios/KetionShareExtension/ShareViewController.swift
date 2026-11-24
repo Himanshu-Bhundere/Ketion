@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 class ShareViewController: UIViewController {
     private let appGroupId = "group.com.example.ketion"
     private var activityIndicator: UIActivityIndicatorView!
+    private let syncQueue = DispatchQueue(label: "com.example.ketion.share_sync")
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,22 +37,44 @@ class ShareViewController: UIViewController {
         for item in items {
             guard let attachments = item.attachments else { continue }
             for provider in attachments {
-                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
                     group.enter()
-                    provider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { [weak self] (tempUrl, error) in
+                    let typeId = provider.registeredTypeIdentifiers.first {
+                        UTType($0)?.conforms(to: .movie) == true
+                    } ?? UTType.movie.identifier
+
+                    provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
                         defer { group.leave() }
-                        guard let self = self, let url = tempUrl else { return }
-                        if let itemMap = self.copyFileToAppGroup(url: url) {
-                            extractedItems.append(itemMap)
+                        guard let self = self else { return }
+                        if let url = tempUrl, let itemMap = self.copyFileToAppGroup(url: url) {
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
+                        } else {
+                            // Fallback to loadItem for direct movie URLs
+                            group.enter()
+                            provider.loadItem(forTypeIdentifier: typeId, options: nil) { [weak self] (data, _) in
+                                defer { group.leave() }
+                                guard let self = self, let url = data as? URL, let itemMap = self.copyFileToAppGroup(url: url) else { return }
+                                self.syncQueue.sync {
+                                    extractedItems.append(itemMap)
+                                }
+                            }
                         }
                     }
-                } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
                     group.enter()
-                    provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { [weak self] (tempUrl, error) in
+                    let typeId = provider.registeredTypeIdentifiers.first {
+                        UTType($0)?.conforms(to: .image) == true
+                    } ?? UTType.image.identifier
+
+                    provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
                         defer { group.leave() }
                         guard let self = self, let url = tempUrl else { return }
                         if let itemMap = self.copyFileToAppGroup(url: url) {
-                            extractedItems.append(itemMap)
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
                         }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
@@ -60,7 +83,9 @@ class ShareViewController: UIViewController {
                         defer { group.leave() }
                         guard let self = self, let url = data as? URL else { return }
                         if let itemMap = self.copyFileToAppGroup(url: url) {
-                            extractedItems.append(itemMap)
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
                         }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
@@ -69,33 +94,69 @@ class ShareViewController: UIViewController {
                         defer { group.leave() }
                         guard let self = self, let url = tempUrl else { return }
                         if let itemMap = self.copyFileToAppGroup(url: url) {
-                            extractedItems.append(itemMap)
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
+                        }
+                    }
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.audio.identifier) {
+                    group.enter()
+                    let typeId = provider.registeredTypeIdentifiers.first {
+                        UTType($0)?.conforms(to: .audio) == true
+                    } ?? UTType.audio.identifier
+
+                    provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
+                        defer { group.leave() }
+                        guard let self = self, let url = tempUrl else { return }
+                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
                         }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
                     group.enter()
-                    provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { (data, error) in
+                    provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { [weak self] (data, error) in
                         defer { group.leave() }
+                        guard let self = self else { return }
                         if let url = data as? URL {
-                            extractedItems.append([
-                                "type": "link",
-                                "name": url.absoluteString,
-                                "url": url.absoluteString
-                            ])
+                            self.syncQueue.sync {
+                                extractedItems.append([
+                                    "type": "link",
+                                    "name": url.absoluteString,
+                                    "url": url.absoluteString
+                                ])
+                            }
                         }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                     group.enter()
-                    provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { (data, error) in
+                    provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] (data, error) in
                         defer { group.leave() }
+                        guard let self = self else { return }
                         if let text = data as? String {
                             let isUrl = text.hasPrefix("http://") || text.hasPrefix("https://")
-                            extractedItems.append([
-                                "type": isUrl ? "link" : "text",
-                                "name": isUrl ? text : "Shared Text",
-                                "url": isUrl ? text : nil as Any?,
-                                "text": isUrl ? nil as Any? : text
-                            ])
+                            self.syncQueue.sync {
+                                extractedItems.append([
+                                    "type": isUrl ? "link" : "text",
+                                    "name": isUrl ? text : "Shared Text",
+                                    "url": isUrl ? text : nil as Any?,
+                                    "text": isUrl ? nil as Any? : text
+                                ])
+                            }
+                        }
+                    }
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.data.identifier) ||
+                          provider.hasItemConformingToTypeIdentifier(UTType.item.identifier) {
+                    group.enter()
+                    let typeId = provider.registeredTypeIdentifiers.first ?? UTType.data.identifier
+                    provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
+                        defer { group.leave() }
+                        guard let self = self, let url = tempUrl else { return }
+                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                            self.syncQueue.sync {
+                                extractedItems.append(itemMap)
+                            }
                         }
                     }
                 }

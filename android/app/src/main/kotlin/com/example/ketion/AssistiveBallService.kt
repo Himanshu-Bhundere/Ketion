@@ -347,6 +347,8 @@ class AssistiveBallService : Service() {
             gravity = Gravity.TOP or Gravity.START
             x = menuX
             y = menuY
+            dimAmount = 0.0f
+            flags = flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
         }
 
         val menuContainer = LinearLayout(this).apply {

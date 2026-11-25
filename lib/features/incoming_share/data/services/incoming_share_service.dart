@@ -71,6 +71,24 @@ class IncomingShareService {
     }
   }
 
+  Future<void> setActiveNoteId(String? noteId) async {
+    try {
+      await _channel.invokeMethod('setActiveNoteId', {'noteId': noteId});
+    } on MissingPluginException {
+      // ignore
+    } catch (_) {}
+  }
+
+  Future<String?> getLastOpenedNoteId() async {
+    try {
+      return await _channel.invokeMethod<String>('getLastOpenedNoteId');
+    } on MissingPluginException {
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   void dispose() {
     _shareController.close();
   }

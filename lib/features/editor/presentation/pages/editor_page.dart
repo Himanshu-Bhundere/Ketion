@@ -37,6 +37,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         ref.read(activeEditorPageIdProvider.notifier).state = widget.pageId;
+        ref.read(incomingShareServiceProvider).setActiveNoteId(widget.pageId);
       }
     });
   }

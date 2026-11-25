@@ -65,10 +65,19 @@ class IncomingShareCoordinator {
   ) async {
     if (items.isEmpty) return;
 
-    final navContext = rootNavigatorKey.currentContext ?? context;
-    final activePageId = getActiveEditorPageId();
+    var activePageId = getActiveEditorPageId();
 
-    // Context-sensitive check: If an active note editor is open, attach directly!
+    if (activePageId == null) {
+      final lastId = await _ref.read(incomingShareServiceProvider).getLastOpenedNoteId();
+      if (lastId != null && lastId.isNotEmpty) {
+        activePageId = lastId;
+      }
+    }
+
+    final navContext = rootNavigatorKey.currentContext ?? context;
+    if (!navContext.mounted) return;
+
+    // Context-sensitive check: If an active/last-opened note is available, attach directly!
     if (activePageId != null) {
       final messenger = ScaffoldMessenger.maybeOf(navContext);
       try {

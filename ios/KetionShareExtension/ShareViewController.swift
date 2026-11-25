@@ -2,6 +2,7 @@ import UIKit
 import Social
 import MobileCoreServices
 import UniformTypeIdentifiers
+import AVFoundation
 
 class ShareViewController: UIViewController {
     private let appGroupId = "group.com.example.ketion"
@@ -37,29 +38,39 @@ class ShareViewController: UIViewController {
         for item in items {
             guard let attachments = item.attachments else { continue }
             for provider in attachments {
-                if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                // Video & Movie types (Photos app video, quicktime, mp4, etc.)
+                if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) ||
+                   provider.hasItemConformingToTypeIdentifier(UTType.video.identifier) ||
+                   provider.hasItemConformingToTypeIdentifier("com.apple.quicktime-movie") ||
+                   provider.hasItemConformingToTypeIdentifier("public.mpeg-4") {
+
                     group.enter()
-                    let typeId = provider.registeredTypeIdentifiers.first {
-                        UTType($0)?.conforms(to: .movie) == true
+
+                    let typeId = provider.registeredTypeIdentifiers.first { identifier in
+                        guard let type = UTType(identifier) else { return false }
+                        return type.conforms(to: .movie) || type.conforms(to: .video)
                     } ?? UTType.movie.identifier
 
-                    provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
+                    provider.loadFileRepresentation(forTypeIdentifier: typeId) {
+                        [weak self] temporaryURL, error in
+
                         defer { group.leave() }
-                        guard let self = self else { return }
-                        if let url = tempUrl, let itemMap = self.copyFileToAppGroup(url: url) {
-                            self.syncQueue.sync {
-                                extractedItems.append(itemMap)
-                            }
-                        } else {
-                            // Fallback to loadItem for direct movie URLs
-                            group.enter()
-                            provider.loadItem(forTypeIdentifier: typeId, options: nil) { [weak self] (data, _) in
-                                defer { group.leave() }
-                                guard let self = self, let url = data as? URL, let itemMap = self.copyFileToAppGroup(url: url) else { return }
-                                self.syncQueue.sync {
-                                    extractedItems.append(itemMap)
-                                }
-                            }
+
+                        guard let self = self,
+                              let temporaryURL = temporaryURL else {
+                            print("Ketion Share Extension: Video load failed: \(String(describing: error))")
+                            return
+                        }
+
+                        // The provider's temporary URL is only valid during this callback.
+                        // Copy it into the App Group container before returning.
+                        guard let itemMap = self.copyFileToAppGroup(url: temporaryURL) else {
+                            print("Ketion Share Extension: Failed to copy shared video")
+                            return
+                        }
+
+                        self.syncQueue.sync {
+                            extractedItems.append(itemMap)
                         }
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
@@ -69,11 +80,23 @@ class ShareViewController: UIViewController {
                     } ?? UTType.image.identifier
 
                     provider.loadFileRepresentation(forTypeIdentifier: typeId) { [weak self] (tempUrl, error) in
-                        defer { group.leave() }
-                        guard let self = self, let url = tempUrl else { return }
-                        if let itemMap = self.copyFileToAppGroup(url: url) {
+                        guard let self = self else {
+                            group.leave()
+                            return
+                        }
+                        if let url = tempUrl, let itemMap = self.copyFileToAppGroup(url: url) {
                             self.syncQueue.sync {
                                 extractedItems.append(itemMap)
+                            }
+                            group.leave()
+                        } else {
+                            // Fallback to loadItem for direct image URLs
+                            provider.loadItem(forTypeIdentifier: typeId, options: nil) { [weak self] (data, _) in
+                                defer { group.leave() }
+                                guard let self = self, let url = data as? URL, let itemMap = self.copyFileToAppGroup(url: url) else { return }
+                                self.syncQueue.sync {
+                                    extractedItems.append(itemMap)
+                                }
                             }
                         }
                     }
@@ -129,9 +152,13 @@ class ShareViewController: UIViewController {
                             }
                         }
                     }
-                } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) ||
+                           provider.hasItemConformingToTypeIdentifier(UTType.text.identifier) {
                     group.enter()
-                    provider.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) { [weak self] (data, error) in
+                    let typeId = provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+                        ? UTType.plainText.identifier
+                        : UTType.text.identifier
+                    provider.loadItem(forTypeIdentifier: typeId, options: nil) { [weak self] (data, error) in
                         defer { group.leave() }
                         guard let self = self else { return }
                         if let text = data as? String {
@@ -171,6 +198,13 @@ class ShareViewController: UIViewController {
     }
 
     private func copyFileToAppGroup(url: URL) -> [String: Any]? {
+        let isSecurityScoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if isSecurityScoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
         guard let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId) else {
             return nil
         }

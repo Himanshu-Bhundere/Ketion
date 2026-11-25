@@ -138,6 +138,16 @@ class MainActivity: FlutterActivity() {
                     }
                     result.success(null)
                 }
+                "setActiveNoteId" -> {
+                    val noteId = call.argument<String>("noteId")
+                    val prefs = getSharedPreferences("ketion_share_prefs", android.content.Context.MODE_PRIVATE)
+                    prefs.edit().putString("last_opened_note_id", noteId).apply()
+                    result.success(null)
+                }
+                "getLastOpenedNoteId" -> {
+                    val prefs = getSharedPreferences("ketion_share_prefs", android.content.Context.MODE_PRIVATE)
+                    result.success(prefs.getString("last_opened_note_id", null))
+                }
                 else -> result.notImplemented()
             }
         }
@@ -149,11 +159,11 @@ class MainActivity: FlutterActivity() {
         if (enable) {
             val dm = resources.displayMetrics
             val density = dm.density
-            val widthPx = (270 * density).toInt().coerceAtMost((dm.widthPixels * 0.72f).toInt())
-            val heightPx = (300 * density).toInt().coerceAtMost((dm.heightPixels * 0.45f).toInt())
+            val widthPx = (280 * density).toInt().coerceAtMost((dm.widthPixels * 0.75f).toInt())
+            val heightPx = (320 * density).toInt().coerceAtMost((dm.heightPixels * 0.50f).toInt())
 
             window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            window.setLayout(widthPx, heightPx)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
 
             val bX = if (lastBallX >= 0) lastBallX else dm.widthPixels - (60 * density).toInt()
             val bY = if (lastBallY >= 0) lastBallY else (100 * density).toInt()
@@ -175,8 +185,11 @@ class MainActivity: FlutterActivity() {
             val params = window.attributes
             params.x = posX
             params.y = posY
+            params.dimAmount = 0.0f
+            params.flags = params.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
             window.attributes = params
 
+            window.setLayout(widthPx, heightPx)
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
@@ -186,7 +199,13 @@ class MainActivity: FlutterActivity() {
             val params = window.attributes
             params.x = 0
             params.y = 0
+            params.dimAmount = 0.0f
             window.attributes = params
+            window.clearFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+                WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            )
             moveTaskToBack(true)
         }
     }
@@ -366,15 +385,23 @@ class MainActivity: FlutterActivity() {
             var name: String? = null
             var size: Long? = null
             if (uri.scheme == "content") {
-                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
-                    if (nameIndex != -1 && cursor.moveToFirst()) {
-                        name = cursor.getString(nameIndex)
+                try {
+                    val projection = arrayOf(
+                        android.provider.OpenableColumns.DISPLAY_NAME,
+                        android.provider.OpenableColumns.SIZE
+                    )
+                    contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                        if (nameIndex != -1 && cursor.moveToFirst()) {
+                            name = cursor.getString(nameIndex)
+                        }
+                        if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
+                            size = cursor.getLong(sizeIndex)
+                        }
                     }
-                    if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) {
-                        size = cursor.getLong(sizeIndex)
-                    }
+                } catch (queryEx: Exception) {
+                    android.util.Log.w("MainActivity", "Failed to query OpenableColumns for $uri: ${queryEx.message}")
                 }
             }
             if (name == null) {

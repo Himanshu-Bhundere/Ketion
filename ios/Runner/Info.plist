@@ -40,6 +40,10 @@
 				<string>public.data</string>
 				<string>public.image</string>
 				<string>public.movie</string>
+				<string>public.video</string>
+				<string>com.apple.quicktime-movie</string>
+				<string>public.mpeg-4</string>
+				<string>public.audiovisual-content</string>
 				<string>public.audio</string>
 				<string>com.adobe.pdf</string>
 				<string>public.text</string>

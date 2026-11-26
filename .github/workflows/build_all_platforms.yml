@@ -183,12 +183,29 @@ jobs:
 
       - name: Package and Ad-Hoc Sign IPA
         run: |
+          # Dynamically locate Runner.app (handles Release-iphoneos or iphoneos)
+          APP_PATH=$(find build/ios -type d -name "Runner.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: Runner.app not found under build/ios"
+            ls -la build/ios
+            exit 1
+          fi
+          echo "Found Runner.app at: $APP_PATH"
+
+          # Ensure build/ios/iphoneos has Runner.app for packaging and artifact upload
+          mkdir -p build/ios/iphoneos
+          if [ "$APP_PATH" != "build/ios/iphoneos/Runner.app" ]; then
+            rm -rf build/ios/iphoneos/Runner.app
+            cp -r "$APP_PATH" build/ios/iphoneos/Runner.app
+          fi
+
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
           find Payload/Runner.app -type d -name "*.bundle" -exec codesign --force --sign - {} + 2>/dev/null || true
-          find Payload/Runner.app -type f -name "*.dylib" -exec codesign --force --sign - {} +
-          find Payload/Runner.app -type d -name "*.framework" -exec codesign --force --sign - {} +
+          find Payload/Runner.app -type f -name "*.dylib" -exec codesign --force --sign - {} + 2>/dev/null || true
+          find Payload/Runner.app -type d -name "*.framework" -exec codesign --force --sign - {} + 2>/dev/null || true
+          find Payload/Runner.app -type d -name "*.appex" -exec codesign --force --sign - {} + 2>/dev/null || true
           codesign --force --sign - Payload/Runner.app
           codesign -dv Payload/Runner.app
           zip -qr Ketion.ipa Payload

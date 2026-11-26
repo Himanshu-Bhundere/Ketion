@@ -4,6 +4,7 @@ import MobileCoreServices
 import UniformTypeIdentifiers
 import AVFoundation
 
+@objc(ShareViewController)
 class ShareViewController: UIViewController {
     private let appGroupId = "group.com.example.ketion"
     private var activityIndicator: UIActivityIndicatorView!

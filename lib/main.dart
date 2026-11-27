@@ -269,14 +269,20 @@ class _KetionAppState extends ConsumerState<KetionApp>
                   String? mimeType = file.mimeType;
                   if (mimeType == null || mimeType.isEmpty) {
                     final ext = file.name.split('.').last.toLowerCase();
-                    if (['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext)) {
-                      mimeType = 'image/${ext == 'jpg' ? 'jpeg' : ext}';
-                    } else if (['mp4', 'mov', 'avi', 'mkv'].contains(ext)) {
-                      mimeType = 'video/$ext';
-                    } else if (['mp3', 'wav', 'm4a', 'flac'].contains(ext)) {
-                      mimeType = 'audio/$ext';
+                    if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'heic'].contains(ext)) {
+                      mimeType = ext == 'jpg' ? 'image/jpeg' : (ext == 'svg' ? 'image/svg+xml' : 'image/$ext');
+                    } else if (['mp4', 'mov', 'avi', 'mkv', 'm4v', 'webm'].contains(ext)) {
+                      mimeType = ext == 'mov' ? 'video/quicktime' : 'video/$ext';
+                    } else if (['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'].contains(ext)) {
+                      mimeType = ext == 'mp3' ? 'audio/mpeg' : (ext == 'm4a' ? 'audio/mp4' : 'audio/$ext');
                     } else if (ext == 'pdf') {
                       mimeType = 'application/pdf';
+                    } else if (ext == 'md' || ext == 'markdown') {
+                      mimeType = 'text/markdown';
+                    } else if (ext == 'txt' || ext == 'log') {
+                      mimeType = 'text/plain';
+                    } else if (ext == 'json') {
+                      mimeType = 'application/json';
                     } else {
                       mimeType = 'application/octet-stream';
                     }

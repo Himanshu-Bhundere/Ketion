@@ -40,6 +40,17 @@ Name: "{autodesktop}\Ketion"; \
     Filename: "{app}\{#MyAppExeName}"; \
     Tasks: desktopicon
 
+Name: "{userappdata}\Microsoft\Windows\SendTo\Ketion"; \
+    Filename: "{app}\{#MyAppExeName}"; \
+    Comment: "Send files to Ketion"
+
+[Registry]
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: "*"; ValueData: ""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Applications\{#MyAppExeName}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\ketion"; ValueType: string; ValueName: ""; ValueData: "URL:Ketion Protocol"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\ketion"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\ketion\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""; Flags: uninsdeletekey
+
 [Tasks]
 Name: "desktopicon"; \
     Description: "Create a desktop shortcut"; \

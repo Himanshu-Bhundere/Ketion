@@ -25,29 +25,27 @@
 		<key>NSExtensionAttributes</key>
 		<dict>
 			<key>NSExtensionActivationRule</key>
-			<dict>
-				<key>NSExtensionActivationDictionaryVersion</key>
-				<integer>2</integer>
-				<!-- Images -->
-				<key>NSExtensionActivationSupportsImageWithMaxCount</key>
-				<integer>10</integer>
-
-				<!-- Videos / Movies -->
-				<key>NSExtensionActivationSupportsMovieWithMaxCount</key>
-				<integer>10</integer>
-
-				<!-- General files: PDFs, documents, archives, etc. -->
-				<key>NSExtensionActivationSupportsFileWithMaxCount</key>
-				<integer>10</integer>
-
-				<!-- Shared web links -->
-				<key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
-				<integer>10</integer>
-
-				<!-- Shared text -->
-				<key>NSExtensionActivationSupportsText</key>
-				<true/>
-			</dict>
+			<string>SUBQUERY (
+    extensionItems,
+    $extensionItem,
+    SUBQUERY (
+        $extensionItem.attachments,
+        $attachment,
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.item"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.content"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.file-url"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.text"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.image"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.movie"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.video"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audiovisual-content"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.audio"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "com.apple.quicktime-movie"
+        OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.mpeg-4"
+    ).@count &gt;= 1
+).@count &gt;= 1</string>
 		</dict>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.share-services</string>

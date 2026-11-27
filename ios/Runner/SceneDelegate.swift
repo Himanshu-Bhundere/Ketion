@@ -71,6 +71,19 @@ class SceneDelegate: FlutterSceneDelegate {
         Self.pendingShares.removeAll()
         Self.clearAppGroupPendingShares()
         result(nil)
+      } else if call.method == "setActiveNoteId" {
+        let args = call.arguments as? [String: Any]
+        let noteId = args?["noteId"] as? String
+        let defaults = UserDefaults(suiteName: Self.appGroupId)
+        if let noteId = noteId, !noteId.isEmpty {
+          defaults?.set(noteId, forKey: "last_opened_note_id")
+        } else {
+          defaults?.removeObject(forKey: "last_opened_note_id")
+        }
+        result(nil)
+      } else if call.method == "getLastOpenedNoteId" {
+        let defaults = UserDefaults(suiteName: Self.appGroupId)
+        result(defaults?.string(forKey: "last_opened_note_id"))
       } else {
         result(FlutterMethodNotImplemented)
       }
@@ -141,7 +154,7 @@ class SceneDelegate: FlutterSceneDelegate {
     let incomingDir = cacheDir.appendingPathComponent("shared_incoming")
     try? fileManager.createDirectory(at: incomingDir, withIntermediateDirectories: true)
 
-    let destinationUrl = incomingDir.appendingPathComponent("\(Int(Date().timeIntervalSince1970))_\(fileName)")
+    let destinationUrl = incomingDir.appendingPathComponent("\(Int(Date().timeIntervalSince1970))_\(UUID().uuidString.prefix(8))_\(fileName)")
     try? fileManager.removeItem(at: destinationUrl)
 
     do {

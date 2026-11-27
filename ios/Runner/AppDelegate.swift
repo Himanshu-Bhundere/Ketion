@@ -20,6 +20,19 @@ import UIKit
         } else if call.method == "clearPendingShares" {
           self.clearPendingShares()
           result(nil)
+        } else if call.method == "setActiveNoteId" {
+          let args = call.arguments as? [String: Any]
+          let noteId = args?["noteId"] as? String
+          let defaults = UserDefaults(suiteName: self.appGroupId)
+          if let noteId = noteId, !noteId.isEmpty {
+            defaults?.set(noteId, forKey: "last_opened_note_id")
+          } else {
+            defaults?.removeObject(forKey: "last_opened_note_id")
+          }
+          result(nil)
+        } else if call.method == "getLastOpenedNoteId" {
+          let defaults = UserDefaults(suiteName: self.appGroupId)
+          result(defaults?.string(forKey: "last_opened_note_id"))
         } else {
           result(FlutterMethodNotImplemented)
         }

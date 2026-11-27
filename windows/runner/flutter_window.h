@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <imm.h>
 
 #include "assistive_ball_window.h"
@@ -17,6 +18,8 @@ class FlutterWindow : public Win32Window {
  public:
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
+
+  void SetInitialArguments(std::vector<std::string> args);
 
  protected:
   bool OnCreate() override;
@@ -29,8 +32,15 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
       assistive_ball_channel_;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      share_channel_;
   std::unique_ptr<AssistiveBallWindow> assistive_ball_window_;
+  std::vector<std::string> initial_args_;
+  std::vector<flutter::EncodableMap> pending_shares_;
+  std::string last_opened_note_id_;
 
+  void ProcessIncomingArguments(const std::vector<std::string>& args,
+                                bool emit_if_ready);
   void EnterOverlayMode(int width, int height);
   void ExitOverlayMode();
 

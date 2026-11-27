@@ -120,17 +120,45 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   RegisterKetionToastIdentity();
 
-  flutter::DartProject project(L"data");
-
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
 
-  project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
+  HANDLE instance_mutex = ::CreateMutexW(nullptr, TRUE, L"Local\\KetionSingleInstanceMutex");
+  if (instance_mutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
+    HWND existing_hwnd = ::FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"ketion");
+    if (existing_hwnd != nullptr) {
+      if (!command_line_arguments.empty()) {
+        std::string payload;
+        for (const auto& arg : command_line_arguments) {
+          if (!payload.empty()) payload += "\n";
+          payload += arg;
+        }
+        COPYDATASTRUCT cds{};
+        cds.dwData = 0x4B455449;  // 'KETI'
+        cds.cbData = static_cast<DWORD>(payload.size());
+        cds.lpData = payload.data();
+        ::SendMessageW(existing_hwnd, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&cds));
+      }
+      if (::IsIconic(existing_hwnd)) {
+        ::ShowWindow(existing_hwnd, SW_RESTORE);
+      }
+      ::SetForegroundWindow(existing_hwnd);
+      ::CloseHandle(instance_mutex);
+      ::OleUninitialize();
+      return EXIT_SUCCESS;
+    }
+  }
+
+  flutter::DartProject project(L"data");
+
+  project.set_dart_entrypoint_arguments(command_line_arguments);
 
   FlutterWindow window(project);
+  window.SetInitialArguments(std::move(command_line_arguments));
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(L"ketion", origin, size)) {
+    if (instance_mutex != nullptr) ::CloseHandle(instance_mutex);
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
@@ -152,6 +180,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  if (instance_mutex != nullptr) {
+    ::ReleaseMutex(instance_mutex);
+    ::CloseHandle(instance_mutex);
+  }
   ::OleUninitialize();
   return EXIT_SUCCESS;
 }

@@ -1,15 +1,150 @@
 #include "flutter_window.h"
 
 #include <dwmapi.h>
+#include <algorithm>
+#include <cctype>
 #include <optional>
+#include <sstream>
 #include <variant>
 
 #include "flutter/generated_plugin_registrant.h"
+#include "utils.h"
+
+namespace {
+
+constexpr ULONG_PTR kShareCopyDataTag = 0x4B455449;  // 'KETI'
+
+std::string InferMimeTypeFromFilename(const std::string& filename) {
+  auto dot_pos = filename.find_last_of('.');
+  if (dot_pos == std::string::npos || dot_pos + 1 >= filename.size()) {
+    return "application/octet-stream";
+  }
+  std::string ext = filename.substr(dot_pos + 1);
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+    return static_cast<char>(std::tolower(c));
+  });
+
+  if (ext == "jpg" || ext == "jpeg") return "image/jpeg";
+  if (ext == "png") return "image/png";
+  if (ext == "gif") return "image/gif";
+  if (ext == "webp") return "image/webp";
+  if (ext == "bmp") return "image/bmp";
+  if (ext == "svg") return "image/svg+xml";
+  if (ext == "heic") return "image/heic";
+  if (ext == "mp4") return "video/mp4";
+  if (ext == "mov") return "video/quicktime";
+  if (ext == "m4v") return "video/x-m4v";
+  if (ext == "avi") return "video/x-msvideo";
+  if (ext == "mkv") return "video/x-matroska";
+  if (ext == "webm") return "video/webm";
+  if (ext == "mp3") return "audio/mpeg";
+  if (ext == "wav") return "audio/wav";
+  if (ext == "m4a") return "audio/mp4";
+  if (ext == "aac") return "audio/aac";
+  if (ext == "ogg") return "audio/ogg";
+  if (ext == "flac") return "audio/flac";
+  if (ext == "pdf") return "application/pdf";
+  if (ext == "md" || ext == "markdown") return "text/markdown";
+  if (ext == "txt") return "text/plain";
+  if (ext == "csv") return "text/csv";
+  if (ext == "html" || ext == "htm") return "text/html";
+  if (ext == "json") return "application/json";
+  if (ext == "xml") return "application/xml";
+  if (ext == "zip") return "application/zip";
+  return "application/octet-stream";
+}
+
+std::string ExtractBasename(const std::string& path) {
+  size_t pos = path.find_last_of("\\/");
+  if (pos == std::string::npos) return path;
+  return path.substr(pos + 1);
+}
+
+std::wstring Utf16FromUtf8(const std::string& utf8) {
+  if (utf8.empty()) return std::wstring();
+  int len = ::MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
+                                  static_cast<int>(utf8.size()), nullptr, 0);
+  if (len <= 0) return std::wstring();
+  std::wstring wide(static_cast<size_t>(len), L'\0');
+  ::MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(),
+                        static_cast<int>(utf8.size()), &wide[0], len);
+  return wide;
+}
+
+}  // namespace
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
 FlutterWindow::~FlutterWindow() {}
+
+void FlutterWindow::SetInitialArguments(std::vector<std::string> args) {
+  initial_args_ = std::move(args);
+}
+
+void FlutterWindow::ProcessIncomingArguments(
+    const std::vector<std::string>& args, bool emit_if_ready) {
+  std::vector<flutter::EncodableMap> items;
+
+  for (const auto& raw_arg : args) {
+    if (raw_arg.empty() || raw_arg[0] == '-' || raw_arg[0] == '/') {
+      continue;
+    }
+
+    std::string arg = raw_arg;
+    if (arg.size() >= 2 && arg.front() == '"' && arg.back() == '"') {
+      arg = arg.substr(1, arg.size() - 2);
+    }
+    if (arg.empty()) continue;
+
+    if (arg.rfind("http://", 0) == 0 || arg.rfind("https://", 0) == 0) {
+      flutter::EncodableMap item;
+      item[flutter::EncodableValue("type")] = flutter::EncodableValue("link");
+      item[flutter::EncodableValue("name")] = flutter::EncodableValue(arg);
+      item[flutter::EncodableValue("url")] = flutter::EncodableValue(arg);
+      items.push_back(std::move(item));
+      continue;
+    }
+
+    std::wstring wide_path = Utf16FromUtf8(arg);
+    if (wide_path.empty()) continue;
+
+    WIN32_FILE_ATTRIBUTE_DATA file_data{};
+    if (::GetFileAttributesExW(wide_path.c_str(), GetFileExInfoStandard,
+                               &file_data) &&
+        !(file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+      LARGE_INTEGER size_li{};
+      size_li.LowPart = file_data.nFileSizeLow;
+      size_li.HighPart = static_cast<LONG>(file_data.nFileSizeHigh);
+
+      std::string name = ExtractBasename(arg);
+      flutter::EncodableMap item;
+      item[flutter::EncodableValue("type")] = flutter::EncodableValue("file");
+      item[flutter::EncodableValue("name")] = flutter::EncodableValue(name);
+      item[flutter::EncodableValue("localPath")] =
+          flutter::EncodableValue(arg);
+      item[flutter::EncodableValue("mimeType")] =
+          flutter::EncodableValue(InferMimeTypeFromFilename(name));
+      item[flutter::EncodableValue("size")] =
+          flutter::EncodableValue(static_cast<int64_t>(size_li.QuadPart));
+      items.push_back(std::move(item));
+    }
+  }
+
+  if (items.empty()) return;
+
+  if (emit_if_ready && share_channel_) {
+    flutter::EncodableList encoded_list;
+    for (const auto& item : items) {
+      encoded_list.push_back(flutter::EncodableValue(item));
+    }
+    share_channel_->InvokeMethod(
+        "onShareReceived",
+        std::make_unique<flutter::EncodableValue>(std::move(encoded_list)));
+  } else {
+    pending_shares_.insert(pending_shares_.end(), items.begin(), items.end());
+  }
+}
 
 void FlutterWindow::EnterOverlayMode(int width, int height) {
   HWND hwnd = GetHandle();
@@ -157,6 +292,52 @@ bool FlutterWindow::OnCreate() {
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   auto messenger = flutter_controller_->engine()->messenger();
+  share_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          messenger, "com.example.ketion/share_target",
+          &flutter::StandardMethodCodec::GetInstance());
+
+  share_channel_->SetMethodCallHandler(
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
+             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+        const std::string& method = call.method_name();
+        if (method == "getPendingShares") {
+          flutter::EncodableList list;
+          for (const auto& item : pending_shares_) {
+            list.push_back(flutter::EncodableValue(item));
+          }
+          pending_shares_.clear();
+          result->Success(flutter::EncodableValue(std::move(list)));
+        } else if (method == "clearPendingShares") {
+          pending_shares_.clear();
+          result->Success();
+        } else if (method == "setActiveNoteId") {
+          const auto* args = std::get_if<flutter::EncodableMap>(call.arguments());
+          if (args) {
+            auto it = args->find(flutter::EncodableValue("noteId"));
+            if (it != args->end() && std::holds_alternative<std::string>(it->second)) {
+              last_opened_note_id_ = std::get<std::string>(it->second);
+            } else {
+              last_opened_note_id_.clear();
+            }
+          }
+          result->Success();
+        } else if (method == "getLastOpenedNoteId") {
+          if (last_opened_note_id_.empty()) {
+            result->Success();
+          } else {
+            result->Success(flutter::EncodableValue(last_opened_note_id_));
+          }
+        } else {
+          result->NotImplemented();
+        }
+      });
+
+  if (!initial_args_.empty()) {
+    ProcessIncomingArguments(initial_args_, false);
+    initial_args_.clear();
+  }
+
   assistive_ball_channel_ =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           messenger, "com.example.ketion/assistive_ball",
@@ -333,6 +514,9 @@ void FlutterWindow::OnDestroy() {
     assistive_ball_window_->Destroy();
     assistive_ball_window_ = nullptr;
   }
+  if (share_channel_) {
+    share_channel_ = nullptr;
+  }
   if (assistive_ball_channel_) {
     assistive_ball_channel_ = nullptr;
   }
@@ -347,6 +531,32 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
+  if (message == WM_COPYDATA) {
+    const auto* cds = reinterpret_cast<const COPYDATASTRUCT*>(lparam);
+    if (cds && cds->dwData == kShareCopyDataTag && cds->lpData && cds->cbData > 0) {
+      std::string payload(static_cast<const char*>(cds->lpData), cds->cbData);
+      std::vector<std::string> forwarded_args;
+      std::istringstream stream(payload);
+      std::string line;
+      while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+          line.pop_back();
+        }
+        if (!line.empty()) {
+          forwarded_args.push_back(std::move(line));
+        }
+      }
+      if (!forwarded_args.empty()) {
+        ProcessIncomingArguments(forwarded_args, true);
+      }
+      if (::IsIconic(hwnd)) {
+        ::ShowWindow(hwnd, SW_RESTORE);
+      }
+      ::SetForegroundWindow(hwnd);
+      return 1;
+    }
+  }
+
   if (message == WM_CLOSE && is_overlay_mode_) {
     if (assistive_ball_channel_) {
       assistive_ball_channel_->InvokeMethod("closeFloatingNote", nullptr);

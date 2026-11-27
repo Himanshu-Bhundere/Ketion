@@ -10,12 +10,14 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
+import android.webkit.MimeTypeMap
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.ArrayList
+import java.util.UUID
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.ketion/assistive_ball"
@@ -292,7 +294,20 @@ class MainActivity: FlutterActivity() {
             val urisToProcess = mutableListOf<Uri>()
 
             if (action == Intent.ACTION_VIEW) {
-                intent.data?.let { urisToProcess.add(it) }
+                intent.data?.let { dataUri ->
+                    val scheme = dataUri.scheme?.lowercase()
+                    if (scheme == "http" || scheme == "https") {
+                        receivedItems.add(
+                            mapOf(
+                                "type" to "link",
+                                "name" to dataUri.toString(),
+                                "url" to dataUri.toString()
+                            )
+                        )
+                    } else if (scheme == "content" || scheme == "file") {
+                        urisToProcess.add(dataUri)
+                    }
+                }
             } else if (action == Intent.ACTION_SEND) {
                 val extraStream = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
@@ -304,15 +319,7 @@ class MainActivity: FlutterActivity() {
 
                 val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (!extraText.isNullOrBlank()) {
-                    val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
-                    receivedItems.add(
-                        mapOf(
-                            "type" to if (isUrl) "link" else "text",
-                            "name" to if (isUrl) extraText else "Shared Text",
-                            "url" to if (isUrl) extraText else null,
-                            "text" to if (!isUrl) extraText else null
-                        )
-                    )
+                    receivedItems.add(buildTextOrLinkItem(extraText))
                 }
             } else if (action == Intent.ACTION_SEND_MULTIPLE) {
                 val extraStreams = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -325,15 +332,7 @@ class MainActivity: FlutterActivity() {
 
                 val extraText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (!extraText.isNullOrBlank()) {
-                    val isUrl = extraText.startsWith("http://") || extraText.startsWith("https://")
-                    receivedItems.add(
-                        mapOf(
-                            "type" to if (isUrl) "link" else "text",
-                            "name" to if (isUrl) extraText else "Shared Text",
-                            "url" to if (isUrl) extraText else null,
-                            "text" to if (!isUrl) extraText else null
-                        )
-                    )
+                    receivedItems.add(buildTextOrLinkItem(extraText))
                 }
             }
 
@@ -346,17 +345,9 @@ class MainActivity: FlutterActivity() {
                             urisToProcess.add(clipUri)
                         }
                     }
-                    val clipText = clipItem.text?.toString()
+                    val clipText = (clipItem.text ?: clipItem.coerceToText(this))?.toString()
                     if (urisToProcess.isEmpty() && receivedItems.isEmpty() && !clipText.isNullOrBlank()) {
-                        val isUrl = clipText.startsWith("http://") || clipText.startsWith("https://")
-                        receivedItems.add(
-                            mapOf(
-                                "type" to if (isUrl) "link" else "text",
-                                "name" to if (isUrl) clipText else "Shared Text",
-                                "url" to if (isUrl) clipText else null,
-                                "text" to if (!isUrl) clipText else null
-                            )
-                        )
+                        receivedItems.add(buildTextOrLinkItem(clipText))
                     }
                 }
             }
@@ -378,6 +369,18 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+    }
+
+    private fun buildTextOrLinkItem(rawText: String): Map<String, Any?> {
+        val trimmed = rawText.trim()
+        val isUrl = (trimmed.startsWith("http://") || trimmed.startsWith("https://")) &&
+            !trimmed.any { it.isWhitespace() }
+        return mapOf(
+            "type" to if (isUrl) "link" else "text",
+            "name" to if (isUrl) trimmed else "Shared Text",
+            "url" to if (isUrl) trimmed else null,
+            "text" to if (!isUrl) rawText else null
+        )
     }
 
     private fun processUri(uri: Uri, fallbackMimeType: String): Map<String, Any?>? {
@@ -404,16 +407,39 @@ class MainActivity: FlutterActivity() {
                     android.util.Log.w("MainActivity", "Failed to query OpenableColumns for $uri: ${queryEx.message}")
                 }
             }
-            if (name == null) {
+            if (name.isNullOrBlank()) {
                 name = uri.lastPathSegment ?: "shared_file_${System.currentTimeMillis()}"
             }
 
-            val mimeType = (if (uri.scheme == "content") contentResolver.getType(uri) else null) ?: fallbackMimeType
-            val safeName = name!!.replace(Regex("[^a-zA-Z0-9._-]"), "_")
+            val resolvedFromResolver = if (uri.scheme == "content") contentResolver.getType(uri) else null
+            val rawExt = MimeTypeMap.getFileExtensionFromUrl(name)?.lowercase()
+                ?: name?.substringAfterLast('.', "")?.lowercase()
+            val resolvedFromExt = if (!rawExt.isNullOrEmpty()) {
+                MimeTypeMap.getSingleton().getMimeTypeFromExtension(rawExt)
+            } else {
+                null
+            }
+            val normalizedFallback = if (fallbackMimeType.isBlank() || fallbackMimeType == "*/*") {
+                "application/octet-stream"
+            } else {
+                fallbackMimeType
+            }
+            val mimeType = resolvedFromResolver ?: resolvedFromExt ?: normalizedFallback
+
+            var finalName = name!!
+            if (!finalName.contains('.') && mimeType != "application/octet-stream") {
+                val inferredExt = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                if (!inferredExt.isNullOrBlank()) {
+                    finalName = "$finalName.$inferredExt"
+                }
+            }
+
+            val safeName = finalName.replace(Regex("[^a-zA-Z0-9._-]"), "_")
             val shareDir = File(cacheDir, "shared_incoming")
             if (!shareDir.exists()) shareDir.mkdirs()
 
-            val destFile = File(shareDir, "${System.currentTimeMillis()}_$safeName")
+            val uniqueId = UUID.randomUUID().toString().take(8)
+            val destFile = File(shareDir, "${System.currentTimeMillis()}_${uniqueId}_$safeName")
             val inputStream = if (uri.scheme == "file" && uri.path != null) {
                 File(uri.path!!).inputStream()
             } else {
@@ -428,7 +454,7 @@ class MainActivity: FlutterActivity() {
 
             mapOf(
                 "type" to "file",
-                "name" to name,
+                "name" to finalName,
                 "localPath" to destFile.absolutePath,
                 "mimeType" to mimeType,
                 "size" to (size ?: destFile.length())

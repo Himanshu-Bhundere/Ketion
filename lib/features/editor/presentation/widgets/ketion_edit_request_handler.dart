@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import 'ketion_callout_node.dart';
 
 import '../../domain/services/block_data_serializer.dart';
+import '../../domain/services/sibling_position_manager.dart';
 
 import '../../services/editor_persistence_coordinator.dart';
 import '../../services/editor_persistence_mutations.dart'
@@ -44,14 +45,25 @@ EditRequestHandler createKetionRequestHandler({
   required KetionSuperEditorAdapter adapter,
   void Function(String, KetionReminderNode)? onReminderInserted,
 }) {
+  final persistence = _KetionPersistenceSupport(
+    registry: registry,
+    pageId: pageId,
+    document: document,
+    composer: composer,
+    coordinator: coordinator,
+    snapshot: snapshot,
+    adapter: adapter,
+  );
+
   return (Editor editor, EditRequest request) {
     // Android IMEs submit Enter as InsertNewlineAtCaretRequest, without a
     // hardware KeyEvent. The keyboard action in ketion_toggle_keyboard_actions
     // therefore cannot see that path. Intercept it here, before SuperEditor
     // falls back to splitting the toggle into an ordinary sibling paragraph.
     final toggleChildCommand =
-        _buildToggleChildInsertionCommand(editor, request, registry);
+        _buildToggleChildInsertionCommand(editor, request, persistence);
     if (toggleChildCommand != null) {
+      adapter.flushPendingChanges();
       return toggleChildCommand;
     }
 
@@ -77,26 +89,17 @@ EditRequestHandler createKetionRequestHandler({
     return _KetionDelegatingCommand(
       mutation: mutation,
       originalRequest: request,
-      registry: registry,
-      pageId: pageId,
-      document: document,
-      composer: composer,
-      coordinator: coordinator,
-      snapshot: snapshot,
-      adapter: adapter,
+      persistence: persistence,
       onReminderInserted: onReminderInserted,
     );
   };
 }
 
-/// Handles the IME newline path for a toggle header.
-///
-/// Both hardware Enter and IME Enter share the unified toggle helpers in
-/// `ketion_toggle_keyboard_actions.dart`.
+/// Handles the IME newline path for a toggle header and toggle body blocks.
 EditCommand? _buildToggleChildInsertionCommand(
   Editor editor,
   EditRequest request,
-  EditorIdentityRegistry registry,
+  _KetionPersistenceSupport persistence,
 ) {
   if (request is! InsertNewlineAtCaretRequest) return null;
 
@@ -112,29 +115,26 @@ EditCommand? _buildToggleChildInsertionCommand(
   if (KetionToggleComponentBuilder.isToggleNode(node)) {
     if (position.offset == node.text.length) {
       return _InsertToggleEndCommand(
-        editor: editor,
-        toggleNode: node,
-        registry: registry,
+        toggleNodeId: node.id,
         newNodeId: request.newNodeId,
+        persistence: persistence,
       );
     } else {
       return _SplitToggleMiddleOfHeaderCommand(
-        editor: editor,
-        toggleNode: node,
+        toggleNodeId: node.id,
         splitOffset: position.offset,
-        registry: registry,
         newNodeId: request.newNodeId,
+        persistence: persistence,
       );
     }
   }
 
-  if (isInsideToggleBody(node, editor.document, registry)) {
+  if (isInsideToggleBody(node, editor.document, persistence.registry)) {
     return _ToggleBodyEnterCommand(
-      editor: editor,
-      node: node,
+      nodeId: node.id,
       caretOffset: position.offset,
-      registry: registry,
       newNodeId: request.newNodeId,
+      persistence: persistence,
     );
   }
 
@@ -143,104 +143,384 @@ EditCommand? _buildToggleChildInsertionCommand(
 
 class _ToggleBodyEnterCommand extends EditCommand {
   _ToggleBodyEnterCommand({
-    required this.editor,
-    required this.node,
+    required this.nodeId,
     required this.caretOffset,
-    required this.registry,
     required this.newNodeId,
+    required this.persistence,
   });
 
-  final Editor editor;
-  final TextNode node;
+  final String nodeId;
   final int caretOffset;
-  final EditorIdentityRegistry registry;
   final String newNodeId;
+  final _KetionPersistenceSupport persistence;
 
   @override
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    executeToggleBodyEnter(
-      editor: editor,
-      document: context.document,
-      node: node,
-      caretOffset: caretOffset,
-      registry: registry,
-      newNodeId: newNodeId,
-    );
+    final doc = context.document;
+    final node = doc.getNodeById(nodeId);
+    if (node is! TextNode) return;
+
+    final isReconciling = persistence.registry.hasSnapshot;
+    persistence.runWithSemanticScope({nodeId, newNodeId}, () {
+      if (isEmptyToggleExitLine(node)) {
+        final toggle = findNearestToggleAncestor(
+          node: node,
+          document: doc,
+          registry: persistence.registry,
+        );
+        if (toggle == null || node is! ParagraphNode) return;
+
+        final toggleDepth = toggle.metadata['depth'] as int? ?? 0;
+        final toggleParentBlockId = toggle.metadata['parentBlockId'] as String?;
+        final lastDescendant = BlockTreeService.findLastDescendant(
+          doc,
+          toggle,
+          getNodeDepth,
+        );
+        final lastDescendantIndex = doc.getNodeIndexById(lastDescendant.id);
+        if (lastDescendantIndex < 0) return;
+
+        final updatedMetadata = Map<String, dynamic>.from(node.metadata)
+          ..['depth'] = toggleDepth;
+        if (toggleParentBlockId != null && toggleParentBlockId.isNotEmpty) {
+          updatedMetadata['parentBlockId'] = toggleParentBlockId;
+          updatedMetadata.remove('forceRootLevel');
+        } else {
+          updatedMetadata.remove('parentBlockId');
+          updatedMetadata['forceRootLevel'] = true;
+        }
+
+        if (node.id != lastDescendant.id) {
+          executor.executeCommand(
+            _MoveSubtreeCommand(
+              nodeId: node.id,
+              newIndex: lastDescendantIndex,
+              registry: persistence.registry,
+              snapshot: persistence.snapshot,
+            ),
+          );
+        }
+
+        executor.executeCommand(
+          ChangeParagraphMetadataCommand(
+            ChangeParagraphMetadataRequest(
+              nodeId: node.id,
+              metadata: updatedMetadata,
+            ),
+          ),
+        );
+
+        if (!isReconciling) {
+          persistence.composer.setSelectionWithReason(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: node.id,
+                nodePosition: const TextNodePosition(offset: 0),
+              ),
+            ),
+            SelectionReason.userInteraction,
+          );
+          persistence.persistMutation(
+            ChangeBlockTypeMutation(nodeId: node.id),
+            executor,
+          );
+        }
+        return;
+      }
+
+      final parentBlockId = node.metadata['parentBlockId'] as String?;
+      final depth = node.metadata['depth'] as int? ?? 1;
+      final textLength = node.text.length;
+      final safeOffset = caretOffset.clamp(0, textLength);
+      final endText = node.text.copyText(safeOffset);
+      final isSplit = safeOffset < textLength;
+
+      String insertAfterId;
+      if (isSplit) {
+        executor.executeCommand(
+          DeleteContentCommand(
+            documentRange: DocumentRange(
+              start: DocumentPosition(
+                nodeId: node.id,
+                nodePosition: TextNodePosition(offset: safeOffset),
+              ),
+              end: DocumentPosition(
+                nodeId: node.id,
+                nodePosition: TextNodePosition(offset: textLength),
+              ),
+            ),
+          ),
+        );
+        insertAfterId = node.id;
+      } else {
+        final freshNode = doc.getNodeById(node.id) ?? node;
+        final lastDescendant = BlockTreeService.findLastDescendant(
+          doc,
+          freshNode,
+          getNodeDepth,
+        );
+        insertAfterId = lastDescendant.id;
+      }
+
+      final newSibling = ParagraphNode(
+        id: newNodeId,
+        text: endText,
+        metadata: {
+          'depth': depth,
+          if (parentBlockId != null && parentBlockId.isNotEmpty)
+            'parentBlockId': parentBlockId,
+        },
+      );
+
+      executor.executeCommand(
+        InsertNodeAfterNodeCommand(
+          existingNodeId: insertAfterId,
+          newNode: newSibling,
+        ),
+      );
+
+      if (!isReconciling) {
+        persistence.composer.setSelectionWithReason(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: newNodeId,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionReason.userInteraction,
+        );
+        persistence.ensurePendingMapping(newNodeId);
+        if (isSplit) {
+          persistence.persistMutation(
+            SplitBlockMutation(originalNodeId: node.id, newNodeId: newNodeId),
+            executor,
+          );
+        } else {
+          persistence.persistMutation(
+            InsertBlockMutation(
+              newNodeId: newNodeId,
+              insertAfterNodeId: insertAfterId,
+            ),
+            executor,
+          );
+        }
+      }
+    });
   }
 }
 
 class _InsertToggleEndCommand extends EditCommand {
   _InsertToggleEndCommand({
-    required this.editor,
-    required this.toggleNode,
-    required this.registry,
+    required this.toggleNodeId,
     required this.newNodeId,
+    required this.persistence,
   });
 
-  final Editor editor;
-  final TextNode toggleNode;
-  final EditorIdentityRegistry registry;
+  final String toggleNodeId;
   final String newNodeId;
+  final _KetionPersistenceSupport persistence;
 
   @override
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    final isExpanded =
-        toggleNode.metadata['isExpanded'] as bool? ?? true;
+    final doc = context.document;
+    final toggleNode = doc.getNodeById(toggleNodeId);
+    if (toggleNode is! TextNode) return;
 
-    if (!isExpanded) {
-      insertExitParagraphAfterToggle(
-        editor: editor,
-        document: context.document,
-        toggleNode: toggleNode,
-        registry: registry,
-        newNodeId: newNodeId,
+    final isReconciling = persistence.registry.hasSnapshot;
+    persistence.runWithSemanticScope({toggleNodeId, newNodeId}, () {
+      final isExpanded = toggleNode.metadata['isExpanded'] as bool? ?? true;
+      final lastDescendant = BlockTreeService.findLastDescendant(
+        doc,
+        toggleNode,
+        getNodeDepth,
       );
-    } else {
-      insertToggleChild(
-        editor: editor,
-        document: context.document,
-        toggleNode: toggleNode,
-        registry: registry,
-        newNodeId: newNodeId,
-      );
-    }
+
+      if (!isExpanded) {
+        final toggleDepth = toggleNode.metadata['depth'] as int? ?? 0;
+        final parentBlockId = toggleNode.metadata['parentBlockId'] as String?;
+        final newNode = ParagraphNode(
+          id: newNodeId,
+          text: AttributedText(),
+          metadata: {
+            'depth': toggleDepth,
+            if (parentBlockId != null && parentBlockId.isNotEmpty)
+              'parentBlockId': parentBlockId,
+            if (parentBlockId == null || parentBlockId.isEmpty)
+              'forceRootLevel': true,
+          },
+        );
+        executor.executeCommand(
+          InsertNodeAfterNodeCommand(
+            existingNodeId: lastDescendant.id,
+            newNode: newNode,
+          ),
+        );
+      } else {
+        var parentBlockId = toggleNode.metadata['blockId'] as String? ??
+            persistence.registry.blockIdForNode(toggleNode.id);
+        if (parentBlockId == null || parentBlockId.isEmpty) {
+          parentBlockId = const Uuid().v7();
+          if (!isReconciling) {
+            persistence.registry.registerPendingMapping(
+              nodeId: toggleNode.id,
+              blockId: parentBlockId,
+            );
+          }
+        }
+        if (toggleNode is ParagraphNode &&
+            toggleNode.metadata['blockId'] != parentBlockId) {
+          executor.executeCommand(
+            ChangeParagraphMetadataCommand(
+              ChangeParagraphMetadataRequest(
+                nodeId: toggleNode.id,
+                metadata: {
+                  ...toggleNode.metadata,
+                  'blockId': parentBlockId,
+                },
+              ),
+            ),
+          );
+        }
+
+        final childDepth = (toggleNode.metadata['depth'] as int? ?? 0) + 1;
+        final childNode = ParagraphNode(
+          id: newNodeId,
+          text: AttributedText(),
+          metadata: {
+            'depth': childDepth,
+            'parentBlockId': parentBlockId,
+          },
+        );
+        executor.executeCommand(
+          InsertNodeAfterNodeCommand(
+            existingNodeId: lastDescendant.id,
+            newNode: childNode,
+          ),
+        );
+      }
+
+      if (!isReconciling) {
+        persistence.composer.setSelectionWithReason(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: newNodeId,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionReason.userInteraction,
+        );
+        persistence.ensurePendingMapping(newNodeId);
+        persistence.persistMutation(
+          InsertBlockMutation(
+            newNodeId: newNodeId,
+            insertAfterNodeId: lastDescendant.id,
+          ),
+          executor,
+        );
+      }
+    });
   }
 }
 
 class _SplitToggleMiddleOfHeaderCommand extends EditCommand {
   _SplitToggleMiddleOfHeaderCommand({
-    required this.editor,
-    required this.toggleNode,
+    required this.toggleNodeId,
     required this.splitOffset,
-    required this.registry,
     required this.newNodeId,
+    required this.persistence,
   });
 
-  final Editor editor;
-  final TextNode toggleNode;
+  final String toggleNodeId;
   final int splitOffset;
-  final EditorIdentityRegistry registry;
   final String newNodeId;
+  final _KetionPersistenceSupport persistence;
 
   @override
   HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
 
   @override
   void execute(EditContext context, CommandExecutor executor) {
-    splitToggleMiddleOfHeader(
-      editor: editor,
-      document: context.document,
-      toggleNode: toggleNode,
-      splitOffset: splitOffset,
-      registry: registry,
-      newNodeId: newNodeId,
-    );
+    final doc = context.document;
+    final toggleNode = doc.getNodeById(toggleNodeId);
+    if (toggleNode is! TextNode) return;
+
+    final isReconciling = persistence.registry.hasSnapshot;
+    persistence.runWithSemanticScope({toggleNodeId, newNodeId}, () {
+      final textLength = toggleNode.text.length;
+      final safeOffset = splitOffset.clamp(0, textLength);
+      final endText = toggleNode.text.copyText(safeOffset);
+
+      if (safeOffset < textLength) {
+        executor.executeCommand(
+          DeleteContentCommand(
+            documentRange: DocumentRange(
+              start: DocumentPosition(
+                nodeId: toggleNode.id,
+                nodePosition: TextNodePosition(offset: safeOffset),
+              ),
+              end: DocumentPosition(
+                nodeId: toggleNode.id,
+                nodePosition: TextNodePosition(offset: textLength),
+              ),
+            ),
+          ),
+        );
+      }
+
+      final freshToggle = doc.getNodeById(toggleNodeId) ?? toggleNode;
+      final lastDescendant = BlockTreeService.findLastDescendant(
+        doc,
+        freshToggle,
+        getNodeDepth,
+      );
+      final depth = freshToggle.metadata['depth'] as int? ?? 0;
+      final parentBlockId = freshToggle.metadata['parentBlockId'] as String?;
+
+      final newNode = ParagraphNode(
+        id: newNodeId,
+        text: endText,
+        metadata: {
+          'depth': depth,
+          if (parentBlockId != null && parentBlockId.isNotEmpty)
+            'parentBlockId': parentBlockId,
+          if (parentBlockId == null || parentBlockId.isEmpty)
+            'forceRootLevel': true,
+        },
+      );
+
+      executor.executeCommand(
+        InsertNodeAfterNodeCommand(
+          existingNodeId: lastDescendant.id,
+          newNode: newNode,
+        ),
+      );
+
+      if (!isReconciling) {
+        persistence.composer.setSelectionWithReason(
+          DocumentSelection.collapsed(
+            position: DocumentPosition(
+              nodeId: newNodeId,
+              nodePosition: const TextNodePosition(offset: 0),
+            ),
+          ),
+          SelectionReason.userInteraction,
+        );
+        persistence.ensurePendingMapping(newNodeId);
+        persistence.persistMutation(
+          SplitBlockMutation(
+            originalNodeId: toggleNodeId,
+            newNodeId: newNodeId,
+          ),
+          executor,
+        );
+      }
+    });
   }
 }
 
@@ -981,9 +1261,7 @@ class _FizzleCommand extends EditCommand {
   }
 }
 
-class _KetionDelegatingCommand extends EditCommand {
-  final SemanticMutation mutation;
-  final EditRequest originalRequest;
+class _KetionPersistenceSupport {
   final EditorIdentityRegistry registry;
   final String pageId;
   final MutableDocument document;
@@ -991,11 +1269,8 @@ class _KetionDelegatingCommand extends EditCommand {
   final EditorPersistenceCoordinator coordinator;
   final EditorPersistenceSnapshot snapshot;
   final KetionSuperEditorAdapter adapter;
-  final void Function(String, KetionReminderNode)? onReminderInserted;
 
-  _KetionDelegatingCommand({
-    required this.mutation,
-    required this.originalRequest,
+  const _KetionPersistenceSupport({
     required this.registry,
     required this.pageId,
     required this.document,
@@ -1003,6 +1278,845 @@ class _KetionDelegatingCommand extends EditCommand {
     required this.coordinator,
     required this.snapshot,
     required this.adapter,
+  });
+
+  void runWithSemanticScope(Set<String> nodeIds, void Function() body) {
+    final isReconciling = registry.hasSnapshot;
+    final scope = isReconciling ? const <String>{} : nodeIds;
+    if (scope.isNotEmpty) {
+      for (final id in scope) {
+        adapter.cancelPendingPersistence(id);
+      }
+      adapter.beginSemanticMutation(scope);
+    }
+    try {
+      body();
+    } finally {
+      if (scope.isNotEmpty) {
+        Future.microtask(() {
+          adapter.endSemanticMutation(scope);
+        });
+      }
+    }
+  }
+
+  void ensurePendingMapping(String nodeId) {
+    if (!registry.containsNode(nodeId)) {
+      registry.registerPendingMapping(
+        nodeId: nodeId,
+        blockId: const Uuid().v7(),
+      );
+    }
+  }
+
+  String? resolveParentBlockIdForNode(DocumentNode node, String blockId) {
+    final meta = node.metadata;
+    if (meta['forceRootLevel'] == true || meta['depth'] == 0) {
+      return null;
+    }
+    if (meta.containsKey('parentBlockId')) {
+      final rawParent = meta['parentBlockId'] as String?;
+      if (rawParent == null || rawParent.isEmpty) return null;
+      return registry.blockIdForNode(rawParent) ?? rawParent;
+    }
+    return snapshot.getBlock(blockId)?.parentBlockId;
+  }
+
+  void persistMutation(SemanticMutation mutation, CommandExecutor executor) {
+    persistence_mutations.EditorPersistenceMutation? persistenceMutation;
+    try {
+      switch (mutation) {
+        case SplitBlockMutation(:final originalNodeId, :final newNodeId):
+          persistenceMutation = _buildSplitPayload(originalNodeId, newNodeId);
+        case MergeBlocksMutation(:final survivorNodeId, :final victimNodeId):
+          persistenceMutation =
+              _buildMergePayload(survivorNodeId, victimNodeId);
+        case DeleteBlockMutation(:final nodeId):
+          persistenceMutation = _buildDeletePayload(nodeId);
+        case InsertBlockMutation m:
+          persistenceMutation = _buildInsertPayload(m);
+        case MoveBlockMutation(:final nodeId):
+          persistenceMutation = _buildMovePayload(nodeId);
+        case ChangeBlockTypeMutation(:final nodeId):
+          persistenceMutation = _buildChangeBlockTypePayload(nodeId);
+        case IndentBlockMutation(:final nodeId):
+          persistenceMutation = _buildIndentPayload(nodeId);
+        case UnindentBlockMutation(:final nodeId):
+          persistenceMutation = _buildUnindentPayload(nodeId);
+        case ToggleBlockExpandedMutation(:final nodeId, :final isExpanded):
+          persistenceMutation = _buildToggleExpandedPayload(nodeId, isExpanded);
+        case UpdateReminderMutation(:final nodeId):
+          persistenceMutation = _buildUpdateReminderPayload(nodeId);
+        case UpdateTableMutation(:final nodeId):
+          persistenceMutation = _buildUpdateTablePayload(nodeId);
+      }
+    } catch (e) {
+      debugPrint(
+        'KETION: Payload building failed for ${mutation.runtimeType}: $e',
+      );
+      return;
+    }
+
+    debugPrint(
+      'KETION: In persistToKetionSynchronously for ${mutation.runtimeType}, payload=$persistenceMutation',
+    );
+    if (persistenceMutation == null) return;
+
+    if (!coordinator.enqueue(persistenceMutation)) {
+      debugPrint(
+        'KETION: Coordinator rejected mutation ${mutation.runtimeType}',
+      );
+      return;
+    }
+
+    snapshot.applyMutation(persistenceMutation);
+
+    if (mutation is IndentBlockMutation || mutation is UnindentBlockMutation) {
+      final nodeId = mutation is IndentBlockMutation
+          ? mutation.nodeId
+          : (mutation as UnindentBlockMutation).nodeId;
+      final node = document.getNodeById(nodeId);
+      final blockId = registry.blockIdForNode(nodeId);
+      if (node != null && blockId != null) {
+        final block = snapshot.getBlock(blockId);
+        final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+        _updateDocumentNodeMetadata(node, newDepth, block);
+        _updateDescendantDepths(blockId, newDepth, executor);
+        executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+
+        if (block?.parentBlockId != null) {
+          final parentBlock = snapshot.getBlock(block!.parentBlockId!);
+          if (parentBlock != null) {
+            final parentNodeId = registry.nodeIdForBlock(parentBlock.blockId);
+            final parentNode = parentNodeId != null
+                ? document.getNodeById(parentNodeId)
+                : null;
+            final isToggle = parentBlock.type == 'toggle' ||
+                (parentNode != null &&
+                    KetionToggleComponentBuilder.isToggleNode(parentNode));
+            if (isToggle &&
+                parentNode != null &&
+                parentNode.metadata['isExpanded'] == false) {
+              adapter.restoreSubtree(parentBlock.blockId);
+              parentNode.metadata['isExpanded'] = true;
+              executor.logChanges([
+                DocumentEdit(NodeChangeEvent(parentNode.id)),
+              ]);
+            }
+          }
+        }
+      }
+    } else if (mutation is SplitBlockMutation) {
+      final newNodeId = mutation.newNodeId;
+      final node = document.getNodeById(newNodeId);
+      final blockId = registry.blockIdForNode(newNodeId);
+      if (node != null && blockId != null) {
+        final block = snapshot.getBlock(blockId);
+        final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+        _updateDocumentNodeMetadata(node, newDepth, block);
+        executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+      }
+    } else if (mutation is InsertBlockMutation) {
+      final newNodeId = mutation.newNodeId;
+      final node = document.getNodeById(newNodeId);
+      final blockId = registry.blockIdForNode(newNodeId);
+      if (node != null && blockId != null) {
+        final block = snapshot.getBlock(blockId);
+        final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+        _updateDocumentNodeMetadata(node, newDepth, block);
+        executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+      }
+    } else if (mutation is MoveBlockMutation) {
+      final nodeId = mutation.nodeId;
+      final node = document.getNodeById(nodeId);
+      final blockId = registry.blockIdForNode(nodeId);
+      if (node != null && blockId != null) {
+        final block = snapshot.getBlock(blockId);
+        final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+        _updateDocumentNodeMetadata(node, newDepth, block);
+        _updateDescendantDepths(blockId, newDepth, executor);
+        executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+      }
+    } else if (mutation is ChangeBlockTypeMutation) {
+      final nodeId = mutation.nodeId;
+      final node = document.getNodeById(nodeId);
+      final blockId = registry.blockIdForNode(nodeId);
+      if (node != null && blockId != null) {
+        final block = snapshot.getBlock(blockId);
+        final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
+        _updateDocumentNodeMetadata(node, newDepth, block);
+        _updateDescendantDepths(blockId, newDepth, executor);
+        executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
+      }
+    }
+  }
+
+  void _updateDocumentNodeMetadata(
+    DocumentNode node,
+    int newDepth,
+    BlockSnapshot? block,
+  ) {
+    final newMetadata = <String, dynamic>{
+      ...node.metadata,
+      'depth': newDepth,
+      if (block != null) 'blockId': block.blockId,
+      if (block?.parentBlockId != null) 'parentBlockId': block!.parentBlockId,
+      if (block != null) 'position': block.position,
+    };
+    if (block?.parentBlockId == null) {
+      newMetadata.remove('parentBlockId');
+    }
+    newMetadata.remove('forceRootLevel');
+
+    if (node is ParagraphNode) {
+      document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+    } else if (node is ListItemNode) {
+      final replacement = node.type == ListItemType.ordered
+          ? ListItemNode.ordered(
+              id: node.id,
+              text: node.text,
+              indent: newDepth,
+              metadata: newMetadata,
+            )
+          : ListItemNode.unordered(
+              id: node.id,
+              text: node.text,
+              indent: newDepth,
+              metadata: newMetadata,
+            );
+      document.replaceNodeById(node.id, replacement);
+    } else if (node is TaskNode) {
+      final replacement = TaskNode(
+        id: node.id,
+        text: node.text,
+        isComplete: node.isComplete,
+        indent: newDepth,
+        metadata: newMetadata,
+      );
+      document.replaceNodeById(node.id, replacement);
+    } else if (node is KetionTableNode) {
+      document.replaceNodeById(
+        node.id,
+        node.copyAndReplaceMetadata(newMetadata),
+      );
+    } else {
+      try {
+        node.metadata['depth'] = newDepth;
+        if (block?.parentBlockId != null) {
+          node.metadata['parentBlockId'] = block!.parentBlockId;
+        } else {
+          node.metadata.remove('parentBlockId');
+        }
+        node.metadata.remove('forceRootLevel');
+      } catch (_) {}
+    }
+  }
+
+  int _calculateDepth(
+    String? parentBlockId,
+    EditorPersistenceSnapshot snapshot,
+  ) {
+    int depth = 0;
+    String? currentParentId = parentBlockId;
+    final visited = <String>{};
+    while (currentParentId != null && !visited.contains(currentParentId)) {
+      visited.add(currentParentId);
+      depth++;
+      final parent = snapshot.getBlock(currentParentId);
+      if (parent != null) {
+        currentParentId = parent.parentBlockId;
+      } else {
+        final parentNodeId =
+            registry.nodeIdForBlock(currentParentId) ?? currentParentId;
+        final parentNode = document.getNodeById(parentNodeId);
+        final rawParent = parentNode?.metadata['parentBlockId'] as String?;
+        currentParentId = rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null;
+      }
+    }
+    return depth;
+  }
+
+  void _updateDescendantDepths(
+    String parentBlockId,
+    int parentDepth,
+    CommandExecutor executor, [
+    Set<String>? visited,
+  ]) {
+    final seen = visited ?? <String>{};
+    if (seen.contains(parentBlockId)) return;
+    seen.add(parentBlockId);
+
+    final children = snapshot.activeBlocks
+        .where((b) => b.parentBlockId == parentBlockId)
+        .toList();
+    for (final child in children) {
+      if (seen.contains(child.blockId)) continue;
+      final childNodeId = registry.nodeIdForBlock(child.blockId);
+      if (childNodeId != null) {
+        final childNode = document.getNodeById(childNodeId);
+        if (childNode != null) {
+          final childDepth = parentDepth + 1;
+          _updateDocumentNodeMetadata(childNode, childDepth, child);
+          executor.logChanges([DocumentEdit(NodeChangeEvent(childNode.id))]);
+          _updateDescendantDepths(child.blockId, childDepth, executor, seen);
+        }
+      }
+    }
+  }
+
+  double _calculatePositionInDocument({
+    required String nodeId,
+    required String? targetParentBlockId,
+  }) {
+    BlockSnapshot? previousSibling;
+    var prevNode = document.getNodeBeforeById(nodeId);
+    while (prevNode != null) {
+      final pBlockId = registry.blockIdForNode(prevNode.id);
+      if (pBlockId != null) {
+        final pBlock = snapshot.getBlock(pBlockId);
+        if (pBlock != null && !pBlock.deleted) {
+          final pParent = prevNode.metadata.containsKey('parentBlockId') ||
+                  prevNode.metadata.containsKey('forceRootLevel') ||
+                  prevNode.metadata['depth'] == 0
+              ? resolveParentBlockIdForNode(prevNode, pBlockId)
+              : pBlock.parentBlockId;
+          if (pParent == targetParentBlockId) {
+            previousSibling = pBlock;
+            break;
+          }
+        }
+      }
+      prevNode = document.getNodeBeforeById(prevNode.id);
+    }
+
+    BlockSnapshot? nextSibling;
+    final node = document.getNodeById(nodeId);
+    final nodeDepth = node != null ? getNodeDepth(node) : 0;
+    var nextNode = document.getNodeAfterById(nodeId);
+    while (nextNode != null && getNodeDepth(nextNode) > nodeDepth) {
+      nextNode = document.getNodeAfterById(nextNode.id);
+    }
+    while (nextNode != null) {
+      final nBlockId = registry.blockIdForNode(nextNode.id);
+      if (nBlockId != null) {
+        final nBlock = snapshot.getBlock(nBlockId);
+        if (nBlock != null && !nBlock.deleted) {
+          final nParent = nextNode.metadata.containsKey('parentBlockId') ||
+                  nextNode.metadata.containsKey('forceRootLevel') ||
+                  nextNode.metadata['depth'] == 0
+              ? resolveParentBlockIdForNode(nextNode, nBlockId)
+              : nBlock.parentBlockId;
+          if (nParent == targetParentBlockId) {
+            nextSibling = nBlock;
+            break;
+          }
+        }
+      }
+      nextNode = document.getNodeAfterById(nextNode.id);
+    }
+
+    return SiblingPositionManager.calculatePositionBetween(
+      previousSibling?.position,
+      nextSibling?.position,
+    );
+  }
+
+  persistence_mutations.SplitBlockMutation? _buildSplitPayload(
+    String originalNodeId,
+    String newNodeId,
+  ) {
+    final originalBlockId = registry.blockIdForNode(originalNodeId)!;
+    final newBlockId = registry.blockIdForNode(newNodeId)!;
+
+    final originalNode = document.getNodeById(originalNodeId);
+    final newNode = document.getNodeById(newNodeId);
+    if (originalNode == null || newNode == null) {
+      throw StateError('Split produced unexpected document state');
+    }
+
+    final originalData = BlockDataSerializer.encodeDocumentNode(originalNode);
+    final newData = BlockDataSerializer.encodeDocumentNode(newNode);
+    final newType = BlockDataSerializer.blockTypeFor(newNode);
+
+    final rawParent = newNode.metadata['parentBlockId'] as String?;
+    final origParent = originalNode.metadata['parentBlockId'] as String?;
+    final rawFallback = origParent != null
+        ? (registry.blockIdForNode(origParent) ?? origParent)
+        : null;
+    final isRoot =
+        newNode.metadata['forceRootLevel'] == true || newNode.metadata['depth'] == 0;
+    final providedParentBlockId = isRoot
+        ? null
+        : (rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : rawFallback);
+
+    return StructuralMutationBuilder.buildSplitMutation(
+      pageId: pageId,
+      originalBlockId: originalBlockId,
+      originalData: originalData,
+      newBlockId: newBlockId,
+      newData: newData,
+      newType: newType,
+      snapshot: snapshot,
+      providedParentBlockId: providedParentBlockId,
+    );
+  }
+
+  persistence_mutations.MergeBlocksMutation? _buildMergePayload(
+    String survivorNodeId,
+    String victimNodeId,
+  ) {
+    final survivorBlockId = registry.blockIdForNode(survivorNodeId)!;
+    final victimBlockId = registry.blockIdForNode(victimNodeId)!;
+
+    registry.recordTombstone(nodeId: victimNodeId, blockId: victimBlockId);
+    registry.removeMappingForNode(victimNodeId);
+    registry.removeContentHash(victimNodeId);
+
+    final survivorNode = document.getNodeById(survivorNodeId);
+    if (survivorNode == null) {
+      throw StateError('Merge produced unexpected document state');
+    }
+
+    final survivorData = BlockDataSerializer.encodeDocumentNode(survivorNode);
+
+    return StructuralMutationBuilder.buildMergeMutation(
+      pageId: pageId,
+      survivorBlockId: survivorBlockId,
+      survivorData: survivorData,
+      victimBlockId: victimBlockId,
+      snapshot: snapshot,
+    );
+  }
+
+  persistence_mutations.DeleteBlockMutation? _buildDeletePayload(
+    String nodeId,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId)!;
+
+    registry.recordTombstone(nodeId: nodeId, blockId: blockId);
+    registry.removeMappingForNode(nodeId);
+    registry.removeContentHash(nodeId);
+
+    return StructuralMutationBuilder.buildDeleteMutation(
+      pageId: pageId,
+      blockId: blockId,
+      snapshot: snapshot,
+    );
+  }
+
+  persistence_mutations.InsertBlockMutation? _buildInsertPayload(
+    InsertBlockMutation mutation,
+  ) {
+    final newNodeId = mutation.newNodeId;
+    final node = document.getNodeById(newNodeId);
+    if (node == null) return null;
+
+    final newBlockId = registry.blockIdForNode(newNodeId)!;
+    final data = BlockDataSerializer.encodeDocumentNode(node);
+    final type = BlockDataSerializer.blockTypeFor(node);
+
+    final rawParent = node.metadata['parentBlockId'] as String?;
+    final forceRootLevel = node.metadata['forceRootLevel'] == true ||
+        (node.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
+
+    final providedParentBlockId = forceRootLevel
+        ? null
+        : (rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null);
+
+    final hasExplicitParent = forceRootLevel || rawParent != null;
+
+    String? previousBlockId;
+    String? nextBlockId;
+
+    if (hasExplicitParent) {
+      var prevNode = document.getNodeBeforeById(newNodeId);
+      while (prevNode != null) {
+        final pBlockId = registry.blockIdForNode(prevNode.id);
+        if (pBlockId != null) {
+          final pBlock = snapshot.getBlock(pBlockId);
+          final pParent = pBlock?.parentBlockId ??
+              (prevNode.metadata['parentBlockId'] as String?);
+          final resolvedPParent = pParent != null
+              ? (registry.blockIdForNode(pParent) ?? pParent)
+              : null;
+          if (resolvedPParent == providedParentBlockId) {
+            previousBlockId = pBlockId;
+            break;
+          }
+        }
+        prevNode = document.getNodeBeforeById(prevNode.id);
+      }
+
+      var nextNode = document.getNodeAfterById(newNodeId);
+      while (nextNode != null) {
+        final nBlockId = registry.blockIdForNode(nextNode.id);
+        if (nBlockId != null) {
+          final nBlock = snapshot.getBlock(nBlockId);
+          final nParent = nBlock?.parentBlockId ??
+              (nextNode.metadata['parentBlockId'] as String?);
+          final resolvedNParent = nParent != null
+              ? (registry.blockIdForNode(nParent) ?? nParent)
+              : null;
+          if (resolvedNParent == providedParentBlockId) {
+            nextBlockId = nBlockId;
+            break;
+          }
+        }
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
+    } else {
+      final previousNodeId = document.getNodeBeforeById(newNodeId)?.id;
+      final nextNodeId = document.getNodeAfterById(newNodeId)?.id;
+
+      previousBlockId =
+          previousNodeId != null ? registry.blockIdForNode(previousNodeId) : null;
+      nextBlockId =
+          nextNodeId != null ? registry.blockIdForNode(nextNodeId) : null;
+    }
+
+    final previousNode = previousBlockId != null
+        ? resolveNodeByBlockId(
+            blockId: previousBlockId,
+            document: document,
+            registry: registry,
+          )
+        : null;
+
+    final previousMetadata =
+        previousNode?.metadata ?? const <String, dynamic>{};
+
+    final previousBlockIsToggle = previousMetadata['listType'] == 'toggle' ||
+        previousMetadata['type'] == 'toggle' ||
+        (previousMetadata['blockType'] is NamedAttribution &&
+            (previousMetadata['blockType'] as NamedAttribution).name ==
+                'toggle');
+
+    return StructuralMutationBuilder.buildInsertMutation(
+      pageId: pageId,
+      blockId: newBlockId,
+      data: data,
+      type: type,
+      previousBlockId: previousBlockId,
+      nextBlockId: nextBlockId,
+      providedParentBlockId: providedParentBlockId,
+      snapshot: snapshot,
+      previousBlockIsToggle: previousBlockIsToggle,
+      forceRootLevel: forceRootLevel,
+    );
+  }
+
+  persistence_mutations.MoveBlockMutation? _buildMovePayload(String nodeId) {
+    final blockId = registry.blockIdForNode(nodeId);
+    if (blockId == null) return null;
+
+    final node = document.getNodeById(nodeId);
+    final rawParent = node?.metadata['parentBlockId'] as String?;
+    final forceRootLevel = node?.metadata['forceRootLevel'] == true ||
+        (node?.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
+
+    final providedParentBlockId = forceRootLevel
+        ? null
+        : (rawParent != null
+            ? (registry.blockIdForNode(rawParent) ?? rawParent)
+            : null);
+
+    final hasExplicitParent = forceRootLevel || rawParent != null;
+
+    String? previousBlockId;
+    String? nextBlockId;
+
+    if (hasExplicitParent) {
+      var prevNode = document.getNodeBeforeById(nodeId);
+      while (prevNode != null) {
+        final pBlockId = registry.blockIdForNode(prevNode.id);
+        if (pBlockId != null) {
+          final pBlock = snapshot.getBlock(pBlockId);
+          final pParent = (prevNode.metadata['parentBlockId'] as String?) ??
+              pBlock?.parentBlockId;
+          final resolvedPParent = pParent != null
+              ? (registry.blockIdForNode(pParent) ?? pParent)
+              : null;
+          if (resolvedPParent == providedParentBlockId) {
+            previousBlockId = pBlockId;
+            break;
+          }
+        }
+        prevNode = document.getNodeBeforeById(prevNode.id);
+      }
+
+      var nextNode = document.getNodeAfterById(nodeId);
+      final nodeDepth = node != null ? getNodeDepth(node) : 0;
+      while (nextNode != null && getNodeDepth(nextNode) > nodeDepth) {
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
+      while (nextNode != null) {
+        final nBlockId = registry.blockIdForNode(nextNode.id);
+        if (nBlockId != null) {
+          final nBlock = snapshot.getBlock(nBlockId);
+          final nParent = (nextNode.metadata['parentBlockId'] as String?) ??
+              nBlock?.parentBlockId;
+          final resolvedNParent = nParent != null
+              ? (registry.blockIdForNode(nParent) ?? nParent)
+              : null;
+          if (resolvedNParent == providedParentBlockId) {
+            nextBlockId = nBlockId;
+            break;
+          }
+        }
+        nextNode = document.getNodeAfterById(nextNode.id);
+      }
+    } else {
+      final previousNode = document.getNodeBeforeById(nodeId);
+      final nextNode = document.getNodeAfterById(nodeId);
+
+      previousBlockId =
+          previousNode != null ? registry.blockIdForNode(previousNode.id) : null;
+      nextBlockId =
+          nextNode != null ? registry.blockIdForNode(nextNode.id) : null;
+    }
+
+    final previousNode = previousBlockId != null
+        ? resolveNodeByBlockId(
+            blockId: previousBlockId,
+            document: document,
+            registry: registry,
+          )
+        : null;
+    final previousBlockIsToggle = previousNode != null &&
+        KetionToggleComponentBuilder.isToggleNode(previousNode);
+
+    return StructuralMutationBuilder.buildMoveMutation(
+      pageId: pageId,
+      blockId: blockId,
+      previousBlockId: previousBlockId,
+      nextBlockId: nextBlockId,
+      snapshot: snapshot,
+      providedParentBlockId: providedParentBlockId,
+      previousBlockIsToggle: previousBlockIsToggle,
+      forceRootLevel: forceRootLevel,
+    );
+  }
+
+  persistence_mutations.ChangeBlockTypeMutation? _buildChangeBlockTypePayload(
+    String nodeId,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId);
+    if (blockId == null) return null;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) {
+      throw StateError('ChangeBlockType produced unexpected document state');
+    }
+
+    final data = BlockDataSerializer.encodeDocumentNode(node);
+    final type = BlockDataSerializer.blockTypeFor(node);
+    final existingBlock = snapshot.getBlock(blockId);
+    final resolvedParentBlockId = resolveParentBlockIdForNode(node, blockId);
+    final hasExplicitHierarchyChange = existingBlock != null &&
+        (existingBlock.parentBlockId != resolvedParentBlockId ||
+            node.metadata['forceRootLevel'] == true);
+
+    final newPosition = hasExplicitHierarchyChange
+        ? _calculatePositionInDocument(
+            nodeId: nodeId,
+            targetParentBlockId: resolvedParentBlockId,
+          )
+        : null;
+
+    return StructuralMutationBuilder.buildChangeBlockTypeMutation(
+      pageId: pageId,
+      blockId: blockId,
+      newData: data,
+      newType: type,
+      snapshot: snapshot,
+      parentBlockId: resolvedParentBlockId,
+      position: newPosition,
+      updateHierarchy: hasExplicitHierarchyChange,
+    );
+  }
+
+  persistence_mutations.MoveBlockMutation? _buildIndentPayload(String nodeId) {
+    final blockId = registry.blockIdForNode(nodeId);
+    if (blockId == null) return null;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) return null;
+
+    return StructuralMutationBuilder.buildIndentMutation(
+      pageId: pageId,
+      blockId: blockId,
+      snapshot: snapshot,
+    );
+  }
+
+  persistence_mutations.MoveBlockMutation? _buildUnindentPayload(
+    String nodeId,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId);
+    if (blockId == null) return null;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) return null;
+
+    final documentBlockOrder = document
+        .map((n) => registry.blockIdForNode(n.id))
+        .whereType<String>()
+        .toList();
+
+    return StructuralMutationBuilder.buildUnindentMutation(
+      pageId: pageId,
+      blockId: blockId,
+      snapshot: snapshot,
+      documentBlockOrder: documentBlockOrder,
+    );
+  }
+
+  persistence_mutations.UpdateToggleMutation? _buildToggleExpandedPayload(
+    String nodeId,
+    bool isExpanded,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId)!;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) {
+      throw StateError('ToggleExpanded produced unexpected document state');
+    }
+
+    final data = BlockDataSerializer.encodeDocumentNode(node);
+    final type = BlockDataSerializer.blockTypeFor(node);
+
+    return persistence_mutations.UpdateToggleMutation(
+      pageId: pageId,
+      blockId: blockId,
+      data: data,
+      type: type,
+      parentBlockId: resolveParentBlockIdForNode(node, blockId),
+      position: (node.metadata['position'] as num?)?.toDouble() ??
+          snapshot.getBlock(blockId)?.position ??
+          0.0,
+      expectedVersion: registry.getBlockVersion(blockId),
+      blockCreatedAt:
+          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
+      createdAt: DateTime.now().toUtc(),
+      isExpanded: isExpanded,
+      contentHash: EditorIdentityRegistry.hashContent(data),
+    );
+  }
+
+  persistence_mutations.UpdateBlockMutation? _buildUpdateReminderPayload(
+    String nodeId,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId)!;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) {
+      throw StateError('UpdateReminder produced unexpected document state');
+    }
+
+    final data = BlockDataSerializer.encodeDocumentNode(node);
+    final type = BlockDataSerializer.blockTypeFor(node);
+
+    return persistence_mutations.UpdateBlockMutation(
+      pageId: pageId,
+      blockId: blockId,
+      data: data,
+      type: type,
+      parentBlockId: resolveParentBlockIdForNode(node, blockId),
+      position: (node.metadata['position'] as num?)?.toDouble() ??
+          snapshot.getBlock(blockId)?.position ??
+          0.0,
+      expectedVersion: registry.getBlockVersion(blockId),
+      blockCreatedAt:
+          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
+      createdAt: DateTime.now().toUtc(),
+      contentHash: EditorIdentityRegistry.hashContent(data),
+    );
+  }
+
+  persistence_mutations.UpdateBlockMutation? _buildUpdateTablePayload(
+    String nodeId,
+  ) {
+    final blockId = registry.blockIdForNode(nodeId)!;
+
+    final node = document.getNodeById(nodeId);
+    if (node == null) {
+      throw StateError('UpdateTable produced unexpected document state');
+    }
+
+    // Validation to prevent persistence of malformed tables
+    final tableNode = node as KetionTableNode;
+    final columnCount = tableNode.columnCount;
+    final rowsList = tableNode.rows;
+    if (columnCount < 1) {
+      throw StateError('Table has invalid columnCount: $columnCount');
+    }
+    if (rowsList.isEmpty) {
+      throw StateError('Table has no rows');
+    }
+    for (int i = 0; i < rowsList.length; i++) {
+      final row = rowsList[i];
+      final cells = row.cells;
+      if (cells.length != columnCount) {
+        throw StateError(
+          'Table row $i has ${cells.length} cells, expected $columnCount',
+        );
+      }
+      for (int j = 0; j < cells.length; j++) {
+        final cell = cells[j];
+        if (cell.id.isEmpty) {
+          throw StateError('Table cell at $i,$j has no ID');
+        }
+      }
+    }
+
+    final data = BlockDataSerializer.encodeDocumentNode(node);
+    final type = BlockDataSerializer.blockTypeFor(node);
+
+    return persistence_mutations.UpdateBlockMutation(
+      pageId: pageId,
+      blockId: blockId,
+      data: data,
+      type: type,
+      parentBlockId: resolveParentBlockIdForNode(node, blockId),
+      position: (node.metadata['position'] as num?)?.toDouble() ??
+          snapshot.getBlock(blockId)?.position ??
+          0.0,
+      expectedVersion: registry.getBlockVersion(blockId),
+      blockCreatedAt:
+          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
+      createdAt: DateTime.now().toUtc(),
+      contentHash: EditorIdentityRegistry.hashContent(data),
+    );
+  }
+}
+
+class _KetionDelegatingCommand extends EditCommand {
+  final SemanticMutation mutation;
+  final EditRequest originalRequest;
+  final _KetionPersistenceSupport persistence;
+  final void Function(String, KetionReminderNode)? onReminderInserted;
+
+  EditorIdentityRegistry get registry => persistence.registry;
+  String get pageId => persistence.pageId;
+  MutableDocument get document => persistence.document;
+  MutableDocumentComposer get composer => persistence.composer;
+  EditorPersistenceCoordinator get coordinator => persistence.coordinator;
+  EditorPersistenceSnapshot get snapshot => persistence.snapshot;
+  KetionSuperEditorAdapter get adapter => persistence.adapter;
+
+  _KetionDelegatingCommand({
+    required this.mutation,
+    required this.originalRequest,
+    required this.persistence,
     this.onReminderInserted,
   });
 
@@ -1482,683 +2596,6 @@ class _KetionDelegatingCommand extends EditCommand {
   }
 
   void persistToKetionSynchronously(CommandExecutor executor) {
-    persistence_mutations.EditorPersistenceMutation? persistenceMutation;
-    try {
-      switch (mutation) {
-        case SplitBlockMutation(:final originalNodeId, :final newNodeId):
-          persistenceMutation = _buildSplitPayload(originalNodeId, newNodeId);
-        case MergeBlocksMutation(:final survivorNodeId, :final victimNodeId):
-          persistenceMutation =
-              _buildMergePayload(survivorNodeId, victimNodeId);
-        case DeleteBlockMutation(:final nodeId):
-          persistenceMutation = _buildDeletePayload(nodeId);
-        case InsertBlockMutation m:
-          persistenceMutation = _buildInsertPayload(m);
-        case MoveBlockMutation(:final nodeId):
-          persistenceMutation = _buildMovePayload(nodeId);
-        case ChangeBlockTypeMutation(:final nodeId):
-          persistenceMutation = _buildChangeBlockTypePayload(nodeId);
-        case IndentBlockMutation(:final nodeId):
-          persistenceMutation = _buildIndentPayload(nodeId);
-        case UnindentBlockMutation(:final nodeId):
-          persistenceMutation = _buildUnindentPayload(nodeId);
-        case ToggleBlockExpandedMutation(:final nodeId, :final isExpanded):
-          persistenceMutation = _buildToggleExpandedPayload(nodeId, isExpanded);
-        case UpdateReminderMutation(:final nodeId):
-          persistenceMutation = _buildUpdateReminderPayload(nodeId);
-        case UpdateTableMutation(:final nodeId):
-          persistenceMutation = _buildUpdateTablePayload(nodeId);
-      }
-    } catch (e) {
-      debugPrint(
-        'KETION: Payload building failed for ${mutation.runtimeType}: $e',
-      );
-      return;
-    }
-
-    debugPrint(
-      'KETION: In persistToKetionSynchronously for ${mutation.runtimeType}, payload=$persistenceMutation',
-    );
-    if (persistenceMutation == null) return;
-
-    if (coordinator.enqueue(persistenceMutation)) {
-      snapshot.applyMutation(persistenceMutation);
-
-      if (mutation is IndentBlockMutation ||
-          mutation is UnindentBlockMutation) {
-        final nodeId = mutation is IndentBlockMutation
-            ? (mutation as IndentBlockMutation).nodeId
-            : (mutation as UnindentBlockMutation).nodeId;
-        final node = document.getNodeById(nodeId);
-        final blockId = registry.blockIdForNode(nodeId);
-        if (node != null && blockId != null) {
-          final block = snapshot.getBlock(blockId);
-          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
-          _updateDocumentNodeMetadata(node, newDepth, block);
-
-          _updateDescendantDepths(blockId, newDepth, executor);
-
-          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
-
-          if (block?.parentBlockId != null) {
-            final parentBlock = snapshot.getBlock(block!.parentBlockId!);
-            if (parentBlock != null) {
-              final parentNodeId = registry.nodeIdForBlock(parentBlock.blockId);
-              final parentNode = parentNodeId != null
-                  ? document.getNodeById(parentNodeId)
-                  : null;
-              final isToggle = parentBlock.type == 'toggle' ||
-                  (parentNode != null &&
-                      KetionToggleComponentBuilder.isToggleNode(parentNode));
-              if (isToggle) {
-                if (parentNode != null &&
-                    parentNode.metadata['isExpanded'] == false) {
-                  adapter.restoreSubtree(parentBlock.blockId);
-                  parentNode.metadata['isExpanded'] = true;
-                  executor.logChanges([
-                    DocumentEdit(NodeChangeEvent(parentNode.id)),
-                  ]);
-                }
-              }
-            }
-          }
-        }
-      } else if (mutation is SplitBlockMutation) {
-        final newNodeId = (mutation as SplitBlockMutation).newNodeId;
-        final node = document.getNodeById(newNodeId);
-        final blockId = registry.blockIdForNode(newNodeId);
-        if (node != null && blockId != null) {
-          final block = snapshot.getBlock(blockId);
-          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
-          _updateDocumentNodeMetadata(node, newDepth, block);
-          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
-        }
-      } else if (mutation is InsertBlockMutation) {
-        final newNodeId = (mutation as InsertBlockMutation).newNodeId;
-        final node = document.getNodeById(newNodeId);
-        final blockId = registry.blockIdForNode(newNodeId);
-        if (node != null && blockId != null) {
-          final block = snapshot.getBlock(blockId);
-          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
-          _updateDocumentNodeMetadata(node, newDepth, block);
-          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
-        }
-      } else if (mutation is MoveBlockMutation) {
-        final nodeId = (mutation as MoveBlockMutation).nodeId;
-        final node = document.getNodeById(nodeId);
-        final blockId = registry.blockIdForNode(nodeId);
-        if (node != null && blockId != null) {
-          final block = snapshot.getBlock(blockId);
-          final newDepth = _calculateDepth(block?.parentBlockId, snapshot);
-          _updateDocumentNodeMetadata(node, newDepth, block);
-          _updateDescendantDepths(blockId, newDepth, executor);
-          executor.logChanges([DocumentEdit(NodeChangeEvent(node.id))]);
-        }
-      }
-    } else {
-      debugPrint(
-        'KETION: Coordinator rejected mutation ${mutation.runtimeType}',
-      );
-    }
-  }
-
-  void _updateDocumentNodeMetadata(
-    DocumentNode node,
-    int newDepth,
-    BlockSnapshot? block,
-  ) {
-    final newMetadata = <String, dynamic>{
-      ...node.metadata,
-      'depth': newDepth,
-      if (block != null) 'blockId': block.blockId,
-      if (block?.parentBlockId != null) 'parentBlockId': block!.parentBlockId,
-      if (block != null) 'position': block.position,
-    };
-    if (block?.parentBlockId == null) {
-      newMetadata.remove('parentBlockId');
-    }
-
-    if (node is ParagraphNode) {
-      document.replaceNodeById(
-        node.id,
-        node.copyAndReplaceMetadata(newMetadata),
-      );
-    } else if (node is ListItemNode) {
-      final replacement = node.type == ListItemType.ordered
-          ? ListItemNode.ordered(
-              id: node.id,
-              text: node.text,
-              indent: newDepth,
-              metadata: newMetadata,
-            )
-          : ListItemNode.unordered(
-              id: node.id,
-              text: node.text,
-              indent: newDepth,
-              metadata: newMetadata,
-            );
-      document.replaceNodeById(node.id, replacement);
-    } else if (node is TaskNode) {
-      final replacement = TaskNode(
-        id: node.id,
-        text: node.text,
-        isComplete: node.isComplete,
-        indent: newDepth,
-        metadata: newMetadata,
-      );
-      document.replaceNodeById(node.id, replacement);
-    } else if (node is KetionTableNode) {
-      document.replaceNodeById(
-        node.id,
-        node.copyAndReplaceMetadata(newMetadata),
-      );
-    } else {
-      try {
-        node.metadata['depth'] = newDepth;
-        if (block?.parentBlockId != null) {
-          node.metadata['parentBlockId'] = block!.parentBlockId;
-        } else {
-          node.metadata.remove('parentBlockId');
-        }
-      } catch (_) {}
-    }
-  }
-
-  int _calculateDepth(
-    String? parentBlockId,
-    EditorPersistenceSnapshot snapshot,
-  ) {
-    int depth = 0;
-    String? currentParentId = parentBlockId;
-    final visited = <String>{};
-    while (currentParentId != null && !visited.contains(currentParentId)) {
-      visited.add(currentParentId);
-      depth++;
-      final parent = snapshot.getBlock(currentParentId);
-      if (parent != null) {
-        currentParentId = parent.parentBlockId;
-      } else {
-        final parentNodeId =
-            registry.nodeIdForBlock(currentParentId) ?? currentParentId;
-        final parentNode = document.getNodeById(parentNodeId);
-        final rawParent = parentNode?.metadata['parentBlockId'] as String?;
-        currentParentId = rawParent != null
-            ? (registry.blockIdForNode(rawParent) ?? rawParent)
-            : null;
-      }
-    }
-    return depth;
-  }
-
-  void _updateDescendantDepths(
-    String parentBlockId,
-    int parentDepth,
-    CommandExecutor executor, [
-    Set<String>? visited,
-  ]) {
-    final seen = visited ?? <String>{};
-    if (seen.contains(parentBlockId)) return;
-    seen.add(parentBlockId);
-
-    final children = snapshot.activeBlocks
-        .where((b) => b.parentBlockId == parentBlockId)
-        .toList();
-    for (final child in children) {
-      if (seen.contains(child.blockId)) continue;
-      final childNodeId = registry.nodeIdForBlock(child.blockId);
-      if (childNodeId != null) {
-        final childNode = document.getNodeById(childNodeId);
-        if (childNode != null) {
-          final childDepth = parentDepth + 1;
-          _updateDocumentNodeMetadata(childNode, childDepth, child);
-          executor.logChanges([DocumentEdit(NodeChangeEvent(childNode.id))]);
-          _updateDescendantDepths(child.blockId, childDepth, executor, seen);
-        }
-      }
-    }
-  }
-
-  persistence_mutations.SplitBlockMutation? _buildSplitPayload(
-    String originalNodeId,
-    String newNodeId,
-  ) {
-    final originalBlockId = registry.blockIdForNode(originalNodeId)!;
-    final newBlockId = registry.blockIdForNode(newNodeId)!;
-
-    final originalNode = document.getNodeById(originalNodeId);
-    final newNode = document.getNodeById(newNodeId);
-    if (originalNode == null || newNode == null) {
-      throw StateError('Split produced unexpected document state');
-    }
-
-    final originalData = BlockDataSerializer.encodeDocumentNode(originalNode);
-    final newData = BlockDataSerializer.encodeDocumentNode(newNode);
-    final newType = BlockDataSerializer.blockTypeFor(newNode);
-
-    final rawParent = newNode.metadata['parentBlockId'] as String?;
-    final origParent = originalNode.metadata['parentBlockId'] as String?;
-    final rawFallback = origParent != null
-        ? (registry.blockIdForNode(origParent) ?? origParent)
-        : null;
-    final providedParentBlockId = rawParent != null
-        ? (registry.blockIdForNode(rawParent) ?? rawParent)
-        : rawFallback;
-
-    return StructuralMutationBuilder.buildSplitMutation(
-      pageId: pageId,
-      originalBlockId: originalBlockId,
-      originalData: originalData,
-      newBlockId: newBlockId,
-      newData: newData,
-      newType: newType,
-      snapshot: snapshot,
-      providedParentBlockId: providedParentBlockId,
-    );
-  }
-
-  persistence_mutations.MergeBlocksMutation? _buildMergePayload(
-    String survivorNodeId,
-    String victimNodeId,
-  ) {
-    final survivorBlockId = registry.blockIdForNode(survivorNodeId)!;
-    final victimBlockId = registry.blockIdForNode(victimNodeId)!;
-
-    registry.recordTombstone(nodeId: victimNodeId, blockId: victimBlockId);
-    registry.removeMappingForNode(victimNodeId);
-    registry.removeContentHash(victimNodeId);
-
-    final survivorNode = document.getNodeById(survivorNodeId);
-    if (survivorNode == null) {
-      throw StateError('Merge produced unexpected document state');
-    }
-
-    final survivorData = BlockDataSerializer.encodeDocumentNode(survivorNode);
-
-    return StructuralMutationBuilder.buildMergeMutation(
-      pageId: pageId,
-      survivorBlockId: survivorBlockId,
-      survivorData: survivorData,
-      victimBlockId: victimBlockId,
-      snapshot: snapshot,
-    );
-  }
-
-  persistence_mutations.DeleteBlockMutation? _buildDeletePayload(
-    String nodeId,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId)!;
-
-    registry.recordTombstone(nodeId: nodeId, blockId: blockId);
-    registry.removeMappingForNode(nodeId);
-    registry.removeContentHash(nodeId);
-
-    return StructuralMutationBuilder.buildDeleteMutation(
-      pageId: pageId,
-      blockId: blockId,
-      snapshot: snapshot,
-    );
-  }
-
-  persistence_mutations.InsertBlockMutation? _buildInsertPayload(
-    InsertBlockMutation mutation,
-  ) {
-    final newNodeId = mutation.newNodeId;
-    final node = document.getNodeById(newNodeId);
-    if (node == null) return null;
-
-    final newBlockId = registry.blockIdForNode(newNodeId)!;
-    final data = BlockDataSerializer.encodeDocumentNode(node);
-    final type = BlockDataSerializer.blockTypeFor(node);
-
-    final rawParent = node.metadata['parentBlockId'] as String?;
-    final forceRootLevel = node.metadata['forceRootLevel'] == true ||
-        (node.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
-
-    final providedParentBlockId = forceRootLevel
-        ? null
-        : (rawParent != null
-            ? (registry.blockIdForNode(rawParent) ?? rawParent)
-            : null);
-
-    final hasExplicitParent = forceRootLevel || rawParent != null;
-
-    String? previousBlockId;
-    String? nextBlockId;
-
-    if (hasExplicitParent) {
-      var prevNode = document.getNodeBeforeById(newNodeId);
-      while (prevNode != null) {
-        final pBlockId = registry.blockIdForNode(prevNode.id);
-        if (pBlockId != null) {
-          final pBlock = snapshot.getBlock(pBlockId);
-          final pParent = pBlock?.parentBlockId ??
-              (prevNode.metadata['parentBlockId'] as String?);
-          final resolvedPParent = pParent != null
-              ? (registry.blockIdForNode(pParent) ?? pParent)
-              : null;
-          if (resolvedPParent == providedParentBlockId) {
-            previousBlockId = pBlockId;
-            break;
-          }
-        }
-        prevNode = document.getNodeBeforeById(prevNode.id);
-      }
-
-      var nextNode = document.getNodeAfterById(newNodeId);
-      while (nextNode != null) {
-        final nBlockId = registry.blockIdForNode(nextNode.id);
-        if (nBlockId != null) {
-          final nBlock = snapshot.getBlock(nBlockId);
-          final nParent = nBlock?.parentBlockId ??
-              (nextNode.metadata['parentBlockId'] as String?);
-          final resolvedNParent = nParent != null
-              ? (registry.blockIdForNode(nParent) ?? nParent)
-              : null;
-          if (resolvedNParent == providedParentBlockId) {
-            nextBlockId = nBlockId;
-            break;
-          }
-        }
-        nextNode = document.getNodeAfterById(nextNode.id);
-      }
-    } else {
-      final previousNodeId = document.getNodeBeforeById(newNodeId)?.id;
-      final nextNodeId = document.getNodeAfterById(newNodeId)?.id;
-
-      previousBlockId =
-          previousNodeId != null ? registry.blockIdForNode(previousNodeId) : null;
-      nextBlockId =
-          nextNodeId != null ? registry.blockIdForNode(nextNodeId) : null;
-    }
-
-    final previousNode = previousBlockId != null
-        ? resolveNodeByBlockId(
-            blockId: previousBlockId,
-            document: document,
-            registry: registry,
-          )
-        : null;
-
-    final previousMetadata =
-        previousNode?.metadata ?? const <String, dynamic>{};
-
-    final previousBlockIsToggle = previousMetadata['listType'] == 'toggle' ||
-        previousMetadata['type'] == 'toggle' ||
-        (previousMetadata['blockType'] is NamedAttribution &&
-            (previousMetadata['blockType'] as NamedAttribution).name ==
-                'toggle');
-
-    return StructuralMutationBuilder.buildInsertMutation(
-      pageId: pageId,
-      blockId: newBlockId,
-      data: data,
-      type: type,
-      previousBlockId: previousBlockId,
-      nextBlockId: nextBlockId,
-      providedParentBlockId: providedParentBlockId,
-      snapshot: snapshot,
-      previousBlockIsToggle: previousBlockIsToggle,
-      forceRootLevel: forceRootLevel,
-    );
-  }
-
-  persistence_mutations.MoveBlockMutation? _buildMovePayload(String nodeId) {
-    final blockId = registry.blockIdForNode(nodeId);
-    if (blockId == null) return null;
-
-    final node = document.getNodeById(nodeId);
-    final rawParent = node?.metadata['parentBlockId'] as String?;
-    final forceRootLevel = node?.metadata['forceRootLevel'] == true ||
-        (node?.metadata['depth'] == 0 && (rawParent == null || rawParent.isEmpty));
-
-    final providedParentBlockId = forceRootLevel
-        ? null
-        : (rawParent != null
-            ? (registry.blockIdForNode(rawParent) ?? rawParent)
-            : null);
-
-    final hasExplicitParent = forceRootLevel || rawParent != null;
-
-    String? previousBlockId;
-    String? nextBlockId;
-
-    if (hasExplicitParent) {
-      var prevNode = document.getNodeBeforeById(nodeId);
-      while (prevNode != null) {
-        final pBlockId = registry.blockIdForNode(prevNode.id);
-        if (pBlockId != null) {
-          final pBlock = snapshot.getBlock(pBlockId);
-          final pParent = (prevNode.metadata['parentBlockId'] as String?) ??
-              pBlock?.parentBlockId;
-          final resolvedPParent = pParent != null
-              ? (registry.blockIdForNode(pParent) ?? pParent)
-              : null;
-          if (resolvedPParent == providedParentBlockId) {
-            previousBlockId = pBlockId;
-            break;
-          }
-        }
-        prevNode = document.getNodeBeforeById(prevNode.id);
-      }
-
-      var nextNode = document.getNodeAfterById(nodeId);
-      final nodeDepth = node != null ? getNodeDepth(node) : 0;
-      while (nextNode != null && getNodeDepth(nextNode) > nodeDepth) {
-        nextNode = document.getNodeAfterById(nextNode.id);
-      }
-      while (nextNode != null) {
-        final nBlockId = registry.blockIdForNode(nextNode.id);
-        if (nBlockId != null) {
-          final nBlock = snapshot.getBlock(nBlockId);
-          final nParent = (nextNode.metadata['parentBlockId'] as String?) ??
-              nBlock?.parentBlockId;
-          final resolvedNParent = nParent != null
-              ? (registry.blockIdForNode(nParent) ?? nParent)
-              : null;
-          if (resolvedNParent == providedParentBlockId) {
-            nextBlockId = nBlockId;
-            break;
-          }
-        }
-        nextNode = document.getNodeAfterById(nextNode.id);
-      }
-    } else {
-      final previousNode = document.getNodeBeforeById(nodeId);
-      final nextNode = document.getNodeAfterById(nodeId);
-
-      previousBlockId =
-          previousNode != null ? registry.blockIdForNode(previousNode.id) : null;
-      nextBlockId =
-          nextNode != null ? registry.blockIdForNode(nextNode.id) : null;
-    }
-
-    return StructuralMutationBuilder.buildMoveMutation(
-      pageId: pageId,
-      blockId: blockId,
-      previousBlockId: previousBlockId,
-      nextBlockId: nextBlockId,
-      snapshot: snapshot,
-      providedParentBlockId: providedParentBlockId,
-      forceRootLevel: forceRootLevel,
-    );
-  }
-
-  persistence_mutations.ChangeBlockTypeMutation? _buildChangeBlockTypePayload(
-    String nodeId,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId)!;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) {
-      throw StateError('ChangeBlockType produced unexpected document state');
-    }
-
-    final data = BlockDataSerializer.encodeDocumentNode(node);
-    final type = BlockDataSerializer.blockTypeFor(node);
-
-    return StructuralMutationBuilder.buildChangeBlockTypeMutation(
-      pageId: pageId,
-      blockId: blockId,
-      newData: data,
-      newType: type,
-      snapshot: snapshot,
-    );
-  }
-
-  persistence_mutations.MoveBlockMutation? _buildIndentPayload(String nodeId) {
-    final blockId = registry.blockIdForNode(nodeId);
-    if (blockId == null) return null;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) return null;
-
-    return StructuralMutationBuilder.buildIndentMutation(
-      pageId: pageId,
-      blockId: blockId,
-      snapshot: snapshot,
-    );
-  }
-
-  persistence_mutations.MoveBlockMutation? _buildUnindentPayload(
-    String nodeId,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId);
-    if (blockId == null) return null;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) return null;
-
-    final documentBlockOrder = document
-        .map((n) => registry.blockIdForNode(n.id))
-        .whereType<String>()
-        .toList();
-
-    return StructuralMutationBuilder.buildUnindentMutation(
-      pageId: pageId,
-      blockId: blockId,
-      snapshot: snapshot,
-      documentBlockOrder: documentBlockOrder,
-    );
-  }
-
-  persistence_mutations.UpdateToggleMutation? _buildToggleExpandedPayload(
-    String nodeId,
-    bool isExpanded,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId)!;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) {
-      throw StateError('ToggleExpanded produced unexpected document state');
-    }
-
-    final data = BlockDataSerializer.encodeDocumentNode(node);
-    final type = BlockDataSerializer.blockTypeFor(node);
-
-    return persistence_mutations.UpdateToggleMutation(
-      pageId: pageId,
-      blockId: blockId,
-      data: data,
-      type: type,
-      parentBlockId: node.metadata['parentBlockId'] as String? ??
-          snapshot.getBlock(blockId)?.parentBlockId,
-      position: (node.metadata['position'] as num?)?.toDouble() ??
-          snapshot.getBlock(blockId)?.position ??
-          0.0,
-      expectedVersion: registry.getBlockVersion(blockId),
-      blockCreatedAt:
-          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
-      createdAt: DateTime.now().toUtc(),
-      isExpanded: isExpanded,
-      contentHash: EditorIdentityRegistry.hashContent(data),
-    );
-  }
-
-  persistence_mutations.UpdateBlockMutation? _buildUpdateReminderPayload(
-    String nodeId,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId)!;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) {
-      throw StateError('UpdateReminder produced unexpected document state');
-    }
-
-    final data = BlockDataSerializer.encodeDocumentNode(node);
-    final type = BlockDataSerializer.blockTypeFor(node);
-
-    return persistence_mutations.UpdateBlockMutation(
-      pageId: pageId,
-      blockId: blockId,
-      data: data,
-      type: type,
-      parentBlockId: node.metadata['parentBlockId'] as String? ??
-          snapshot.getBlock(blockId)?.parentBlockId,
-      position: (node.metadata['position'] as num?)?.toDouble() ??
-          snapshot.getBlock(blockId)?.position ??
-          0.0,
-      expectedVersion: registry.getBlockVersion(blockId),
-      blockCreatedAt:
-          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
-      createdAt: DateTime.now().toUtc(),
-      contentHash: EditorIdentityRegistry.hashContent(data),
-    );
-  }
-
-  persistence_mutations.UpdateBlockMutation? _buildUpdateTablePayload(
-    String nodeId,
-  ) {
-    final blockId = registry.blockIdForNode(nodeId)!;
-
-    final node = document.getNodeById(nodeId);
-    if (node == null) {
-      throw StateError('UpdateTable produced unexpected document state');
-    }
-
-    // Validation to prevent persistence of malformed tables
-    final tableNode = node as KetionTableNode;
-    final columnCount = tableNode.columnCount;
-    final rowsList = tableNode.rows;
-    if (columnCount < 1) {
-      throw StateError('Table has invalid columnCount: $columnCount');
-    }
-    if (rowsList.isEmpty) {
-      throw StateError('Table has no rows');
-    }
-    for (int i = 0; i < rowsList.length; i++) {
-      final row = rowsList[i];
-      final cells = row.cells;
-      if (cells.length != columnCount) {
-        throw StateError(
-          'Table row $i has ${cells.length} cells, expected $columnCount',
-        );
-      }
-      for (int j = 0; j < cells.length; j++) {
-        final cell = cells[j];
-        if (cell.id.isEmpty) {
-          throw StateError('Table cell at $i,$j has no ID');
-        }
-      }
-    }
-
-    final data = BlockDataSerializer.encodeDocumentNode(node);
-    final type = BlockDataSerializer.blockTypeFor(node);
-
-    return persistence_mutations.UpdateBlockMutation(
-      pageId: pageId,
-      blockId: blockId,
-      data: data,
-      type: type,
-      parentBlockId: node.metadata['parentBlockId'] as String? ??
-          snapshot.getBlock(blockId)?.parentBlockId,
-      position: (node.metadata['position'] as num?)?.toDouble() ??
-          snapshot.getBlock(blockId)?.position ??
-          0.0,
-      expectedVersion: registry.getBlockVersion(blockId),
-      blockCreatedAt:
-          registry.getBlockCreatedAt(blockId) ?? DateTime.now().toUtc(),
-      createdAt: DateTime.now().toUtc(),
-      contentHash: EditorIdentityRegistry.hashContent(data),
-    );
+    persistence.persistMutation(mutation, executor);
   }
 }

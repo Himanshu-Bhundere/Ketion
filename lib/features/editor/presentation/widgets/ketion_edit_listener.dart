@@ -9,6 +9,7 @@ import '../../domain/services/sibling_position_manager.dart';
 import '../../services/editor_persistence_coordinator.dart';
 import '../../services/editor_persistence_mutations.dart'
     as persistence_mutations;
+import '../../services/editor_persistence_snapshot.dart';
 import 'editor_identity_registry.dart';
 
 /// EditListener that handles undo/redo reconciliation.
@@ -36,12 +37,16 @@ class KetionEditListener extends EditListener {
   final MutableDocument document;
   final String pageId;
   final EditorPersistenceCoordinator coordinator;
+  final EditorPersistenceSnapshot? snapshot;
+  final void Function(String nodeId)? onNodeAlreadyMapped;
 
   KetionEditListener({
     required this.registry,
     required this.document,
     required this.pageId,
     required this.coordinator,
+    this.snapshot,
+    this.onNodeAlreadyMapped,
   });
 
   @override
@@ -128,6 +133,22 @@ class KetionEditListener extends EditListener {
 
   /// Handles a node that was restored by undo (exists in document but not in registry).
   void _handleRestoredNode(String nodeId) {
+    // Hidden subtree nodes revealed by undo remain mapped in the registry;
+    // avoid allocating duplicate block IDs or enqueueing duplicate inserts.
+    if (registry.containsNode(nodeId)) {
+      onNodeAlreadyMapped?.call(nodeId);
+      final node = document.getNodeById(nodeId);
+      if (node != null) {
+        registry.setContentHash(
+          nodeId,
+          EditorIdentityRegistry.hashContent(
+            BlockDataSerializer.encodeDocumentNode(node),
+          ),
+        );
+      }
+      return;
+    }
+
     // Try tombstone restoration first — this preserves the original Ketion block ID
     final restoredBlockId = registry.restoreFromTombstone(nodeId);
     if (restoredBlockId != null) {
@@ -190,11 +211,21 @@ class KetionEditListener extends EditListener {
 
   // --- Persistence helpers (fire-and-forget async) ---
 
+  String? _resolveParentBlockId(DocumentNode node) {
+    if (node.metadata['forceRootLevel'] == true ||
+        node.metadata['depth'] == 0) {
+      return null;
+    }
+    final rawParent = node.metadata['parentBlockId'] as String?;
+    if (rawParent == null || rawParent.isEmpty) return null;
+    return registry.blockIdForNode(rawParent) ?? rawParent;
+  }
+
   double _calculatePositionForNode(String nodeId, String? parentBlockId) {
     Block? previousSibling;
     final previousNode = document.getNodeBeforeById(nodeId);
     if (previousNode != null &&
-        previousNode.metadata['parentBlockId'] == parentBlockId) {
+        _resolveParentBlockId(previousNode) == parentBlockId) {
       final prevBlockId = registry.blockIdForNode(previousNode.id);
       if (prevBlockId != null) {
         previousSibling = Block(
@@ -212,8 +243,7 @@ class KetionEditListener extends EditListener {
 
     Block? nextSibling;
     final nextNode = document.getNodeAfterById(nodeId);
-    if (nextNode != null &&
-        nextNode.metadata['parentBlockId'] == parentBlockId) {
+    if (nextNode != null && _resolveParentBlockId(nextNode) == parentBlockId) {
       final nextBlockId = registry.blockIdForNode(nextNode.id);
       if (nextBlockId != null) {
         nextSibling = Block(
@@ -239,25 +269,26 @@ class KetionEditListener extends EditListener {
       final node = document.getNodeById(nodeId);
       if (node == null) return;
 
-      final parentBlockId = node.metadata['parentBlockId'] as String?;
+      final parentBlockId = _resolveParentBlockId(node);
       final position = _calculatePositionForNode(nodeId, parentBlockId);
 
       final block =
           _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
-      coordinator.enqueue(
-        persistence_mutations.RestoreBlockMutation(
-          pageId: pageId,
-          blockId: blockId,
-          type: block.type,
-          blockCreatedAt: DateTime.now().toUtc(),
-          data: block.data,
-          parentBlockId: parentBlockId,
-          position: position,
-          expectedVersion: registry.getBlockVersion(blockId),
-          createdAt: DateTime.now().toUtc(),
-        ),
+      final mutation = persistence_mutations.RestoreBlockMutation(
+        pageId: pageId,
+        blockId: blockId,
+        type: block.type,
+        blockCreatedAt: DateTime.now().toUtc(),
+        data: block.data,
+        parentBlockId: parentBlockId,
+        position: position,
+        expectedVersion: registry.getBlockVersion(blockId),
+        createdAt: DateTime.now().toUtc(),
       );
+      if (coordinator.enqueue(mutation)) {
+        snapshot?.applyMutation(mutation);
+      }
 
       registry.setContentHash(
         nodeId,
@@ -275,24 +306,25 @@ class KetionEditListener extends EditListener {
       final node = document.getNodeById(nodeId);
       if (node == null) return;
 
-      final parentBlockId = node.metadata['parentBlockId'] as String?;
+      final parentBlockId = _resolveParentBlockId(node);
       final position = _calculatePositionForNode(nodeId, parentBlockId);
 
       final block =
           _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
-      coordinator.enqueue(
-        persistence_mutations.InsertBlockMutation(
-          pageId: pageId,
-          blockId: blockId,
-          data: block.data,
-          parentBlockId: parentBlockId,
-          position: position,
-          type: block.type,
-          createdAt: DateTime.now().toUtc(),
-          expectedVersion: 1,
-        ),
+      final mutation = persistence_mutations.InsertBlockMutation(
+        pageId: pageId,
+        blockId: blockId,
+        data: block.data,
+        parentBlockId: parentBlockId,
+        position: position,
+        type: block.type,
+        createdAt: DateTime.now().toUtc(),
+        expectedVersion: 1,
       );
+      if (coordinator.enqueue(mutation)) {
+        snapshot?.applyMutation(mutation);
+      }
 
       registry.setContentHash(
         nodeId,
@@ -307,14 +339,15 @@ class KetionEditListener extends EditListener {
 
   void _deleteBlock(String blockId) {
     try {
-      coordinator.enqueue(
-        persistence_mutations.DeleteBlockMutation(
-          pageId: pageId,
-          blockId: blockId,
-          expectedVersion: registry.getBlockVersion(blockId),
-          createdAt: DateTime.now().toUtc(),
-        ),
+      final mutation = persistence_mutations.DeleteBlockMutation(
+        pageId: pageId,
+        blockId: blockId,
+        expectedVersion: registry.getBlockVersion(blockId),
+        createdAt: DateTime.now().toUtc(),
       );
+      if (coordinator.enqueue(mutation)) {
+        snapshot?.applyMutation(mutation);
+      }
     } catch (e) {
       debugPrint('KETION: Failed to delete block $blockId: $e');
     }
@@ -322,25 +355,26 @@ class KetionEditListener extends EditListener {
 
   void _updateBlock(String blockId, DocumentNode node) {
     try {
-      final parentBlockId = node.metadata['parentBlockId'] as String?;
+      final parentBlockId = _resolveParentBlockId(node);
       final position = _calculatePositionForNode(node.id, parentBlockId);
 
       final block =
           _buildBlockFromNode(node, blockId, pageId, parentBlockId, position);
 
-      coordinator.enqueue(
-        persistence_mutations.UpdateBlockMutation(
-          pageId: pageId,
-          blockId: blockId,
-          type: block.type,
-          blockCreatedAt: DateTime.now().toUtc(),
-          data: block.data,
-          parentBlockId: parentBlockId,
-          position: position,
-          expectedVersion: registry.getBlockVersion(blockId),
-          createdAt: DateTime.now().toUtc(),
-        ),
+      final mutation = persistence_mutations.UpdateBlockMutation(
+        pageId: pageId,
+        blockId: blockId,
+        type: block.type,
+        blockCreatedAt: DateTime.now().toUtc(),
+        data: block.data,
+        parentBlockId: parentBlockId,
+        position: position,
+        expectedVersion: registry.getBlockVersion(blockId),
+        createdAt: DateTime.now().toUtc(),
       );
+      if (coordinator.enqueue(mutation)) {
+        snapshot?.applyMutation(mutation);
+      }
     } catch (e) {
       debugPrint('KETION: Failed to update block $blockId: $e');
     }

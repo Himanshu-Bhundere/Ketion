@@ -309,22 +309,26 @@ ParagraphNode? exitToggleBodyOnEmpty({
   if (toggleParentBlockId != null &&
       toggleParentBlockId.isNotEmpty) {
     updatedMetadata['parentBlockId'] = toggleParentBlockId;
+    updatedMetadata.remove('forceRootLevel');
   } else {
     updatedMetadata.remove('parentBlockId');
+    updatedMetadata['forceRootLevel'] = true;
   }
 
   final requests = <EditRequest>[
+    // Move the existing paragraph after the complete toggle subtree first
+    // so ChangeParagraphMetadataRequest applies final metadata without being
+    // overwritten by _MoveSubtreeCommand.
+    if (node.id != lastDescendant.id)
+      MoveNodeRequest(
+        nodeId: node.id,
+        newIndex: lastDescendantIndex,
+      ),
+
     ChangeParagraphMetadataRequest(
       nodeId: node.id,
       metadata: updatedMetadata,
     ),
-
-    // Move the existing paragraph after the complete toggle subtree.
-    if (node.id != lastDescendant.id)
-      MoveNodeRequest(
-        nodeId: node.id,
-        newIndex: lastDescendantIndex + 1,
-      ),
 
     ChangeSelectionRequest(
       DocumentSelection.collapsed(
@@ -352,7 +356,7 @@ ParagraphNode? exitToggleBodyOnEmpty({
       if (node.id != lastDescendant.id)
         MoveNodeRequest(
           nodeId: node.id,
-          newIndex: lastDescendantIndex + 1,
+          newIndex: lastDescendantIndex,
         ),
       ChangeSelectionRequest(
         DocumentSelection.collapsed(

@@ -253,6 +253,8 @@ class SuperEditorHostState extends ConsumerState<SuperEditorHost> {
         document: _document,
         pageId: widget.pageId,
         coordinator: _coordinator,
+        snapshot: snapshot,
+        onNodeAlreadyMapped: _adapter.invalidateNode,
       );
       _editor.addListener(_editListener);
 

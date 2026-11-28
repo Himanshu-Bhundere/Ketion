@@ -30,7 +30,6 @@ class KetionSuperEditorAdapter {
   final EditorIdentityRegistry _registry = EditorIdentityRegistry();
   final Set<String> _pendingNodeIds = {};
   final Set<String> _pendingInsertNodeIds = {};
-  Future<void>? _activeFlush;
 
   /// Node IDs currently being transformed by a semantic structural mutation
   /// (e.g., ChangeBlockTypeMutation from slash conversion). While a semantic
@@ -80,16 +79,8 @@ class KetionSuperEditorAdapter {
       }
     }
 
-    if (mutation is persistence_mutations.UpdateToggleMutation) {
-      final nodeId = _registry.nodeIdForBlock(mutation.blockId);
-      if (nodeId != null) {
-        if (mutation.isExpanded) {
-          restoreSubtree(mutation.blockId);
-        } else {
-          hideSubtree(mutation.blockId);
-        }
-      }
-    } else if (mutation is persistence_mutations.UpdateBlockMutation) {
+    if (mutation is persistence_mutations.UpdateBlockMutation &&
+        mutation is! persistence_mutations.UpdateToggleMutation) {
       final nodeId = _registry.nodeIdForBlock(mutation.blockId);
       if (nodeId != null) {
         final node = document.getNodeById(nodeId);
@@ -275,20 +266,10 @@ class KetionSuperEditorAdapter {
             nodePosition: const TextNodePosition(offset: 0),
           ),
         );
-        try {
-          editor.execute([
-            ChangeSelectionRequest(
-              newSel,
-              SelectionChangeType.placeCaret,
-              SelectionReason.userInteraction,
-            ),
-          ]);
-        } catch (_) {
-          composer?.setSelectionWithReason(
-            newSel,
-            SelectionReason.userInteraction,
-          );
-        }
+        composer?.setSelectionWithReason(
+          newSel,
+          SelectionReason.userInteraction,
+        );
       }
     }
 
@@ -371,20 +352,10 @@ class KetionSuperEditorAdapter {
             nodePosition: const TextNodePosition(offset: 0),
           ),
         );
-        try {
-          editor.execute([
-            ChangeSelectionRequest(
-              newSel,
-              SelectionChangeType.placeCaret,
-              SelectionReason.userInteraction,
-            ),
-          ]);
-        } catch (_) {
-          _safeComposer?.setSelectionWithReason(
-            newSel,
-            SelectionReason.userInteraction,
-          );
-        }
+        _safeComposer?.setSelectionWithReason(
+          newSel,
+          SelectionReason.userInteraction,
+        );
       }
     }
   }
@@ -672,7 +643,7 @@ class KetionSuperEditorAdapter {
   }
 
   void _onDocumentChange(DocumentChangeLog log) {
-    if (_isSyncingFromKetion) return;
+    if (_isSyncingFromKetion || _registry.hasSnapshot) return;
 
     for (final change in log.changes) {
       debugPrint(
@@ -729,12 +700,8 @@ class KetionSuperEditorAdapter {
   Future<void> flushPendingChanges() {
     _debounceTimer?.cancel();
     _debounceTimer = null;
-    if (_activeFlush != null) {
-      return _activeFlush!.then((_) => flushPendingChanges());
-    }
-    _activeFlush =
-        _flushPendingChangesInternal().whenComplete(() => _activeFlush = null);
-    return _activeFlush!;
+    _flushPendingChangesSync();
+    return Future.value();
   }
 
   void cancelPendingPersistence(String nodeId) {
@@ -742,7 +709,18 @@ class KetionSuperEditorAdapter {
     _pendingInsertNodeIds.remove(nodeId);
   }
 
-  Future<void> _flushPendingChangesInternal() async {
+  DocumentNode? _findNodeIncludingHidden(String nodeId) {
+    final visible = document.getNodeById(nodeId);
+    if (visible != null) return visible;
+    for (final nodes in _hiddenNodeCache.values) {
+      for (final node in nodes) {
+        if (node.id == nodeId) return node;
+      }
+    }
+    return null;
+  }
+
+  void _flushPendingChangesSync() {
     if (_pendingNodeIds.isEmpty && _pendingInsertNodeIds.isEmpty) return;
 
     // Process insertions in document order first
@@ -838,7 +816,7 @@ class KetionSuperEditorAdapter {
     final mutationsToEnqueue = <persistence_mutations.UpdateBlockMutation>[];
 
     for (final nodeId in nodeIdsToProcess) {
-      final node = document.getNodeById(nodeId);
+      final node = _findNodeIncludingHidden(nodeId);
       if (node != null) {
         final currentMetadata = node.metadata;
         final newData = _buildDataFromNode(node);
@@ -846,15 +824,26 @@ class KetionSuperEditorAdapter {
 
         final blockId = _registry.blockIdForNode(nodeId);
         if (blockId != null) {
+          final isRoot = currentMetadata['forceRootLevel'] == true ||
+              currentMetadata['depth'] == 0;
+          final rawParent = currentMetadata['parentBlockId'] as String?;
+          final String? resolvedParentBlockId;
+          if (isRoot) {
+            resolvedParentBlockId = null;
+          } else if (currentMetadata.containsKey('parentBlockId')) {
+            resolvedParentBlockId = rawParent != null && rawParent.isNotEmpty
+                ? (_registry.blockIdForNode(rawParent) ?? rawParent)
+                : null;
+          } else {
+            resolvedParentBlockId = snapshot.getBlock(blockId)?.parentBlockId;
+          }
+
           mutationsToEnqueue.add(
             persistence_mutations.UpdateBlockMutation(
               pageId: pageId,
               blockId: blockId,
               data: newData,
-              parentBlockId: (currentMetadata['depth'] == 0)
-                  ? null
-                  : (currentMetadata['parentBlockId'] as String? ??
-                      snapshot.getBlock(blockId)?.parentBlockId),
+              parentBlockId: resolvedParentBlockId,
               position: (currentMetadata['position'] as num?)?.toDouble() ??
                   snapshot.getBlock(blockId)?.position ??
                   0.0,
@@ -878,6 +867,7 @@ class KetionSuperEditorAdapter {
           'for block ${mutation.blockId}.',
         );
       }
+      snapshot.applyMutation(mutation);
     }
   }
 

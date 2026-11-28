@@ -499,9 +499,7 @@ class KetionSlashCommandRegistry {
       return []; // unsupported
     }
 
-    final currentMetadata = node is ParagraphNode
-        ? Map<String, dynamic>.from(node.metadata)
-        : <String, dynamic>{};
+    final currentMetadata = Map<String, dynamic>.from(node.metadata);
     final newMetadata = {
       ...currentMetadata,
       ...metadataOverrides,

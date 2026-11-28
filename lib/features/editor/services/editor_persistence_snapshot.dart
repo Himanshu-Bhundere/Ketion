@@ -118,6 +118,14 @@ class EditorPersistenceSnapshot {
         updateBlock(
           block.copyWith(
             type: mutation.newType,
+            parentBlockId: mutation.updateHierarchy
+                ? mutation.parentBlockId
+                : block.parentBlockId,
+            resetParentBlockId:
+                mutation.updateHierarchy && mutation.parentBlockId == null,
+            position: mutation.updateHierarchy
+                ? (mutation.position ?? block.position)
+                : block.position,
           ),
         );
       }
@@ -126,7 +134,24 @@ class EditorPersistenceSnapshot {
       if (block != null) {
         updateBlock(
           block.copyWith(
+            type: mutation.type,
+            parentBlockId: mutation.parentBlockId,
+            resetParentBlockId: mutation.parentBlockId == null,
+            position: mutation.position,
             contentHash: mutation.contentHash,
+          ),
+        );
+      }
+    } else if (mutation is RestoreBlockMutation) {
+      final block = getBlock(mutation.blockId);
+      if (block != null) {
+        updateBlock(
+          block.copyWith(
+            type: mutation.type,
+            parentBlockId: mutation.parentBlockId,
+            resetParentBlockId: mutation.parentBlockId == null,
+            position: mutation.position,
+            deleted: false,
           ),
         );
       }

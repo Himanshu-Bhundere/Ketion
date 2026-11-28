@@ -481,6 +481,9 @@ class ChangeBlockTypeMutation extends StructuralMutation {
   final String newData;
   final int expectedVersion;
   final DateTime blockCreatedAt;
+  final String? parentBlockId;
+  final double? position;
+  final bool updateHierarchy;
 
   ChangeBlockTypeMutation({
     required super.pageId,
@@ -490,6 +493,9 @@ class ChangeBlockTypeMutation extends StructuralMutation {
     required this.expectedVersion,
     required this.blockCreatedAt,
     required super.createdAt,
+    this.parentBlockId,
+    this.position,
+    this.updateHierarchy = false,
   }) : super(affectedBlockIds: {blockId});
 
   @override
@@ -520,6 +526,9 @@ class ChangeBlockTypeMutation extends StructuralMutation {
         expectedVersion: currentVersions[blockId]!,
         blockCreatedAt: blockCreatedAt,
         createdAt: createdAt,
+        parentBlockId: parentBlockId,
+        position: position,
+        updateHierarchy: updateHierarchy,
       );
     }
     return this;

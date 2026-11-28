@@ -190,6 +190,7 @@ class StructuralMutationBuilder {
     required String? nextBlockId,
     required EditorPersistenceSnapshot snapshot,
     String? providedParentBlockId,
+    bool previousBlockIsToggle = false,
     bool forceRootLevel = false,
   }) {
     final block = snapshot.getBlock(blockId);
@@ -203,7 +204,7 @@ class StructuralMutationBuilder {
       final prev = snapshot.getBlock(previousBlockId);
       if (prev != null && !prev.deleted) {
         if (!forceRootLevel && providedParentBlockId == null) {
-          if (prev.type == 'toggle') {
+          if (prev.type == 'toggle' || previousBlockIsToggle) {
             parentBlockId = prev.blockId;
           } else {
             parentBlockId = prev.parentBlockId;
@@ -251,6 +252,9 @@ class StructuralMutationBuilder {
     required String newType,
     required String newData,
     required EditorPersistenceSnapshot snapshot,
+    String? parentBlockId,
+    double? position,
+    bool updateHierarchy = false,
   }) {
     final block = snapshot.getBlock(blockId);
     if (block == null || block.deleted) return null;
@@ -263,6 +267,9 @@ class StructuralMutationBuilder {
       expectedVersion: block.version,
       blockCreatedAt: block.createdAt,
       createdAt: DateTime.now().toUtc(),
+      parentBlockId: parentBlockId,
+      position: position,
+      updateHierarchy: updateHierarchy,
     );
   }
 

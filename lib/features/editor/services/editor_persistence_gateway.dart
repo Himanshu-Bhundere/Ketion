@@ -147,6 +147,12 @@ class RepositoryEditorPersistenceGateway implements EditorPersistenceGateway {
         final updated = block.copyWith(
           type: mutation.newType,
           data: mutation.newData,
+          parentBlockId: mutation.updateHierarchy
+              ? mutation.parentBlockId
+              : block.parentBlockId,
+          position: mutation.updateHierarchy
+              ? (mutation.position ?? block.position)
+              : block.position,
         );
         final result = await repository.updateBlock(
           updated,

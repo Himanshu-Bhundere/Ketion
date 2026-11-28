@@ -436,7 +436,8 @@ class BlockRepositoryImpl implements BlockRepository {
             parentBlockId: Value(parentBlockId),
             position: Value(position),
             version: Value(newVersion),
-            updatedAt: Value(now), // Clear deletedAt
+            updatedAt: Value(now),
+            deleted: const Value(false),
           ),
         );
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ketion/features/incoming_share/domain/models/incoming_share_item.dart';
@@ -131,5 +132,142 @@ void main() {
       container.read(activeEditorPageIdProvider.notifier).state = null;
       expect(container.read(activeEditorPageIdProvider), isNull);
     });
+  });
+
+  group('IncomingShareCoordinator regression', () {
+    const channel = MethodChannel('com.example.ketion/share_target');
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    testWidgets(
+      'clears stale native active note and shows picker when no note is open',
+      (tester) async {
+        final recordedCalls = <MethodCall>[];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, (call) async {
+          recordedCalls.add(call);
+          if (call.method == 'getLastOpenedNoteId') {
+            return 'stale-last-note';
+          }
+          return null;
+        });
+
+        final now = DateTime.now().toUtc();
+        final pages = [
+          entity.Page(
+            id: 'note-1',
+            title: 'First Note',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ];
+
+        late BuildContext capturedContext;
+        late WidgetRef capturedRef;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              allPagesProvider.overrideWith((ref) => pages),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) {
+                    capturedContext = context;
+                    capturedRef = ref;
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final coordinator = capturedRef.read(incomingShareCoordinatorProvider);
+        await coordinator.handleIncomingItems(
+          capturedContext,
+          const [
+            IncomingShareItem(
+              type: IncomingShareType.file,
+              name: 'clip.mp4',
+              mimeType: 'video/mp4',
+              localPath: '/tmp/clip.mp4',
+            ),
+          ],
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          recordedCalls
+              .where((c) => c.method == 'setActiveNoteId')
+              .map((c) => c.arguments)
+              .toList(),
+          equals([
+            {'noteId': null},
+          ]),
+        );
+        expect(find.byType(IncomingShareNotePicker), findsOneWidget);
+        expect(find.text('clip.mp4'), findsOneWidget);
+        expect(find.text('First Note'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'attaches directly when an editor note is open without showing picker',
+      (tester) async {
+        final attachedItems = <IncomingShareItem>[];
+
+        late BuildContext capturedContext;
+        late WidgetRef capturedRef;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              activeEditorPageIdProvider.overrideWith((ref) => 'active-note-1'),
+              editorInsertItemCallbackProvider('active-note-1').overrideWith(
+                (ref) => (item) async {
+                  attachedItems.add(item);
+                },
+              ),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) {
+                    capturedContext = context;
+                    capturedRef = ref;
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final coordinator = capturedRef.read(incomingShareCoordinatorProvider);
+        await coordinator.handleIncomingItems(
+          capturedContext,
+          const [
+            IncomingShareItem(
+              type: IncomingShareType.file,
+              name: 'photo.jpg',
+              mimeType: 'image/jpeg',
+              localPath: '/tmp/photo.jpg',
+            ),
+          ],
+        );
+        await tester.pumpAndSettle();
+
+        expect(attachedItems.length, 1);
+        expect(attachedItems.first.name, 'photo.jpg');
+        expect(find.byType(IncomingShareNotePicker), findsNothing);
+      },
+    );
   });
 }

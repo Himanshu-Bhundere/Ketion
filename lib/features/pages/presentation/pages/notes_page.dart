@@ -7,7 +7,6 @@ import 'package:ketion/core/presentation/widgets/skeleton_loader.dart';
 import 'package:ketion/core/router/routes.dart';
 import 'package:ketion/core/theme/app_spacing.dart';
 import 'package:ketion/core/theme/app_typography.dart';
-import 'package:ketion/core/theme/breakpoints.dart';
 import 'package:ketion/features/collections/presentation/providers/collection_providers.dart';
 import 'package:ketion/features/home/presentation/providers/home_providers.dart';
 import 'package:ketion/features/pages/domain/entities/page.dart' as entity;
@@ -385,12 +384,8 @@ class _NotesPageState extends ConsumerState<NotesPage> {
   }
 
   void _openNote(BuildContext context, entity.Page page) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= AppBreakpoints.medium) {
-      ref.read(activePageIdProvider.notifier).state = page.id;
-    } else {
-      context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
-    }
+    ref.read(activePageIdProvider.notifier).state = page.id;
+    context.pushNamed(Routes.editorName, pathParameters: {'pageId': page.id});
   }
 }
 

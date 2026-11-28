@@ -43,13 +43,28 @@ class _EditorPageState extends ConsumerState<EditorPage> {
   }
 
   @override
+  void didUpdateWidget(covariant EditorPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.pageId != widget.pageId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(activeEditorPageIdProvider.notifier).state = widget.pageId;
+          ref.read(incomingShareServiceProvider).setActiveNoteId(widget.pageId);
+        }
+      });
+    }
+  }
+
+  @override
   void deactivate() {
     final activeNotifier = ref.read(activeEditorPageIdProvider.notifier);
+    final shareService = ref.read(incomingShareServiceProvider);
     final currentPageId = widget.pageId;
     Future.microtask(() {
       try {
         if (activeNotifier.mounted && activeNotifier.state == currentPageId) {
           activeNotifier.state = null;
+          shareService.setActiveNoteId(null);
         }
       } catch (_) {}
     });

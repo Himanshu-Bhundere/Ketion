@@ -65,13 +65,12 @@ class IncomingShareCoordinator {
   ) async {
     if (items.isEmpty) return;
 
-    var activePageId = getActiveEditorPageId();
+    final activePageId = getActiveEditorPageId();
 
     if (activePageId == null) {
-      final lastId = await _ref.read(incomingShareServiceProvider).getLastOpenedNoteId();
-      if (lastId != null && lastId.isNotEmpty) {
-        activePageId = lastId;
-      }
+      // Clear any stale native active-note preference when no editor is open so
+      // incoming shares always display the note picker instead of auto-attaching.
+      await _ref.read(incomingShareServiceProvider).setActiveNoteId(null);
     }
 
     final navContext = rootNavigatorKey.currentContext ?? context;
@@ -106,8 +105,10 @@ class IncomingShareCoordinator {
     // Otherwise route to the notes list and show the multi-note picker
     if (!navContext.mounted) return;
 
-    // Route to the notes list page as required when no note is open
-    appRouter.go(Routes.notes);
+    // Route to the notes list page when the app router is attached.
+    if (rootNavigatorKey.currentContext != null) {
+      appRouter.go(Routes.notes);
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final currentNavContext = rootNavigatorKey.currentContext ?? navContext;
@@ -154,6 +155,7 @@ class IncomingShareCoordinator {
         },
       );
     });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   Future<void> importItemsToPages({

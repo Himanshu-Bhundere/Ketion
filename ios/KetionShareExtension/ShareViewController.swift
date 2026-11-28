@@ -46,9 +46,23 @@ class ShareViewController: UIViewController {
                 // 1. Video & Movie types (Apple Photos videos, QuickTime, MP4, etc.)
                 if isVideoProvider(provider) {
                     group.enter()
-                    let typeId = preferredTypeIdentifier(for: provider, matching: [.movie, .video, .audiovisualContent])
-                        ?? UTType.movie.identifier
-                    loadFileOrData(provider: provider, typeId: typeId, fallbackExtension: "mov") { itemMap in
+                    let candidates = candidateTypeIdentifiers(
+                        for: provider,
+                        matching: [.movie, .video, .audiovisualContent],
+                        fallbacks: [
+                            "com.apple.quicktime-movie",
+                            "public.mpeg-4",
+                            UTType.movie.identifier,
+                            UTType.video.identifier,
+                            UTType.audiovisualContent.identifier,
+                            UTType.fileURL.identifier,
+                        ]
+                    )
+                    loadFileOrDataFromCandidates(
+                        provider: provider,
+                        typeIds: candidates,
+                        fallbackExtension: "mov"
+                    ) { itemMap in
                         if let itemMap = itemMap {
                             self.syncQueue.sync { extractedItems.append(itemMap) }
                         }
@@ -70,7 +84,11 @@ class ShareViewController: UIViewController {
                 // 3. Explicit File URLs (Files app, third-party document providers)
                 else if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
                     group.enter()
-                    loadFileOrData(provider: provider, typeId: UTType.fileURL.identifier, fallbackExtension: nil) { itemMap in
+                    loadFileOrDataFromCandidates(
+                        provider: provider,
+                        typeIds: [UTType.fileURL.identifier],
+                        fallbackExtension: nil
+                    ) { itemMap in
                         if let itemMap = itemMap {
                             self.syncQueue.sync { extractedItems.append(itemMap) }
                         }
@@ -80,7 +98,11 @@ class ShareViewController: UIViewController {
                 // 4. PDF documents
                 else if provider.hasItemConformingToTypeIdentifier(UTType.pdf.identifier) {
                     group.enter()
-                    loadFileOrData(provider: provider, typeId: UTType.pdf.identifier, fallbackExtension: "pdf") { itemMap in
+                    loadFileOrDataFromCandidates(
+                        provider: provider,
+                        typeIds: [UTType.pdf.identifier, UTType.fileURL.identifier],
+                        fallbackExtension: "pdf"
+                    ) { itemMap in
                         if let itemMap = itemMap {
                             self.syncQueue.sync { extractedItems.append(itemMap) }
                         }
@@ -90,9 +112,16 @@ class ShareViewController: UIViewController {
                 // 5. Audio files (Voice Memos, Music, audio messages)
                 else if provider.hasItemConformingToTypeIdentifier(UTType.audio.identifier) {
                     group.enter()
-                    let typeId = preferredTypeIdentifier(for: provider, matching: [.audio])
-                        ?? UTType.audio.identifier
-                    loadFileOrData(provider: provider, typeId: typeId, fallbackExtension: "m4a") { itemMap in
+                    let candidates = candidateTypeIdentifiers(
+                        for: provider,
+                        matching: [.audio],
+                        fallbacks: [UTType.audio.identifier, UTType.fileURL.identifier]
+                    )
+                    loadFileOrDataFromCandidates(
+                        provider: provider,
+                        typeIds: candidates,
+                        fallbackExtension: "m4a"
+                    ) { itemMap in
                         if let itemMap = itemMap {
                             self.syncQueue.sync { extractedItems.append(itemMap) }
                         }
@@ -124,10 +153,15 @@ class ShareViewController: UIViewController {
                     }
                 }
                 // 8. Any other generic file, data, or content type
-                else if let fallbackTypeId = provider.registeredTypeIdentifiers.first {
+                else if !provider.registeredTypeIdentifiers.isEmpty {
                     group.enter()
-                    let ext = UTType(fallbackTypeId)?.preferredFilenameExtension
-                    loadFileOrData(provider: provider, typeId: fallbackTypeId, fallbackExtension: ext) { itemMap in
+                    let firstId = provider.registeredTypeIdentifiers.first!
+                    let ext = UTType(firstId)?.preferredFilenameExtension
+                    loadFileOrDataFromCandidates(
+                        provider: provider,
+                        typeIds: provider.registeredTypeIdentifiers,
+                        fallbackExtension: ext
+                    ) { itemMap in
                         if let itemMap = itemMap {
                             self.syncQueue.sync { extractedItems.append(itemMap) }
                         }
@@ -167,10 +201,62 @@ class ShareViewController: UIViewController {
         return false
     }
 
+    private func candidateTypeIdentifiers(
+        for provider: NSItemProvider,
+        matching targets: [UTType],
+        fallbacks: [String]
+    ) -> [String] {
+        var result: [String] = []
+        for identifier in provider.registeredTypeIdentifiers {
+            if let type = UTType(identifier), targets.contains(where: { type.conforms(to: $0) }) {
+                result.append(identifier)
+            }
+        }
+        for fallback in fallbacks {
+            if provider.hasItemConformingToTypeIdentifier(fallback) && !result.contains(fallback) {
+                result.append(fallback)
+            }
+        }
+        if result.isEmpty {
+            result = fallbacks
+        }
+        return result
+    }
+
     private func preferredTypeIdentifier(for provider: NSItemProvider, matching targets: [UTType]) -> String? {
         return provider.registeredTypeIdentifiers.first { identifier in
             guard let type = UTType(identifier) else { return false }
             return targets.contains { type.conforms(to: $0) }
+        }
+    }
+
+    private func loadFileOrDataFromCandidates(
+        provider: NSItemProvider,
+        typeIds: [String],
+        index: Int = 0,
+        fallbackExtension: String?,
+        completion: @escaping ([String: Any]?) -> Void
+    ) {
+        guard index < typeIds.count else {
+            completion(nil)
+            return
+        }
+        loadFileOrData(
+            provider: provider,
+            typeId: typeIds[index],
+            fallbackExtension: fallbackExtension
+        ) { [weak self] itemMap in
+            if let itemMap = itemMap {
+                completion(itemMap)
+            } else {
+                self?.loadFileOrDataFromCandidates(
+                    provider: provider,
+                    typeIds: typeIds,
+                    index: index + 1,
+                    fallbackExtension: fallbackExtension,
+                    completion: completion
+                )
+            }
         }
     }
 
@@ -216,8 +302,9 @@ class ShareViewController: UIViewController {
 
                 if let rawData = data as? Data {
                     if let parsedUrl = URL(dataRepresentation: rawData, relativeTo: nil),
-                       parsedUrl.isFileURL {
-                        completion(self.copyFileToAppGroup(url: parsedUrl, typeId: typeId))
+                       parsedUrl.isFileURL,
+                       let itemMap = self.copyFileToAppGroup(url: parsedUrl, typeId: typeId) {
+                        completion(itemMap)
                         return
                     }
                     completion(self.writeDataToAppGroup(rawData, typeId: typeId, fallbackExtension: fallbackExtension))
@@ -466,7 +553,7 @@ class ShareViewController: UIViewController {
         existingList.append(contentsOf: items)
 
         if let updatedData = try? JSONSerialization.data(withJSONObject: existingList, options: .prettyPrinted) {
-            try? updatedData.write(to: manifestURL)
+            try? updatedData.write(to: manifestURL, options: .atomic)
         }
     }
 

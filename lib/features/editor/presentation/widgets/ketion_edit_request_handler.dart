@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:ketion/features/editor/presentation/widgets/convert_paragraph_to_callout.dart';
 import 'package:super_editor/super_editor.dart';
 import 'package:uuid/uuid.dart';
@@ -67,6 +68,17 @@ EditRequestHandler createKetionRequestHandler({
       return toggleChildCommand;
     }
 
+    // Intercept newline requests on lists and checklists (across Windows,
+    // Android, and iOS, both at root and inside toggles/nested sub-lists) so
+    // continuation preserves type, indent, depth, parentBlockId, and syncs
+    // persistence without falling back to plain paragraphs.
+    final listOrTaskNewlineCommand =
+        _buildListOrTaskNewlineCommand(editor, request, persistence);
+    if (listOrTaskNewlineCommand != null) {
+      adapter.flushPendingChanges();
+      return listOrTaskNewlineCommand;
+    }
+
     // Let all requests pass through to semantic translation
 
     final mutation = _translateRequest(request, registry);
@@ -129,6 +141,10 @@ EditCommand? _buildToggleChildInsertionCommand(
     }
   }
 
+  if (node is ListItemNode || node is TaskNode) {
+    return null;
+  }
+
   if (isInsideToggleBody(node, editor.document, persistence.registry)) {
     return _ToggleBodyEnterCommand(
       nodeId: node.id,
@@ -139,6 +155,284 @@ EditCommand? _buildToggleChildInsertionCommand(
   }
 
   return null;
+}
+
+EditCommand? _buildListOrTaskNewlineCommand(
+  Editor editor,
+  EditRequest request,
+  _KetionPersistenceSupport persistence,
+) {
+  if (request is! InsertNewlineAtCaretRequest) return null;
+
+  final selection = editor.composer.selection;
+  if (selection == null) return null;
+
+  if (!selection.isCollapsed &&
+      selection.base.nodeId != selection.extent.nodeId) {
+    return null;
+  }
+
+  final extentNode = editor.document.getNodeById(selection.extent.nodeId);
+  if (extentNode is! TextNode ||
+      (extentNode is! ListItemNode && extentNode is! TaskNode)) {
+    return null;
+  }
+
+  return _KetionListOrTaskNewlineCommand(
+    nodeId: extentNode.id,
+    newNodeId: request.newNodeId,
+    persistence: persistence,
+  );
+}
+
+class _KetionListOrTaskNewlineCommand extends EditCommand {
+  _KetionListOrTaskNewlineCommand({
+    required this.nodeId,
+    required this.newNodeId,
+    required this.persistence,
+  });
+
+  final String nodeId;
+  final String newNodeId;
+  final _KetionPersistenceSupport persistence;
+
+  @override
+  HistoryBehavior get historyBehavior => HistoryBehavior.undoable;
+
+  @override
+  void execute(EditContext context, CommandExecutor executor) {
+    final doc = context.document;
+    final composer =
+        context.find<MutableDocumentComposer>(Editor.composerKey);
+    final selectionBefore = composer.selection;
+    if (selectionBefore == null) return;
+
+    final initialNode = doc.getNodeById(nodeId);
+    if (initialNode is! TextNode ||
+        (initialNode is! ListItemNode && initialNode is! TaskNode)) {
+      return;
+    }
+    if (!initialNode.isDeletable) return;
+
+    if (!selectionBefore.isCollapsed) {
+      if (selectionBefore.base.nodeId != nodeId ||
+          selectionBefore.extent.nodeId != nodeId) {
+        return;
+      }
+      executor.executeCommand(
+        DeleteSelectionCommand(affinity: TextAffinity.downstream),
+      );
+    }
+
+    final updatedSelection = composer.selection;
+    if (updatedSelection == null || !updatedSelection.isCollapsed) return;
+    final caretPos = updatedSelection.extent.nodePosition;
+    if (caretPos is! TextNodePosition) return;
+
+    final node = doc.getNodeById(nodeId);
+    if (node is! TextNode || (node is! ListItemNode && node is! TaskNode)) {
+      return;
+    }
+
+    final isReconciling = persistence.registry.hasSnapshot;
+    if (!isReconciling) {
+      persistence.ensurePendingMapping(nodeId);
+    }
+
+    final nodeDepth = getNodeDepth(node);
+    final blockId = persistence.registry.blockIdForNode(nodeId);
+    final rawParent = node.metadata['parentBlockId'] as String?;
+    final existingSnapshotBlock =
+        blockId != null ? persistence.snapshot.getBlock(blockId) : null;
+    final resolvedParentBlockId = (rawParent != null && rawParent.isNotEmpty)
+        ? (persistence.registry.blockIdForNode(rawParent) ?? rawParent)
+        : existingSnapshotBlock?.parentBlockId;
+
+    if (node.text.isEmpty) {
+      final directParentIsToggle = isDirectChildOfToggle(
+        node,
+        doc,
+        persistence.registry,
+      );
+      final canUnindent = !directParentIsToggle &&
+          nodeDepth > 0 &&
+          resolvedParentBlockId != null &&
+          (isReconciling ||
+              (existingSnapshotBlock != null &&
+                  existingSnapshotBlock.parentBlockId != null));
+
+      persistence.runWithSemanticScope({nodeId}, () {
+        if (canUnindent) {
+          executor.executeCommand(_KetionUnindentNodeCommand(nodeId: nodeId));
+          executor.executeCommand(
+            ChangeSelectionCommand(
+              DocumentSelection.collapsed(
+                position: DocumentPosition(
+                  nodeId: nodeId,
+                  nodePosition: const TextNodePosition(offset: 0),
+                ),
+              ),
+              SelectionChangeType.placeCaret,
+              SelectionReason.userInteraction,
+            ),
+          );
+          executor.executeCommand(ChangeComposingRegionCommand(null));
+          if (!isReconciling) {
+            persistence.persistMutation(
+              UnindentBlockMutation(nodeId: nodeId),
+              executor,
+            );
+          }
+          return;
+        }
+
+        final preservedMetadata = <String, dynamic>{
+          ...node.metadata,
+          'depth': nodeDepth,
+        };
+        if (resolvedParentBlockId != null &&
+            resolvedParentBlockId.isNotEmpty) {
+          preservedMetadata['parentBlockId'] = resolvedParentBlockId;
+          preservedMetadata.remove('forceRootLevel');
+        } else {
+          preservedMetadata.remove('parentBlockId');
+          if (existingSnapshotBlock?.parentBlockId != null) {
+            preservedMetadata['forceRootLevel'] = true;
+          } else {
+            preservedMetadata.remove('forceRootLevel');
+          }
+        }
+
+        if (node is ListItemNode) {
+          executor.executeCommand(
+            ConvertListItemToParagraphCommand(
+              nodeId: nodeId,
+              paragraphMetadata: preservedMetadata,
+            ),
+          );
+        } else if (node is TaskNode) {
+          executor.executeCommand(
+            ConvertTaskToParagraphCommand(
+              nodeId: nodeId,
+              paragraphMetadata: preservedMetadata,
+            ),
+          );
+        }
+
+        executor.executeCommand(
+          ChangeSelectionCommand(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: nodeId,
+                nodePosition: const TextNodePosition(offset: 0),
+              ),
+            ),
+            SelectionChangeType.placeCaret,
+            SelectionReason.userInteraction,
+          ),
+        );
+        executor.executeCommand(ChangeComposingRegionCommand(null));
+
+        if (!isReconciling) {
+          persistence.persistMutation(
+            ChangeBlockTypeMutation(nodeId: nodeId),
+            executor,
+          );
+        }
+      });
+      return;
+    }
+
+    final safeOffset = caretPos.offset.clamp(0, node.text.length);
+    final endText = safeOffset < node.text.length
+        ? node.text.copyText(safeOffset)
+        : AttributedText();
+    final rawIndent =
+        node is ListItemNode ? node.indent : (node as TaskNode).indent;
+    final effectiveIndent = rawIndent > 0 ? rawIndent : nodeDepth;
+    final newMetadata = <String, dynamic>{
+      'depth': nodeDepth,
+      if (resolvedParentBlockId != null && resolvedParentBlockId.isNotEmpty)
+        'parentBlockId': resolvedParentBlockId,
+    };
+
+    final DocumentNode newNode;
+    if (node is ListItemNode) {
+      newNode = ListItemNode(
+        id: newNodeId,
+        itemType: node.type,
+        text: endText,
+        indent: effectiveIndent,
+        metadata: newMetadata,
+      );
+    } else {
+      newNode = TaskNode(
+        id: newNodeId,
+        text: endText,
+        isComplete: false,
+        indent: effectiveIndent,
+        metadata: newMetadata,
+      );
+    }
+
+    persistence.runWithSemanticScope({nodeId, newNodeId}, () {
+      if (safeOffset < node.text.length) {
+        executor.executeCommand(
+          DeleteContentCommand(
+            documentRange: DocumentRange(
+              start: DocumentPosition(
+                nodeId: nodeId,
+                nodePosition: TextNodePosition(offset: safeOffset),
+              ),
+              end: DocumentPosition(
+                nodeId: nodeId,
+                nodePosition: TextNodePosition(offset: node.text.length),
+              ),
+            ),
+          ),
+        );
+      }
+
+      final freshNode = doc.getNodeById(nodeId) ?? node;
+      final lastDescendant = BlockTreeService.findLastDescendant(
+        doc,
+        freshNode,
+        getNodeDepth,
+      );
+
+      executor
+        ..executeCommand(
+          InsertNodeAfterNodeCommand(
+            existingNodeId: lastDescendant.id,
+            newNode: newNode,
+          ),
+        )
+        ..executeCommand(
+          ChangeSelectionCommand(
+            DocumentSelection.collapsed(
+              position: DocumentPosition(
+                nodeId: newNodeId,
+                nodePosition: const TextNodePosition(offset: 0),
+              ),
+            ),
+            SelectionChangeType.insertContent,
+            SelectionReason.userInteraction,
+          ),
+        )
+        ..executeCommand(ChangeComposingRegionCommand(null));
+
+      if (!isReconciling) {
+        persistence.ensurePendingMapping(newNodeId);
+        persistence.persistMutation(
+          SplitBlockMutation(
+            originalNodeId: nodeId,
+            newNodeId: newNodeId,
+          ),
+          executor,
+        );
+      }
+    });
+  }
 }
 
 class _ToggleBodyEnterCommand extends EditCommand {

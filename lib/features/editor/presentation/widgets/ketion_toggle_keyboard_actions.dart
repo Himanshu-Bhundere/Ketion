@@ -253,6 +253,54 @@ TextNode? findNearestToggleAncestor({
   return null;
 }
 
+/// Resolves the immediate parent node of [node] via its persistent `parentBlockId`,
+/// falling back to the nearest preceding lower-depth node in [document].
+DocumentNode? resolveImmediateParentNode({
+  required DocumentNode node,
+  required Document document,
+  EditorIdentityRegistry? registry,
+}) {
+  final parentBlockId = node.metadata['parentBlockId'] as String?;
+  if (parentBlockId != null && parentBlockId.isNotEmpty) {
+    final parent = resolveNodeByBlockId(
+      blockId: parentBlockId,
+      document: document,
+      registry: registry,
+    );
+    if (parent != null) {
+      return parent;
+    }
+  }
+
+  final nodeDepth = getNodeDepth(node);
+  if (nodeDepth <= 0) return null;
+
+  final nodeIndex = document.getNodeIndexById(node.id);
+  for (int i = nodeIndex - 1; i >= 0; i--) {
+    final prev = document.getNodeAt(i);
+    if (prev == null) continue;
+    if (getNodeDepth(prev) < nodeDepth) {
+      return prev;
+    }
+  }
+  return null;
+}
+
+/// Checks whether [node] is a direct child of a toggle block (as opposed to
+/// being nested under another non-toggle block inside a toggle).
+bool isDirectChildOfToggle(
+  DocumentNode node,
+  Document document, [
+  EditorIdentityRegistry? registry,
+]) {
+  final parent = resolveImmediateParentNode(
+    node: node,
+    document: document,
+    registry: registry,
+  );
+  return parent != null && KetionToggleComponentBuilder.isToggleNode(parent);
+}
+
 /// Checks whether [node] is inside the body of a toggle by walking its persistent parent chain.
 bool isInsideToggleBody(
   DocumentNode node,
@@ -709,6 +757,9 @@ ExecutionInstruction splitToggleWhenEnterPressed({
   }
 
   if (isInsideToggleBody(node, editContext.document, registry)) {
+    if (node is ListItemNode || node is TaskNode) {
+      return ExecutionInstruction.continueExecution;
+    }
     return handleToggleBodyEnter(
       editContext: editContext,
       node: node,
@@ -894,24 +945,24 @@ ExecutionInstruction unindentParagraphWhenEnterPressedOnEmpty({
     return ExecutionInstruction.continueExecution;
   }
 
-  if (node is TaskNode) {
-    final indent = node.metadata['depth'] as int? ?? node.indent;
-    if (indent > 0 && node.text.isEmpty) {
+  if (node is TextNode && (node is TaskNode || node is ListItemNode)) {
+    final indent = node.metadata['depth'] as int? ??
+        (node is TaskNode ? node.indent : (node as ListItemNode).indent);
+    final hasParent = node.metadata['parentBlockId'] is String &&
+        (node.metadata['parentBlockId'] as String).isNotEmpty;
+    if (indent > 0 &&
+        node.text.isEmpty &&
+        hasParent &&
+        !isDirectChildOfToggle(node, editContext.document)) {
       editContext.editor.execute([
-        UnIndentTaskRequest(node.id),
+        if (node is TaskNode)
+          UnIndentTaskRequest(node.id)
+        else
+          UnIndentListItemRequest(nodeId: node.id),
       ]);
       return ExecutionInstruction.haltExecution;
     }
-  }
-
-  if (node is ListItemNode) {
-    final indent = node.metadata['depth'] as int? ?? node.indent;
-    if (indent > 0 && node.text.isEmpty) {
-      editContext.editor.execute([
-        UnIndentListItemRequest(nodeId: node.id),
-      ]);
-      return ExecutionInstruction.haltExecution;
-    }
+    return ExecutionInstruction.continueExecution;
   }
 
   if (node is! ParagraphNode) {
